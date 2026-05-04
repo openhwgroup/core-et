@@ -1,0 +1,6 @@
+fields,interrupt_x,ZERO,cause
+width,1,58,5
+,,,
+bit idx,63,62..5,4..0
+,,,
+sum bits,64,,

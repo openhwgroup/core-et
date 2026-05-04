@@ -1,0 +1,142 @@
+// Copyright (c) 2026 Ainekko
+// SPDX-License-Identifier: Apache-2.0
+
+`include "soc.vh"
+
+module cosim_vpu_mask_tb
+  import minion_pkg::*;
+  import vpu_pkg::*;
+(
+  input  logic                           clk_i,
+  input  logic                           rst_ni,
+  input  logic                           ex_in_valid_i,
+  input  logic                           ex_inst_valid_i,
+  input  logic [MregAddrSize-1:0]        ex_regfile_raddr1_i,
+  input  logic [MregAddrSize-1:0]        ex_regfile_raddr2_i,
+  input  logic [$bits(vpu_cmd_e)-1:0]    ex_cmd_i,
+  input  logic [VpuLaneNum-1:0]          ex_imm_i,
+  input  logic                           ex_fromint_i,
+  input  logic [XregSize-1:0]            ex_fromint_data_i,
+  input  logic                           ex_thread_id_i,
+  input  logic                           ex_ignore_mask_i,
+  input  logic                           f2_thread_id_i,
+  input  logic                           f2_wen_i,
+  input  logic                           f2_core_kill_i,
+  input  logic [MregAddrSize-1:0]        f2_waddr_i,
+  input  logic                           f2_maskop_i,
+  input  logic                           f2_tointm_i,
+  input  logic                           f3_thread_id_i,
+  input  logic                           f3_regmask_from_txfma_i,
+  input  logic                           f3_regmask_from_short_i,
+  input  logic                           f3_core_kill_i,
+  input  logic [VpuLaneNum-1:0]          f3_regmask_wdata_lane_i,
+  input  logic                           f4_regmask_from_txfma_i,
+  input  logic                           f4_core_kill_i,
+  input  logic                           f5_thread_id_i,
+  input  logic                           f6_thread_id_i,
+  input  logic                           f7_thread_id_i,
+  input  logic                           f8_thread_id_i,
+  input  logic [VpuLaneNum-1:0]          f8_regmask_comp_res_i,
+  output logic [VpuLaneNum-1:0]          orig_ex_mask_rf0_o,
+  output logic [VpuLaneNum-1:0]          new_ex_mask_rf0_o,
+  output logic [VpuLaneNum-1:0]          orig_ex_mask_in1_o,
+  output logic [VpuLaneNum-1:0]          new_ex_mask_in1_o,
+  output logic [VpuLaneNum-1:0]          orig_f2_mask_rf0_o,
+  output logic [VpuLaneNum-1:0]          new_f2_mask_rf0_o,
+  output logic [XregSize-1:0]            orig_f8_toint_data_o,
+  output logic [XregSize-1:0]            new_f8_toint_data_o,
+  output logic [VpuLaneNum-1:0]          orig_f8_regmask_store_o,
+  output logic [VpuLaneNum-1:0]          new_f8_regmask_store_o,
+  output logic [VpuMaskScoreboardSize-1:0] orig_wb_mask_valid_o,
+  output logic [VpuMaskScoreboardSize-1:0] new_wb_mask_valid_o,
+  output logic [VpuMaskScoreboardSize*$bits(minion_mreg_dest_t)-1:0] orig_wb_mask_dest_packed_o,
+  output logic [VpuMaskScoreboardSize*$bits(minion_mreg_dest_t)-1:0] new_wb_mask_dest_packed_o
+);
+
+  minion_mreg_dest   [VpuMaskScoreboardSize-1:0] orig_wb_mask_dest;
+  minion_mreg_dest_t [VpuMaskScoreboardSize-1:0] new_wb_mask_dest;
+
+  vpu_mask_orig u_orig (
+    .clock                 (clk_i),
+    .reset                 (!rst_ni),
+    .ex_in_valid           (ex_in_valid_i),
+    .ex_inst_valid         (ex_inst_valid_i),
+    .ex_regfile_raddr1     (ex_regfile_raddr1_i),
+    .ex_regfile_raddr2     (ex_regfile_raddr2_i),
+    .ex_cmd                (ex_cmd_i),
+    .ex_imm                (ex_imm_i),
+    .ex_fromint            (ex_fromint_i),
+    .ex_fromint_data       (ex_fromint_data_i),
+    .ex_thread_id          (ex_thread_id_i),
+    .ex_ignore_mask        (ex_ignore_mask_i),
+    .f2_thread_id          (f2_thread_id_i),
+    .f2_wen                (f2_wen_i),
+    .f2_core_kill          (f2_core_kill_i),
+    .f2_waddr              (f2_waddr_i),
+    .f2_maskop             (f2_maskop_i),
+    .f2_tointm             (f2_tointm_i),
+    .f3_thread_id          (f3_thread_id_i),
+    .f3_regmask_from_txfma (f3_regmask_from_txfma_i),
+    .f3_regmask_from_short (f3_regmask_from_short_i),
+    .f3_core_kill          (f3_core_kill_i),
+    .f3_regmask_wdata_lane (f3_regmask_wdata_lane_i),
+    .f4_regmask_from_txfma (f4_regmask_from_txfma_i),
+    .f4_core_kill          (f4_core_kill_i),
+    .f5_thread_id          (f5_thread_id_i),
+    .f6_thread_id          (f6_thread_id_i),
+    .f7_thread_id          (f7_thread_id_i),
+    .f8_thread_id          (f8_thread_id_i),
+    .f8_regmask_comp_res   (f8_regmask_comp_res_i),
+    .ex_mask_rf0           (orig_ex_mask_rf0_o),
+    .ex_mask_in1           (orig_ex_mask_in1_o),
+    .f2_mask_rf0           (orig_f2_mask_rf0_o),
+    .f8_toint_data         (orig_f8_toint_data_o),
+    .f8_regmask_store      (orig_f8_regmask_store_o),
+    .wb_mask_valid         (orig_wb_mask_valid_o),
+    .wb_mask_dest          (orig_wb_mask_dest)
+  );
+
+  vpu_mask u_new (
+    .clk_i,
+    .rst_ni,
+    .ex_in_valid_i,
+    .ex_inst_valid_i,
+    .ex_regfile_raddr1_i,
+    .ex_regfile_raddr2_i,
+    .ex_cmd_i                (vpu_cmd_e'(ex_cmd_i)),
+    .ex_imm_i,
+    .ex_fromint_i,
+    .ex_fromint_data_i,
+    .ex_thread_id_i,
+    .ex_ignore_mask_i,
+    .f2_thread_id_i,
+    .f2_wen_i,
+    .f2_core_kill_i,
+    .f2_waddr_i,
+    .f2_maskop_i,
+    .f2_tointm_i,
+    .f3_thread_id_i,
+    .f3_regmask_from_txfma_i,
+    .f3_regmask_from_short_i,
+    .f3_core_kill_i,
+    .f3_regmask_wdata_lane_i,
+    .f4_regmask_from_txfma_i,
+    .f4_core_kill_i,
+    .f5_thread_id_i,
+    .f6_thread_id_i,
+    .f7_thread_id_i,
+    .f8_thread_id_i,
+    .f8_regmask_comp_res_i,
+    .ex_mask_rf0_o           (new_ex_mask_rf0_o),
+    .ex_mask_in1_o           (new_ex_mask_in1_o),
+    .f2_mask_rf0_o           (new_f2_mask_rf0_o),
+    .f8_toint_data_o         (new_f8_toint_data_o),
+    .f8_regmask_store_o      (new_f8_regmask_store_o),
+    .wb_mask_valid_o         (new_wb_mask_valid_o),
+    .wb_mask_dest_o          (new_wb_mask_dest)
+  );
+
+  assign orig_wb_mask_dest_packed_o = orig_wb_mask_dest;
+  assign new_wb_mask_dest_packed_o  = new_wb_mask_dest;
+
+endmodule

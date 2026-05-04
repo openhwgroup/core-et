@@ -1,0 +1,778 @@
+{
+  "module": "trans_sin_rom_case_c0",
+  "source": "/home/glguida/ainekko/et-soc/rtl/shire/minion/vpu/trans_unit/trans_sin_rom_case_c0.v",
+  "addr_width": 6,
+  "depth": 64,
+  "raw_width": 27,
+  "packed_width": 58,
+  "entries": [
+    {
+      "address": 0,
+      "raw": "0x48fb2fb",
+      "fields": {
+        "exc": 0,
+        "mask": "0x7f",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x91f65f60"
+      },
+      "packed": "0x1fc000091f65f60"
+    },
+    {
+      "address": 1,
+      "raw": "0x0000000",
+      "fields": {
+        "exc": 0,
+        "mask": "0x00",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x00000000"
+      },
+      "packed": "0x000000000000000"
+    },
+    {
+      "address": 2,
+      "raw": "0x48bd35f",
+      "fields": {
+        "exc": 0,
+        "mask": "0x3f",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x48bd35f0"
+      },
+      "packed": "0x0fc000048bd35f0"
+    },
+    {
+      "address": 3,
+      "raw": "0x4856054",
+      "fields": {
+        "exc": 0,
+        "mask": "0x3f",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x48560540"
+      },
+      "packed": "0x0fc000048560540"
+    },
+    {
+      "address": 4,
+      "raw": "0x0000000",
+      "fields": {
+        "exc": 0,
+        "mask": "0x00",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x00000000"
+      },
+      "packed": "0x000000000000000"
+    },
+    {
+      "address": 5,
+      "raw": "0x0000000",
+      "fields": {
+        "exc": 0,
+        "mask": "0x00",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x00000000"
+      },
+      "packed": "0x000000000000000"
+    },
+    {
+      "address": 6,
+      "raw": "0x0000000",
+      "fields": {
+        "exc": 0,
+        "mask": "0x3f",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x00000000"
+      },
+      "packed": "0x0fc000000000000"
+    },
+    {
+      "address": 7,
+      "raw": "0x0000000",
+      "fields": {
+        "exc": 0,
+        "mask": "0x3f",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x00000000"
+      },
+      "packed": "0x0fc000000000000"
+    },
+    {
+      "address": 8,
+      "raw": "0x47c5c21",
+      "fields": {
+        "exc": 0,
+        "mask": "0x0f",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x11f17084"
+      },
+      "packed": "0x03c000011f17084"
+    },
+    {
+      "address": 9,
+      "raw": "0x476e49c",
+      "fields": {
+        "exc": 0,
+        "mask": "0x0f",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x11db9270"
+      },
+      "packed": "0x03c000011db9270"
+    },
+    {
+      "address": 10,
+      "raw": "0x470ca37",
+      "fields": {
+        "exc": 0,
+        "mask": "0x0f",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x11c328dc"
+      },
+      "packed": "0x03c000011c328dc"
+    },
+    {
+      "address": 11,
+      "raw": "0x46a0d6a",
+      "fields": {
+        "exc": 0,
+        "mask": "0x0f",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x11a835a8"
+      },
+      "packed": "0x03c000011a835a8"
+    },
+    {
+      "address": 12,
+      "raw": "0x462aed1",
+      "fields": {
+        "exc": 0,
+        "mask": "0x0f",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x118abb44"
+      },
+      "packed": "0x03c0000118abb44"
+    },
+    {
+      "address": 13,
+      "raw": "0x45aaf28",
+      "fields": {
+        "exc": 0,
+        "mask": "0x0f",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x116abca0"
+      },
+      "packed": "0x03c0000116abca0"
+    },
+    {
+      "address": 14,
+      "raw": "0x4520f27",
+      "fields": {
+        "exc": 0,
+        "mask": "0x0f",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x11483c9c"
+      },
+      "packed": "0x03c000011483c9c"
+    },
+    {
+      "address": 15,
+      "raw": "0x448cf98",
+      "fields": {
+        "exc": 0,
+        "mask": "0x0f",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x11233e60"
+      },
+      "packed": "0x03c000011233e60"
+    },
+    {
+      "address": 16,
+      "raw": "0x43ef15b",
+      "fields": {
+        "exc": 0,
+        "mask": "0x07",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x087de2b6"
+      },
+      "packed": "0x01c0000087de2b6"
+    },
+    {
+      "address": 17,
+      "raw": "0x4347553",
+      "fields": {
+        "exc": 0,
+        "mask": "0x07",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x0868eaa6"
+      },
+      "packed": "0x01c00000868eaa6"
+    },
+    {
+      "address": 18,
+      "raw": "0x4295c7d",
+      "fields": {
+        "exc": 0,
+        "mask": "0x07",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x0852b8fa"
+      },
+      "packed": "0x01c00000852b8fa"
+    },
+    {
+      "address": 19,
+      "raw": "0x41da7d1",
+      "fields": {
+        "exc": 0,
+        "mask": "0x07",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x083b4fa2"
+      },
+      "packed": "0x01c0000083b4fa2"
+    },
+    {
+      "address": 20,
+      "raw": "0x4115882",
+      "fields": {
+        "exc": 0,
+        "mask": "0x07",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x0822b104"
+      },
+      "packed": "0x01c00000822b104"
+    },
+    {
+      "address": 21,
+      "raw": "0x4046f96",
+      "fields": {
+        "exc": 0,
+        "mask": "0x07",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x0808df2c"
+      },
+      "packed": "0x01c00000808df2c"
+    },
+    {
+      "address": 22,
+      "raw": "0x3f6ee3e",
+      "fields": {
+        "exc": 0,
+        "mask": "0x07",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x07eddc7c"
+      },
+      "packed": "0x01c000007eddc7c"
+    },
+    {
+      "address": 23,
+      "raw": "0x3e8d5c8",
+      "fields": {
+        "exc": 0,
+        "mask": "0x07",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x07d1ab90"
+      },
+      "packed": "0x01c000007d1ab90"
+    },
+    {
+      "address": 24,
+      "raw": "0x3da2779",
+      "fields": {
+        "exc": 0,
+        "mask": "0x07",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x07b44ef2"
+      },
+      "packed": "0x01c000007b44ef2"
+    },
+    {
+      "address": 25,
+      "raw": "0x3cae4b0",
+      "fields": {
+        "exc": 0,
+        "mask": "0x07",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x0795c960"
+      },
+      "packed": "0x01c00000795c960"
+    },
+    {
+      "address": 26,
+      "raw": "0x3bb0eca",
+      "fields": {
+        "exc": 0,
+        "mask": "0x07",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x07761d94"
+      },
+      "packed": "0x01c000007761d94"
+    },
+    {
+      "address": 27,
+      "raw": "0x3aaa73e",
+      "fields": {
+        "exc": 0,
+        "mask": "0x07",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x07554e7c"
+      },
+      "packed": "0x01c000007554e7c"
+    },
+    {
+      "address": 28,
+      "raw": "0x399af84",
+      "fields": {
+        "exc": 0,
+        "mask": "0x07",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x07335f08"
+      },
+      "packed": "0x01c000007335f08"
+    },
+    {
+      "address": 29,
+      "raw": "0x3882944",
+      "fields": {
+        "exc": 0,
+        "mask": "0x07",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x07105288"
+      },
+      "packed": "0x01c000007105288"
+    },
+    {
+      "address": 30,
+      "raw": "0x3761602",
+      "fields": {
+        "exc": 0,
+        "mask": "0x07",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x06ec2c04"
+      },
+      "packed": "0x01c000006ec2c04"
+    },
+    {
+      "address": 31,
+      "raw": "0x3637769",
+      "fields": {
+        "exc": 0,
+        "mask": "0x07",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x06c6eed2"
+      },
+      "packed": "0x01c000006c6eed2"
+    },
+    {
+      "address": 32,
+      "raw": "0x3504f38",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x03504f38"
+      },
+      "packed": "0x00c000003504f38"
+    },
+    {
+      "address": 33,
+      "raw": "0x33c9f22",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x033c9f22"
+      },
+      "packed": "0x00c0000033c9f22"
+    },
+    {
+      "address": 34,
+      "raw": "0x3286908",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x03286908"
+      },
+      "packed": "0x00c000003286908"
+    },
+    {
+      "address": 35,
+      "raw": "0x313aea5",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x0313aea5"
+      },
+      "packed": "0x00c00000313aea5"
+    },
+    {
+      "address": 36,
+      "raw": "0x2fe71f7",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x02fe71f7"
+      },
+      "packed": "0x00c000002fe71f7"
+    },
+    {
+      "address": 37,
+      "raw": "0x2e8b4e1",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x02e8b4e1"
+      },
+      "packed": "0x00c000002e8b4e1"
+    },
+    {
+      "address": 38,
+      "raw": "0x2d27965",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x02d27965"
+      },
+      "packed": "0x00c000002d27965"
+    },
+    {
+      "address": 39,
+      "raw": "0x2bbc17c",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x02bbc17c"
+      },
+      "packed": "0x00c000002bbc17c"
+    },
+    {
+      "address": 40,
+      "raw": "0x2a48f47",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x02a48f47"
+      },
+      "packed": "0x00c000002a48f47"
+    },
+    {
+      "address": 41,
+      "raw": "0x28ce4d1",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x028ce4d1"
+      },
+      "packed": "0x00c0000028ce4d1"
+    },
+    {
+      "address": 42,
+      "raw": "0x274c44c",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x0274c44c"
+      },
+      "packed": "0x00c00000274c44c"
+    },
+    {
+      "address": 43,
+      "raw": "0x25c2fe2",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x025c2fe2"
+      },
+      "packed": "0x00c0000025c2fe2"
+    },
+    {
+      "address": 44,
+      "raw": "0x24329d1",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x024329d1"
+      },
+      "packed": "0x00c0000024329d1"
+    },
+    {
+      "address": 45,
+      "raw": "0x229b452",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x0229b452"
+      },
+      "packed": "0x00c00000229b452"
+    },
+    {
+      "address": 46,
+      "raw": "0x20fd1ba",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x020fd1ba"
+      },
+      "packed": "0x00c0000020fd1ba"
+    },
+    {
+      "address": 47,
+      "raw": "0x1f58461",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x01f58461"
+      },
+      "packed": "0x00c000001f58461"
+    },
+    {
+      "address": 48,
+      "raw": "0x1dace9e",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x01dace9e"
+      },
+      "packed": "0x00c000001dace9e"
+    },
+    {
+      "address": 49,
+      "raw": "0x1bfb2da",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x01bfb2da"
+      },
+      "packed": "0x00c000001bfb2da"
+    },
+    {
+      "address": 50,
+      "raw": "0x1a4338a",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x01a4338a"
+      },
+      "packed": "0x00c000001a4338a"
+    },
+    {
+      "address": 51,
+      "raw": "0x1885320",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x01885320"
+      },
+      "packed": "0x00c000001885320"
+    },
+    {
+      "address": 52,
+      "raw": "0x16c141f",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x016c141f"
+      },
+      "packed": "0x00c0000016c141f"
+    },
+    {
+      "address": 53,
+      "raw": "0x14f790c",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x014f790c"
+      },
+      "packed": "0x00c0000014f790c"
+    },
+    {
+      "address": 54,
+      "raw": "0x1328475",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x01328475"
+      },
+      "packed": "0x00c000001328475"
+    },
+    {
+      "address": 55,
+      "raw": "0x11538f1",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x011538f1"
+      },
+      "packed": "0x00c0000011538f1"
+    },
+    {
+      "address": 56,
+      "raw": "0x0f7991b",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x00f7991b"
+      },
+      "packed": "0x00c000000f7991b"
+    },
+    {
+      "address": 57,
+      "raw": "0x0d9a795",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x00d9a795"
+      },
+      "packed": "0x00c000000d9a795"
+    },
+    {
+      "address": 58,
+      "raw": "0x0bb670d",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x00bb670d"
+      },
+      "packed": "0x00c000000bb670d"
+    },
+    {
+      "address": 59,
+      "raw": "0x09cda2b",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x009cda2b"
+      },
+      "packed": "0x00c0000009cda2b"
+    },
+    {
+      "address": 60,
+      "raw": "0x07e03a7",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x007e03a7"
+      },
+      "packed": "0x00c0000007e03a7"
+    },
+    {
+      "address": 61,
+      "raw": "0x05ee63a",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x005ee63a"
+      },
+      "packed": "0x00c0000005ee63a"
+    },
+    {
+      "address": 62,
+      "raw": "0x03f84a1",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x003f84a1"
+      },
+      "packed": "0x00c0000003f84a1"
+    },
+    {
+      "address": 63,
+      "raw": "0x01fe1a2",
+      "fields": {
+        "exc": 0,
+        "mask": "0x03",
+        "taylor": 0,
+        "c2": "0x00000",
+        "c0": "0x001fe1a2"
+      },
+      "packed": "0x00c0000001fe1a2"
+    }
+  ]
+}

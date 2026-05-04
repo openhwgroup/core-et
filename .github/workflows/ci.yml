@@ -1,0 +1,152 @@
+name: ci
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+env:
+  VERILATOR_VERSION: v5.046
+  VERILATOR_PREFIX: ${{ github.workspace }}/.verilator
+  VERILATOR_CACHE_KEY: verilator-v5.046-ubuntu-24.04
+  OSS_CAD_SUITE_DATE: "2026-04-12"
+  OSS_CAD_SUITE_PREFIX: ${{ github.workspace }}/.oss-cad-suite
+  OSS_CAD_SUITE_CACHE_KEY: oss-cad-suite-2026-04-12-slang-linux-x64
+
+jobs:
+  verilator:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore Verilator cache
+        id: cache-verilator
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.VERILATOR_PREFIX }}
+          key: ${{ env.VERILATOR_CACHE_KEY }}
+
+      - name: Build Verilator (cache miss only)
+        if: steps.cache-verilator.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential git autoconf flex bison \
+            libfl2 libfl-dev help2man perl python3 zlib1g-dev
+          git clone https://github.com/verilator/verilator.git \
+            -b $VERILATOR_VERSION --depth 1
+          cd verilator
+          autoconf
+          ./configure --prefix=$VERILATOR_PREFIX
+          make -j$(nproc)
+          make install
+
+      - name: Save Verilator cache
+        if: steps.cache-verilator.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.VERILATOR_PREFIX }}
+          key: ${{ env.VERILATOR_CACHE_KEY }}
+
+      - name: Install build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential make libfl2 libfl-dev zlib1g-dev
+
+      - name: Tool versions
+        run: |
+          $VERILATOR_PREFIX/bin/verilator --version
+          g++ --version
+
+      - name: Add Verilator to PATH
+        run: echo "$VERILATOR_PREFIX/bin" >> $GITHUB_PATH
+
+      - name: Lint
+        run: make lint
+
+      - name: Tests
+        run: make test
+
+      - name: Generate LCOV info files
+        run: make coverage-report
+
+      - name: List generated LCOV files
+        run: |
+          echo "build/coverage:"
+          find build/coverage -maxdepth 1 -type f | sort
+
+      - name: Generate coverage dashboard
+        run: make coverage-html
+
+      - name: Upload coverage dashboard
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-dashboard
+          path: build/coverview/index.html
+
+      - name: Upload LCOV info files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-lcov
+          path: build/coverage/
+
+  synthesis:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore oss-cad-suite cache
+        id: cache-oss-cad
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.OSS_CAD_SUITE_PREFIX }}
+          key: ${{ env.OSS_CAD_SUITE_CACHE_KEY }}
+
+      - name: Download oss-cad-suite (cache miss only)
+        if: steps.cache-oss-cad.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p $OSS_CAD_SUITE_PREFIX/bin
+          OSS_CAD_SUITE_DATE_COMPACT=$(echo $OSS_CAD_SUITE_DATE | tr -d '-')
+          curl -sL https://github.com/YosysHQ/oss-cad-suite-build/releases/download/$OSS_CAD_SUITE_DATE/oss-cad-suite-linux-x64-${OSS_CAD_SUITE_DATE_COMPACT}.tgz \
+            | tar -xz -C $OSS_CAD_SUITE_PREFIX --strip-components=1
+
+      - name: Save oss-cad-suite cache
+        if: steps.cache-oss-cad.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.OSS_CAD_SUITE_PREFIX }}
+          key: ${{ env.OSS_CAD_SUITE_CACHE_KEY }}
+
+      - name: Tool versions
+        run: |
+          export PATH=$OSS_CAD_SUITE_PREFIX/bin:$PATH
+          yosys --version
+          yosys -m slang -p 'help read_slang' >/dev/null
+
+      - name: Synthesis — fifo_example (iCE40)
+        run: |
+          export PATH=$OSS_CAD_SUITE_PREFIX/bin:$PATH
+          make -C fpga/fifo_example/ice40 synth
+
+      - name: Synthesis — fifo_example (Xilinx Ultrascale+)
+        run: |
+          export PATH=$OSS_CAD_SUITE_PREFIX/bin:$PATH
+          make -C fpga/fifo_example/xilinx synth
+
+      - name: Synthesis — shirecache_pipe_example (iCE40)
+        if: false  # disabled: takes >15 min per target
+        run: |
+          export PATH=$OSS_CAD_SUITE_PREFIX/bin:$PATH
+          make -C fpga/shirecache_pipe_example/ice40 synth
+
+      - name: Synthesis — shirecache_pipe_example (Xilinx Ultrascale+)
+        if: false  # disabled: takes >15 min per target
+        run: |
+          export PATH=$OSS_CAD_SUITE_PREFIX/bin:$PATH
+          make -C fpga/shirecache_pipe_example/xilinx synth

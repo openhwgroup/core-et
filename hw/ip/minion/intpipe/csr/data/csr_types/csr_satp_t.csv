@@ -1,0 +1,6 @@
+fields,mode,ZERO,ZERO,ppn
+width,4,16,16,28
+,,,,
+,63..60,59..44,43..28,27..0
+,,,,
+sum bits,64,,,

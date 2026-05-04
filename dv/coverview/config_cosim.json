@@ -1,0 +1,12 @@
+{
+  "title": "SoC Cosim Coverage Dashboard",
+  "repo": "soc",
+  "flat_file_list": false,
+  "datasets": {
+    "cosim": {
+      "line": "coverage_line_cosim.info",
+      "branch": "coverage_branch_cosim.info",
+      "toggle": "coverage_toggle_cosim.info"
+    }
+  }
+}

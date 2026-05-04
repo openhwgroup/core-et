@@ -1,0 +1,6 @@
+fields,eflags,WIRI,flags
+width,1,26,5
+,,,
+bit idx,31,30:5,4:0
+,,,
+sum bits,32,,

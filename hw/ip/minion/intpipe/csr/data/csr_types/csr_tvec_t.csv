@@ -1,0 +1,6 @@
+fields,ext,base,ZERO,mode
+width,1,36,11,1
+,,,,
+bit idx,,47..12,11..1,0
+,,,,
+sum bits,49,,,

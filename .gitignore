@@ -1,0 +1,13 @@
+build/
+# Editor backup files
+\#*#
+*~
+*.vcd
+*.fst
+*.log
+*.o
+*.a
+*.d
+*.DS_Store
+__pycache__/
+*.pyc

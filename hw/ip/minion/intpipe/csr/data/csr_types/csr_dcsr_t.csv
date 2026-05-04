@@ -1,0 +1,8 @@
+fields,xdebugver,ZERO,ebreakm,ZERO,ebreaks,ebreaku,stepie-ZERO,stopcount-ZERO,stoptime-ZERO,cause,ZERO,mprven,nmip,step,prv
+width,4,12,1,1,1,1,1,1,1,3,1,1,1,1,2
+RO,YES,NO,NO,NO,NO,NO,NO,NO,NO,YES,NO,NO,YES,NO,NO
+ROValue,4'h4,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,
+sum bits,32,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,
+bit idx,31:28,27:16,15,14,13,12,11,10,9,8:6,5,4,3,2,1:0
