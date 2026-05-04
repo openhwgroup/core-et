@@ -198,6 +198,7 @@ Project-wide policies and references:
 |----------|---------|
 | [docs/onboarding.md](docs/onboarding.md) | Practical guide for navigating the repository and translation flow. |
 | [docs/translation.md](docs/translation.md) | Maintained CORE-ET-to-ETASP translation reference. |
+| [docs/minion_vpu_standalone_plan.md](docs/minion_vpu_standalone_plan.md) | Dependency map from the current null-VPU Minion state to full original-equivalent `standalone_minion`. |
 | [docs/coding_style.md](docs/coding_style.md) | SystemVerilog style and tool-compatibility rules. |
 | [docs/future_asic_notes.md](docs/future_asic_notes.md) | Notes for ASIC-oriented infrastructure and future technology hooks. |
 
