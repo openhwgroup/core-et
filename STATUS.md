@@ -223,6 +223,7 @@ Build order: 12→13→14→15→16→17→18
 | Module | Original | Test | Cosim | Status |
 |--------|----------|------|-------|--------|
 | `vpu_pkg` | internal VPU-only types from `vpu_types.vh` + `trans_types.vh` | — | — | Done |
+| `vpu_defs_pkg` | selected constants/aliases from original VPU include stack | — | — | RTL present for TXFMA top-half support |
 | `vpu_bypass` | `vpu_bypass` | 25 checks | 98,412 comparisons | Done |
 | `vpu_mask` | `vpu_mask` | 15 checks | 57,827 comparisons | Done |
 | `vpu_rf` | `vpu_rf` | 12,391 checks (`UseMmi=0`) + 12,391 checks (`UseMmi=1`) | 49,251 comparisons (`UseMmi=0`) + 49,251 comparisons (`UseMmi=1`) | Done |
@@ -235,6 +236,34 @@ Build order: 12→13→14→15→16→17→18
 | `txfma_booth_ppg_32r4` | `txfma_booth_ppg_32r4` | 9,842 checks | 155,762 comparisons | Done |
 | `txfma_wallace1` | `txfma_wallace1` | 8,216 checks | 25,288 comparisons | Done |
 | `txfma_wallace2` | `txfma_wallace2` | 8,200 checks | 25,074 comparisons | Done |
+| `txfma_c0` | `txfma_c0` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_c1` | `txfma_c1` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_c2` | `txfma_c2` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_c3` | `txfma_c3` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_c4` | `txfma_c4` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_c5` | `txfma_c5` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_c6` | `txfma_c6` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_e1` | `txfma_e1` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_e2` | `txfma_e2` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_e4` | `txfma_e4` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_e5` | `txfma_e5` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_e6` | `txfma_e6` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_ediff_opdorder_logic` | `txfma_ediff_opdorder_logic` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_exp_special_detect` | `txfma_exp_special_detect` | — | — | RTL present, standalone DV/cosim pending |
+| `txfma_f0` | `txfma_f0` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_f1` | `txfma_f1` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_f2` | `txfma_f2` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_f3` | `txfma_f3` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_f4` | `txfma_f4` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_f5` | `txfma_f5` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_f6` | `txfma_f6` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_frac_zero_detect` | `txfma_frac_zero_detect` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_rnd_adder` | `txfma_rnd_adder` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfmactl_top` | `txfmactl_top` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfmaexp_top` | `txfmaexp_top` | 31 checks | 508,152 comparisons | Done |
+| `txfmafrac_top` | `txfmafrac_top` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_top` | `txfma_top` | 9 checks | 15,024 comparisons | Done |
+| `txfma_top_fake` | `txfma_top_fake` | 18 checks | 15,024 comparisons | Done |
 | `txfma_lxd` | `txfma_lxd` | 4,102 checks | 25,162 comparisons | Done |
 | `txfma_trz` | `txfma_trz` | 4,102 checks | 25,054 comparisons | Done |
 | `txfma_trz2` | `txfma_trz2` | 4,102 checks | 25,162 comparisons | Done |
@@ -375,9 +404,9 @@ backfilled.
 | Metric | Count |
 |--------|-------|
 | Unit-test Makefiles | 64 |
-| Test suites discovered by `make test` | 171 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 199 |
+| Test suites discovered by `make test` | 174 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 202 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 21 unit suites + 22 cosim Makefile runs |
+| Targeted update runs | 24 unit suites + 25 cosim Makefile runs |
 | Targeted update failures | 0 |
