@@ -1,0 +1,67 @@
+// Copyright (c) 2026 Ainekko
+// SPDX-License-Identifier: Apache-2.0
+
+addrmap D_hart_esr {
+	name = "D_hart_esr";
+	desc = "These registers are per hart.([15:12] bits) in the address indicates hart_id. bits[15:13] minion id and bit [12] is thread id.";
+	alignment = 8;
+	default regwidth = 64;
+	default sw = r;
+	default hw = na;
+
+	regfile dbg_regs_t {
+		reg {
+			name = "ABSCMD";
+			desc = "This register holds bits 0-63 of the instruction buffer from where instructions can be executed when the hart is halted. The first instruction in the buffer is in the lower order 16 or 32 bits of the ABSCMD register. Writing to this register wakes up a halted hart, after the instruction buffer is written, and starts execution from the beginning of the instruction buffer, until either an ebreak instruction is executed or the end of the instruction buffer is reached, at which point the hart goes back to being halted.";
+			field {sw=rw;} ABSCMD[63:0];
+		} ABSCMD @ 0x7C0;
+
+		reg {
+			name = "NXDATA0";
+			field {sw=rw; desc = "The low (nxdata0)  of ddata0";} NXDATA0_f0[31:0];
+			field {sw=rw; desc = "WIRI";} NXDATA0_f1[63:32];
+		} NXDATA0 @ 0x780;
+
+		reg {
+			name = "NXDATA1";
+			field {sw=rw; desc = "The high (nxdata0)  of ddata0";} NXDATA1_f0[31:0];
+			field {sw=rw; desc = "WIRI";} NXDATA1_f1[63:32];
+		} NXDATA1 @ 0x788;
+
+		reg {
+			name = "AXDATA0";
+			field {sw=rw; desc = "This register is shadow, and have the same layout as the nxdata0 register. A write to this register \"wakes up\" a halted hart, after ddata0 is written, and starts execution from the beginning of the instruction buffer";} AXDATA0_f0[31:0];
+			field {sw=rw; } AXDATA0_f1[63:32];
+		} AXDATA0 @ 0x790;
+
+		reg {
+			name = "AXDATA1";
+			field {sw=rw; desc = "This register is shadow, and have the same layout as the nxdata1 register. A write to this register \"wakes up\" a halted hart, after ddata0 is written, and starts execution from the beginning of the instruction buffer.";} AXDATA1_f0[31:0];
+			field {sw=rw; } AXDATA1_f1[63:32];
+		} AXDATA1 @ 0x798;
+
+		reg {
+			name = "NXPROGBUFF0";
+			field {sw=rw; desc = "This register holds bits 64-95 of the instruction buffer from where instructions can be executed when the hart is halted (see also abscmd), encoded in the lower half of the register.";} NXPROGBUFF0[31:0];
+		} NXPROGBUFF0 @ 0x7B0;
+
+		reg {
+			name = "NXPROGBUFF1";
+			field {sw=rw; desc = "This register holds bits 96-127 of the instruction buffer from where instructions can be executed when the hart is halted (see also abscmd), encoded in the lower half of the register.";} NXPROGBUFF1[31:0];
+		} NXPROGBUFF1 @ 0x7B8;
+
+		reg {
+			name = "AXPROGBUFF0";
+			field {sw=rw; desc = "This register shadows the nxprogbuf0 register. A write to this register wakes up a halted hart, after the instruction buffer is written, and starts execution from the beginning of the instruction buffer, until either an ebreak instruction is executed or the end of the instruction buffer is reached, at which point the hart goes back to being halted.";} AXPROGBUFF0[31:0];
+		} AXPROGBUFF0 @ 0x7A0;
+
+		reg {
+			name = "AXPROGBUFF1";
+			field {sw=rw; desc = "This register shadows the nxprogbuf1 register. A write to this register wakes up a halted hart, after the instruction buffer is written, and starts execution from the beginning of the instruction buffer, until either an ebreak instruction is executed or the end of the instruction buffer is reached, at which point the hart goes back to being halted.";} AXPROGBUFF1[31:0];
+		} AXPROGBUFF1 @ 0x7A8;
+	};
+
+
+	dbg_regs_t dbg_hart[16] @ 0x0000 += 0x1000;
+
+};

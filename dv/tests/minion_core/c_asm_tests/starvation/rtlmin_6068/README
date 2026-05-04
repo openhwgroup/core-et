@@ -1,0 +1,99 @@
+Goal:
+The purpose of the test is to have 2 threads of a single minion in an infinite loop, accessing a shared resource
+with different timing alignments to try to find starvation problems.
+For further details see: $REPOROOT/dv/tests/minion_core/c_asm_tests/starvation/rtlmin_6068/testCases.xlsx
+
+Details:
+The following is copied from an E-mail sent by Sebastia Tortella.
+Take this example, for instance: both threads try to use the integer div/mul this way:
+
+thread0:                   thread1:         
+  nop (N0 times)              nop (M0 times)
+  div                         div 
+  nop (N1 times)              nop (M1 times)
+  j thread0                   j thread1
+
+And repeat that for different values of N0, N1, M0, M1.
+For example, and instance with (N0, N1)= (1,0) and (M0,M1)=(1,1) would have the following timing:
+T0: NOP, DIV, NOP, DIV, NOP, DIV, NOP, DIV, NOP, DIV, NOP, DIV, NOP, DIV, NOP...
+T1: NOP, DIV, NOP, NOP, DIV, NOP, NOP, DIV, NOP, NOP, DIV, NOP, NOP, DIV, NOP...
+
+The idea is to sweep for different ranges of these parameters (Ni and Mi) to test all possible alignments to try to
+find situations where the div block is being monopolized by one thread and the other one cannot go forward. That would
+happen (if there was no RTL mechanism preventing it) if one thread does a DIV followed by a number of nops such as to
+request again a div at the same cycle the div becomes available (and the other thread cannot use the div because it
+is never scheduled at that precise cycle). So I'd say the number of nops in this case that would be relevant would be
+values close to the equivalent time the division takes.
+
+ - You can do that with either an external tool such as a python script generating an assembly code with all these
+   combinations, or what I did in the test with c++ templates.
+
+Why templates and not regular function parameters? Take the following 2 C++ functions:
+
+template<size_t count>                   |  
+static void ALWAYS_INLINE nops1() {      |  void nops2(size_t count) {      
+  __asm__ __volatile__                   |  for (size_t i = 0; i< count; i++)
+    (                                    |      asm("nop");                  
+     ".rept %0\n"                        |  }                                
+     "nop\n"                             |                                  
+     ".endr\n"                           |
+     : : "i" (count) );                  |
+}                                        |
+
+The dissasembly they'd produce for nops1<5>() and nops2(N) would be:
+             nop                           |    li t0, 4
+           nop                           |    1:
+           nop                           |    nop
+           nop                           |    addi t0, t0, -1
+           nop                           |    bne t0, zero, 1b
+
+As you can see each different specialization of nops1<N> creates a function with exactly the number of nops we want,
+instead of doing a loop and the function being reused for each value of N. I want the first one to create the test
+pattern, not the second one.
+
+That was the introduction. Let's get briefly into the test specifics:
+
+The test expects all minions of a neighbourhood to be active and with both threads. For each neigh:
+ - thread 0 is the control thread, thread 1 is unused
+ - threads 2 to 15 are the test threads
+
+
+For each iteration of the test,
+   - test threads enter an infinite loop
+   - the control thread waits for a certain amount of time (constant EXPECTED_CYCLES) and notifies the test threads
+     with a msip int so that they exit the infinite loop.
+In the minion_diags.py, there is the "+thread_timeout=3000" option, which is smaller than the default. If a thread
+doesn't retire instruction in 3000 cycles, then the test fails (this 3000 is less than the expected_cycles)
+
+In $MINION_DIAGS/starvation/common you'll find 2 classes:
+ starvationTest.h => class starvation_test_base (to define the thread loops)
+ starvation.h => class starvation (for test loop code and test cases definition)
+To define a test, you'll need to make classes derived from them. All the sync code, loop control, code alignment...
+is hidden inside these 2 base classes
+
+- For the test loop code, make a class inheriting from starvation_test_base. You need to define this virtual functions:
+         void setup() => to be executed before the test (e.g. setup offsets for gsc)
+         first_thread_iter()  => what one of the threads will do in a loop
+         second_thread_iter() => what the other thread will do in a loop  
+
+The idea is that the class you define is templatized with things you want to be variable (e.g. number of nops in the
+div example)
+See rtlmin_6068.h for an example
+
+- To define the test case, you'll need to inherit from 'starvation' and define the run_tests method. See any of the
+rtlmin_6068_X.cc for examples.
+I added the 'make_test' class to help define sweeps for the template parameters of the test code class.
+ auto table = make_tests< gsc_starvation_test,  // test class name (which has N template parameters)
+                        range<Mx,Mn,Inc>,       // first parameter of the test class range (from mx to mn with
+                                                // increments of inc)
+                        range<Mx2,Mn2,Inc2>,    // second parameter
+                        ...
+                  > ::sweep();                 // to generate all combinations of parametes with the ranges you defined
+                  > ::random<COUNT,SEED>();    // to generate COUNT random combinations of parameters within the
+                                               // ranges you defined
+
+Some final notes:
+- I added using x31 as an iteration counter to make the test self checking (if there are less than a threshold
+  number of iterations in the infinite loops when the MSIP arrives, the test fails)
+- inheritance and virtual functions is done via the so called CRPT in order to have static polymorphism (and void
+  the virtual method overhead, which maybe does not even work with the way we load the elfs into the simulations)

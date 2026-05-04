@@ -1,0 +1,5 @@
+Goal:
+Check that no exception is generated when vector accesses are completely masked.
+
+Parameter(s):
+Core - This test will run on any Core (even thread) of any Neighborhood of any Shire. Only 1 Core (even thread) is expected to be enabled.

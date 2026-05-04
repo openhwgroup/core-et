@@ -1,0 +1,19 @@
+#!/bin/csh -fx
+
+set xstatus=$1
+set mkpid=$2
+
+if (-r $xstatus) then
+	if (0 < `/bin/fgrep -ic pass $xstatus`) then
+		exit 0
+	endif
+endif
+
+# create artifact in /makefile directory that we did this 
+set mdir=${xstatus:h:h:h:h:h}
+/bin/touch ${mdir}/.killed_by_zkmof
+
+# kill the make and other processes
+set killme=${ETDV_RUNROOT}/killall
+$killme
+et-dvrun-kill-all $mkpid

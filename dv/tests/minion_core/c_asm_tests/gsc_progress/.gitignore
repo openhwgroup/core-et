@@ -1,0 +1,4 @@
+# Minion loads_and_stores raw data, executable and assembler source file
+data.raw
+gsc_progress
+gsc_progress.dasm

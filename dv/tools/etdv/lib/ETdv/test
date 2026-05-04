@@ -1,0 +1,10 @@
+#!/bin/csh -f
+
+set n=20
+set i=0
+while ($i < $n)
+	echo "${i}: hello world"
+	@ i++
+end
+
+exit 0

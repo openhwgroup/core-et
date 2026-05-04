@@ -1,0 +1,7 @@
+fields,agent_forced,force_all_agents,reserved0,dest_fifo,force_dest_fifo,bypass_dcache,bypass_icache
+width,1,1,2,1,1,1,1
+,,,,,,
+,,,,,,
+,,,,,,
+sum bits,8,,,,,
+

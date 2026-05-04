@@ -1,0 +1,168 @@
+#!/eng/dvtools/release/ruby/2.4.2/bin/ruby
+# Hack the GEM_PATH To Karls Libary
+ENV['GEM_PATH']="/eng/dvtools/release/ruby/mygems"
+Gem.clear_paths
+
+require 'optparse'
+require 'fileutils'
+require 'logger'
+require 'awesome_print'
+require 'socket'
+require_relative 'rblib/et_log'
+
+#@@usage="usage: $0 {-h} {-v <verbose level>} {-s <grid number>}"
+
+# FUTURE:Turn on all dirs eventually
+#
+#CHECK_DIRS=["ioshire","memshire","pshire","soctop","libs/pll","dft_control_unit","dft"]
+CHECK_DIRS=["ioshire","pshire","soctop"]
+
+include ET_LOG
+
+def file_edit(filename, regexp, replacement)
+  Tempfile.open(".#{File.basename(filename)}", File.dirname(filename)) do |tempfile|
+    File.open(filename).each do |line|
+      tempfile.puts line.gsub(regexp, replacement)
+    end
+    tempfile.fdatasync
+    tempfile.close
+    stat = File.stat(filename)
+    FileUtils.chown stat.uid, stat.gid, tempfile.path
+    FileUtils.chmod stat.mode, tempfile.path
+    FileUtils.mv tempfile.path, filename
+  end
+end
+
+def setup_repo options
+
+   # Is $REPOROOT defined and is it a valid writable path?
+   if ENV.has_key? "REPOROOT"
+     unless File.writable? ENV['REPOROOT']
+       error "$REPOROOT points to non existant path #{ENV['REPO_ROOT']} or is not writable".colorize("red")
+     end
+   else
+       error "Env var reporoot is not defined.  source env.sh in root of repo".colorize("red")
+   end
+
+   logpath="."
+   if options[:log]
+     logpath=options[:log]
+   end
+   options[:logpath] = logpath
+
+   unless Dir.exists? logpath
+    FileUtils.mkdir_p logpath
+   end
+
+   # Now that we are done cleaning etc, we can setup the proper log
+   #'
+   options[:prog_name]="check_genv"
+   level=:info
+   @log = EtLog.new("#{logpath}/#{options[:prog_name]}.log",:info,false,options[:prog_name])
+   if options[:verbose]
+    level=:debug
+   end
+   @log.level = level
+   @log.info "#{options[:prog_name]} is running"
+   @log.info "logpath is #{logpath}/#{options[:prog_name]}.log"
+   options[:logfile] = "#{logpath}/#{options[:prog_name]}.log"
+
+   @log.info "command line=#{options[:cmd_line]}"
+
+   #options[:git_hash],rc = @log.et_backtick "cd ${REPOROOT};git rev-parse HEAD"
+   #options[:git_hash].chomp!
+   #@log.info "git revision=#{options[:git_hash]}"
+
+   #options[:git_short_hash],rc = @log.et_backtick "cd ${REPOROOT};git rev-parse --short HEAD"
+   #options[:git_short_hash].chomp!
+   #@log.info "git short hash=#{options[:git_short_hash]}"
+
+#   @log.info "Querying git repo for local modifications..."
+#   diff,rc =@log.et_backtick "cd ${REPOROOT};git diff"
+#   if diff != ""
+#     diff_path="#{logpath}/local_modifications.patch"
+#     f = File.new(diff_path, File::CREAT|File::TRUNC|File::RDWR, 0644)
+#     f.write diff
+#     f.close
+#     @log.warn "There were local modifications so creating patch file #{diff_path}"
+#   else
+#     @log.info "Repo is clean there are no modifications"
+#   end
+end
+
+def find_csv path
+  return Dir["#{path}/*.csv"]
+end
+
+def run_genv options 
+   CHECK_DIRS.each do |dirname|
+     path="#{ENV['RTLROOT']}/#{dirname}"
+     @log.et_sys "cd #{path};genv"
+   end
+   @log.et_sys "cd $RTLROOT/memshire/vp;make"
+end
+
+def workspace_dirty?
+  diff,rc=@log.et_backtick "git diff HEAD -- $RTLROOT"
+  #ap diff
+  #ap rc
+  if  diff != ""
+    @log.error "Workspace is dirty. Please rerun 'genv' and retry B4C",true
+    @log.info "Difference:\n#{diff}"
+    exit 1
+  else
+   @log.info "Workspace is clean. All is well, proceeding"
+   return false
+  end
+end
+
+begin
+   cmd_line="check_genv"
+   ARGV.each { |arg| cmd_line += " #{arg}" }
+
+   options = {}
+   OptionParser.new do |opts|
+     opts.banner = "Usage: check_genv [options]"
+     opts.on("-l directory", "--log directory", "directory to place script log") do |arg|
+       options[:log] = arg
+     end
+     opts.on("-q", "--quiet", "Quiesce most output") do |arg|
+       options[:quiet] = arg
+     end
+     opts.on("-v", "--verbose", "Verbose output") do |arg|
+       options[:verbose] = arg
+     end
+   end.parse!
+   options[:cmd_line]=cmd_line
+
+   unless options[:quiet]
+     options[:quiet]=:info
+   end
+
+   #
+   # Setup the workspace, cleanup, and get the log setup
+   #
+   setup_repo options
+   @log.info "cmd_line=#{cmd_line}"
+
+   hostname = Socket.gethostname
+   @log.info "running on hostname=#{hostname}"
+
+   ap options      if options[:verbose]
+   @log.ap options if options[:verbose]
+
+   run_genv options
+
+   workspace_dirty?
+
+rescue Interrupt => e
+  @log.info "Interrupt detected (Ctrl-c): #{e}\nStack Trace Follows\n#{e.backtrace.join("\n")}"
+  exit 1
+rescue Exception => e
+  @log.info "Exception detected : #{e}\nStack Trace Follows\n#{e.backtrace.join("\n")}"
+ exit 1
+rescue SystemExit => e
+  exit e.status
+ensure
+  @log.close unless @log.nil?
+end

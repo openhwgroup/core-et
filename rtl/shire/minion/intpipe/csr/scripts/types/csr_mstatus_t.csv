@@ -1,0 +1,8 @@
+fields,SD,WPRI,SXL,UXL,WPRI,TSR,TW,TVM,MXR,SUM,MPRV,XS,FS,MPP,WPRI,SPP,MPIE,WPRI,SPIE,UPIE-ZERO,MIE,WPRI,SIE,UIE-ZERO
+width,1,27,2,2,9,1,1,1,1,1,1,2,2,2,2,1,1,1,1,1,1,1,1,1
+RO,YES,NO,YES,YES,NO,NO,NO,NO,NO,YES,NO,YES,NO,NO,NO,NO,NO,NO,NO,NO,NO,NO,NO,NO
+ROValue,,,2'b10,2'b10,,,,,,1'b0,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,
+sum bits,64,,,,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,,,,,
+bitIdx,63,62..36,35..34,33..32,31..23,22,21,20,19,18,17,16..15+,14..13,12..11,10..9,8,7,6,5,4,3,2,1,0

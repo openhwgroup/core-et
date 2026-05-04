@@ -1,0 +1,87 @@
+#!/usr/bin/make -f
+
+RM = rm -rf
+
+tag = ETDV_DEV
+tools=$(MINION_DIAGS)/sting/tools
+rand_conf=rand/rand_vcs.conf
+rand_snp=$(rand_conf:%.conf=.sting_db/%.snp)
+
+confs = $(shell find . -name '*.conf' -printf '%P\n')
+diffs = $(confs:%.conf=.sting_db/%.diff)
+dev   = $(shell grep -rl $(tag) $(confs))
+
+cmds = help \
+	   list-confs \
+	   list-dev   \
+	   find-dev   \
+	   find-dev+  \
+	   clean
+
+find_dev = find .sting_db -name '*.dev' -printf '%P\n' \
+		| sed 's|^.sting_db||' | sed 's|\.dev|\.conf|' \
+		| xargs grep -vl 'ETDV_SEED_MULTIPLIER.*=.*0'  \
+		| sort
+
+help:
+	@echo "Usage: sting_db <cmd>"
+	@echo "Commands:"
+	@echo "  help          Show this help and exit"
+	@echo "  list-confs    List all conf files in the current directory"
+	@echo "  list-dev      List all conf files tagged as sting_dev ($(tag))"
+	@echo "  find-dev      List all conf files that have any snippet *not* in sting_rand"
+	@echo "  find-dev+      .. same as above, but list snippets also"
+	@echo "  tag/<conf>    Add sting_dev tag to <conf>"
+	@echo "  snp/<conf>    List all snippets in <conf>"
+	@echo "  diff/<conf>   List snippets in <conf> that are not in sting_rand"
+	@echo "  clean         Cleanup temporary files"
+
+list-confs:
+ifeq ($(confs),)
+	@echo "Error: No conf files" && exit 1
+else
+	@echo $(confs) | xargs ls
+endif
+
+list-dev:
+ifeq ($(dev),)
+	@echo "Error: No conf files tagged as sting_dev" && exit 1
+else
+	@echo $(dev) | xargs ls
+endif
+
+find-dev: $(diffs)
+	@$(find_dev)
+
+find-dev+: $(diffs)
+	@for conf in $$($(find_dev)) ; do      \
+		echo "$$conf";                     \
+		cat .sting_db/$${conf%.conf}.diff  | sed 's|^| - |'; \
+	done
+
+define add_conf
+.PHONY: snp/$(1)
+snp/$(1): .sting_db/$(1:%.conf=%.snp)
+	@cat $$<
+
+.PHONY: diff/$(1)
+diff/$(1): .sting_db/$(1:%.conf=%.diff)
+	@cat $$<
+
+.PHONY: tag/$(1)
+tag/$(1):
+	@grep -q $(tag) $(1) || sed -i '1i \#$(tag)' $(1)
+endef
+
+$(foreach conf,$(confs),$(eval $(call add_conf,$(conf))))
+
+.sting_db/%.snp: %.conf
+	@mkdir -p $(@D)
+	@echo "+ collecting snippets for $<"
+	@$(tools)/collect_snippets $< >$@ 2>/dev/null
+
+%.diff: %.snp $(rand_snp)
+	@grep -v -f $(rand_snp) $< > $@ && touch $(@:%.diff=%.dev) $<|| true
+
+clean:
+	$(RM) .sting_db

@@ -1,0 +1,5 @@
+fields,err_interrupt_enable
+width,3
+,,
+,,
+sum bits,3,

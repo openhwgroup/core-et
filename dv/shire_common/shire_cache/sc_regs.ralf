@@ -1,0 +1,715 @@
+register sc_l3_shire_swizzle_ctl {
+   field ESR_SC_SHIRE_SEL_B0 @'h0 {
+      bits 4;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_SC_SHIRE_SEL_B1 @'h4 {
+      bits 4;
+      reset 'h1;
+      access rw;
+   }
+   field ESR_SC_SHIRE_SEL_B2 @'h8 {
+      bits 4;
+      reset 'h2;
+      access rw;
+   }
+   field ESR_SC_SHIRE_SEL_B3 @'hc {
+      bits 4;
+      reset 'h3;
+      access rw;
+   }
+   field ESR_SC_SHIRE_SEL_B4 @'h10 {
+      bits 4;
+      reset 'h4;
+      access rw;
+   }
+   field ESR_SC_SHIRE_SEL_B5 @'h14 {
+      bits 4;
+      reset 'h5;
+      access rw;
+   }
+   field ESR_SC_BANK_SEL_B0 @'h18 {
+      bits 4;
+      reset 'h5;
+      access rw;
+   }
+   field ESR_SC_BANK_SEL_B1 @'h1c {
+      bits 4;
+      reset 'h6;
+      access rw;
+   }
+   field ESR_SC_BANK_SEL_B2 @'h20 {
+      bits 4;
+      reset 'h7;
+      access rw;
+   }
+   field ESR_SC_SUB_BANK_SEL_B0 @'h24 {
+      bits 4;
+      reset 'h7;
+      access rw;
+   }
+   field ESR_SC_SUB_BANK_SEL_B1 @'h28 {
+      bits 4;
+      reset 'h8;
+      access rw;
+   }
+   field ESR_SC_SUB_BANK_SEL_B2 @'h2c {
+      bits 4;
+      reset 'h9;
+      access rw;
+   }
+   field ESR_SC_ALL_SHIRE_ALIASING @'h30 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_SC_TWO_SHIRE_ALIASING_USE_SHIRE_LSB @'h31 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+}
+
+register sc_reqq_ctl {
+   field ESR_SC_L3_YIELD_PRIORITY @'h0 {
+      bits 5;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_SC_ECC_SCRUB_ENABLE @'h5 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_SC_REQQ_NO_LINK_LIST @'h6 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_SC_NUM_L3_REQQ_ENTRIES @'h7 {
+      bits 6;
+      reset 'h15;
+      access rw;
+   }
+   field ESR_SC_L3_BYPASS @'hd {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_SC_L2_BYPASS @'he {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_SC_REMOTE_SCP_ENABLE @'hf {
+      bits 1;
+      reset 'h1;
+      access rw;
+   }
+   field ESR_SC_REMOTE_L3_ENABLE @'h10 {
+      bits 1;
+      reset 'h1;
+      access rw;
+   }
+   field ESR_SC_CBUF_ENABLE @'h11 {
+      bits 1;
+      reset 'h1;
+      access rw;
+   }
+}
+
+register sc_pipe_ctl {
+   field ESR_SC_CBUF_ENTRY_ENABLE @'h0 {
+      bits 32;
+      reset 'hffffffff;
+      access rw;
+   }
+   field ESR_SC_ALLOW_ONLY_1_REQ_PER_BANK @'h20 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_SC_ALLOW_ONLY_1_REQ_PER_SUB_BANK @'h21 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_SC_ZERO_STATE_ENABLE @'h22 {
+      bits 1;
+      reset 'h1;
+      access rw;
+   }
+   field ESR_SC_SCP_RBUF_ENABLE @'h23 {
+      bits 1;
+      reset 'h1;
+      access rw;
+   }
+   field ESR_SC_L2_RBUF_ENABLE @'h24 {
+      bits 1;
+      reset 'h1;
+      access rw;
+   }
+   field ESR_SC_RAM_DELAY @'h25 {
+      bits 3;
+      reset 'h2;
+      access rw;
+   }
+   field ESR_SC_RAM_SHUT_DOWN @'h28 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_SC_RAM_DEEP_SLEEP @'h29 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+}
+
+register sc_l2_cache_ctl {
+   field TAG_MASK @'h0 {
+      bits 12;
+      reset 'h7f;
+      access rw;
+   }
+   field TAG_MASK_RSVD @'hc {
+      bits 4;
+      reset 'h0;
+      access ro;
+   }
+   field SET_MASK @'h10 {
+      bits 12;
+      reset 'h7f;
+      access rw;
+   }
+   field SET_MASK_RSVD @'h1c {
+      bits 4;
+      reset 'h0;
+      access ro;
+   }
+   field SET_SIZE @'h20 {
+      bits 13;
+      reset 'h80;
+      access rw;
+   }
+   field SET_SIZE_RSVD @'h2d {
+      bits 3;
+      reset 'h0;
+      access ro;
+   }
+   field SET_BASE @'h30 {
+      bits 12;
+      reset 'h280;
+      access rw;
+   }
+   field SET_BASE_RSVD @'h3c {
+      bits 4;
+      reset 'h0;
+      access ro;
+   }
+}
+
+register sc_l3_cache_ctl {
+   field TAG_MASK @'h0 {
+      bits 12;
+      reset 'hff;
+      access rw;
+   }
+   field TAG_MASK_RSVD @'hc {
+      bits 4;
+      reset 'h0;
+      access ro;
+   }
+   field SET_MASK @'h10 {
+      bits 12;
+      reset 'hff;
+      access rw;
+   }
+   field SET_MASK_RSVD @'h1c {
+      bits 4;
+      reset 'h0;
+      access ro;
+   }
+   field SET_SIZE @'h20 {
+      bits 13;
+      reset 'h100;
+      access rw;
+   }
+   field SET_SIZE_RSVD @'h2d {
+      bits 3;
+      reset 'h0;
+      access ro;
+   }
+   field SET_BASE @'h30 {
+      bits 12;
+      reset 'h300;
+      access rw;
+   }
+   field SET_BASE_RSVD @'h3c {
+      bits 4;
+      reset 'h0;
+      access ro;
+   }
+}
+
+register sc_scp_cache_ctl {
+   field TAG_MASK @'h0 {
+      bits 12;
+      reset 'h1ff;
+      access rw;
+   }
+   field TAG_MASK_RSVD @'hc {
+      bits 4;
+      reset 'h0;
+      access ro;
+   }
+   field SET_MASK @'h10 {
+      bits 12;
+      reset 'h3ff;
+      access rw;
+   }
+   field SET_MASK_RSVD @'h1c {
+      bits 4;
+      reset 'h0;
+      access ro;
+   }
+   field SET_SIZE @'h20 {
+      bits 13;
+      reset 'h280;
+      access rw;
+   }
+   field SET_SIZE_RSVD @'h2d {
+      bits 3;
+      reset 'h0;
+      access ro;
+   }
+   field SET_BASE @'h30 {
+      bits 12;
+      reset 'h0;
+      access rw;
+   }
+   field SET_BASE_RSVD @'h3c {
+      bits 4;
+      reset 'h0;
+      access ro;
+   }
+}
+
+register sc_idx_cop_sm_ctl {
+   field GO @'h0 {
+      bits 1;
+      reset 'h0;
+      access wc;
+   }
+   field ABORT @'h1 {
+      bits 1;
+      reset 'h0;
+      access wc;
+   }
+   field OPCODE @'h8 {
+      bits 4;
+      reset 'h0;
+      access rw;
+   }
+   field ECC_WR_EN @'hd {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field LOGICAL_RAM @'he {
+      bits 2;
+      reset 'h0;
+      access rw;
+   }
+   field IDX_COP_SM_STATE @'h18 {
+      bits 8;
+      reset 'h4;
+      access ro;
+   }
+}
+
+register sc_idx_cop_sm_physical_index {
+   field QW @'h0 {
+      bits 2;
+      reset 'h0;
+      access rw;
+   }
+   field SUB_BANK @'h8 {
+      bits 3;
+      reset 'h0;
+      access rw;
+   }
+   field WAY @'h10 {
+      bits 2;
+      reset 'h0;
+      access rw;
+   }
+   field SET @'h20 {
+      bits 16;
+      reset 'h0;
+      access rw;
+   }
+}
+
+register sc_idx_cop_sm_data0 {
+   field SC_IDX_COP_SM_DATA0 @'h0 {
+      bits 64;
+      reset 'h0;
+      access rw;
+   }
+}
+
+register sc_idx_cop_sm_data1 {
+   field SC_IDX_COP_SM_DATA1 @'h0 {
+      bits 64;
+      reset 'h0;
+      access rw;
+   }
+}
+
+register sc_idx_cop_sm_ecc {
+   field SC_IDX_COP_SM_ECC @'h0 {
+      bits 24;
+      reset 'h0;
+      access rw;
+   }
+}
+
+register sc_err_log_ctl {
+   field ESR_SC_ERR_INTERRUPT_ENABLE @'h0 {
+      bits 8;
+      reset 'hfe;
+      access rw;
+   }
+   field ESR_SC_ERR_RSP_ENABLE @'h8 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+}
+
+register sc_err_log_info {
+   field SC_ERR_LOG_INFO @'h0 {
+      bits 64;
+      reset 'h0;
+      access rw;
+   }
+}
+
+register sc_err_log_address {
+   field SC_ERR_LOG_ADDRESS @'h0 {
+      bits 64;
+      reset 'h0;
+      access ro;
+   }
+}
+
+register sc_sbe_dbe_counts {
+   field SC_SBE_DBE_COUNTS @'h0 {
+      bits 64;
+      reset 'h0;
+      access wc;
+   }
+}
+
+register sc_reqq_debug_ctl {
+   field SC_REQQ_DEBUG_CTL @'h0 {
+      bits 64;
+      reset 'h0;
+      access wc;
+   }
+}
+
+register sc_reqq_debug0 {
+   field SC_REQQ_DEBUG0 @'h0 {
+      bits 64;
+      reset 'h0;
+      access ro;
+   }
+}
+
+register sc_reqq_debug1 {
+   field SC_REQQ_DEBUG1 @'h0 {
+      bits 64;
+      reset 'h0;
+      access ro;
+   }
+}
+
+register sc_reqq_debug2 {
+   field SC_REQQ_DEBUG2 @'h0 {
+      bits 64;
+      reset 'h0;
+      access ro;
+   }
+}
+
+register sc_reqq_debug3 {
+   field SC_REQQ_DEBUG3 @'h0 {
+      bits 64;
+      reset 'h0;
+      access ro;
+   }
+}
+
+register sc_trace_address_enable {
+   field ESR_SC_TRACE_ADDRESS_ENABLE @'h0 {
+      bits 40;
+      reset 'h0;
+      access rw;
+   }
+}
+
+register sc_trace_address_value {
+   field ESR_SC_TRACE_ADDRESS_VALUE @'h0 {
+      bits 40;
+      reset 'h0;
+      access rw;
+   }
+}
+
+register sc_trace_ctl {
+   field ESR_SC_TRACE_TYPE_HOT_ENABLE @'h0 {
+      bits 12;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_SC_TRACE_FILTER_FSM_ENABLE @'hc {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_SC_TRACE_FILTER_L3_ENABLE @'hd {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_SC_TRACE_FILTER_L2_ENABLE @'he {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_SC_TRACE_FILTER_SOURCE @'hf {
+      bits 8;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_SC_TRACE_FILTER_SOURCE_ENABLE @'h17 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_SC_TRACE_FILTER_PORT @'h18 {
+      bits 3;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_SC_TRACE_FILTER_PORT_ENABLE @'h1b {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_SC_TRACE_FILTER_REQQ_ID @'h1c {
+      bits 6;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_SC_TRACE_FILTER_REQQ_ID_ENABLE @'h22 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+}
+
+register sc_perfmon_ctl_status {
+   field ESR_PERFMON_CYCLE_CNTR_START @'h0 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_PERFMON_CYCLE_CNTR_RESET @'h1 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_PERFMON_CYCLE_CNTR_OVERFLOW @'h2 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_PERFMON_CYCLE_CNTR_INTERRUPT @'h3 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_PERFMON_P0_CNTR_START @'h4 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_PERFMON_P0_CNTR_RESET @'h5 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_PERFMON_P0_CNTR_OVERFLOW @'h6 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_PERFMON_P0_CNTR_INTERRUPT @'h7 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_PERFMON_P0_CNTR_EVENT @'h8 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_PERFMON_P0_CNTR_MODE @'h9 {
+      bits 8;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_PERFMON_P1_CNTR_START @'h11 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_PERFMON_P1_CNTR_RESET @'h12 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_PERFMON_P1_CNTR_OVERFLOW @'h13 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_PERFMON_P1_CNTR_INTERRUPT @'h14 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_PERFMON_P1_CNTR_EVENT @'h15 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_PERFMON_P1_CNTR_MODE @'h16 {
+      bits 8;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_PERFMON_ANY_OVERFLOW @'h1e {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_PERFMON_CYCLE_CNTR_STATUS_ACTIVE @'h20 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_PERFMON_CYCLE_CNTR_STATUS_OVERFLOW @'h21 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_PERFMON_P0_CNTR_STATUS_ACTIVE @'h22 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_PERFMON_P0_CNTR_STATUS_OVERFLOW @'h23 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_PERFMON_P1_CNTR_STATUS_ACTIVE @'h24 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_PERFMON_P1_CNTR_STATUS_OVERFLOW @'h25 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+}
+
+register sc_perfmon_cyc_cntr {
+   field SC_PERFMON_CYC_CNTR @'h0 {
+      bits 40;
+      reset 'h0;
+      access rw;
+   }
+}
+
+register sc_perfmon_p0_cntr {
+   field SC_PERFMON_P0_CNTR @'h0 {
+      bits 40;
+      reset 'h0;
+      access rw;
+   }
+}
+
+register sc_perfmon_p1_cntr {
+   field SC_PERFMON_P1_CNTR @'h0 {
+      bits 40;
+      reset 'h0;
+      access rw;
+   }
+}
+
+register sc_perfmon_p0_qual {
+   field SC_PERFMON_P0_QUAL @'h0 {
+      bits 51;
+      reset 'h0;
+      access rw;
+   }
+}
+
+register sc_perfmon_p1_qual {
+   field SC_PERFMON_P1_QUAL @'h0 {
+      bits 51;
+      reset 'h0;
+      access rw;
+   }
+}
+
+
+block sc_bank_regs {
+   bytes 8;
+   register sc_l3_shire_swizzle_ctl @'h0;
+   register sc_reqq_ctl @ 'h1;
+   register sc_pipe_ctl  @ 'h2;
+   register sc_l2_cache_ctl  @ 'h3;
+   register sc_l3_cache_ctl  @ 'h4;
+   register sc_scp_cache_ctl  @ 'h5;
+   register sc_idx_cop_sm_ctl  @ 'h6;
+   register sc_idx_cop_sm_physical_index  @ 'h7;
+   register sc_idx_cop_sm_data0  @ 'h8;
+   register sc_idx_cop_sm_data1  @ 'h9;
+   register sc_idx_cop_sm_ecc  @ 'ha;
+   register sc_err_log_ctl  @ 'hb;
+   register sc_err_log_info  @ 'hc;
+   register sc_err_log_address  @ 'hd;
+   register sc_sbe_dbe_counts  @ 'he;
+   register sc_reqq_debug_ctl  @ 'hf;
+   register sc_reqq_debug0  @ 'h10;
+   register sc_reqq_debug1  @ 'h11;
+   register sc_reqq_debug2  @ 'h12;
+   register sc_reqq_debug3  @ 'h13;
+   register sc_trace_address_enable  @ 'h14;
+   register sc_trace_address_value  @ 'h15;
+   register sc_trace_ctl  @ 'h16;
+   register sc_perfmon_ctl_status  @ 'h17;
+   register sc_perfmon_cyc_cntr  @ 'h18;
+   register sc_perfmon_p0_cntr  @ 'h19;
+   register sc_perfmon_p1_cntr  @ 'h1a;
+   register sc_perfmon_p0_qual  @ 'h1b;
+   register sc_perfmon_p1_qual  @ 'h1c;
+}

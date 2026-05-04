@@ -1,0 +1,13 @@
+Goal:
+The test checks the extent of support for the Performance Monitoring Unit as described in Section 22 and 23 of PRM-0.
+ET-SOC does not have any support for User Performance Monitoring counters and as such those accesses should trap.
+While ET-SOC does not support mhpmcounter9-31/mhpmevent9-31, these are hard-wired to 0 and so technically should not
+trap if accessed from M-Mode (although the reads should always return 0).
+
+Parameter(s):
+Thread - This test will run on any Thread of any Core of any Neighborhood of any Shire depending on what is enabled.
+
+Details:
+Please note that ET-SOC does not support the Performance Monitoring Unit as described in the RISC-V privileged spec.
+Section 23 specifically calls out the differences in the implementation.
+

@@ -1,0 +1,14 @@
+Goal:
+The purpose is to test the machine trap delegation and improve coverage in intpipe_csr_file. More details in VERIF-1886.
+
+Parameter(s):
+Core - This test will run on any Core (even thread) of any Neighborhood of any Shire. Only 1 Core (even thread) is expected to be enabled.
+
+Details:
+A microkernel test that starts in M-mode:
+Contains two exception handlers: "M" and "S", both logging that they have been hit (by increasing a counter) and returning the priviledge level in which they are running. The "M" handler also sets medeleg for the "user ecall" exception to be delegated to S-mode.
+Sets mtvec for handling a "user ecall" with handler "M".
+Sets stvec for handling a "user ecall" with handler "S".
+Switches to U-mode.
+Issues a "user ecall", verifying that the "M" handler was hit and its priviledge level was M-mode. This M-mode handler will have set medeleg for any subsequent ecall to be delegated.
+Issues another "user ecall", verifying that this second time the handler "S" was hit and its privilege level was S-mode.

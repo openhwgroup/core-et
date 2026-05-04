@@ -1,0 +1,6 @@
+fields,address_msb,ZERO
+width,47,1
+,,
+ROValue,'0,
+,,
+sum bits,48,

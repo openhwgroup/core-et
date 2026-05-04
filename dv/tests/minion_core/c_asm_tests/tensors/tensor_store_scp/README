@@ -1,0 +1,3 @@
+Goal:
+This test does a basic self-check for Tensor Load SCP operations. It loads data into the SCP using a Tensor Load instruction and
+then writes that data from the L1 SCP into L2/Memory. It also a self-check that data loaded and stored matches.

@@ -1,0 +1,43 @@
+Goal:
+The purpose of the test is to check latency in tensor_quant transformations using various scenarios.
+
+Details:
+First we load data to the scratchpad and then perform the following transformations.
+// Quant + tensor wait. Just one transformation, try all of them.    	    
+tensor_quant(start_reg, cols, rows, scp_loc, QUANT_LAST_TRANS, QUANT_LAST_TRANS, QUANT_LAST_TRANS, QUANT_LAST_TRANS, 
+	QUANT_LAST_TRANS, QUANT_LAST_TRANS, QUANT_LAST_TRANS, QUANT_LAST_TRANS, QUANT_LAST_TRANS, t);		
+	
+// Quant w/o tensor wait. Just one transformation, try all of them.
+tensor_quant(start_reg, cols, rows, scp_loc, QUANT_LAST_TRANS, QUANT_LAST_TRANS, QUANT_LAST_TRANS, QUANT_LAST_TRANS, 
+	QUANT_LAST_TRANS, QUANT_LAST_TRANS, QUANT_LAST_TRANS, QUANT_LAST_TRANS, QUANT_LAST_TRANS, t);	
+			    
+// Super minimal case, just one row and column
+rows = 0; cols = 0;       
+tensor_quant(start_reg, cols, rows, scp_loc, QUANT_LAST_TRANS, QUANT_LAST_TRANS, QUANT_LAST_TRANS, QUANT_LAST_TRANS, 
+	QUANT_LAST_TRANS, QUANT_LAST_TRANS, QUANT_LAST_TRANS, QUANT_LAST_TRANS, QUANT_LAST_TRANS, QUANT_INT32_TO_FP32);
+
+// Now run worst-case scenario of "ALL transformations	
+rows = 15; cols = 3;
+tensor_quant(start_reg, cols, rows, scp_loc, QUANT_PACK_128B, QUANT_SATUINT8, QUANT_SATINT8, QUANT_RELU,
+	QUANT_INT32_ADD_COL, QUANT_INT32_ADD_ROW, QUANT_FP32_TO_INT32, QUANT_FP32_MUL_COL, QUANT_FP32_MUL_ROW, QUANT_INT32_TO_FP32);
+       
+// Most typical scenario in resnet:
+tensor_quant(start_reg, cols, rows, scp_loc, QUANT_LAST_TRANS, QUANT_LAST_TRANS, QUANT_LAST_TRANS, QUANT_LAST_TRANS, 
+	QUANT_PACK_128B, QUANT_SATUINT8, QUANT_FP32_TO_INT32, QUANT_FP32_MUL_ROW, QUANT_INT32_TO_FP32, QUANT_INT32_ADD_ROW);
+
+// Scale this down to fewer rows.
+rows = 7; cols = 3;
+tensor_quant(start_reg, cols, rows, scp_loc, QUANT_LAST_TRANS, QUANT_LAST_TRANS, QUANT_LAST_TRANS, QUANT_LAST_TRANS, 
+	QUANT_PACK_128B, QUANT_SATUINT8, QUANT_FP32_TO_INT32, QUANT_FP32_MUL_ROW, QUANT_INT32_TO_FP32, QUANT_INT32_ADD_ROW);
+
+// Scale this down to fewer columns
+rows = 15;cols = 1;
+tensor_quant(start_reg, cols, rows, scp_loc, QUANT_LAST_TRANS, QUANT_LAST_TRANS, QUANT_LAST_TRANS, QUANT_LAST_TRANS, 
+	QUANT_PACK_128B, QUANT_SATUINT8, QUANT_FP32_TO_INT32, QUANT_FP32_MUL_ROW, QUANT_INT32_TO_FP32, QUANT_INT32_ADD_ROW);
+
+// Scale this down to fewer columns
+rows = 15;cols = 0;
+tensor_quant(start_reg, cols, rows, scp_loc, QUANT_LAST_TRANS, QUANT_LAST_TRANS, QUANT_LAST_TRANS, QUANT_LAST_TRANS, 
+	QUANT_PACK_128B, QUANT_SATUINT8, QUANT_FP32_TO_INT32, QUANT_FP32_MUL_ROW, QUANT_INT32_TO_FP32, QUANT_INT32_ADD_ROW);
+
+

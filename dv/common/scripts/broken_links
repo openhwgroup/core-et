@@ -1,0 +1,358 @@
+#!/eng/dvtools/release/ruby/2.4.2/bin/ruby
+# Hack the GEM_PATH To Karls Libary
+#ENV['GEM_PATH']="/eng/dvtools/release/ruby/mygems"
+#Gem.clear_paths
+
+# Import packages
+require 'optparse'
+require 'fileutils'
+require 'logger'
+require 'awesome_print'
+require_relative 'rblib/et_log'
+require 'tempfile'
+require 'builder'
+
+#@@usage="usage: $0 {-h} {-v <verbose level>} {-s <grid number>}"
+
+include ET_LOG
+
+class Link
+  attr_accessor :link,:target,:user,:waive
+
+  def initialize
+    @waive=false
+  end # end constructor
+
+  def to_array
+   [] << @link << @target << @user << @waive
+  end
+end # end class
+
+def file_edit(filename, regexp, replacement)
+  Tempfile.open(".#{File.basename(filename)}", File.dirname(filename)) do |tempfile|
+    File.open(filename).each do |line|
+      tempfile.puts line.gsub(regexp, replacement)
+    end
+    tempfile.fdatasync
+    tempfile.close
+    stat = File.stat(filename)
+    FileUtils.chown stat.uid, stat.gid, tempfile.path
+    FileUtils.chmod stat.mode, tempfile.path
+    FileUtils.mv tempfile.path, filename
+  end
+end
+
+def setup_repo options
+
+# Is $REPOROOT defined and is it a valid writable path?
+#   if ENV.has_key? "REPOROOT"
+#     unless File.writable? ENV['REPOROOT']
+#       error "$REPOROOT points to non existant path #{ENV['REPOROOT']} or is not writable".colorize("red")
+#     end
+#  else
+#       error "Env var reporoot is not defined.  source env.sh in root of repo".colorize("red")
+#   end
+
+   logpath="."
+
+
+   # Now that we are done cleaning etc, we can setup the proper log
+   #
+   level=:info
+   @log = EtLog.new("#{logpath}/#{options[:cmd]}.log",:info,false,options[:cmd])
+   if options[:verbose]
+    level=:debug
+   end
+   @log.level = level
+   @log.info "#{options[:cmd]} is running"
+   @log.info "logpath is #{logpath}/#{options[:cmd]}.log"
+   options[:logfile] = "#{logpath}/#{options[:cmd]}.log"
+
+   @log.info "command line=#{options[:cmd_line]}"
+
+   options[:git_hash],rc = @log.et_backtick "cd ${REPOROOT};git rev-parse HEAD"
+   options[:git_hash].chomp!
+   @log.info "git revision=#{options[:git_hash]}"
+
+   options[:git_short_hash],rc = @log.et_backtick "cd ${REPOROOT};git rev-parse --short HEAD"
+   options[:git_short_hash].chomp!
+   @log.info "git short hash=#{options[:git_short_hash]}"
+
+end
+
+def prune_file start_string,end_string, filename, prune_filename
+  line_num=0
+  started=false
+  @log.info "Pruning file=#{filename}"
+  File.open(filename, "r") do |source_file|
+    File.open(prune_filename, "w") do |prune_file|
+      source_file.each_line do |line|
+        line_num+=1
+        if line =~ /#{start_string}/
+          @log.debug "Match Start line=#{start_string} at line #{line_num}"
+          started=true
+          prune_file.puts line
+          next
+        end
+        if started
+          prune_file.puts line
+        end
+        if started and line =~ /#{end_string}/
+          @log.debug "Match End line=#{end_string} at line #{line_num}"
+          started=false
+        end
+        if (line_num % 1000000) == 0
+          @log.debug "looping: line_num=#{line_num}"
+        end
+      end # each line
+    end # prune_filename
+  end # source_filename
+end # method prune_file
+
+# Defaults for Broken link mode
+#
+BROKEN_WAIVER_FILE="#{ENV['REPOROOT']}/dv/common/scripts/broken_links_waivers.txt"
+USER_BROKEN_LINKS="user_broken_links.html"
+BROKEN_LINKS="broken_links.html"
+
+# Defaults for external link mode
+#
+EXTERNAL_WAIVER_FILE="#{ENV['REPOROOT']}/dv/common/scripts/external_links_waivers.txt"
+USER_EXTERNAL_LINKS="user_external_links.html"
+EXTERNAL_LINKS="external_links.html"
+
+ADMIN_USER="slavko.guduric@esperantotech.com"
+
+def make_html_table links, report_type, waiver_file,output_filename,email_addr=nil,show_waivers=nil
+
+table_header_css = <<-HEADER
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+table, th, td {
+  border: 1px solid black;
+}
+table {
+  width: 100%;
+}
+</style>
+</head>
+<body>
+
+<h2>Table of #{report_type} links for path</h2>"
+
+HEADER
+
+   xm = Builder::XmlMarkup.new(:indent => 2)
+   i=0
+   xm.table {
+     xm.tr { ["link","target","user","waive"].each { |key| xm.th(key)}}
+     links.each { |row|
+         xm.tr { row.to_array.each { |value| xm.td(value)}} if  ((!row.waive) or (show_waivers))
+         i+=1  if  ((!row.waive) or (show_waivers))
+     }
+   }
+
+   if email_addr.nil? or email_addr==''
+     File.open(output_filename, 'w') { |file| file.write table_header_css+xm }
+   else
+     mail_header = <<-MAIL
+To: #{email_addr}
+Subject: #{report_type} Links report for #{email_addr}
+Content-Type: text/html
+
+\nwaiver_file: #{waiver_file}\n
+
+MAIL
+
+    File.open(output_filename, 'w') { |file| file.write mail_header+table_header_css+xm}
+
+    @log.et_sys "cat #{output_filename} | sendmail -t"  if i > 0
+   end
+   return i
+end
+
+def read_waivers filename
+  return File.readlines  filename ,chomp: true
+end
+
+def process_broken_waivers  links, waivers
+  links.each do |rec|
+   waivers.each do |waiver|
+     #@log.info "link=#{rec.link} waiver=#{waiver}"
+     if rec.link =~ /#{waiver}/
+       rec.waive=true
+       @log.debug "Waived: link=#{rec.link}"
+     end
+   end # each waiver
+  end # each link
+end # method process_waivers
+
+def process_external_waivers  links, waivers
+  links.each do |rec|
+   waivers.each do |waiver|
+#     @log.info "target=#{rec.target} waiver=#{waiver}"
+     if rec.target =~ /#{waiver}/
+       rec.waive=true
+       @log.debug "Waived: link=#{rec.link}"
+     end
+   end # each waiver
+  end # each link
+end # method process_waivers
+
+
+begin
+   options = {}
+
+   if $0 =~ /broken/
+     cmd_line="broken_links"
+     options[:broken] = true
+     waiver_file=BROKEN_WAIVER_FILE
+     report_file= BROKEN_LINKS
+     user_report_file = USER_BROKEN_LINKS
+     report_type="broken"
+   else
+     cmd_line="external_links"
+     options[:external]
+     waiver_file=EXTERNAL_WAIVER_FILE
+     report_file= EXTERNAL_LINKS
+     user_report_file = USER_EXTERNAL_LINKS
+     report_type="external"
+   end
+   options[:cmd]=cmd_line
+
+   ARGV.each { |arg| cmd_line += " #{arg}" }
+
+   OptionParser.new do |opts|
+     opts.banner = "Usage: #{cmd_line} [options]"
+     opts.on("-a", "--admin", "Email each admin user all report's") do |arg|
+       options[:admin] = arg
+     end
+     opts.on("-e", "--email", "Email each user a report") do |arg|
+       options[:email] = arg
+     end
+     opts.on("-o filename", "--target filename", "Specify output report file name.  DEFAULT: #{report_file}") do |arg|
+       options[:target] = arg
+       report_file=arg
+     end
+     opts.on("-q", "--quiet", "Quiesce most output") do |arg|
+       options[:quiet] = arg
+     end
+     opts.on("-v", "--verbose", "Verbose output") do |arg|
+       options[:verbose] = arg
+     end
+     opts.on("-w filename", "--target filename", "Specify input waiver file.  DEFAULT: #{waiver_file}") do |arg|
+       options[:waiver] = arg
+       waiver_file=arg
+     end
+     opts.on("-W", "--show_waivers", "Show records that are waived in the report.") do |arg|
+       options[:show_waivers] = arg
+     end
+   end.parse!
+   options[:cmd_line]=cmd_line
+
+   unless options[:quiet]
+     options[:quiet]=:info
+   end
+
+   #
+   # Setup the workspace, cleanup, and get the log setup
+   #
+   setup_repo options
+   @log.info "cmd_line=#{cmd_line}"
+
+   require 'socket'
+   hostname = Socket.gethostname
+   @log.info "running on hostname=#{hostname}"
+
+   ap options      if options[:verbose]
+   @log.ap options if options[:verbose]
+
+   unless options[:waiver]
+     options[:waiver]=waiver_file
+   end
+
+   unless options[:target]
+     options[:target]=report_file
+   end
+
+   waivers=read_waivers waiver_file
+
+   if options[:broken]
+     bl,rc = @log.et_backtick 'find . -xtype l -exec  ls -l {}  \;'
+   else
+     bl,rc = @log.et_backtick 'find . -type l  -exec ls -l {} \;'
+   end
+
+   original_links=bl.split "\n"
+
+   links=[]
+   original_links.each do |line|
+     fields=line.split
+     link_filename=fields[8];
+     target_filename=fields[10];
+     user,rc = @log.et_backtick "git log -s -n1 --pretty='format:%an %ae%n' #{link_filename}"
+     @log.debug "file=#{link_filename} user=#{user}"
+     rec=Link.new
+     rec.link=link_filename
+     rec.target=target_filename
+     rec.user=user
+
+     if options[:cmd] == "broken_links"
+       links << rec
+     end
+     if options[:cmd] == "external_links" and rec.target =~ /^\//
+       links << rec
+     end
+   end
+
+   ap options[:cmd]
+
+   if options[:cmd]=="broken_links"
+     @log.info "Processing #{options[:cmd]} waivers file=#{waiver_file}"
+     process_broken_waivers links,waivers
+   else
+     @log.info "SWS Processing #{options[:cmd]} waivers file=#{waiver_file}"
+     process_external_waivers links,waivers
+   end
+
+   status=make_html_table links,report_type,waiver_file,report_file,ADMIN_USER,options[:show_waivers]
+
+   @log.debug "top level table contained #{status} entries"
+
+   links_by_user = {}
+
+   links.each do |rec|
+      unless links_by_user.has_key? rec.user
+        links_by_user[rec.user] = []
+      end
+      links_by_user[rec.user] << rec
+   end
+
+   if options[:admin] or options[:email]
+     links_by_user.each_pair do |key,rec|
+       key =~ /.*( [a-z,A-Z,0-9,.]+@[a-z,A-Z,0-9,.]+)\n/
+       email_addr = $1.strip
+       if options[:email]
+         make_html_table rec,report_type,waiver_file,user_report_file,email_addr
+       end
+       if options[:admin]
+         make_html_table rec,waiver_file,user_report_file,ADMIN_USER
+       end
+     end
+   end
+
+   exit status
+
+rescue Interrupt => e
+  @log.info "Interrupt detected (Ctrl-c): #{e}\nStack Trace Follows\n#{e.backtrace.join("\n")}" unless @log.nil?
+  exit 1
+#rescue Exception => e
+#  @log.info "Exception detected : #{e}\nStack Trace Follows\n#{e.backtrace.join("\n")}" unless @log.nil?
+# exit 1
+rescue SystemExit => e
+  exit e.status
+ensure
+  @log.close unless @log.nil?
+end

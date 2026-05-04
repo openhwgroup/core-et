@@ -1,0 +1,5 @@
+fields,reserved2,haltreq,resumereq,hartreset,ackhavereset,reserved1,setresethaltreq,clrresethaltreq,ndmreset,reserved0
+width,32,1,1,1,1,24,1,1,1,1
+RO,YES,NO,NO,NO,NO,YES,NO,NO,NO,YES
+,,,,,,,,,,
+sum bits,64,,,,,,,,,

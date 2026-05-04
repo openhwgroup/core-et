@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# Pick up some util functions for printing colorized messages and testing shell commands
+#
+source $REPOROOT/dv/common/scripts/bash_utils.sh
+
+# Set DEBUG Env var for additional logging
+#
+export DEBUG=1
+
+try csrCompile -v -c $REPOROOT/dv/common/scripts/semifore_css/bitfield_enum_doc.css -t h $1.csr -o gen_sw/$1
+try csrCompile -v -c $REPOROOT/dv/common/scripts/semifore_css/bitfield_enum_doc.css -t perl $1.csr -o gen_perf/$1
+#try perl -I /eng/cad/tools/semifore/csrCompile/LATEST/lib/ $REPOROOT/dv/common/scripts/semifore_css/json.pl gen_perf/$1.pm
+#try mv *.json gen_perf
+
+# temp fix to cast 32 bit x in header file into 64 bit 
+#gawk '{ if (match($0,">>") || match($0,"<<")) {split($3,a,")");split($5,b,")");if ((match($0,"<<") && a[1]>31) || (match($0,">>") && b[1]>31)) {gsub("\\(x\\)","\((uint64_t)x\)");gsub("\\(r\\)","\((uint64_t)r\)");}} print $0;}' gen_sw/$1.h > $1.tempcsrsw.h && mv $1.tempcsrsw.h gen_sw/$1.h
+gawk '{ if (match($0,">>") || match($0,"<<")) {if ((match($0,"<<") && match($0,"ull")) || (match($0,">>") && match($0,"ull"))) {gsub("\\(x\\)","\((uint64_t)x\)");}} print $0;}' gen_sw/$1.h > $1.tempcsrsw.h && mv $1.tempcsrsw.h gen_sw/$1.h

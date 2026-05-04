@@ -1,0 +1,5 @@
+Goal:
+Specific testing of cases for mstatus.FS as described in https://esperantotech.atlassian.net/browse/RTLMIN-5651
+
+Parameter(s):
+Core - This test will run on any Core (even thread) of any Neighborhood of any Shire. Only 1 Core (even thread) is expected to be enabled.

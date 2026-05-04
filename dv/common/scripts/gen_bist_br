@@ -1,0 +1,567 @@
+#!/eng/dvtools/release/ruby/2.4.2/bin/ruby
+# Hack the GEM_PATH To Karls Libary
+ENV['GEM_PATH']="/eng/dvtools/release/ruby/mygems"
+Gem.clear_paths
+
+# Whitespace change for b4c
+
+# Import packages
+require 'optparse'
+require 'fileutils'
+require 'logger'
+require 'awesome_print'
+require_relative 'rblib/et_log'
+require 'tempfile'
+
+#@@usage="usage: $0 {-h} {-v <verbose level>} {-s <grid number>}"
+
+include ET_LOG
+
+BIST_RTL_FILE_LIST=[
+"rtl/ioshire/maxshire/maxion_shire_channel/bist/maxion_shire_channel.v",
+"rtl/ioshire/maxshire/maxion_shire_channel/orig/maxion_shire_channel.v",
+"rtl/ioshire/maxshire/maxneigh/maxion/tile/bist/boom.system.TestHarness.ETSoCConfig.v",
+"rtl/ioshire/maxshire/maxneigh/maxion/tile/orig/boom.system.TestHarness.ETSoCConfig.v",
+"rtl/ioshire/maxshire/top/bist/maxshire_top.v",
+"rtl/ioshire/maxshire/top/orig/maxshire_top.v",
+"rtl/ioshire/misc/top/bist/ioshire_misc.v",
+"rtl/ioshire/misc/top/orig/ioshire_misc.v",
+"rtl/ioshire/pu/top/bist/pu.v",
+"rtl/ioshire/pu/top/orig/pu.v",
+"rtl/ioshire/spio/spio_vault/spio_vault_bisted_rtl/rtl/dft__spio_vault.v",
+"rtl/ioshire/spio/spio_vault/spio_vault_bisted_rtl/rtl/dft__spio_vault_data_ram.v",
+"rtl/ioshire/spio/spio_vault/spio_vault_bisted_rtl/rtl/dft__spio_vault_dmac_fifo.v",
+"rtl/ioshire/spio/spio_vault/spio_vault_bisted_rtl/rtl/dft__spio_vault_mbram.v",
+"rtl/ioshire/spio/spio_vault/spio_vault_bisted_rtl/rtl/dft__spio_vault_prog_ram.v",
+"rtl/ioshire/spio/spio_vault/spio_vault_bisted_rtl/rtl/dft__spio_vault_prog_rom.v",
+"rtl/ioshire/spio/spio_vault/spio_vault_bisted_rtl/sms/dwsms_stdlib.sv",
+"rtl/ioshire/spio/spio_vault/spio_vault_bisted_rtl/sms/sms_rom_proc_spio_vault_1_defs.sv",
+"rtl/ioshire/spio/spio_vault/spio_vault_bisted_rtl/sms/sms_rom_proc_spio_vault_1_stp.sv",
+"rtl/ioshire/spio/spio_vault/spio_vault_bisted_rtl/sms/sms_rom_wr_spio_vault_asdvds0g0rm0sd_ctrl.8b2c0p0r0rm0sd_ctrl.sv",
+"rtl/ioshire/spio/spio_vault/spio_vault_bisted_rtl/sms/sms_rom_wr_spio_vault_asdvds0g4l1p4096x24m8b2c0p0r0rm0sd_int.sv",
+"rtl/ioshire/spio/spio_vault/spio_vault_bisted_rtl/sms/sms_sram_proc_spio_vault_1_defs.sv",
+"rtl/ioshire/spio/spio_vault/spio_vault_bisted_rtl/sms/sms_sram_proc_spio_vault_1_stp.sv",
+"rtl/ioshire/spio/spio_vault/spio_vault_bisted_rtl/sms/sms_sram_wr_spio_vault_sadcls0c0p0d0r0rm0s2m16b4w1c0p0d0r0rm0sdrw11_ctrl.sv",
+"rtl/ioshire/spio/spio_vault/spio_vault_bisted_rtl/sms/sms_sram_wr_spio_vault_sadcls0g4l1p163rm0sdrw11_inc0p0d0r0rm0sdrw11_int.sv",
+"rtl/ioshire/spio/spio_vault/spio_vault_bisted_rtl/sms/sms_sram_wr_spio_vault_sadcls0g4l1p32768x24m16b8w1c0p0d0r0rm0sdrw11_ctrl.sv",
+"rtl/ioshire/spio/spio_vault/spio_vault_bisted_rtl/sms/sms_sram_wr_spio_vault_sadcls0g4l1p32768x24m16b8w1c0p0d0r0rm0sdrw11_int.sv",
+"rtl/ioshire/spio/spio_vault/spio_vault_bisted_rtl/sms/sms_sram_wr_spio_vault_sadrls0g4l2p256x32m2b2w1c0p0d0r0rm0sdrw11_ctrl.sv",
+"rtl/ioshire/spio/spio_vault/spio_vault_bisted_rtl/sms/sms_sram_wr_spio_vault_sadrls0g4l2p256x32m2b2w1c0p0d0r0rm0sdrw11_int.sv",
+"rtl/ioshire/spio/spio_vault/spio_vault_bisted_rtl/sms/sms_sram_wr_spp256x64m2b2w0c0p0d0r0rm0sdrw2b2w0c0p0d0r0rm0sdrw11_ctrl.sv",
+"rtl/ioshire/spio/spio_vault/spio_vault_bisted_rtl/sms/sms_sram_wr_spio_vault2b2w0c0p0d0r0rm0sdrw11_int.s0d0r0rm0sdrw11_int.sv",
+"rtl/ioshire/spio/top/bist/spio.v",
+"rtl/ioshire/spio/top/orig/spio.v",
+"rtl/ioshire/wrapper/bisted_rtl/maxshire_top/dft__boom.system.TestHarness.ETSoCConfig.pd-allsnps.srams.v",
+"rtl/ioshire/wrapper/bisted_rtl/maxshire_top/dft__maxion.v",
+"rtl/ioshire/wrapper/bisted_rtl/maxshire_top/dft__maxneigh.v",
+"rtl/ioshire/wrapper/bisted_rtl/maxshire_top/dft__mxn_shire_cache.v",
+"rtl/ioshire/wrapper/bisted_rtl/maxshire_top/dft__mxn_shire_cache_bank.v",
+"rtl/ioshire/wrapper/bisted_rtl/maxshire_top/dft__mxn_shire_cache_pipe.v",
+"rtl/ioshire/wrapper/bisted_rtl/maxshire_top/dft__mxn_shire_cache_pipe_data_ram_wrap.v",
+"rtl/ioshire/wrapper/bisted_rtl/maxshire_top/dft__mxn_shire_cache_pipe_mem.v",
+"rtl/ioshire/wrapper/bisted_rtl/maxshire_top/dft__mxn_shire_cache_pipe_sub_bank_mem.v",
+"rtl/ioshire/wrapper/bisted_rtl/maxshire_top/dft__mxn_shire_cache_pipe_tag_ram_wrap.v",
+"rtl/ioshire/wrapper/bisted_rtl/maxshire_top/dft__mxn_shire_cache_pipe_tag_state_ram_wrap.v",
+"rtl/ioshire/wrapper/bisted_rtl/maxshire_top/dft__mxn_shire_channel.v",
+"rtl/ioshire/wrapper/bisted_rtl/pu/dft__emmc_ss.v",
+"rtl/ioshire/wrapper/bisted_rtl/pu/dft__pu_scram_axi.v",
+"rtl/ioshire/wrapper/bisted_rtl/pu/dft__usb2_dev_ctrl.v",
+"rtl/ioshire/wrapper/bisted_rtl/pu/dft__usb2_gp_ctrl.v",
+"rtl/ioshire/wrapper/bisted_rtl/pu/dft__usb2_gp_subsys.v",
+"rtl/ioshire/wrapper/bisted_rtl/pu/dft__usb2_ust_dev_subsys.v",
+"rtl/ioshire/wrapper/bisted_rtl/sms/dwsms_stdlib.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/mmbprocessor_bank0_defs.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/mmbprocessor_bank0_stp.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/mmbprocessor_bank1_defs.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/mmbprocessor_bank1_stp.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/mmbprocessor_bank2_defs.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/mmbprocessor_bank2_stp.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/mmbprocessor_bank3_defs.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/mmbprocessor_bank3_stp.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/proc_1_defs.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/proc_1_stp.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/proc_2_defs.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/proc_2_stp.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/proc_3_defs.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/proc_3_stp.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_proc_spio_1_defs.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_proc_spio_1_stp.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_0_0_ctrl.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_0_0_int.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_0_1_ctrl.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_0_1_int.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_0_2_ctrl.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_0_2_int.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_0_3_ctrl.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_0_3_int.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_0_4_ctrl.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_0_4_int.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_0_5_ctrl.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_0_5_int.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_0_6_ctrl.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_0_6_int.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_0_7_ctrl.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_0_7_int.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_1_0_ctrl.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_1_0_int.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_1_1_ctrl.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_1_1_int.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_1_2_ctrl.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_1_2_int.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_1_3_ctrl.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_1_3_int.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_1_4_ctrl.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_1_4_int.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_1_5_ctrl.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_1_5_int.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_1_6_ctrl.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_1_6_int.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_1_7_ctrl.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_rom_wr_spio_asdvds0g4l1p1024x64m8b1c0p0r0rm0sd_1_7_int.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_sram_proc_maxshire_top_1_defs.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_sram_proc_maxshire_top_1_stp.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_sram_proc_pu_1_defs.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_sram_proc_pu_1_stp.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_sram_proc_pu_2_defs.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_sram_proc_pu_2_stp.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_sram_proc_spio_1_defs.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_sram_proc_spio_1_stp.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_sram_wr_maxshire_top_saduls0g4l1p2048x32m4b2w0c0p0d0r1rm0sdrw11_ctrl.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_sram_wr_maxshire_top_saduls0g4l1p2048x32m4b2w0c0p0d0r1rm0sdrw11_int.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_sram_wr_pu_sadcls0g4l1p1024x35m4b1w0c0p0d0r1rm0sdrw11_ctrl.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_sram_wr_pu_sadcls0g4l1p1024x35m4b1w0c0p0d0r1rm0sdrw11_int.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_sram_wr_pu_sadcls0g4l1p4096x144m4b4w1c0p0d0r1rm0sdrw11_ctrl.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_sram_wr_pu_sadcls0g4l1p4096x144m4b4w1c0p0d0r1rm0sdrw11_int.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_sram_wr_pu_sadcls0g4l1p512x64m4b1w0c0p0d0r1rm0sdrw11_ctrl.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_sram_wr_pu_sadcls0g4l1p512x64m4b1w0c0p0d0r1rm0sdrw11_int.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_sram_wr_spio_sadcls0g4l1p4096x144m4b4w1c0p0d0r1rm0sdrw11_ctrl.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_sram_wr_spio_sadcls0g4l1p4096x144m4b4w1c0p0d0r1rm0sdrw11_int.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_sram_wr_spio_saduls0g4l1p512x144m4b1w0c0p0d0r1rm0sdrw11_ctrl.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_sram_wr_spio_saduls0g4l1p512x144m4b1w0c0p0d0r1rm0sdrw11_int.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_sub_server_ioshire_wrapper.cfg",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_sub_server_ioshire_wrapper_ce.v",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_sub_server_ioshire_wrapper_controller.v",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_sub_server_ioshire_wrapper_jpc.v",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_sub_server_ioshire_wrapper_jpc_sfp.ds",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_sub_server_ioshire_wrapper_jpc_sfp.v",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_sub_server_ioshire_wrapper_mux.v",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_sub_server_ioshire_wrapper_net_send_engine.v",
+"rtl/ioshire/wrapper/bisted_rtl/sms/sms_sub_server_ioshire_wrapper_sfp_wr.v",
+"rtl/ioshire/wrapper/bisted_rtl/sms/srv_sync.v",
+"rtl/ioshire/wrapper/bisted_rtl/sms/wrap_sacrls0g4l1p128x120m2b1w1c1p0d0r1rm0sdrw11_1_gen_ctrl.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/wrap_sacrls0g4l1p128x120m2b1w1c1p0d0r1rm0sdrw11_1_gen_int.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/wrap_sacrls0g4l1p128x148m2b1w1c1p0d0r1rm0sdrw11_1_gen_ctrl.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/wrap_sacrls0g4l1p128x148m2b1w1c1p0d0r1rm0sdrw11_1_gen_int.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/wrap_sacrls0g4l1p256x60m2b1w0c1p0d0r1rm0sdrw11_1_gen_ctrl.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/wrap_sacrls0g4l1p256x60m2b1w0c1p0d0r1rm0sdrw11_1_gen_int.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/wrap_sadcls0g4l1p512x16m4b1w0c0p0d0r1rm0sdrw11_1_gen_ctrl.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/wrap_sadcls0g4l1p512x16m4b1w0c0p0d0r1rm0sdrw11_1_gen_int.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/wrap_sadcls0g4l1p512x62m4b1w0c0p0d0r1rm0sdrw11_1_gen_ctrl.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/wrap_sadcls0g4l1p512x62m4b1w0c0p0d0r1rm0sdrw11_1_gen_int.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/wrap_sadcls0g4l1p512x65m4b1w0c0p0d0r1rm0sdrw11_1_gen_ctrl.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/wrap_sadcls0g4l1p512x65m4b1w0c0p0d0r1rm0sdrw11_1_gen_int.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/wrap_sadrls0g4u2p1024x18m4b4w0c0p0d0r1rm0sdrw11_1_gen_ctrl.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/wrap_sadrls0g4u2p1024x18m4b4w0c0p0d0r1rm0sdrw11_1_gen_int.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/wrap_sadrls0g4u2p512x132m2b4w1c1p0d0r1rm0sdrw11_1_gen_ctrl.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/wrap_sadrls0g4u2p512x132m2b4w1c1p0d0r1rm0sdrw11_1_gen_int.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/wrap_sadrls0g4u2p512x144m2b4w1c1p0d0r1rm0sdrw11_1_gen_ctrl.sv",
+"rtl/ioshire/wrapper/bisted_rtl/sms/wrap_sadrls0g4u2p512x144m2b4w1c1p0d0r1rm0sdrw11_1_gen_int.sv",
+"rtl/ioshire/wrapper/bisted_rtl/spio/dft__icache_data_ram_wrap.v",
+"rtl/ioshire/wrapper/bisted_rtl/spio/dft__sp_top.v",
+"rtl/ioshire/wrapper/bisted_rtl/spio/dft__spio_rom_axi.v",
+"rtl/ioshire/wrapper/bisted_rtl/spio/dft__spio_scram_axi.v",
+"rtl/ioshire/wrapper/bisted_rtl/spio/dft__standalone_minion.v",
+"rtl/ioshire/wrapper/bisted_rtl/wrapper/dft__ioshire_top.v",
+"rtl/ioshire/wrapper/bisted_rtl/wrapper/dft__pvtc_wrapper.v",
+"rtl/ioshire/wrapper/top/bist/ioshire_wrapper.v",
+"rtl/ioshire/wrapper/top/orig/ioshire_wrapper.v",
+"rtl/shire/shire_bisted_rtl/rtl/dft__minion_icache_data_ram_wrap.v",
+"rtl/shire/shire_bisted_rtl/rtl/dft__minion_icache_mems.v",
+"rtl/shire/shire_bisted_rtl/rtl/dft__minion_shire_cache.v",
+"rtl/shire/shire_bisted_rtl/rtl/dft__minion_shire_cache_pipe.v",
+"rtl/shire/shire_bisted_rtl/rtl/dft__minion_shire_cache_pipe_data_ram_wrap.v",
+"rtl/shire/shire_bisted_rtl/rtl/dft__minion_shire_cache_pipe_mem.v",
+"rtl/shire/shire_bisted_rtl/rtl/dft__minion_shire_cache_pipe_sub_bank_mem.v",
+"rtl/shire/shire_bisted_rtl/rtl/dft__minion_shire_cache_pipe_tag_ram_wrap.v",
+"rtl/shire/shire_bisted_rtl/rtl/dft__minion_shire_cache_pipe_tag_state_ram_wrap.v",
+"rtl/shire/shire_bisted_rtl/sms/minion_mmbprocessor_bank0_defs.sv",
+"rtl/shire/shire_bisted_rtl/sms/minion_mmbprocessor_bank0_stp.sv",
+"rtl/shire/shire_bisted_rtl/sms/minion_mmbprocessor_bank1_defs.sv",
+"rtl/shire/shire_bisted_rtl/sms/minion_mmbprocessor_bank1_stp.sv",
+"rtl/shire/shire_bisted_rtl/sms/minion_mmbprocessor_bank2_defs.sv",
+"rtl/shire/shire_bisted_rtl/sms/minion_mmbprocessor_bank2_stp.sv",
+"rtl/shire/shire_bisted_rtl/sms/minion_mmbprocessor_bank3_defs.sv",
+"rtl/shire/shire_bisted_rtl/sms/minion_mmbprocessor_bank3_stp.sv",
+"rtl/shire/shire_cache/bist/shire_cache_bank.v",
+"rtl/shire/shire_cache/orig/shire_cache_bank.v",
+"rtl/shire/shire_channel/bist/shire_channel.v",
+"rtl/shire/shire_channel/orig/shire_channel.v",
+"rtl/shire/shire_channel/icache/icache_data_ram_wrap.v",
+"rtl/shire/shire_channel/icache/icache_mems.v",
+"rtl/shire/shire_cache/shire_cache_pipe_data_ram_wrap.v",
+"rtl/shire/shire_cache/shire_cache_pipe_mem.v",
+"rtl/shire/shire_cache/shire_cache_pipe_sub_bank_mem.v",
+"rtl/shire/shire_cache/shire_cache_pipe_tag_ram_wrap.v",
+"rtl/shire/shire_cache/shire_cache_pipe_tag_state_ram_wrap.v",
+"rtl/shire/shire_cache/shire_cache_pipe.v",
+"rtl/shire/shire_cache/shire_cache.v",
+"rtl/ioshire/spio/spio_vault/spio_vault.v",
+"rtl/ioshire/spio/spio_vault/spio_vault_data_ram.v",
+"rtl/ioshire/spio/spio_vault/spio_vault_dmac_fifo.v",
+"rtl/ioshire/spio/spio_vault/spio_vault_mbram.v",
+"rtl/ioshire/spio/spio_vault/spio_vault_prog_ram.v",
+"rtl/ioshire/spio/spio_vault/spio_vault_prog_rom.v",
+"rtl/ioshire/maxshire/maxneigh/maxion/tile/boom.system.TestHarness.ETSoCConfig.pd-allsnps.srams.v",
+"rtl/ioshire/maxshire/maxneigh/maxion/maxion.v",
+"rtl/ioshire/maxshire/maxneigh/maxneigh.v",
+"rtl/ioshire/pu/emmc/emmc_ss.v",
+"rtl/ioshire/pu/pu_usb2/usb2_ust_dev_subsys/usb2_dev_ctrl.v",
+"rtl/ioshire/pu/pu_usb2/usb2_gp_subsys/usb2_gp_ctrl.v",
+"rtl/ioshire/pu/pu_usb2/usb2_gp_subsys/usb2_gp_subsys.v",
+"rtl/ioshire/pu/pu_usb2/usb2_ust_dev_subsys/usb2_ust_dev_subsys.v",
+"rtl/ioshire/spio/sp/sp_top.v",
+"rtl/ioshire/spio/rom/spio_rom_axi.v",
+"rtl/shire/standalone_minion/standalone_minion.v",
+"rtl/ioshire/top/ioshire_top.v",
+"rtl/ioshire/misc/pvtc/pvtc_wrapper.v",
+"rtl/ioshire/common/scram/scram_axi.v"
+]
+
+
+class Bist_rtl_record
+  attr_accessor :name,:build_dir, :build_cmd, :bist_log, :fail_count,:pass_strings,:fail_string,:target_dir
+
+  def initialize
+    @fail_count=0
+    @pass_strings=["P A S S"]
+    @fail_string="F A I L"
+    @bist_log="bist.log"
+    @build_cmd="make bist > /dev/null 2>&1"
+  end # end constructor
+end # end class
+
+def file_edit(filename, regexp, replacement)
+  Tempfile.open(".#{File.basename(filename)}", File.dirname(filename)) do |tempfile|
+    File.open(filename).each do |line|
+      tempfile.puts line.gsub(regexp, replacement)
+    end
+    tempfile.fdatasync
+    tempfile.close
+    stat = File.stat(filename)
+    FileUtils.chown stat.uid, stat.gid, tempfile.path
+    FileUtils.chmod stat.mode, tempfile.path
+    FileUtils.mv tempfile.path, filename
+  end
+end
+
+def setup_repo options
+
+   # Is $REPOROOT defined and is it a valid writable path?
+   if ENV.has_key? "REPOROOT"
+     unless File.writable? ENV['REPOROOT']
+       error "$REPOROOT points to non existant path #{ENV['REPO_ROOT']} or is not writable".colorize("red")
+     end
+   else
+       error "Env var reporoot is not defined.  source env.sh in root of repo".colorize("red")
+   end
+
+   logpath="."
+   options[:logpath] = logpath
+
+   # Now that we are done cleaning etc, we can setup the proper log
+   #
+   level=:info
+   @log = EtLog.new("#{logpath}/gen_bist_br.log",:info,false,"gen_bist_br")
+   if options[:verbose]
+    level=:debug
+   end
+   @log.level = level
+   @log.info "gen_bist_br is running"
+   @log.info "logpath is #{logpath}/gen_bist_br.log"
+   options[:logfile] = "#{logpath}/gen_bist_br.log"
+
+   @log.info "command line=#{options[:cmd_line]}"
+
+   options[:git_hash],rc = @log.et_backtick "cd ${REPOROOT};git rev-parse HEAD"
+   options[:git_hash].chomp!
+   @log.info "git revision=#{options[:git_hash]}"
+
+   options[:git_short_hash],rc = @log.et_backtick "cd ${REPOROOT};git rev-parse --short HEAD"
+   options[:git_short_hash].chomp!
+   @log.info "git short hash=#{options[:git_short_hash]}"
+
+   @log.info "Querying git repo for local modifications..."
+   diff,rc =@log.et_backtick "cd ${REPOROOT};git diff"
+   if diff != ""
+     diff_path="#{logpath}/local_modifications.patch"
+     f = File.new(diff_path, File::CREAT|File::TRUNC|File::RDWR, 0644)
+     f.write diff
+     f.close
+     @log.warn "There were local modifications so creating patch file #{diff_path}"
+   else
+     @log.info "Repo is clean there are no modifications"
+   end
+end
+
+def create_branch options
+  time = Time.new
+  options[:branch_name]="bist_rtl_#{time.strftime("%Y_%m_%d")}_#{options[:git_short_hash]}"
+  @log.info "Using branch name=#{options[:branch_name]}"
+
+  #
+  # Fix me remove the ,true in the final script
+
+  rc=@log.et_sys "git checkout -b #{options[:branch_name]}",true
+  if rc != 0
+    @log.error "Branch=#{options[:branch_name]} already exists"
+  end
+end
+
+def check_log bist
+  bist_log="#{ENV['REPOROOT']}/#{bist.build_dir}/#{bist.bist_log}"
+
+
+  unless File.exist? bist_log
+    @log.error "Missing logfile=#{bist_log} for block=#{bist.name}"
+  end
+
+
+  pass_count=0
+  expected_pass_count=bist.pass_strings.size
+  @log.info "Pass Count=#{pass_count} Expected Pass Count=#{expected_pass_count}"
+  bist.pass_strings.each do |pass_string|
+    out,pass=@log.et_backtick "grep \"#{pass_string}\" #{bist_log}",true,:debug
+    #@log.info "pass=#{pass} out=#{out}"
+    if out!=""
+       @log.info "\"#{pass_string}\" detected in #{bist_log}"
+     else
+       @log.error"\"#{pass_string}\" not detected in #{bist_log}"
+     end
+     out,fail=@log.et_backtick "grep \"#{bist.fail_string}\" #{bist_log}",true,:debug
+     #@log.info "fail=#{fail} out=#{out}"
+     if out!=""
+       @log.error "\"#{bist.fail_string}\" detected in #{bist_log}"
+     else
+       @log.info "\"#{bist.fail_string}\" not detected in #{bist_log}"
+     end
+     pass_count += 1
+  end
+  @log.info   "Found all #{expected_pass_count} pass strings. Build=#{bist.name} has passed".colorize("yellow");
+end
+
+def build_bists bists
+   bists.each do |bist|
+     @log.info "Building bist=#{bist.name}  log=#{bist.build_dir}/bist.log"
+     ap bist, :raw => true
+     @log.et_sys "cd #{bist.build_dir}/;#{bist.build_cmd}"
+     check_log bist
+     #@log.et_sys "git add #{ENV['REPOROOT']}/#{bist.target_dir}"
+   end
+   @log.info "All bist builds completed!".colorize("yellow")
+end
+
+begin
+   bists = Array.new()
+
+   # Vault
+   bist_rec =Bist_rtl_record.new()
+   bist_rec.name="Vault"
+   bist_rec.build_dir="physical/bist/vault"
+   bist_rec.build_cmd="./run_bist_vault > bist.log 2>&1"
+   bist_rec.target_dir="rtl/ioshire/spio/vault/spio_vault_bisted_rtl"
+   bist_rec.pass_strings=["P A S S vault mbist insertion"]
+   bists << bist_rec
+
+   # IO Shire
+   bist_rec =Bist_rtl_record.new()
+   bist_rec.name="IO Shire"
+   bist_rec.build_dir="physical/bist/ioshire_wrapper"
+   bist_rec.build_cmd="./run_bist_ioshire_wrapper run_all > bist.log 2>&1"
+   bist_rec.target_dir="rtl/ioshire/wrapper/bisted_rtl"
+   bist_rec.pass_strings=["P A S S Maxion shire channel is mbist inserted","P A S S Maxshire_top is mbist inserted","P A S S Pu is mbist inserted","P A S S Spio is mbist inserted","P A S S ioshire_wrapper bist insertion"]
+   bists << bist_rec
+
+
+   # Shire Channel
+   bist_rec =Bist_rtl_record.new()
+   bist_rec.name="Shire Channel"
+   bist_rec.build_dir="physical/bist/shire_channel"
+   bist_rec.target_dir="rtl/shire"
+   bist_rec.pass_strings=["P A S S","CHECKPOINT: TOTAL 112 MEMORY INSTANCES HAVE BEEN DETECTED."]
+   bists << bist_rec
+
+   cmd_line="gen_bist_br"
+   ARGV.each { |arg| cmd_line += " #{arg}" }
+
+   options = {}
+   OptionParser.new do |opts|
+     opts.banner = "Usage: gen_bist_br [options]"
+     opts.on("-a build_arguments","--build_args build_arguments","Specify additional build arguments") do |arg|
+       options[:build_args] = arg
+     end
+     opts.on("-c", "--clean", "Clean the just the specified build dir") do |arg|
+       options[:clean] = arg
+     end
+     opts.on("-i", "--insert", "Only run insertion. Skip all validation") do |arg|
+       options[:insert_only] = arg
+     end
+     opts.on("-n", "--no_branch", "Don't create a git branch for bist insertion") do |arg|
+       options[:no_branch] = arg
+     end
+     opts.on("-q", "--quiet", "Quiesce most output") do |arg|
+       options[:quiet] = arg
+     end
+     opts.on("-s", "--skip", "Quiesce most output") do |arg|
+       options[:skip] = arg
+     end
+     opts.on("-v", "--verbose", "Verbose output") do |arg|
+       options[:verbose] = arg
+     end
+   end.parse!
+   options[:cmd_line]=cmd_line
+
+   unless options[:quiet]
+     options[:quiet]=:info
+   end
+
+   #
+   # Setup the workspace, cleanup, and get the log setup
+   #
+   setup_repo options
+   @log.info "cmd_line=#{cmd_line}"
+
+   require 'socket'
+   hostname = Socket.gethostname
+   @log.info "running on hostname=#{hostname}"
+
+   if options[:insert_only]
+     @log.info "running bist insertion only. skipping validation"
+   end
+
+   ap options      if options[:verbose]
+   @log.ap options if options[:verbose]
+
+   unless options[:no_branch] || options[:skip]
+     create_branch options
+   end
+
+   unless options[:skip]
+     build_bists bists
+
+     @log.info "BIST Insertion Completed...".colorize("yellow")
+     if options[:insert_only]
+       @log.info "Insertion completed successfully. Exiting"
+       exit 0
+     end
+
+
+     COMMON_LINT_F="#{ENV['RTLROOT']}/inc/common_lint.f"
+     COMMON_SYN_F="#{ENV['RTLROOT']}/inc/common_syn.f"
+     COMMON_VCS_F="#{ENV['RTLROOT']}/inc/common_vcs.f"
+
+     #Fix up the dft_defines.vh
+     DFT_DEFINES="#{ENV['RTLROOT']}/inc/dft_defines.vh"
+     file_edit(DFT_DEFINES,/define ET_BIST_INSERTION       0/, "define ET_BIST_INSERTION       1")
+     file_edit(DFT_DEFINES,/\/\/ \`define ET_USE_BIST_RTL/, "`define ET_USE_BIST_RTL\n`define ET_USE_ASIC_MEMS\n")
+
+     #VCS_MK="#{ENV['REPOROOT']}/dv/standalone/ioshire/Makefile"
+     #file_edit(VCS_MK,/VCS_USE_MX\?=0/, "VCS_USE_MX?=1")
+     #file_edit(VCS_MK,/VCS_VER\?=P-2019.06-SP1-1/,"VCS_VER?=O-2018.09-SP2-3")
+
+     #VCS_MK2="#{ENV['REPOROOT']}/dv/standalone/fc/Makefile"
+     #file_edit(VCS_MK2,/VCS_USE_MX\?=0/, "VCS_USE_MX?=1")
+     #file_edit(VCS_MK2,/VCS_VER\?=P-2019.06-SP1-1/,"VCS_VER?=O-2018.09-SP2-3")
+
+     # Do we need to hack these as well
+     #@log.et_sys "echo +define+ET_BIST_INSERTION=0 >> #{COMMON_LINT_F}"
+     #@log.et_sys "echo +define+ET_BIST_INSERTION=0 >> #{COMMON_SYN_F}"
+     #@log.et_sys "echo +define+ET_BIST_INSERTION=0 >> #{COMMON_VCS_F}"
+     #@log.et_sys "echo +define+ET_BIST_RTL >> #{COMMON_LINT_F}"
+     #@log.et_sys "echo +define+ET_BIST_RTL >> #{COMMON_SYN_F}"
+     #@log.et_sys "echo +define+ET_BIST_RTL >> #{COMMON_VCS_F}"
+
+     ENV_SH="#{ENV['REPOROOT']}/env.sh"
+     file_edit(ENV_SH,/export MIN_BIST_DIR=orig/, 'export MIN_BIST_DIR=bist')
+     file_edit(ENV_SH,/export IOS_BIST_DIR=orig/, 'export IOS_BIST_DIR=bist')
+     #file_edit(ENV_SH,/vcs\/P-2019.06-SP1-1/,'vcs-mx/LATEST')
+
+     @log.et_sys "git add --ignore-removal rtl"
+     @log.et_sys "git add --ignore-removal env.sh"
+     @log.et_sys "git add --ignore-removal dv/standalone/ioshire/Makefile"
+     @log.et_sys "git add --ignore-removal dv/standalone/fc/Makefile"
+
+     @log.et_sys "git commit -m \"Bist insertion for git hash=#{options[:git_hash]}\" --no-verify"
+  #   @log.et_sys "git reset --hard "
+     @log.et_sys "cp $REPOROOT/gen_bist_br.log ~/"
+  #   @log.et_sys "cd #{ENV['REPOROOT']};git clean -fd",true
+
+     @log.info "git repo updated".colorize("yellow")
+     @log.info "Running tests...".colorize("yellow")
+
+     @log.info "b4c started!".colorize("yellow")
+     @log.et_sys "sync; cd $REPOROOT; ls -l; cat env.sh"
+     rc=@log.et_sys "export MIN_BIST_DIR=bist;export IOS_BIST_DIR=bist;#{ENV['REPOROOT']}/dv/common/scripts/run_bist_smoke",true
+     if rc==0
+       @log.info "b4c passed!".colorize("yellow")
+     else
+       @log.et_sys "chmod g+rwx ${TESTRUN}/b4c*",true
+       @log.error "b4c failed!"
+     end
+     @log.info "Pushing Branch".colorize("yellow")
+     @log.et_sys "git push origin #{options[:branch_name]}"
+     @log.et_sys "git st; git reset --hard HEAD"
+     @log.et_sys "git fetch;git co master_bisted"
+     @log.et_sys "git merge --strategy-option theirs --no-edit origin/#{options[:branch_name]}"
+     @log.et_sys "git push -u"
+     @log.et_sys "git checkout #{options[:branch_name]}"
+     @log.et_sys "cd ${REPOROOT};git clean -fdx",true
+     @log.info "DFT regression started".colorize("yellow")
+     @log.et_sys "et-dvrun --config $MINION_REG --make -j 8 -s --noclean --runroot $TESTRUN --tags sms_b4c --noslurm  --status --zkmof" 
+     @log.info "DFT regression completed".colorize("yellow") 
+     @log.et_sys "cd ${REPOROOT};git clean -fdx",true
+   else
+     @log.info "SKIP BIST PATH"
+     @log.et_sys "git reset --hard HEAD"
+     @log.et_sys "git clean -fdx",true
+     @log.et_sys "git fetch;git co master_bisted"
+     @log.et_sys "git pull"
+     hash,rc=@log.et_backtick "git rev-parse HEAD"
+     @log.info "Source hash=#{hash}"
+     @log.et_sys "git merge --strategy-option theirs --no-edit origin/master"
+     change_list,rc=@log.et_backtick "git diff --name-only HEAD #{hash}"
+     @log.info "Change List is=#{change_list}"
+     change_list_array=change_list.split("\n")
+     #ap change_list_array
+     intersection=change_list_array & BIST_RTL_FILE_LIST
+     if intersection.length() != 0 
+        @log.error "Bisted RTL files were modified. Aborted. Admin needs to resolve this by hand!",true
+        @log.error intersection
+     end
+     @log.info "git repo updated".colorize("yellow")
+     @log.info "Running tests...".colorize("yellow")
+
+     @log.info "b4c started!".colorize("yellow")
+     @log.et_sys "sync; cd $REPOROOT; ls -l; cat env.sh"
+     rc=@log.et_sys "export MIN_BIST_DIR=bist;export IOS_BIST_DIR=bist;#{ENV['REPOROOT']}/dv/common/scripts/run_bist_smoke",true
+     if rc==0
+       @log.info "b4c passed!".colorize("yellow")
+     else
+       @log.et_sys "chmod g+rwx ${TESTRUN}/b4c*",true
+       @log.error "b4c failed!"
+     end
+     @log.info "Pushing Branch".colorize("yellow")
+     @log.et_sys "git push origin master_bisted"
+
+   end
+
+rescue Interrupt => e
+  @log.info "Interrupt detected (Ctrl-c): #{e}\nStack Trace Follows\n#{e.backtrace.join("\n")}" unless @log.nil?
+  exit 1
+#rescue Exception => e
+#  @log.info "Exception detected : #{e}\nStack Trace Follows\n#{e.backtrace.join("\n")}" unless @log.nil?
+# exit 1
+rescue SystemExit => e
+  exit e.status
+ensure
+  @log.close unless @log.nil?
+end

@@ -1,0 +1,106 @@
+VPATH = $(SW_CPU_DIR)/src/:
+
+VPATH += $(SW_IP_DIR)/src/:                     \
+         $(REPOROOT)/dv/tests/ioshire/sw/src/:  \
+         $(SW_UTILS_DIR)/src/:                  \
+
+ifneq ($(TB_SP_BRINGUP),1)
+VPATH += $(REPOROOT)/swx/glow/lib/src/:
+endif
+
+EVL_MAXSHIRE_CHECKS ?= 0
+
+# Include riscV specific defines
+include $(SW_CPU_DIR)/scripts/makefile.options.swlib.mk
+
+ifeq ($(EVL_MAXSHIRE_CHECKS),1)
+   RVCC_FLAGS += -DEVL_MAXSHIRE_CHECKS
+endif
+
+#Include Path
+INCLUDE_PATH += -I $(REPOROOT)/dv/ioshire_common/inc/c
+INCLUDE_PATH += -I $(SW_CPU_DIR)/inc
+INCLUDE_PATH += -I $(SW_IP_DIR)/inc
+INCLUDE_PATH += -I $(SW_UTILS_DIR)/inc
+INCLUDE_PATH += -I $(SW_CHIP_DIR)/sw/inc
+INCLUDE_PATH += -I $(REPOROOT)/dv/tests/ioshire/sw/inc
+INCLUDE_PATH += -I $(MINION_DIAGS)/include
+INCLUDE_PATH += -I $(RTLROOT)/shire/esr/scripts
+
+ifneq ($(TB_SP_BRINGUP),1)
+   INCLUDE_PATH += -I $(REPOROOT)/swx/glow/lib/include
+endif
+
+#Project specific defines
+
+
+# Directory mess follows.
+# We want to have all our object files stored in src/../obj/ directories.
+# For this purpose we need to:
+# (1) Calculate new full paths for our object files, and
+# (2) Feed them as targets to the gcc, while using rules to point to
+#     appropriate source files.
+#
+# NOTE: This makefile doesn't create/destroy the 'obj' directories.
+#       It has to be done manually.
+
+# Get the source files' paths...
+origsrcpaths    = $(dir $(src))
+origasmsrcpaths = $(dir $(asmsrc))
+
+# ...and the filenames.
+srcfiles    = $(notdir $(src))
+asmsrcfiles = $(notdir $(asmsrc))
+
+# Convert source to object filenames (.c -> .o).
+objfiles    = $(srcfiles:%.c=%.o)
+asmobjfiles = $(asmsrcfiles:%.s=%.o)
+
+# Recalculate the move to "obj" directory...
+objpath = $(SW_LIB_DIR)/obj
+
+# ..and use it to get the final *.o filenames.
+cobj   = $(foreach objfiles,$(objfiles),$(objpath)/$(objfiles))
+asmobj = $(foreach asmobjfiles,$(asmobjfiles),$(objpath)/$(asmobjfiles))
+
+obj = $(cobj) $(asmobj)
+
+# The rules:
+
+all: $(bin)
+
+.NOTPARALLEL:
+# We'll have the gcc use our precalculated $(obj) object file list:
+$(bin): $(obj)
+	@mkdir -p $(objpath)
+	$(AR) rcs $@ $(obj)
+
+# One more path move, back to where the source file is, for compilation:
+$(objpath)/%.o : %.c
+	@mkdir -p $(objpath)
+	$(CC) -c $(RVCC_FLAGS) $(EXTRA_CFLAGS) $(INCLUDE_PATH) $(DEFINES) $< -o $@
+
+$(objpath)/%.o : %.s
+	@mkdir -p $(objpath)
+	$(CC) -c $(RVCC_FLAGS) $(INCLUDE_PATH) $(DEFINES) $< -o $@
+
+clean:
+	rm -f $(obj) $(bin)
+	rm -f $(objpath)/*
+
+new: clean all
+
+tt:
+	@echo "Rajko Test Print:";
+	@echo "Dirs:";
+	@echo $(SW_COMMON_DIR) $(SW_UTILS_DIR) $(SW_IP_DIR) $(SW_CPU_DIR);
+	@echo "src list: ";
+	@echo "$(src)";
+	@echo "src Files: ";
+	@echo "$(srcfiles)";
+	@echo "asm src list: ";
+	@echo "$(asmsrc)";
+	@echo "obj list: ";
+	@echo "$(obj)";
+	@echo "Vpath:"
+	@echo $(VPATH)

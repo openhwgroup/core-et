@@ -1,0 +1,19 @@
+Goal:
+The purpose of the test is to test out the tensor_mask is being calculated and updated each time we write into convolutionSize and convolutionCtrl registers.
+
+Details:
+After each write to one of (or both) the convolutionSize and convolutionCtrl registers, tensor_mask is being read and checked if the read value is correct.
+      writeTensorMask(0x3f3f);
+      writeConvolutionSize(convolutionSize);
+      writeConvCtrl(convolutionCtrl);
+      read=readTensorMask();
+      
+      writeConvolutionSize(convolutionSize2);
+      read=readTensorMask();
+
+      writeConvolutionSize(convolutionSize3);
+      read=readTensorMask();
+
+      writeConvCtrl(convolutionCtrl2);
+      read=readTensorMask();
+

@@ -1,0 +1,5 @@
+Goal:
+The purpose of this test is checking that end of DDR is detected. 
+
+Details:
+When the access to beyond 32 GB of DDR is accessed, a bus error is raised.

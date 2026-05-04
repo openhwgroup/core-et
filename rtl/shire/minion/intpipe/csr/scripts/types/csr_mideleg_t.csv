@@ -1,0 +1,9 @@
+fields,WIRI,MIECO-ZERO,WIRI,MBAD_REP-ZERO,WIRI,MEIP-ZERO,WIRI,SEIP,UEIP-ZERO,MTIP-ZERO,WIRI,STIP,UTIP-ZERO,MSIP-ZERO,WIRI,SSIP,USIP-ZERO
+width,44,1,2,1,4,1,1,1,1,1,1,1,1,1,1,1,1
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+bit idx,63:20,19,18:17,16,15:12,11,10,9,8,7,6,5,4,3,2,1,0
+,,,,,,,,,,,,,,,,,
+sum bits,64,,,,,,,,User level interrupts are not implemented,,,,,,,,
+,,,,,,,,,"Machine level interrupts are not delegable, only supervisor",,,,,,,,
+,,,,,,,,,,,,,, ,,,

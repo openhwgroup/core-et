@@ -1,0 +1,6 @@
+Goal:
+The test cycles through the instructions that are expected to be emulated in M-code (see: https://esperantotech.atlassian.net/browse/RTLMIN-51)
+and checks that they were trapped. There is also some code to fmadd.ps into mcode using MINSTMASK and MINSTMATCH.
+
+Parameter(s):
+Core - This test will run on any Core (even thread) of any Neighborhood of any Shire. Only 1 Core (even thread) is expected to be enabled.

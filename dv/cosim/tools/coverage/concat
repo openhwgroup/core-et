@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# Usage: concat <tsv>..
+# Concatenate multiple TSVs into one
+
+head -n1 $1
+
+for tsv ; do tail -n+2 $tsv ; done

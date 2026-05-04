@@ -1,0 +1,26 @@
+#!/bin/csh -f
+
+set wasPWD=${PWD}
+if ("${0:h}" != "${0:t}") then
+	cd ${0:h}
+endif
+set root=${PWD}
+cd ${wasPWD}
+set py=${root}/et-dvrun.py
+
+#mitigate https://bugs.python.org/issue18748
+setenv ETDV_PY_BUG /tmp/$$.dvrun.pybug
+
+${py} ${*:q}
+set pystatus=${status}
+if (${pystatus}) exit $pystatus
+set estatus=${pystatus}
+if (-e ${ETDV_PY_BUG}) then
+    set wrapper=`/bin/cat ${ETDV_PY_BUG}`
+	rm -f ${ETDV_PY_BUG}
+	chmod +x ${wrapper}
+	${wrapper}
+	set estatus=${status}
+endif
+
+exit ${estatus}

@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# Check if SW artifacts exists 
+if [ ! -d ${REPOROOT}/swx/sw-artifacts ] ; then
+     echo "SW Artifacts not downloaded.. Pls do ";
+     echo "cd $REPOROOT/swx; make ";
+     echo "to download SW Artifact Tree ..."; 
+fi
+
+for i ; do echo Args: $i ; done
+
+if [ $unitest ] ; then
+   echo "Running GLOW unittest...";
+   # Execute unittest based on artifactory path
+   cmd="$REPOROOT/swx/sw-artifacts/etsoc-glow/tests/ETSOC/$TESTNAME --gtest_filter=$TESTFILTER --runDir=$ETDV_RUNDIR --genUberKernel=false $flags";
+else
+   # Add protobuf to LD_LIBRARY_PATH
+   export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${REPOROOT}/swx/sw-artifacts/protobuf-dyn/lib64/
+   flags_opt=""
+   if [ ! -z $flags ]; then
+       flags_opt="-flags $flags --genUberKernel=false"
+   fi
+   cmd="${REPOROOT}/nn/scripts/run_model_glow.pl -download_artifact 1 -model $model -batch $batch $flags_opt";
+   if [ $type == 'int8' ]; then
+       cmd="$cmd -quantized 1"
+   fi
+fi
+
+   echo "$cmd";
+if [ ! $FILELOAD ] ; then
+   #uKernel style Unitest 
+   $cmd > $ETDV_RUNDIR/glow_generate.log ; #--runDir=$testRunDir
+else
+   #ResNet style Operator Unitest 
+   $cmd --fileload=$FILELOAD > $ETDV_RUNDIR/glow_generate.log #--runDir=$testRunDir 
+fi
+
+if [ $? != 0 ]; then
+    echo "Unittest $TESTNAME failed" >&2
+    echo "$cmd";
+    exit 1
+fi
+
+cp -fr $REPOROOT/swx/sw-artifacts/fake-fw/obj/etrt/firmware.hex $ETDV_RUNDIR/.
+cp -fr $REPOROOT/swx/sw-artifacts/fake-fw/obj/etrt/firmware.elf $ETDV_RUNDIR/.
+cp -fr $ETDV_RUNDIR/*/. $ETDV_RUNDIR/.
+
+# and create logs dir
+mkdir -p $ETDV_RUNDIR/logs || exit
+
+if [ $? != 0 ]; then
+    echo "Error detected in preTest\n" >&2
+    exit 1
+fi

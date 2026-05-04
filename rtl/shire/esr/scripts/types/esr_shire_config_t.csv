@@ -1,0 +1,6 @@
+fields,tbox3_id,tbox2_id,tbox1_id,tbox0_id,rbox_en,tbox_en,neigh_en,cache_en,shire_id
+width,2,2,2,2,1,4,4,1,8
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+sum bits,26,,,,,,,,

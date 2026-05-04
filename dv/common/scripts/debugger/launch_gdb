@@ -1,0 +1,18 @@
+#!/usr/bin/bash
+debugger_path=$REPOROOT/dv/common/scripts/debugger
+debugger_rundir=$TESTRUN/ioshire/ioshire_debugger
+
+## ===================================
+# =============== GDB ===============
+# ===================================
+## Connect to OpenOCD assuming it is running on the localhost. This command tells GDB to connect to the localhost on TCP port 3333 
+## which is the default OpenOCD gdb connection port. 
+
+## 1. Open a different bash and run the next command: 
+riscv64-unknown-elf-gdb $debugger_rundir/spMin/py_tb_wfi.elf -x $debugger_path/gdb_config 
+
+# After openOCD start its execution we have to wait for about 5 minuts until we see the next message:
+# Info : 744 932624 server.c:100 add_connection(): accepting 'gdb' connection on tcp/3333
+
+## 2. Then, connect to the openOCD by running the next command:
+#      target remote localhost:3333

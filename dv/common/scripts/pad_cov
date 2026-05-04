@@ -1,0 +1,1 @@
+verdi  -cov -covdir /project/jenkins/func_cov/pad_cov_cumulative/latest/master_cum.vdb &

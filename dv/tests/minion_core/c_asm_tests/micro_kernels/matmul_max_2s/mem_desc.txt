@@ -1,0 +1,11 @@
+New Mem Region: 40'h8000000000, 40'h0001000000, ./elf_region.mem
+New Mem Region: 40'h8040000000, 40'h0001000000, ./layer_region.mem
+New Mem Region: 40'h8080000000, 40'h0030000000, ./data_region.mem
+New Mem Region: 40'h8100000000, 40'h0004000000, ./stack_region.mem
+New Mem Region: 40'h8200000000, 40'h0001000000, ./master_region.mem
+ELF Load: matmul_max_2s
+File Load: 40'h8000001000, ./firmware.mem
+File Load: 40'h8200000000, ./net_desc.mem
+File Load: 40'h8080000000, ./weights.mem
+File Load: 40'h8090000000, ./scales.mem
+File Load: 40'h80a0000000, ./offsets.mem

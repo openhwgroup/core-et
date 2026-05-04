@@ -1,0 +1,6 @@
+fields,esr_sc_idx_cop_sm_ctl_user_en,esr_sc_ram_deep_sleep,esr_sc_ram_shut_down,esr_sc_ram_delay,esr_sc_l2_rbuf_enable,esr_sc_scp_rbuf_enable,esr_sc_zero_state_enable,esr_sc_allow_only_1_req_per_sub_bank,esr_sc_allow_only_1_req_per_bank,esr_sc_cbuf_entry_enable
+width,1,1,1,3,1,1,1,1,1,32
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+sum bits,43,,,,,,,,

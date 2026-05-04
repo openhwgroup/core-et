@@ -1,0 +1,17 @@
+// Copyright (c) 2026 Ainekko
+// SPDX-License-Identifier: Apache-2.0
+
+`ifndef _CMESH_DEFINES_
+`define _CMESH_DEFINES_
+
+
+////////////////////////////////////////////////////////////////////////////////
+// MACROS
+////////////////////////////////////////////////////////////////////////////////
+
+
+`define L2_MESH_REQ_ID_SZ 10
+`define L2_MESH_REQ_ID_R (`L2_MESH_REQ_ID_SZ-1):0
+
+
+`endif // _CMESH_DEFINES_

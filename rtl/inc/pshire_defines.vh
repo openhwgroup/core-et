@@ -1,0 +1,85 @@
+// Copyright (c) 2026 Ainekko
+// SPDX-License-Identifier: Apache-2.0
+
+`ifndef _PSHIRE_DEFINES_
+`define _PSHIRE_DEFINES_
+
+`define IOS_APB_ADDR_WIDTH   32
+`define IOS_APB_DATA_WIDTH   32
+
+// APB Base Address only cares about lower 32 bits.
+// The actual base is 1GB+386MB.
+// The space size is 4 KB.
+`define PSHR_SYS_APB_BASEADDR       32'h5820_0000
+
+
+// The actual base is 510G.
+// The space size is 4 KB.
+`define PSHR_USR_APB_BASEADDR       32'h8000_0000
+
+`define PSHIRE_CTRL_ADDR            (`PSHR_SYS_APB_BASEADDR+32'h000)
+`define PSHIRE_RESET_ADDR           (`PSHR_SYS_APB_BASEADDR+32'h004)
+`define PSHIRE_STAT_ADDR	    (`PSHR_SYS_APB_BASEADDR+32'h008)
+`define INT_AXI_LO_ADDR_ADDR        (`PSHR_SYS_APB_BASEADDR+32'h00C)
+`define INT_AXI_HI_ADDR_ADDR        (`PSHR_SYS_APB_BASEADDR+32'h010)
+`define INT_AXI_LO_DATA_ADDR        (`PSHR_SYS_APB_BASEADDR+32'h014)
+`define INT_AXI_HI_DATA_ADDR        (`PSHR_SYS_APB_BASEADDR+32'h018)
+`define INT_AXI_STAT_ADDR           (`PSHR_SYS_APB_BASEADDR+32'h01C)
+`define INT_AXI_EN_ADDR             (`PSHR_SYS_APB_BASEADDR+32'h020)
+`define INT_AXI_SET_ADDR            (`PSHR_SYS_APB_BASEADDR+32'h024)
+`define MSI_RX_VEC_ADDR		    (`PSHR_SYS_APB_BASEADDR+32'h028)
+`define NOC_INT_STAT_ADDR	    (`PSHR_SYS_APB_BASEADDR+32'h02C)
+
+`define DMA_RDXFER_GO_ADDR          (`PSHR_USR_APB_BASEADDR+32'h000)
+`define DMA_WRXFER_GO_ADDR          (`PSHR_USR_APB_BASEADDR+32'h004)
+`define DMA_RDXFER_DONE0_ADDR       (`PSHR_USR_APB_BASEADDR+32'h008)
+`define DMA_RDXFER_DONE1_ADDR       (`PSHR_USR_APB_BASEADDR+32'h00C)
+`define DMA_RDXFER_DONE2_ADDR       (`PSHR_USR_APB_BASEADDR+32'h010)
+`define DMA_RDXFER_DONE3_ADDR       (`PSHR_USR_APB_BASEADDR+32'h014)
+`define DMA_WRXFER_DONE0_ADDR       (`PSHR_USR_APB_BASEADDR+32'h018)
+`define DMA_WRXFER_DONE1_ADDR       (`PSHR_USR_APB_BASEADDR+32'h01C)
+`define DMA_WRXFER_DONE2_ADDR       (`PSHR_USR_APB_BASEADDR+32'h020)
+`define DMA_WRXFER_DONE3_ADDR       (`PSHR_USR_APB_BASEADDR+32'h024)
+
+`define PSLV_R_MISC_INFO0_ADDR	    (`PSHR_USR_APB_BASEADDR+32'h1000)
+`define PSLV_R_MISC_INFO1_ADDR	    (`PSHR_USR_APB_BASEADDR+32'h1004)
+`define PSLV_W_MISC_INFO0_ADDR	    (`PSHR_USR_APB_BASEADDR+32'h1008)
+`define PSLV_W_MISC_INFO1_ADDR	    (`PSHR_USR_APB_BASEADDR+32'h100C)
+`define MSTR_MISC_INFO_ADDR	    (`PSHR_USR_APB_BASEADDR+32'h1010)
+`define INTX_EN_ADDR		    (`PSHR_USR_APB_BASEADDR+32'h1014)
+`define MSI_TX_VEC_ADDR		    (`PSHR_USR_APB_BASEADDR+32'h1018)
+`define XFER_PENDING_ADDR	    (`PSHR_USR_APB_BASEADDR+32'h101C)
+
+`define PSHIRE_HI_TO_LO_SYNC_STAGES    2
+`define PSHIRE_LO_TO_HI_SYNC_STAGES    2
+
+// DFT
+`define PSHIRE_DFT_MODE_WIDTH                      `SHIRE_DFT_MODE_WIDTH
+//`define PSHIRE_DFT_BC_CTL_WIDTH                    `SHIRE_DFT_BC_CTL_WIDTH
+`define PSHIRE_DFT_BC_CTL_WIDTH                    `SOCTOP_DFT_BC_CTL_WIDTH
+`define PSHIRE_DFT_CNTL_WIDTH                      `SHIRE_DFT_CNTL_WIDTH
+
+`define PSHIRE_DFT_SCANIN_E2W_WIDTH                `SOCTOP_DFT_SI_SO_TOP_WIDTH
+`define PSHIRE_DFT_SCANIN_W2E_WIDTH                `SOCTOP_DFT_SI_SO_TOP_WIDTH
+`define PSHIRE_DFT_SCANIN_ETBLK_WIDTH              16
+
+`define PSHIRE_DFT_SCANOUT_E2W_WIDTH               `SOCTOP_DFT_SI_SO_TOP_WIDTH
+`define PSHIRE_DFT_SCANOUT_W2E_WIDTH               `SOCTOP_DFT_SI_SO_TOP_WIDTH
+`define PSHIRE_DFT_SCANOUT_ETBLK_WIDTH             16
+
+// ECO ports
+`define ET_ECO_PSHIRE_INPUT_WIDTH                  32
+`define ET_ECO_PSHIRE_OUTPUT_WIDTH                 32
+
+//// //NoC ports
+//// `define PSHIRE_NUM_L3_PORTS                             1
+
+`endif // _PSHIRE_DEFINES_
+
+`ifndef _PSHIRE_AXI_TYPE_DEFINES_
+`define _PSHIRE_AXI_TYPE_DEFINES_
+typedef struct packed {
+   logic [39:0]			  addr;   // Address
+   logic [63:0]			  data;   // Write data
+} pshire_int_axi_t;
+`endif

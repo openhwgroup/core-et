@@ -1,0 +1,1437 @@
+#!/eng/dvtools/release/ruby/2.4.2/bin/ruby
+# Hack the GEM_PATH To Karls Libary
+ENV['GEM_PATH']="/eng/dvtools/release/ruby/mygems"
+Gem.clear_paths
+
+require 'optparse'
+require 'fileutils'
+require 'logger'
+require 'awesome_print'
+require_relative 'rblib/et_log'
+
+#@@usage="usage: $0 {-h} {-v <verbose level>} {-s <grid number>}"
+
+include ET_LOG
+
+#
+# Just define some constants for now and refactor into class if needed
+#
+CLUSTER="ioshire"
+SHIRE_PATH="dv/standalone/#{CLUSTER}"
+SHIRE_TEST_DIR="dv/tests/#{CLUSTER}"
+START_PC_HEX="40000000"
+VERBOSITY_LEVELS=["NONE","LOW","MED","MEDIUM","HIGH","FULL","DEBUG"]
+RISCV_LIB="export LD_LIBRARY_PATH=${RISCV}/riscv64-unknown-elf/lib:${LD_LIBRARY_PATH}"
+TBV={}
+TBV["NONE"]   = " +UVM_VERBOSITY=UVM_NONE    +verbosity=NONE    +DEFAULT_LOG_LEVEL=1 +EMU_LOG_LEVEL=2 "
+TBV["LOW"]    = " +UVM_VERBOSITY=UVM_LOW     +verbosity=LOW     +DEFAULT_LOG_LEVEL=0 +EMU_LOG_LEVEL=2 "
+TBV["MEDIUM"] = " +UVM_VERBOSITY=UVM_LOW     +verbosity=MEDIUM  +DEFAULT_LOG_LEVEL=0 +EMU_LOG_LEVEL=0 "
+TBV["HIGH"]   = " +UVM_VERBOSITY=UVM_MEDIUM  +verbosity=HIGH    +DEFAULT_LOG_LEVEL=0 +EMU_LOG_LEVEL=0 "
+TBV["FULL"]   = " +UVM_VERBOSITY=UVM_HIGH    +verbosity=FULL    +DEFAULT_LOG_LEVEL=0 +EMU_LOG_LEVEL=0 +UVM_OBJECTION_TRACE  +UVM_PHASE_TRACE +display_objections +verbosityMESH_MON=DEBUG  +verbosityNOC_SB=DEBUG"
+TBV["DEBUG"]  = " +UVM_VERBOSITY=UVM_DEBUG   +verbosity=DEBUG   +DEFAULT_LOG_LEVEL=0 +EMU_LOG_LEVEL=0 +UVM_OBJECTION_TRACE  +UVM_PHASE_TRACE +display_objections +verbosityMESH_MON=DEBUG  +verbosityNOC_SB=DEBUG"
+DEFAULT_UVM_TEST="dummy_test"
+AAPG_TEST_PATH="#{ENV['REPOROOT']}/dv/tests/ioshire/aapg"
+
+def setup_repo options
+
+   # Is $REPOROOT defined and is it a valid writable path?
+   if ENV.has_key? "REPOROOT"
+     unless File.writable? ENV['REPOROOT']
+       error "$REPOROOT points to non existant path #{ENV['REPO_ROOT']} or is not writable".colorize("red")
+     end
+   else
+       error "Env var reporoot is not defined.  source env.sh in root of repo".colorize("red")
+   end
+
+   # Use the ENV var if set otherwise set to default
+   unless ENV.has_key? "TESTRUN"
+     ENV['TESTRUN'] = "#{ENV['REPOROOT']}/test_run_dir"
+   end
+
+   #
+   # Now figure out where the log file goes based on test and build paramters
+   #
+   unless (options[:test] || options[:build] || options[:check_log] || options[:py_test] || options[:max_test] || options[:max_checkpoint] || options[:aapg_test_name])
+     error  "-t testname, --test testname, -p testname.py, --py_test testname.py, -m testname, -c checkpoint, --aapg testname are mandatory flags unless using -b or --build or --check_log logfile to post process a log".colorize("red")
+   end
+
+   unless options[:build_name]
+     options[:build_name]="debug"
+   end
+
+   if options[:xprop]
+      puts Dir.pwd
+      unless File.exists? options[:xprop]
+        @log.error "Xprop configuration file does not exist file=#{options[:xprop]}"
+      end
+      options[:xprop]=File.expand_path options[:xprop]
+   end
+
+   if options[:py_test]
+     unless (options[:build] || options[:check_log])
+       unless File.exist? options[:py_test]
+         error "specified python test does not exist. py_test=#{options[:py_test]}"
+       end
+       options[:py_test_name]=File.basename options[:py_test],'.py'
+       options[:py_test] = File.expand_path options[:py_test]
+     end
+   end
+
+   if options[:aapg_test_name]
+    tests = options[:aapg_test_name].split "."
+    tests.each do |test|
+       unless (options[:build] || options[:check_log])
+         aapg_ini_file="#{AAPG_TEST_PATH}/#{test}.ini"
+         unless File.exist? aapg_ini_file
+           error "specified aapg test does not exist. aapg_test=#{aapg_ini_file}"
+         end
+       end
+     end
+   end
+
+   max_test_path="#{ENV['REPOROOT']}/dv/tests/ioshire/maxion-hex-files"
+   if options[:max_test]
+     options[:max_test_name]=options[:max_test]
+     unless (options[:build] || options[:check_log] || options[:postsi])
+       max_file_path="#{max_test_path}/#{options[:max_test]}.hex"
+       unless File.exist? max_file_path
+         error "specified maxion test does not exist. max_test=#{max_file_path}"
+       end
+       options[:max_test] = File.expand_path max_file_path
+     end
+   end
+
+   if options[:max_checkpoint]
+     options[:max_chpt_name]=options[:max_checkpoint]
+     unless (options[:build] || options[:check_log])
+       max_file_path="#{max_test_path}/#{options[:max_checkpoint]}-mainram.hex"
+       unless File.exist? max_file_path
+         error "specified maxion checkpoint does not exist. max_checkpoint=#{max_file_path}"
+       end
+       options[:max_checkpoint] = File.expand_path max_file_path
+     end
+   end
+
+   logpath="./"
+   if options[:target]
+     logpath="#{ENV['TESTRUN']}/#{CLUSTER}/#{options[:target]}"
+   elsif options[:py_test]
+     logpath="#{ENV['TESTRUN']}/#{CLUSTER}/#{options[:py_test_name]}"
+   elsif options[:aapg_test_name]
+     logpath="#{ENV['TESTRUN']}/#{CLUSTER}/#{options[:aapg_test_name]}"
+   elsif options[:max_test]
+     logpath="#{ENV['TESTRUN']}/#{CLUSTER}/#{options[:max_test_name]}"
+   elsif options[:max_checkpoint]
+     logpath="#{ENV['TESTRUN']}/#{CLUSTER}/#{options[:max_chpt_name]}"
+   elsif options[:test]
+     logpath="#{ENV['TESTRUN']}/#{CLUSTER}/#{options[:test]}"
+   else
+     logpath="#{ENV['TESTRUN']}/#{CLUSTER}/builds/#{options[:build_name]}"
+   end
+   if options[:sfx]
+     logpath += options[:sfx]
+   end
+   options[:logpath] = logpath
+   options[:build_path]="#{ENV['TESTRUN']}/#{CLUSTER}/builds/#{options[:build_name]}"
+
+   # Cleanup before we open the log
+   if options[:clean] || options[:CLEAN] || options[:CLEAN_TEST]
+     unless ENV.has_key? 'B4C_NOCLEAN'
+       if options[:clean]
+         puts "Cleaning build dir=#{options[:build_path]}"
+         FileUtils.rm_rf options[:build_path]
+       elsif options[:CLEAN]
+         puts "Cleaning $TESTRUN=#{ENV['TESTRUN']}"
+         FileUtils.rm_rf ENV['TESTRUN']
+       elsif options[:CLEAN_TEST]
+         puts "Cleaning testcase directory=#{logpath}"
+         FileUtils.rm_rf logpath
+       end
+     else
+       puts "Not forcing cleanup due to env $B4C_NOCLEAN set"
+     end
+   end
+
+   FileUtils.mkdir_p logpath unless Dir.exists? logpath
+
+   unless Dir.exists?  options[:build_path]
+     FileUtils.mkdir_p options[:build_path]
+   end
+
+   #
+   #
+   level=:info
+   @log = EtLog.new("#{logpath}/run_io.log",:info,false,"run_io")
+   if options[:verbose]
+    level=:debug
+   end
+   @log.level = level
+   @log.info "run_io is running"
+   @log.info "logpath is #{logpath}/run_io.log"
+   options[:logfile] = "#{logpath}/run_io.log"
+
+   @log.info "command line=#{options[:cmd_line]}"
+
+   if options[:aapg_test_name]
+     @log.info "Using AAPG Version=#{options[:aapg_ver]}"
+   end
+
+   unless ENV.has_key? 'B4C_NOCLEAN'
+     @log.et_sys "make -f #{ENV['REPOROOT']}/#{SHIRE_PATH}/Makefile clean",false,options[:quiet] if (options[:clean] || options[:CLEAN])
+   end
+
+   if options[:py_test]
+     unless options[:test]
+      options[:test]="py_tb_wfi"
+      @log.info "-t was not specified for python test so using default test=#{options[:test]}"
+     end
+
+     unless options[:uvm_test]
+      options[:uvm_test]="py_tb_example"
+      @log.info "-u was not specified for python test so using default test=#{options[:uvm_test]}"
+     end
+   end
+
+   if options[:aapg_test_name]
+     unless options[:test]
+      options[:test]="aapgT1"
+      @log.info "-t was not specified for AAPG test so using default test=#{options[:test]}"
+     end
+   end
+
+   if options[:max_test] || options[:max_checkpoint]
+     unless options[:test]
+      options[:test]="max_linux_boot"
+      @log.info "-t was not specified for python test so using default test=#{options[:test]}"
+     end
+   end
+
+   if options[:git]
+     options[:git_hash],rc = @log.et_backtick "cd ${REPOROOT};git rev-parse HEAD"
+     options[:git_hash].chomp!
+     @log.info "git revision=#{options[:git_hash]}"
+     @log.et_sys "echo #{options[:git_hash]} > #{logpath}/git_rev_hash.txt"
+
+     @log.info "Querying git repo for local modifications..."
+     diff,rc =@log.et_backtick "cd ${REPOROOT};git diff"
+     if diff != ""
+       diff_path="#{logpath}/local_modifications.patch"
+       f = File.new(diff_path, File::CREAT|File::TRUNC|File::RDWR, 0644)
+       f.write diff
+       f.close
+       @log.warn "There were local modifications so creating patch file #{diff_path}"
+     else
+       @log.info "Repo is clean there are no modifications"
+     end
+   end
+   Dir.chdir  "#{ENV['TESTRUN']}/#{CLUSTER}"
+end
+
+def build_model options
+  unless options[:build_args]
+    options[:build_args] = ""
+  end
+
+  if options[:no_print]
+    print_select=" PRINT_OPT+=\"-D NO_PRINT\""
+  else
+    print_select=""
+  end
+
+  if options[:sys_emu_only]
+    sys_emu_only="SYS_EMU_ONLY=1"
+  else
+    sys_emu_only=""
+  end
+
+  if options[:stub_randoms]
+    stub_randoms="STUB_RANDOMS=1"
+  else
+    stub_randoms=""
+  end
+
+  if options[:bringup]
+    bringup_vars="MAXION_BRINGUP=1 MINION_BRINGUP=1 SP_BRINGUP=1 "
+    if options[:maxion_uart_print]
+      bringup_vars+="MAXION_UART_PRINT=1 "
+    end
+  else
+    bringup_vars=""
+  end
+
+  if options[:spi_model]
+    model_select="DEFINES+=-DUSE_LE25S161"
+  else
+    model_select="DEFINES+=-DUSE_LE25S161"
+  end
+  if not options[:dummy_test]
+  unless options[:build]
+     @log.info "SW LIB build started".colorize("yellow")
+     if options[:lib_recompile]
+        @log.et_sys "cd #{ENV['REPOROOT']}/dv/tests/ioshire/scripts;#{RISCV_LIB};make -f makefile.master #{sys_emu_only} #{stub_randoms} #{bringup_vars} cleanswlib",false
+     end
+     @log.et_sys "cd #{ENV['REPOROOT']}/dv/tests/ioshire/scripts;#{RISCV_LIB};make -f makefile.master #{sys_emu_only} #{stub_randoms} #{bringup_vars} swlib #{print_select} #{model_select}",false#,options[:quiet]
+     @log.info "SW LIB build completed".colorize("yellow")
+  end
+  end
+
+  unless options[:build_test]
+    @log.info "VCS Model Build Starting!!!".colorize("yellow")
+    simv_path="#{options[:build_path]}/vbuild/simv"
+
+    options[:simv_path]=simv_path
+
+    debug_options=""
+    if options[:debug_build]
+      debug_options="VCS_DEBUG=2 "
+    elsif options[:fast]
+      debug_options="VCS_DEBUG=0 "
+    else
+      debug_options="VCS_DEBUG=1 "
+    end
+    if options[:upf]
+      debug_options += "ENABLE_UPF?=1 "
+    end
+    if options[:xprop]
+      debug_options += "ENABLE_XPROP?=1  XPROP_CFG=#{options[:xprop]}"
+    end
+
+    if options[:incr] and File.exists? simv_path
+      @log.warn "simv exists but incremental compile was specified. Deleteing simv and building....."
+      @log.warn "Deleting simv=#{simv_path}"
+      FileUtils.rm_rf simv_path
+    end
+
+    profile_args=""
+
+    if options[:py_type] == "jtag"
+      if options[:build_args]
+        options[:build_args] += " +define+ULTRASOC_JTAG_ENABLE "
+      else
+        options[:build_args] = " +define+ULTRASOC_JTAG_ENABLE "
+      end
+      options[:py_type] = " +py_jtag "
+    else
+      options[:py_type] = " +py_usb "
+    end
+
+    if options[:profile]
+      options[:build_args] += " -simprofile -pcmakeprof "
+    end
+
+    # If CPP debug is enabled add this to make arguments
+    #
+    if options[:vcs_cpp_debug]
+      if options[:vcs_make_args]
+        options[:vcs_make_args]+=" VCS_CPP_DEBUG?=1 "
+      else
+        options[:vcs_make_args]=" VCS_CPP_DEBUG?=1 "
+      end
+    end
+    if not options[:dummy_test]
+    unless File.exists? simv_path
+      @log.et_sys "make -C #{options[:build_path]} -f #{ENV['REPOROOT']}/dv/standalone/#{CLUSTER}/Makefile all VCS_CMPL_OPTS=\"#{VCS_BUILD_ARGS} #{options[:build_args]}\" #{profile_args} #{debug_options} #{options[:vcs_make_args]}",false,options[:quiet]
+    else
+      @log.info "Build target #{simv_path} exists so skipping TE build".colorize("yellow")
+    end
+    end #dummy_test
+    @log.info "VCS Model Build Completed!".colorize("yellow")
+  end # unless :build_test
+end
+
+def build_test options
+  @log.info "Build testcase starting!!!".colorize("yellow")
+  user_args=""
+  test_path="#{ENV['REPOROOT']}/#{SHIRE_TEST_DIR}"
+  test_case_path="#{test_path}/#{options[:test]}"
+  unless Dir.exists? test_case_path
+    @log.error "Can't find test=#{options[:test]} in path=#{test_path}"
+  end
+
+  test_base_path=""
+  if options[:py_test]
+    if options[:sfx]
+      if options[:target]
+        test_base_path="#{ENV['TESTRUN']}/#{CLUSTER}/#{options[:target]}#{options[:sfx]}"
+      else
+        test_base_path="#{ENV['TESTRUN']}/#{CLUSTER}/#{options[:py_test_name]}#{options[:sfx]}"
+      end
+    else
+      if options[:target]
+        test_base_path="#{ENV['TESTRUN']}/#{CLUSTER}/#{options[:target]}"
+      else
+        test_base_path="#{ENV['TESTRUN']}/#{CLUSTER}/#{options[:py_test_name]}"
+      end
+    end
+    FileUtils.mkdir_p test_base_path unless Dir.exists? test_base_path
+    test_target_path="#{test_base_path}/sim"
+    @log.et_sys "cp -rL #{test_case_path}/* #{test_base_path}"
+  elsif options[:aapg_test_name]
+    if options[:sfx]
+      if options[:target]
+        test_base_path="#{ENV['TESTRUN']}/#{CLUSTER}/#{options[:target]}#{options[:sfx]}"
+      else
+        test_base_path="#{ENV['TESTRUN']}/#{CLUSTER}/#{options[:aapg_test_name]}#{options[:sfx]}"
+      end
+    else
+      if options[:target]
+        test_base_path="#{ENV['TESTRUN']}/#{CLUSTER}/#{options[:target]}"
+      else
+        test_base_path="#{ENV['TESTRUN']}/#{CLUSTER}/#{options[:aapg_test_name]}"
+      end
+    end
+    FileUtils.mkdir_p test_base_path unless Dir.exists? test_base_path
+    test_target_path="#{test_base_path}/sim"
+    @log.et_sys "cp -rL #{test_case_path}/* #{test_base_path}"
+    spMin_dir="#{test_base_path}/spMin"
+    aapg_args=" -f "
+    tests = options[:aapg_test_name].split "."
+    aapg_ddr_id = ""
+    tests.each do |test|
+      aapg_ini_file="#{AAPG_TEST_PATH}/#{test}.ini"
+      aapg_args+=" #{aapg_ini_file} "
+      @log.et_sys "cp #{aapg_ini_file} #{spMin_dir}"
+      if test.include? "ddr"
+         aapg_ddr_id += test
+      end
+    end
+    unless aapg_ddr_id.empty?
+      data_preload_knob="#{AAPG_TEST_PATH}/sp_minion_#{aapg_ddr_id}_cfg_knobs.json"
+      @log.et_sys "cd #{spMin_dir};/eng/dvtools/release/aapg/#{options[:aapg_ver]}/aapg/make.py --seed #{options[:seed]} -c Minion Minion 1 -r . #{aapg_args} -k /eng/dvtools/release/aapg/#{options[:aapg_ver]}/cfg/sp_minion_default_knobs.json #{data_preload_knob} "
+      @log.et_sys "cd #{spMin_dir}/test1;/eng/dvtools/release/aapg/#{options[:aapg_ver]}/tools/sp_asm_process.py; riscv64-unknown-elf-gcc -march=rv64imaf -mcmodel=medany -fomit-frame-pointer -fno-strict-aliasing -fno-builtin -c -o data.o data.s; riscv64-unknown-elf-ld data.o -T /eng/dvtools/release/aapg/#{options[:aapg_ver]}/aapg/sp_link.ld -o data.elf; elf2hex data.elf memImage.hex; mkdir ../../sim; cp memImage.hex ../../sim/memImage.hex "
+    else
+      @log.et_sys "cd #{spMin_dir};/eng/dvtools/release/aapg/#{options[:aapg_ver]}/aapg/make.py --seed #{options[:seed]} -c Minion Minion 1 -r . #{aapg_args} -k /eng/dvtools/release/aapg/#{options[:aapg_ver]}/cfg/sp_minion_default_knobs.json "
+
+    end
+    unless File.exists? "#{spMin_dir}/aapgT1.S"
+      @log.et_sys "cd #{spMin_dir};ln -s test1/output.s aapgT1.S"
+    end
+  elsif options[:max_test]
+    if options[:sfx]
+      if options[:target]
+        test_base_path="#{ENV['TESTRUN']}/#{CLUSTER}/#{options[:target]}#{options[:sfx]}"
+      else
+        test_base_path="#{ENV['TESTRUN']}/#{CLUSTER}/#{options[:max_test_name]}#{options[:sfx]}"
+      end
+    else
+      if options[:target]
+        test_base_path="#{ENV['TESTRUN']}/#{CLUSTER}/#{options[:target]}"
+      else
+        test_base_path="#{ENV['TESTRUN']}/#{CLUSTER}/#{options[:max_test_name]}"
+      end
+    end
+    FileUtils.mkdir_p test_base_path unless Dir.exists? test_base_path
+    test_target_path="#{test_base_path}/sim"
+    @log.et_sys "cp -rL #{test_case_path}/* #{test_base_path}"
+  elsif options[:max_checkpoint]
+    if options[:sfx]
+      if options[:target]
+        test_base_path="#{ENV['TESTRUN']}/#{CLUSTER}/#{options[:target]}#{options[:sfx]}"
+      else
+        test_base_path="#{ENV['TESTRUN']}/#{CLUSTER}/#{options[:max_chpt_name]}#{options[:sfx]}"
+      end
+    else
+      if options[:target]
+        test_base_path="#{ENV['TESTRUN']}/#{CLUSTER}/#{options[:target]}"
+      else
+        test_base_path="#{ENV['TESTRUN']}/#{CLUSTER}/#{options[:max_chpt_name]}"
+      end
+    end
+    FileUtils.mkdir_p test_base_path unless Dir.exists? test_base_path
+    test_target_path="#{test_base_path}/sim"
+    @log.et_sys "cp -rL #{test_case_path}/* #{test_base_path}"
+  else
+    if options[:sfx]
+      if options[:target]
+        test_base_path="#{ENV['TESTRUN']}/#{CLUSTER}/#{options[:target]}#{options[:sfx]}"
+      else
+        test_base_path="#{ENV['TESTRUN']}/#{CLUSTER}/#{options[:test]}#{options[:sfx]}"
+      end
+    else
+      if options[:target]
+        test_base_path="#{ENV['TESTRUN']}/#{CLUSTER}/#{options[:target]}"
+      else
+        test_base_path="#{ENV['TESTRUN']}/#{CLUSTER}/#{options[:test]}"
+      end
+    end
+    FileUtils.mkdir_p test_base_path unless Dir.exists? test_base_path
+    test_target_path="#{test_base_path}/sim"
+    @log.et_sys "cp -rL #{test_case_path}/* #{test_base_path}"
+  end
+  options[:test_target_path]=test_target_path;
+  options[:test_base_path]=test_base_path
+  options[:simv_log_path]="#{options[:test_target_path]}/simv.log"
+
+  unless Dir.exists? test_target_path  # Look for sim subdir inside the test case and if it doesn't exist then create it.
+    Dir.mkdir test_target_path
+  end
+
+  #
+  # Create obj dirs for compiling.  make file requires these
+  #
+  if Dir.exist? "#{test_base_path}/spMin"
+    obj_path="#{test_base_path}/spMin/obj"
+    unless Dir.exists? obj_path
+      @log.debug "Creating path=#{obj_path}"
+      Dir.mkdir obj_path
+    end
+  end
+
+  if Dir.exist? "#{test_base_path}/msMin"
+    obj_path="#{test_base_path}/msMin/obj"
+    unless Dir.exists? obj_path
+      @log.debug "Creating path=#{obj_path}"
+      Dir.mkdir obj_path
+    end
+  end
+
+  if Dir.exist? "#{test_base_path}/ioMax"
+    obj_path="#{test_base_path}/ioMax/obj"
+    unless Dir.exists? obj_path
+      @log.debug "Creating path=#{obj_path}"
+      Dir.mkdir obj_path
+    end
+  end
+
+  # We need to create the top level makefile before we build the test
+  #
+
+  if options[:no_print]
+    print_flag="PRINT_SEL=2"
+    print_select="PRINT_OPT+=\"-D NO_PRINT\""
+  else
+    print_flag="PRINT_SEL=1"
+    print_select=""
+  end
+
+make_file_template = <<-EOS_MAKE
+#{print_flag}
+
+tc_name = #{options[:test]}
+uvm_test = #{options[:uvm_test]}
+
+include ${REPOROOT}/dv/tests/#{CLUSTER}/scripts/makefile.master
+EOS_MAKE
+
+  make_path="#{test_target_path}/makefile"
+  f = File.new(make_path, File::CREAT|File::TRUNC|File::RDWR, 0755)
+  f.write make_file_template
+  f.close
+
+  # OK Now actually build the test
+
+  obj_path_max="#{test_base_path}/ioMax/obj"
+  path_maxion="#{test_base_path}/ioMax"
+  @log.info "Building testcase".colorize("yellow")
+  #Recompile all TC and obj files
+  if options[:sw_recompile]
+    FileUtils.rm_rf obj_path
+    @log.debug "Creating path=#{}"
+    Dir.mkdir obj_path
+
+    unless !(Dir.exists? path_maxion)
+    FileUtils.rm_rf obj_path_max
+    @log.debug "Creating path=#{obj_path_max}"
+    Dir.mkdir obj_path_max
+    end
+
+    rc=@log.et_sys "cd #{test_target_path};#{RISCV_LIB};make cleansw",true
+  end
+
+  if options[:sys_emu_only]
+    system ("python #{ENV['REPOROOT']}/dv/common/scripts/tcParam_gen.py --path #{test_base_path} --seed #{options[:seed]}") or raise "Cannot execute tcParam generator"
+  end
+
+  if options[:stub_randoms]
+    system ("python #{ENV['REPOROOT']}/dv/common/scripts/tcParam_gen.py --path #{test_base_path} --seed #{options[:seed]}") or raise "Cannot execute tcParam generator"
+  end
+
+  maxion_core_selection=""
+  if options[:maxion_core]
+    maxion_core_selection="MAXION_BOOT_SELECTION=#{options[:maxion_core]}"
+  end
+
+  #default linker script for spMin puts the data into SRAM
+  #this behavior is bad for bringup, we must laid down everything into SRAM
+  boot_sp_from_sram=""
+  if options[:bringup]
+   boot_sp_from_sram="BOOT_SP_FROM_SRAM=1"
+  end
+
+  if not options[:dummy_test]
+  rc=@log.et_sys "cd #{test_target_path};#{RISCV_LIB};make sw #{options[:test_make_args]} #{maxion_core_selection} #{boot_sp_from_sram}",true
+  else
+  rc=0
+  end
+
+  # Create the Status file for et-dvrun
+  #
+  if rc!=0 || options[:build_test]
+    if ENV.has_key? "ETDV_RUNDIR"
+      filename="#{ENV['ETDV_RUNDIR']}/status"
+    else
+      filename="#{test_target_path}/status"
+    end
+
+    open(filename, 'w') do |f|
+        if rc==0
+          f.puts "pass"
+        else
+          f.puts "fail ET_TESTCASE_BUILD_FAILED"
+        end
+        f.flush
+    end
+    if not options[:dummy_test]
+    sleep 5
+    end
+    @log.info   "Created status file with Pathname=#{filename}"
+    #
+    #  FUTURE: This was debug code added to show Karl. seems to cause hangs now.  Removed.  delete after whiel
+    if not options[:dummy_test]
+    @log.et_sys "sync;ls -l #{filename}"
+    @log.et_sys "cat #{filename}"
+    end
+    if rc !=0
+      @log.error "Testcase build failed.  Created status=#{filename}"
+    else
+      @log.info "Testcase build PASSED!.  Created status=#{filename}"
+    end
+  end
+
+  msMinString=""
+  if not options[:dummy_test]
+  if Dir.exists? "#{test_base_path}/msMin"
+    elfs = Dir.glob "#{test_base_path}/msMin/*.elf"
+    msMinElf = File.basename elfs[0]
+    msMinString = "ELF Load: ../msMin/#{msMinElf}"
+  end
+  end
+  aapgSpDataInDramString=""
+  if options[:aapg_test_name] and options[:aapg_test_name].include? "ddr"
+     firstMemAddr = File.open("#{test_target_path}/memImage.hex").first.split(' ')[0]
+     aapgSpDataInDramString = "File Load: 40'h#{firstMemAddr}, ./memImage.hex\n"
+  end
+  # Create the mem_desc_text which BEMU uses to load the test into BEMU
+mem_desc_txt = <<-EOS
+ELF Load: ../spMin/#{options[:test]}.elf
+#{msMinString}
+#{aapgSpDataInDramString}
+Ignore Data: 40'h0010000000, 40'h0011FFFFFF
+Ignore Data: 40'h0012000000, 40'h0012007FFF
+Ignore Data: 40'h0018000000, 40'h0018082FFF
+Ignore Data: 40'h001A000000, 40'h001A007FFF
+Ignore Data: 40'h001B000000, 40'h001BFFFFFF
+Ignore Data: 40'h0020009000, 40'h0020009FFF
+Ignore Data: 40'h0020030000, 40'h002003FFFF
+Ignore Data: 40'h0040100000, 40'h00403FFFFF
+Ignore Data: 40'h0050000000, 40'h0051FFFFFF
+Ignore Data: 40'h0052000000, 40'h005201FFFF
+Ignore Data: 40'h0052020000, 40'h0052029FFF
+Ignore Data: 40'h0054000000, 40'h005404FFFF
+Ignore Data: 40'h0054050000, 40'h0054057FFF
+Ignore Data: 40'h0054088000, 40'h0054089FFF
+Ignore Data: 40'h0056000000, 40'h0056001FFF
+Ignore Data: 40'h0058101000, 40'hC7FFFFFFFF
+Ignore Data: 40'h0020007000, 40'h0020007FFF
+Ignore Data: 40'h0030001000, 40'h0030001FFF
+Ignore Data: 40'h003000A000, 40'h003000BFFF
+EOS
+
+  mem_desc_file="#{test_target_path}/mem_desc.txt"
+  f = File.new(mem_desc_file, File::CREAT|File::TRUNC|File::RDWR, 0644)
+  f.write mem_desc_txt
+  f.close
+
+if not options[:dummy_test]
+unless File.exist? "#{test_target_path}/vault_rom.vhx"
+  @log.debug "Testcase does not specify vault_rom.vhx. linking default Vault ROM Image"
+  File.symlink "#{ENV['REPOROOT']}/dv/tests/ioshire/vaultipMinimal/sim/vault_rom.vhx","#{test_target_path}/vault_rom.vhx"
+end
+end
+
+@log.info "Build testcase completed!!!".colorize("yellow")
+end # end of build_test method
+
+# Run Sys Emu to detect possible test problems before actually running the
+#
+
+#
+#$REPOROOT/emu/bemu/sys_emu/build/sys_emu -l  -max_cycles 1000000 -shires 0x400000000 -minions 0x1 -display_trap_info -elf #aapg.elf -reset_pc 0x40400000 -sp_reset_pc 0x40400000
+#
+
+def emu_test options
+
+  sys_emu="#{ENV['BEMU']}/sys_emu/build/sys_emu"
+
+  unless File.executable? sys_emu
+    @log.info "Building sys_emu started".colorize("yellow")
+    @log.et_sys "cd #{ENV['REPOROOT']}/emu/bemu/sys_emu/;make"
+    @log.info "Building sys_emu completed".colorize("yellow")
+  end
+
+  sys_emu_txt = <<-EOT
+#!/bin/bash -e
+set -o pipefail
+cd #{options[:test_target_path]}
+#{sys_emu} -pu_uart0_tx_file pu_uart_tx.log -mem_desc mem_desc.txt  -sp_reset_pc 0x#{START_PC_HEX} -l  -max_cycles #{options[:sys_emu_max_cycles]}  -shires #{options[:shire_mask]} -minions 0x1 -display_trap_info > sys_emu_run.log 2>&1
+EOT
+
+  sys_emu_script="#{options[:test_target_path]}/run_sys_emu"
+  f = File.new(sys_emu_script, File::CREAT|File::TRUNC|File::RDWR, 0755)
+  f.write sys_emu_txt
+  f.close
+
+  sys_emu_pass_string="Signal end test with PASS"
+
+  @log.info "Starting sys_emu on testcase".colorize("yellow")
+  rc=@log.et_sys sys_emu_script,true,options[:quiet]
+
+  @log.info "sys_emu completed. Checking pass/fail status".colorize("yellow")
+  cat,grep_rc=@log.et_backtick "egrep \"#{sys_emu_pass_string}\" #{options[:test_target_path]}/sys_emu_run.log",true
+
+  if (rc !=0) || (grep_rc !=0)
+    @log.warn "sys_emu failed running testcase please review #{options[:test_target_path]}/sys_emu_run.log  sys_emu_rc=#{rc}  log_grep_rc=#{grep_rc}"
+  else
+    @log.info "sys_emu completed successfully!".colorize("yellow")
+  end
+
+  # create pass/fail signature for ET-DVRUN if we are in testcase only mode
+  if options[:build_test]
+    # Create the Status file for et-dvrun
+    #
+    if ENV.has_key? "ETDV_RUNDIR"
+      filename="#{ENV['ETDV_RUNDIR']}/status"
+    else
+      filename="#{File.dirname options[:simv_log_path]}/status"
+    end
+
+    open(filename, 'w') do |f|
+      if (rc==0) && (grep_rc==0)
+        f.puts "pass"
+   #   elsif (final_errors.size > 0)
+   #     f.puts "fail "
+      else
+        f.puts "fail ET_NO_SYSEMU_PASS_STRING"
+     end
+     f.flush
+     if not options[:dummy_test]
+     sleep 5
+     end
+     @log.info   "Created status file with Pathname=#{filename}"
+     @log.et_sys "sync;ls -l #{filename}"
+     @log.et_sys "cat #{filename}"
+   end
+  end # end only build and sys_emu test
+
+end  # end method emu_test()
+
+
+
+def run_test options
+  @log.info "Running testcase...".colorize("yellow")
+  if options[:skip_sp_rom_load]
+    test_args = "+UVM_TESTNAME=#{options[:uvm_test]} +HEX_FILE_IOMAX=../ioMax/#{options[:test]}.hex +TC_PATH=$REPOROOT/dv/tests/#{CLUSTER}/#{options[:test]}"
+  else
+   test_args = "+UVM_TESTNAME=#{options[:uvm_test]} +HEX_FILE=../spMin/#{options[:test]}.hex +HEX_FILE_IOMAX=../ioMax/#{options[:test]}.hex +TC_PATH=$REPOROOT/dv/tests/#{CLUSTER}/#{options[:test]}"
+  end
+
+  user_args = " "
+
+  run_cmd_path="#{options[:test_target_path]}/rerun"
+
+  if options[:fsdb]
+    user_args+=" +dump=1 +fsdb+mda=on "
+    options[:fsdb_run_cmd]="#{options[:test_target_path]}/debug_me"
+
+verdi_template = <<-EOS_VERDI
+#!/bin/bash
+# NOTE: THIS needs to match version from IOSHIRE makefile
+#
+#export VERDI_HOME=/eng/cad/tools/snps/verdi/P-2019.06-SP1-1
+#export PATH=$VERDI_HOME/bin:$PATH
+export DISABLE_TDC_DELETED_MSG=1
+cmd=`readlink -f $0`
+debug_dir=`dirname $cmd`
+verdi -ssf ${debug_dir}/trace.fsdb "$@"
+EOS_VERDI
+
+    verdi_path="#{options[:test_target_path]}/debug_me"
+    f = File.new(verdi_path, File::CREAT|File::TRUNC|File::RDWR, 0755)
+    f.write verdi_template
+    f.close
+
+  end  # Verdi
+
+  if options[:no_sva]
+    user_args+=" -assert quiet+quiet1+nopostproc "
+  end
+
+
+  if options[:gui]
+    user_args+=" -verdi "
+  end
+  user_args += TBV[options[:tbv]]
+
+  if options[:py_test]
+    user_args += " +py_test=#{options[:py_test]} +py_start_script=$REPOROOT/test/scripts/start_ust_vcs +py_sys=soc_tb #{options[:py_type]} "
+  end
+
+  if File.exist? "#{options[:test_target_path]}/memImage.hex"
+    user_args += " +memImage=#{options[:test_target_path]}/memImage.hex"
+  end
+
+  # FUTURE: This is non standard.  Hack to work around stuff
+  #
+  if Dir.exist? "#{options[:test_target_path]}/../msMin"
+    user_args += " +CONTROL_START_PC=0x8000001000 +START_PC=0x8000001000 "
+  end
+
+  if options[:max_test]
+    user_args += " +MAXIONS_MASK=0x1 +riscvemu_cfg=#{options[:max_test_name]}.cfg  +memImage=#{ENV['REPOROOT']}/dv/tests/ioshire/maxion-hex-files/#{options[:max_test_name]}.hex +bootramhex=#{ENV['REPOROOT']}/dv/tests/ioshire/maxion-hex-files/bootram.hex "
+
+    max_cosim_txt = <<-EOT
+{version:1,machine:"riscv64",memory_size:256,bios:"#{ENV['REPOROOT']}/dv/tests/ioshire/maxion-hex-files/#{options[:max_test_name]}.bin",memory_base_addr:0x8000000000,mmio_start:0x100000,mmio_end:0x12003000,bootrom:"#{ENV['REPOROOT']}/dv/tests/ioshire/maxion-hex-files/bootram.bin",logfile:"#{options[:max_test_name]}.riscvemu.log"}
+EOT
+
+     max_cosim_cfg="#{options[:test_target_path]}/#{options[:max_test_name]}.cfg"
+     f = File.new(max_cosim_cfg, File::CREAT|File::TRUNC|File::RDWR, 0755)
+     f.write max_cosim_txt
+     f.close
+
+     @log.debug "max_cosim_cfg=#{max_cosim_txt}"
+  end
+
+  if options[:max_checkpoint]
+    user_args += " +MAXIONS_MASK=0x1 +riscvemu_cfg=#{options[:max_chpt_name]}.cfg  +memImage=#{ENV['REPOROOT']}/dv/tests/ioshire/maxion-hex-files/#{options[:max_test_name]}-mainram.hex +bootramhex=#{ENV['REPOROOT']}/dv/tests/ioshire/maxion-hex-files/#{options[:max_chpt_name]}-maskram.hex "
+
+    max_cosim_txt = <<-EOT
+{version:1,machine:"riscv64",memory_size:256,load:"#{options[:max_chpt_name]}",bios:"#{ENV['REPOROOT']}/dv/tests/ioshire/maxion-hex-files/bbl-vmlinux0.bin",memory_base_addr:0x8000000000,mmio_start:0x100000,mmio_end:0x12003000,logfile:"#{options[:max_chpt_name]}.riscvemu.log"}
+EOT
+
+     max_cosim_cfg="#{options[:test_target_path]}/#{options[:max_chpt_name]}.cfg"
+     f = File.new(max_cosim_cfg, File::CREAT|File::TRUNC|File::RDWR, 0755)
+     f.write max_cosim_txt
+     f.close
+
+     @log.debug "max_cosim_cfg=#{max_cosim_txt}"
+
+     max_test_path="#{ENV['REPOROOT']}/dv/tests/ioshire/maxion-hex-files"
+     @log.et_sys "cp #{max_test_path}/#{options[:max_chpt_name]}.re_regs #{options[:test_target_path]}/."
+     @log.et_sys "cp #{max_test_path}/#{options[:max_chpt_name]}.bootram #{options[:test_target_path]}/."
+     @log.et_sys "cp #{max_test_path}/#{options[:max_chpt_name]}.mainram #{options[:test_target_path]}/."
+  end
+
+
+  @log.debug "user_args=#{user_args}"
+
+
+
+python_test_bash=""
+if options[:py_test]
+  python_test_bash = <<-EOS
+rm -rf ${testRunDir}/py_tb_sync
+EOS
+end
+
+   log_redirect=""
+   if options[:quiet]  == :info
+     log_redirect=" |& tee simv.log"
+   else
+     log_redirect=" > simv.log 2>&1"
+   end
+
+  lic_debug=""
+  if options[:lic_debug]
+    lic_debug="export FLEXLM_DIAGNOSTICS=5; export SLI_DEBUG_SERVER=1  # Turn on License debugging"
+  end
+
+
+  rerun_snippet=""
+  if options[:dummy_test]
+    rerun_snippet="echo '*** TEST HAS PASSED ***' > simv.log\n"\
+                  "echo -e 'N0:C0:T0]\t0123456789-9876543210-RET\tRetire' >> simv.log\n"\
+                  "##{options[:simv_path]} #{options[:sim_args]} #{SIMV_ARGS} #{test_args} #{user_args} '$@' #{log_redirect}"
+  else
+    rerun_snippet="#{options[:simv_path]} #{options[:sim_args]} #{SIMV_ARGS} #{test_args} #{user_args} '$@' #{log_redirect}"
+  end
+
+run_cmd = <<-EOS
+#!/bin/bash
+set -o pipefail
+export SLI_LOCAL_MODE=1
+export DW_WAIT_LICENSE=1   # Wait for VIP License
+#{lic_debug}
+#{python_test_bash}
+#{rerun_snippet}
+EOS
+
+  f = File.new(run_cmd_path, File::CREAT|File::TRUNC|File::RDWR, 0755)
+  f.write run_cmd
+  f.close
+
+  # Write the build name so we know which build corresponds to this test for put_dropbox
+  #
+  f = File.new("#{options[:test_target_path]}/.build", File::CREAT|File::TRUNC|File::RDWR, 0755)
+  f.write options[:build_name]
+  f.close
+
+  unless options[:dry]
+    @log.info   "cd #{options[:test_target_path]};#{run_cmd_path}"
+    options[:simv_rc]=@log.et_sys "cd #{options[:test_target_path]};#{run_cmd_path}",true
+    if options[:simv_rc] != 0
+      @log.error "Simulation exited with return code=#{options[:simv_rc ]}",true
+    end
+  else
+    @log.info "Skipping execution"
+    @log.info "final run script: #{run_cmd_path}"
+  end
+  @log.info "Running testcase completed".colorize("yellow")
+end
+
+RTL_PASS_STRINGS=["\*\*\* TEST HAS PASSED \*\*\*",
+              "N0:C0:T0]\t[0-9a-f]{10}-[0-9a-f]{10}-RET\tRetire"]
+
+
+GATE_PASS_STRINGS=["\*\*\* TEST HAS PASSED \*\*\*"]
+
+
+FAIL_STRINGS=["Checker Error!!",
+              " DUT Error \\(ERROR\\)",  # DUT/BEMU
+               "UVM_ERROR",              # UVM
+               "UVM_FATAL",              # UVM
+               ": FATAL ",               # ??
+               "Fatal: ",                # ??
+               "Assertion failed: ",     # RTL Assertion
+               "Error\\\-\\\[",          # Compiler error
+               "Fatal\\\-\\\[",          # Compiler error
+               "error at time",          # Inside Secure vault IP
+               "ERROR CoSIM:",           # COSIM
+               "ERROR MAXION:",          # riscvemu MAXION
+               "ERROR!",                 # eFuse model
+               "Antecedent of the implication never satisfied.",  # VCS error message for bad assertion.  causes non zero rc
+               "here is a code failure of some sort",
+               "VIRL_MEM_ERR"
+               ]
+
+IGNORE_STRINGS=["DUT error count",
+               "UVM_ERROR count",
+               "UVM_ERROR :",
+               "UVM_FATAL :",
+               "Number of demoted UVM_ERROR",
+               "Number of demoted UVM_FATAL",
+               "Number of caught UVM_ERROR",
+               "Number of caught UVM_FATAL",
+               "error at time               1.0 ns",  # Ignore the 1 Vault error at 1ns
+               "time=             10.0 ns",            # Ignore mem errors before reset
+               "SYS_ATTRS: S254:N15:C0 thread 0 has already completed the boot code",
+               "S254:N15:C0 thread 0 finished the boot code more than once",
+               "VIRL_MEM_ERR: Simultaneous access to the same address on B-port.*g_ioshire.ioshire_wrapper.i_ioshire_top.maxshire_top.maxneigh.maxion.maxion_subsys.tile.frontend.bpdpipeline.btb.btb.BTBbigSmall_[0-9]+.BpuSeqMemArray_sram_sram_b0.uut",
+               "VIRL_MEM_ERR: Simultaneous access to the same address on B-port.*g_ioshire.ioshire_wrapper.i_ioshire_top.maxshire_top.maxneigh.maxion.maxion_subsys.tile.frontend.bpdpipeline.bpd.tables_[0-9]+.ram.TageTableDataArray_sram_b0.uut",
+               "VIRL_MEM_ERR: Simultaneous access to the same address on B-port.*g_ioshire.ioshire_wrapper.i_ioshire_top.maxshire_top.maxneigh.maxion.maxion_subsys.tile_[0-9]+.frontend.bpdpipeline.bpd.tables_[0-9]+.ram.TageTableDataArray_sram_b0.uut",
+	       "VIRL_MEM_ERR: Simultaneous access to the same address on B-port.*g_ioshire.ioshire_wrapper.i_ioshire_top.maxshire_top.maxneigh.maxion.maxion_subsys.tile_[0-9]+.frontend.bpdpipeline.btb.btb.BTBbigSmall_[0-9]+.BpuSeqMemArray_sram_sram_b0.uut",
+               "VIRL_MEM_ERR: Simultaneous access to the same address on B-port.*g_ioshire.ioshire_wrapper.i_ioshire_top.maxshire_top.maxneigh.maxion.maxion_subsys.tile_[0-9]+.mau",
+               "VIRL_MEM_ERR: Simultaneous access to the same address on B-port.*g_ioshire.ioshire_wrapper.i_ioshire_top.maxshire_top.maxneigh.maxion.maxion_subsys.tile.mau.dcache.data",
+               "VIRL_MEM_ERR: D unknown>>.*g_ioshire.ioshire_wrapper.i_ioshire_top.spio.vault_wrapper.spio_vault.data_ram.data_ram.uut.report_unknown",
+               "VIRL_MEM_ERR: TCLKE Transition during active Clock>>.*g_ioshire.ioshire_wrapper.i_ioshire_top.spio.vault_wrapper.spio_vault.prog_rom.prog_rom.blk_tclkebuf_0",
+               "VIRL_MEM_ERR:RSCRST unknown>> at time=            0.180 ns; instance=top.soc_top.*pu.pu_scram_axi",
+               "VIRL_MEM_ERR:RSCRST unknown>> at time=            0.180 ns; instance=top.soc_top.*spio.spio_scram_axi",
+               "VIRL_MEM_ERR: D unknown.*spio.sp.standalone_minion.icache_data_ram.*uut.report_unknown",
+               "<<VIRL_MEM_ERR:OUT OF RANGE BITS IN SCANCHAIN COLUMN>>"
+]
+
+# List of files to keep even if we clean_on_pass
+#
+KEEP_LIST=["spMin.log","ioMax.log","msMin.log"]
+
+#
+# Simple method to process pass/fail
+# missing proper error checks since we dont have a test that works!
+#
+def check_test options,logfile
+
+  # FUTURE: re-write
+  # This is a total hack. Its just collects errors brute force but does not provide
+  # signatures
+  # its uses too many external calls
+  # hack to eliminate the UVM_ERROR cout
+  #
+  # This should be replaced by et-dvrun checker
+  # These checkers need to be expanded to control strings per test for weird exception cases
+
+  @log.info "Parsing test log=#{logfile} to determine final status".colorize("yellow")
+
+  log_dir = File.dirname logfile
+  @log.debug "logpath=#{log_dir}"
+
+  pass_count=0;
+  pass_string_criteria_met=false
+  missing_pass_strings=""
+
+  if options[:gates]
+    my_pass_strings=GATE_PASS_STRINGS
+  else
+    my_pass_strings=RTL_PASS_STRINGS
+  end
+
+  my_pass_strings.each do |pass_string|
+    #@log.info "egrep  \"#{pass_string}\" #{logfile}"
+    out,rc=@log.et_backtick "egrep -m 1 \"#{pass_string}\" #{logfile}",true
+    if (out =="")
+      missing_pass_strings << "#{pass_string}\n"
+    else
+      pass_count +=1
+    end
+  end
+
+  if (pass_count != my_pass_strings.size)
+    pass_string_criteria_met=false
+    @log.error "The following require PASS_STRINGS were not found=#{missing_pass_strings}",true
+  else
+    @log.info "All #{pass_count} PASS_STRINGS were found"
+    pass_string_criteria_met=true
+  end
+
+  error_strings=""
+  FAIL_STRINGS.each do |fail_string|
+    #@log.info "egrep  \"#{fail_string}\" #{logfile}"
+    out,rc=@log.et_backtick "egrep  \"#{fail_string}\" #{logfile}",true
+    if (out !="")
+      error_strings << out
+    end
+  end
+
+  #@log.debug "Error Strings=#{error_strings}"
+
+  errors = error_strings.split "\n"
+  final_errors=[];
+  errors.each do |error|
+    match_any=false
+    IGNORE_STRINGS.each do |ignore|
+      #@log.info "error=#{error} ignore=#{ignore}"
+      if error =~ /#{ignore}/
+        #@log.info "MATCH IGNORE"
+        match_any=true
+      end
+    end
+    #@log.info "Match Any=#{match_any}"
+    final_errors << error unless match_any==true
+  end
+
+  if options[:simv_rc] != 0
+    final_errors << "Fatal Error: simv exited with non zero return code. rc=#{options[:simv_rc]}"
+  end
+
+  # Check for Maxion cosim log
+  maxion_pass_string="ET validation mhartid=0 PASS code=0"
+
+  maxion_cosim_log=Dir["#{log_dir}/*.riscvemu.log"]
+  if maxion_cosim_log.size != 0
+    @log.debug "Maxion cosim log found=#{maxion_cosim_log[0]}"
+#   out,rc=@log.et_backtick "egrep  \"#{maxion_pass_string}\" #{maxion_cosim_log[0]}",true
+#   if (rc !=0)
+#     final_errors << "Error: Maxion cosim log does not contain pass string.  log=#{maxion_cosim_log[0]}"
+#   end
+  else
+    @log.debug "Maxion cosim log does not exist"
+  end
+
+ if final_errors.size > 0
+  @log.error "Final error count=#{final_errors.size}",true
+  final_errors.each do |error|
+      @log.error error,true
+  end
+ else
+  @log.info "No errors detected in logfile".colorize("yellow")
+ end
+
+ # Create the Status file for et-dvrun
+ #
+ if ENV.has_key? "ETDV_RUNDIR"
+   filename="#{ENV['ETDV_RUNDIR']}/status"
+ else
+   filename="#{File.dirname logfile}/status"
+ end
+
+ open(filename, 'w') do |f|
+   if (pass_string_criteria_met) && (final_errors.size==0)
+     f.puts "pass"
+   elsif (final_errors.size > 0)
+     f.puts "fail #{final_errors[0]}"
+   else
+     f.puts "fail ET_NO_PASS_STRING"
+   end
+   f.flush
+ end
+ if not options[:dummy_test]
+ sleep 5
+ end
+ @log.info   "Created status file with Pathname=#{filename}"
+ @log.et_sys "sync;ls -l #{filename}"
+ @log.et_sys "cat #{filename}"
+
+ if options[:clean_on_pass] && (pass_string_criteria_met) && (final_errors.size==0)
+   @log.info "--clean_on_pass specified and test passed. Removing sim directory contents #{File.dirname logfile}".colorize("yellow")
+   @log.et_sys "cd #{options[:test_target_path]}; mkdir ../sim_keep"
+   KEEP_LIST.each do |file|
+     @log.et_sys "cd #{options[:test_target_path]};cp -f #{options[:test_target_path]}/#{file} ../sim_keep"
+   end
+   @log.et_sys "cd #{options[:test_target_path]};cd ..;mv sim_keep sim; rm -rf spMin;rm -rf ioMax; rm -rf msMin"
+   @log.info "--clean_on_pass completed ".colorize("yellow");
+ end
+
+   @log.info "Starting test post processing for debug"
+   if Dir.exists? "#{log_dir}/../spMin"
+     @log.info "Detected testcase spMin directory"
+     @log.et_sys "cd #{log_dir};parse_sp_test"
+   end
+   if Dir.exists? "#{log_dir}/../ioMax"
+     @log.info "Detected testcase ioMax directory"
+     @log.et_sys "cd #{log_dir};parse_maxion_test"
+   end
+
+ return (pass_string_criteria_met) && (final_errors.size==0)
+end
+
+#
+# MAIN Program starts here
+#
+
+begin
+   cmd_line="run_io"
+   ARGV.each { |arg| cmd_line += " #{arg}" }
+   puts "cmd_line=#{cmd_line}"
+
+   options = {}
+   OptionParser.new do |opts|
+     opts.banner = "Usage: run_io [options]"
+     opts.on("-a build_arguments","--build_args build_arguments","Specify additional build arguments") do |arg|
+       options[:build_args] = arg
+     end
+     opts.on("--aapg_ver versioN# ","Run an aapg test defaults to SP template aapgT1") do |arg|
+       options[:aapg_ver] = arg
+     end
+     opts.on("-A aapg_ini_file ","--aapg aapg_ini_file,[opt additional_ini] ","Run an aapg test defaults to SP template aapgT1") do |arg|
+       options[:aapg_test_name] = arg
+     end
+     opts.on("--bringup", "Includes make variables needed for bringup sw") do |arg|
+       options[:bringup] = arg
+     end
+     opts.on("-b", "--build_model", "build model only") do |arg|
+       options[:build] = arg
+     end
+     opts.on("-B buildName", "--build_name buildName", "name of build to use") do |arg|
+       options[:build_name] = arg
+     end
+     opts.on("-c", "--clean", "Clean the just the specified build dir") do |arg|
+       options[:clean] = arg
+     end
+     opts.on("--check_log logfile","Post process build/simulation log for errors") do |arg|
+       options[:check_log] = arg
+     end
+     opts.on("-C", "--clean_all", "Clean all $TESTRUN (all builds and simulations)") do |arg|
+       options[:CLEAN] = arg
+     end
+     opts.on("--clean_test", "Clean just the test directory and not the builds") do |arg|
+       options[:CLEAN_TEST] = arg
+     end
+     opts.on("--clean_on_pass","Clean the simulation dir if test passses") do |arg|
+       options[:clean_on_pass] = arg
+     end
+     opts.on("--vcs_cpp_debug","Builds COSIM & VCS with Address Santizer enabled to debug VCS internal crashes") do |arg|
+       options[:vcs_cpp_debug] = arg
+     end
+     opts.on("-d","--dry_run","Just build everything but don't run the simulation") do |arg|
+       options[:dry] = arg
+     end
+     opts.on("-f", "--fsdb", "dump fsdb") do |arg|
+       options[:fsdb] = arg
+     end
+     opts.on("-F","--force","Compile with full debug_build for forcing and extra debug (runs slow)") do |arg|
+       options[:debug_build] = arg
+     end
+     opts.on("--fast", "optimize build for runtime speed.  no waves/vpd/fsdb possible") do |arg|
+       options[:fast] = arg
+     end
+     opts.on("-g", "--gui", "Run Verdi in interactive mode") do |arg|
+       options[:gui] = arg
+     end
+     opts.on("-G", "--git", "Run record git hash and diff for reproduction") do |arg|
+       options[:git] = arg
+     end
+     opts.on("--gates", "Specify gate_sim.  This changes test pass/fail criteria for gatesime purposes") do |arg|
+       options[:gates] = arg
+     end
+     opts.on("-i", "--incremental", "Enable incremental build in VCS (use at your own risk)") do |arg|
+       options[:incr] = arg
+     end
+     opts.on("-l checkpoint", "--linuxchpt checkpoint", "name of the maxion checkpoint to execute") do |arg|
+       options[:max_checkpoint] = arg
+     end
+     opts.on("--lic_debug") do |arg|
+       options[:lic_debug] = arg
+     end
+     opts.on("--lib_recompile","") do |arg|
+       options[:lib_recompile] = arg
+     end
+     opts.on("-m testname", "--max testname", "name of the maxion testcase to execute") do |arg|
+       options[:max_test] = arg
+     end
+     opts.on("--maxion_core maxion_core", "Maxion core to keep alive in the simulation for BootRAM") do |arg|
+       options[:maxion_core] = arg
+     end
+     opts.on("--maxion_uart_print", "Default printDbg via mailbox, if passed, print via PU_UART0") do |arg|
+       options[:maxion_uart_print] = arg
+     end
+     opts.on("-M arguments", "--make arguments", "Pass arguments directly to VCS make file") do |arg|
+       options[:vcs_make_args] = arg
+     end
+     opts.on("--no_cosim","Don't enable cosim checking step") do |arg|
+       options[:no_cosim] = arg
+     end
+     opts.on("--no_print","Don't enable printDbg") do |arg|
+       options[:no_print] = arg
+     end
+     opts.on("--no_sva","Quiet SVA's") do |arg|
+       options[:no_sva] = arg
+     end
+     opts.on("-o name", "--target name", "Use specified name as target directory instead of the default testname") do |arg|
+       options[:target] = arg
+     end
+     opts.on("-p testname", "--py_test testname", "name of (Ultrasoc/Python) testcase to execute") do |arg|
+       options[:py_test] = arg
+     end
+     opts.on("--py_type usb|jtag", "Type of connection of ultrasoc test usb|jtag") do |arg|
+       options[:py_type] = arg
+     end
+     opts.on("--profile","Profile simulation runtime") do |arg|
+       options[:profile] = arg
+     end
+     opts.on("--postsi","Post silicon test") do |arg|
+       options[:postsi] = arg
+     end
+     opts.on("-q","--quiet","Enable quiet simulation mode") do |arg|
+       options[:quiet] = ":debug"
+     end
+     opts.on("-s args","--sim_args args","Arguements to pass directly to the simulator") do |arg|
+       options[:sim_args] = arg
+     end
+     opts.on("--seed <num>","Specify seed or else random") do |arg|
+       options[:seed] = arg
+     end
+     opts.on("--sfx suffix","Specify a suffix to append to test name") do |arg|
+       options[:sfx]  = arg
+     end
+     opts.on("--skip_emu","Skip the emu step") do |arg|
+       options[:skip_emu] = arg
+     end
+     opts.on("--skip_sp_rom_load","Don't load the testcase contents into the ROM.  Use with Gate level ROMs") do |arg|
+       options[:skip_sp_rom_load] = arg
+     end
+     opts.on("--spi_model","Don't enable printDbg") do |arg|
+       options[:spi_model] = arg
+     end
+     opts.on("--sys_emu_only","Change implementation of tb.c to tb_sysemu.c") do |arg|
+       options[:sys_emu_only] = arg
+     end
+     opts.on("--stub_randoms", "Allow generation of tcParam.h") do |arg|
+       options[:stub_randoms] = arg
+     end
+
+     opts.on("--sys_emu_max_cycles <num>","SYS_EMU simulation max cycles") do |arg|
+       options[:sys_emu_max_cycles] = arg
+     end
+     opts.on("--sw_recompile","") do |arg|
+       options[:sw_recompile] = arg
+     end
+     opts.on("-t testname", "--test testname", "name of testcase to execute") do |arg|
+       options[:test] = arg
+     end
+     opts.on("-T testname", "--TEST testname", "Just build the testcase. Nothing else") do |arg|
+       options[:test] = arg
+       options[:build_test] = arg
+     end
+     opts.on("--test_make args", "Arguments are passed directory to testcase makefile") do |arg|
+       options[:test_make_args] = arg
+     end
+     opts.on("-u uvm_testname","--uvm_test uvm_testname","Specify a UVM testname") do |arg|
+       options[:uvm_test] = arg
+     end
+     opts.on("-U","--upf","Enable VCS UPF simulation mode") do |arg|
+       options[:upf] = arg
+     end
+     opts.on("-v", "--[no-]verbose", "Run verbosely") do |arg|
+       options[:verbose] = arg
+     end
+     opts.on("-V verbosity_level","--tbv verbosity_level","TB verbosity=[NONE,LOW,MED,HIGH,FULL,DEBUG") do |arg|
+       options[:tbv] = arg.upcase
+     end
+     opts.on("-x xprop_file","--xprop xprop_file","Enable VCS X propogation mode") do |arg|
+       options[:xprop] = arg
+     end
+     opts.on("-z", "--dummy_test", "Produce only rerun scripts") do |arg|
+       options[:dummy_test] = arg
+     end
+   end.parse!
+   options[:cmd_line]=cmd_line
+
+   unless options[:quiet]
+     options[:quiet]=:info
+   end
+
+   #
+   # Setup the workspace, cleanup, and get the log setup
+   #
+   setup_repo options
+
+   require 'socket'
+   hostname = Socket.gethostname
+   if (hostname =~ /vnc/) || (hostname =~ /sc\-dv[\d]*/)
+     @log.error "running run_io directly on hostname=#{hostname} is forbidden. use \'srun run_io ....\' instead"
+   end
+
+   #
+   # No check the rest of the command line flags
+   #
+   @log.debug "sim_args=#{options[:sim_args]}"
+
+   unless options[:aapg_ver]
+     options[:aapg_ver]="LATEST"
+   end
+
+   unless options[:sys_emu_max_cycles]
+       options[:sys_emu_max_cycles] = 1000000
+   end
+   @log.info "SYSEMU_max_cycles=#{options[:sys_emu_max_cycles]}"
+
+   unless options[:seed]
+     options[:seed] = rand(0..0xFFFFFFFF)
+     unless options[:build]
+       @log.info "No command line seed specified.  Generated random SEED=#{options[:seed]}"
+     end
+   else
+     unless options[:build]
+       @log.info "Using command line SEED=#{options[:seed]}"
+     end
+   end
+
+   unless options[:tbv]
+       options[:tbv]="MEDIUM"
+   end
+
+   if options[:tbv]=="MED"
+     options[:tbv]="MEDIUM"
+   end
+
+   unless VERBOSITY_LEVELS.include? options[:tbv]
+     @log.error "Invalid verbosity level! Valid Levels=#{VERBOSITY_LEVELS}"
+   end
+
+   unless options[:py_type]
+     options[:py_type]="usb"
+     @log.info "--py_type was not specified for python test so using default connection=usb"
+   end
+
+   unless ["usb","jtag"].include? options[:py_type]
+     @log.error "--py_type must be either jtag or usb.  #{options[:py_type]} is not a valid value"
+   end
+
+   #@log.ap options
+
+   #Check for Valid Testcase
+   #
+   test_path="#{ENV['REPOROOT']}/#{SHIRE_TEST_DIR}"
+   test_case_path="#{test_path}/#{options[:test]}"
+   @log.info "C/ASM Testcase path=#{test_case_path}";
+   unless Dir.exists? test_case_path
+     @log.error "Can't find test=#{options[:test]} in path=#{test_path}"
+   end
+
+
+
+   #
+   # FUTURE:  Refactor this into a method soon
+   #
+   if options[:no_cosim]
+     checker_flag=" +CHECKER=0 +COSIM_LOG_LEVEL=1"
+   else
+     checker_flag=" +MONITOR=1 +CHECKER=1 +COSIM_LOG_LEVEL=1"
+   end
+
+   if Dir.exists? "#{test_case_path}/msMin"
+     options[:shire_mask]="0x500000000"
+   else
+     options[:shire_mask]="0x400000000"
+   end
+
+   SIMV_ARGS="+verbosityTIMER=HIGH +vcs+lic+wait \
+   #{checker_flag}  +SHIRE_MASK=#{options[:shire_mask]} +UVM_TIMEOUT=50000000 +ntb_random_seed=#{options[:seed]} +SEED=#{options[:seed]}"
+
+   @log.debug "SIMV_ARGS=#{SIMV_ARGS}"
+
+   VCS_BUILD_ARGS="+define+SVT_FSDB_ENABLE "
+
+   #
+   # End refactor section
+   #
+
+   unless (options[:uvm_test])
+     @log.warn "no uvm test specified on command line.  Using default uvm_test=#{DEFAULT_UVM_TEST}"
+     options[:uvm_test]=DEFAULT_UVM_TEST
+   end
+   if options[:check_log]
+     unless File.exist? options[:check_log]
+       @log.error "Logfile does not exist path=#{options[:check_log]}"
+     end
+     options[:simv_rc]=0
+     @log.info "Post processing logfile=#{options[:check_log]}";
+     final_pass_status=check_test options,options[:check_log]  # Check the logs and determing final pass/fail status
+     exit final_pass_status;
+   end
+
+   build_model options  # Build the SIMV file to run. if :build_test it will just build SW Library which is needed for testcases
+
+   # Run the sim and process the results
+   #
+   unless options[:build]
+
+     build_test  options   # Compile the testcase
+
+     unless options[:skip_emu]
+       emu_test  options   # Check that the test runs on the SYS EMU emulator
+     end
+     if options[:build_test]
+       @log.info "-T option specified.  Testcase has been built exiting!".colorize("yellow")
+       exit 0
+     end
+
+     run_test options      # Actually run the RTL Simulation
+     final_pass_status=check_test options,options[:simv_log_path]  # Check the logs and determing final pass/fail status
+
+     if options[:fsdb]
+       @log.info "invoke waves:  #{options[:fsdb_run_cmd]}".colorize("yellow")
+     end
+     @log.info "Path to log:  #{options[:simv_log_path]}".colorize("yellow")
+
+     if (final_pass_status==true)
+       @log.smiley
+       if options[:clean_on_pass]  # only delete the log with the true argument to close if we pass and option is specified
+         @log.close true unless @log.nil?
+         @log=nil
+       end
+     else
+       @log.cross
+       exit 1;
+     end
+   end
+
+rescue Interrupt => e
+  @log.info "Interrupt detected (Ctrl-c): #{e}\nStack Trace Follows\n#{e.backtrace.join("\n")}"
+  exit 1
+#rescue Exception => e
+#  @log.info "Exception detected : #{e}\nStack Trace Follows\n#{e.backtrace.join("\n")}"
+# exit 1
+rescue SystemExit => e
+  exit e.status
+ensure
+  @log.close unless @log.nil?
+end

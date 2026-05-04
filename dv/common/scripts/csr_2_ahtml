@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Pick up some util functions for printing colorized messages and testing shell commands
+#
+source $REPOROOT/dv/common/scripts/bash_utils.sh
+
+# Set DEBUG Env var for additional logging
+#
+export DEBUG=1
+
+
+mkdir -f top
+try csrCompile -v -R  -c $REPOROOT/dv/common/scripts/semifore_css/etsoc_esr.css -I . -t ahtml $1.csr -o top/
+
+#try csrCompile -v  -c $REPOROOT/dv/common/scripts/semifore_css/et_soc.css -I . -t h    $1.csr -o $REPOROOT/dv/common/sw/ip/inc/$1
+#try sed -i 's/FIXME title check/FIX ME SNPS title check/g' $REPOROOT/dv/common/sw/ip/inc/$1.html

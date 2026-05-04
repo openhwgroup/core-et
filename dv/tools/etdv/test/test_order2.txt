@@ -1,0 +1,2 @@
+t1 t2 t3
+#my_config.my_buildA.test_nightly

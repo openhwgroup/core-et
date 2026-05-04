@@ -1,0 +1,11 @@
+Goal:
+Test to check the HART ESR space.
+
+Details:
+ Test list:
+ Test1: access hart space (no esr)
+ Test2: access esr dbg (abscmd)
+ Test3: access hart space (no esr) (target next minion which should be disabled)
+ Test4: access esr dbg (abscmd)  (target next minion which should be disabled)
+
+

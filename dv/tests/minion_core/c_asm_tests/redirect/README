@@ -1,0 +1,3 @@
+Goal:
+Test basic IPI_REDIRECT; 2 cases: 1) t0 receiving and t1 sending; 2) t0 sending and t1 receiving.
+

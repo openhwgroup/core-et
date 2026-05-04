@@ -1,0 +1,46 @@
+#!/bin/csh -f
+
+set cmd="`(cd ${0:h}; pwd)`/${0:t}"
+set dvg="${cmd:h:h}/dvg/${cmd:t}"
+
+# Add in our ruby
+setenv RUBY_HOME /home/eng/dvtools/release/ruby/2.4.2
+setenv GEM_HOME /home/eng/dvtools/release/ruby/mygems
+setenv PATH ${RUBY_HOME}/bin:${PATH}
+
+if (0 && ("kpfalzer" != "${USER}")) then
+	echo "Sorry: please try again later."
+	exit 1
+endif
+
+# stage2 always on barcino jenkins
+set stage2=0
+if ($?MYMLTSTAGE && $?MYSTAGE) then
+	if (("0" != "${MYMLTSTAGE}") && ("1" == "${MYSTAGE}")) then
+		set stage2=1
+	endif
+endif
+
+# where are we: determine which jenkins to use
+#if ("xkpfalzer" == "${USER}") then
+if ("0" == "${stage2}") then
+	# if we start on sc-xxx machine, then run on sc-jenkins
+	hostname -s | egrep -iq '^sc\-' 
+    set xstatus=$status
+else
+    set xstatus=1
+endif
+if (0 == ${xstatus}) then
+    setenv DVG_HOST sc-jenkins01
+else
+    ping -c 1 -t 5 barcino >& /dev/null
+    if (0 == ${status}) then
+        setenv DVG_HOST barcino
+    else
+        echo "Could not determine which jenkins to use"
+        exit 1
+    endif
+endif
+
+exec $dvg ${*}
+

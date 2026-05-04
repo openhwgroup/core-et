@@ -1,0 +1,64 @@
+#!/usr/bin/env python3.6
+
+import sys, os, re
+
+PROG = os.path.basename(sys.argv[0])
+
+
+def eprint(text):
+    print(text, file=sys.stderr, flush=True)
+
+
+def _usage_error():
+    eprint(f"Usage: {PROG} qacct.log")
+    exit(1)
+
+
+def _error(msg, do_exit=True):
+    eprint(f'Error: {msg}.')
+    if do_exit: exit(1)
+
+
+__PATTERN = re.compile(r'(cwd|owner|qsub_time|start_time|end_time|failed)\s+(\S+)(\s+(\S+))?')
+
+
+def _process(qlog=None):
+    key_order = None
+    values = None
+    with (qlog and open(qlog, 'rt')) or sys.stdin as ifs:
+        for line in ifs:
+            line = line.strip()
+            if 0 < len(line):
+                if line.startswith('==='):
+                    if values is not None:
+                        if key_order is None:
+                            key_order = values.keys()
+                            print(','.join(key_order))
+                        oline = ','.join([((k in values and values[k]) or '-') for k in key_order])
+                        print(oline)
+                    values = None
+                else:
+                    m = __PATTERN.match(line)
+                    if m:
+                        if values is None: values = {}
+                        key = m.group(1)
+                        if key.endswith('time'):
+                            values[key+'_d'] = m.group(2)
+                            values[key+'_t'] = m.group(4)
+                        else:
+                            values[key] = m.group(2)
+
+
+def main(argv):
+    argc = len(argv)
+    if 2 < argc: _usage_error()
+    eprint(argc)
+    if 1 >= argc:
+        inf = None
+    else:
+        inf = argv[1]
+    _process(inf)
+    exit(0)
+
+
+main(sys.argv)

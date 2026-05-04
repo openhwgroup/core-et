@@ -1,0 +1,6 @@
+fields,sm_enable,sm_target_sel,sm_data_sel
+width,1,4,7
+,
+,
+,
+sum bits,12

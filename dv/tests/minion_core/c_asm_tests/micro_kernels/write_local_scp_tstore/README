@@ -1,0 +1,5 @@
+Goal:
+The purpose of this micro kernel test is to write data into memory using tensorStore.
+
+Details:
+After each tensorStore is performed, which is assured by using the tensorWait(8) in order to wait for the testorStore to finish before continuing, we are reading the data from the memory and comparing it to the data we initially stored.

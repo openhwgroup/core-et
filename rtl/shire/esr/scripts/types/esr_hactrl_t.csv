@@ -1,0 +1,5 @@
+fields,resethalt,hartmask,hawindow
+width,16,16,16
+RO,YES,NO,NO
+,,,
+sum bits,48,,

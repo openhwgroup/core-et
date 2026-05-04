@@ -1,0 +1,6 @@
+Goal:
+Test CacheOp Flush_SW (to L2, L3, or Mem); added self-checking for the result (using atomics to direct access L2 or L3)
+
+Parameter(s):
+Core - This test will run on any Core (Thread 0 only) of any Neighborhood of any Shire.  
+

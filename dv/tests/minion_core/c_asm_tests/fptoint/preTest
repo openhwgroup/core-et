@@ -1,0 +1,6 @@
+#!/bin/bash
+
+rm -rf $testRunDir/fptoint
+cp -RL $MINION_DIAGS/fptoint/ $testRunDir
+make -C $testRunDir/fptoint/ clean
+MINION_SRC_DIR=$testRunDir/fptoint MINION_BIN=fptoint scripts/preTest

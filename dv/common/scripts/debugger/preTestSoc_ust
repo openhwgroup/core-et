@@ -1,0 +1,34 @@
+#!/bin/bash 
+
+# Set the test run directory for the environment
+debugger_sim=$TESTRUN/ioshire/ioshire_debugger/sim
+simEnvironmentFile="ultrasoc_test.env"
+
+# Compile UltraSoc SW Link
+cd $RTLROOT/ip/ultrasoc/modules/ust_sw_link/tb/
+gcc -m64 -Wall -c -I . -I ../../ust_sw_link/tb ust_sw_link.c  -fPIC
+gcc -m64 -shared -Bsymbolic -o ust_sw_link.so -fPIC ust_sw_link.o
+
+# Look for a free port to be opened
+UST_SW_LINK_usb_PORT=54321
+MAX_PORTS=128
+
+for i in `seq 0 $MAX_PORTS`; do
+    if ! netstat -nlt |grep ":$UST_SW_LINK_usb_PORT\b" > /dev/null; then
+        break
+    fi
+    UST_SW_LINK_usb_PORT=$[$UST_SW_LINK_usb_PORT+1]
+done
+
+if [ $i == $MAX_PORTS ]; then
+    echo "ERROR: all available ports for python script are open";
+    exit 1
+fi
+
+export UST_SW_LINK_usb_PORT=$UST_SW_LINK_usb_PORT
+
+# Set USB mode to listen mode, such that it will wait for the simulator to be ready
+export UST_SW_LINK_usb_MODE=connect
+
+# Set environment file to be loaded before the simulation starts
+echo "export UST_SW_LINK_usb_PORT=$UST_SW_LINK_usb_PORT" > $debugger_sim/$simEnvironmentFile

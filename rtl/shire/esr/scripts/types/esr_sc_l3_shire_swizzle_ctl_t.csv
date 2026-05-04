@@ -1,0 +1,6 @@
+fields,esr_sc_two_shire_aliasing_use_shire_lsb,esr_sc_all_shire_aliasing,esr_sc_sub_bank_sel_b2,esr_sc_sub_bank_sel_b1,esr_sc_sub_bank_sel_b0,esr_sc_bank_sel_b2,esr_sc_bank_sel_b1,esr_sc_bank_sel_b0,esr_sc_shire_sel_b5,esr_sc_shire_sel_b4,esr_sc_shire_sel_b3,esr_sc_shire_sel_b2,esr_sc_shire_sel_b1,esr_sc_shire_sel_b0
+width,1,1,4,4,4,4,4,4,4,4,4,4,4,4
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,
+sum bits,50,,,,,,,,,,,,,

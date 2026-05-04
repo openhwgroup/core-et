@@ -1,0 +1,138 @@
+Goal:
+The following vpu tests are created to maximize vpu functional coverage and target a wide range of functionality. They exercise
+VPU specific operations and tensor operations. The test with ust in their name are targeted for the UST flow and are designed to finish
+in ~1-2 days in simulation and 2 hours on the Zebu platform and have coverage of ~60%+.
+The non-UST tests should be run in the most general setting possible (for example, full-chip environment).
+The combined expected coverage of these tests is above 80% for vpu related cover-groups and above 70% for overall ET-SOC functional coverage.
+The _<X>h_ specifies how many HART(s) are active in the tests. More details are available in the README file.
+
+Detail(s):
+vpu tests are divided into directories by the number of threads they target:
+dv/tests/minion_core/c_asm_tests/vpu/1h
+dv/tests/minion_core/c_asm_tests/vpu/2h
+dv/tests/minion_core/c_asm_tests/vpu/16h
+dv/tests/minion_core/c_asm_tests/vpu/64h
+
+The number of threads increase successively from 1 thread to 1 minion core to 1 neighborhood to 1 shire.
+Currently, hartid's are hardcoded into the test to target the following: 
+1h tests: hart0 of  minion0 of neigh0 of shire0 
+2h tests: all threads of minion0 of neigh0 of shire0, 
+16h tests: all threads of all cores of neigh0 of shire0, 
+64h tests: all threads of all cores of all neighs of shire0, 
+
+These tests only access legal DRAM memory locations as per memory map and initialize all memory locations accessed by the test.
+This is to avoid memory related exceptions (if any memory exceptions happen in the test execution, they are unintentional and a possible test bug) 
+and to bring data into faster levels of memory. When data hits in L1/L2/L3 caches for the most part, the tests can stress the vpu datapaths and
+functionality aggressively rather than idling on memory access service requests.
+The tests have a simplistic exception handler that simply returns control flow back to the instructions after an excepting instruction.
+
+Dependencies are created by manipulating the source and destination register addresses of the adjacent instructions.  For e.g.,
+
+			"fmul.s f26, f15, f25, rne\n"
+			"fexp.ps f12, f21\n"
+			"fmul.s f15, f9, f15, rup\n"
+
+The tests have a limited amount of self-checking. Each test has a seq counter and counts the number of sequences executed. 
+At the end of the test, the total number of sequences are checked against the expected sequences executed. 
+Some of the tensor fma sequences involving integer data have expected results and check the registers against the expected values. 
+None of the tensor sequences are expected to generate tensor errors, and will jump to TEST_FAIL if any tensor_errors happen in the test.
+
+The following vpu tests are created to maximize vpu functional coverage and target a wide range of functionality. They should be run in the most 
+general setting possible (for example, full-chip environment). The combined expected coverage of these tests is above 80% for vpu related
+cover-groups and above 70% for overall ET-SOC functional coverage:
+
+dv/tests/minion_core/c_asm_tests/vpu/1h/vpu_cvg_1h_id_0
+dv/tests/minion_core/c_asm_tests/vpu/1h/vpu_cvg_1h_id_1
+dv/tests/minion_core/c_asm_tests/vpu/1h/vpu_cvg_1h_id_2
+dv/tests/minion_core/c_asm_tests/vpu/1h/vpu_cvg_1h_id_3
+dv/tests/minion_core/c_asm_tests/vpu/1h/vpu_cvg_1h_id_4
+dv/tests/minion_core/c_asm_tests/vpu/1h/vpu_cvg_1h_id_5
+dv/tests/minion_core/c_asm_tests/vpu/1h/vpu_cvg_1h_id_6
+dv/tests/minion_core/c_asm_tests/vpu/1h/vpu_cvg_1h_id_7
+dv/tests/minion_core/c_asm_tests/vpu/1h/vpu_cvg_1h_id_8
+
+dv/tests/minion_core/c_asm_tests/vpu/2h/vpu_cvg_2h_id_0
+dv/tests/minion_core/c_asm_tests/vpu/2h/vpu_cvg_2h_id_1
+dv/tests/minion_core/c_asm_tests/vpu/2h/vpu_cvg_2h_id_2
+dv/tests/minion_core/c_asm_tests/vpu/2h/vpu_cvg_2h_id_3
+dv/tests/minion_core/c_asm_tests/vpu/2h/vpu_cvg_2h_id_4
+dv/tests/minion_core/c_asm_tests/vpu/2h/vpu_cvg_2h_id_5
+dv/tests/minion_core/c_asm_tests/vpu/2h/vpu_cvg_2h_id_6
+dv/tests/minion_core/c_asm_tests/vpu/2h/vpu_cvg_2h_id_7
+dv/tests/minion_core/c_asm_tests/vpu/2h/vpu_cvg_2h_id_8
+
+dv/tests/minion_core/c_asm_tests/vpu/16h/vpu_cvg_16h_id_0
+dv/tests/minion_core/c_asm_tests/vpu/16h/vpu_cvg_16h_id_1
+dv/tests/minion_core/c_asm_tests/vpu/16h/vpu_cvg_16h_id_2
+dv/tests/minion_core/c_asm_tests/vpu/16h/vpu_cvg_16h_id_3
+dv/tests/minion_core/c_asm_tests/vpu/16h/vpu_cvg_16h_id_4
+dv/tests/minion_core/c_asm_tests/vpu/16h/vpu_cvg_16h_id_5
+dv/tests/minion_core/c_asm_tests/vpu/16h/vpu_cvg_16h_id_6
+dv/tests/minion_core/c_asm_tests/vpu/16h/vpu_cvg_16h_id_7
+dv/tests/minion_core/c_asm_tests/vpu/16h/vpu_cvg_16h_id_8
+
+dv/tests/minion_core/c_asm_tests/vpu/64h/vpu_cvg_64h_id_0
+dv/tests/minion_core/c_asm_tests/vpu/64h/vpu_cvg_64h_id_1
+dv/tests/minion_core/c_asm_tests/vpu/64h/vpu_cvg_64h_id_2
+dv/tests/minion_core/c_asm_tests/vpu/64h/vpu_cvg_64h_id_3
+dv/tests/minion_core/c_asm_tests/vpu/64h/vpu_cvg_64h_id_4
+dv/tests/minion_core/c_asm_tests/vpu/64h/vpu_cvg_64h_id_5
+dv/tests/minion_core/c_asm_tests/vpu/64h/vpu_cvg_64h_id_6
+dv/tests/minion_core/c_asm_tests/vpu/64h/vpu_cvg_64h_id_7
+dv/tests/minion_core/c_asm_tests/vpu/64h/vpu_cvg_64h_id_8
+
+The following tests are written with ultrasoc flow constraints in mind: 
+ ust_vpu_cvg_1h_id_0
+ ust_vpu_cvg_1h_id_1
+ ust_vpu_cvg_1h_id_2
+ ust_vpu_cvg_1h_id_3
+ ust_vpu_cvg_1h_id_4
+ ust_vpu_cvg_1h_id_5
+ ust_vpu_cvg_1h_id_6
+ ust_vpu_cvg_1h_id_7
+ ust_vpu_cvg_1h_id_8
+ ust_vpu_cvg_1h_id_9
+ ust_vpu_cvg_1h_id_10
+ ust_vpu_cvg_1h_id_11
+
+ ust_vpu_cvg_2h_id_0
+ ust_vpu_cvg_2h_id_1
+ ust_vpu_cvg_2h_id_2
+ ust_vpu_cvg_2h_id_3
+ ust_vpu_cvg_2h_id_4
+ ust_vpu_cvg_2h_id_5
+ ust_vpu_cvg_2h_id_6
+ ust_vpu_cvg_2h_id_7
+ ust_vpu_cvg_2h_id_8
+ ust_vpu_cvg_2h_id_9
+ ust_vpu_cvg_2h_id_10
+ ust_vpu_cvg_2h_id_11
+
+ ust_vpu_cvg_16h_id_0
+ ust_vpu_cvg_16h_id_1
+ ust_vpu_cvg_16h_id_2
+ ust_vpu_cvg_16h_id_3
+ ust_vpu_cvg_16h_id_4
+ ust_vpu_cvg_16h_id_5
+ ust_vpu_cvg_16h_id_6
+ ust_vpu_cvg_16h_id_7
+ ust_vpu_cvg_16h_id_8
+ ust_vpu_cvg_16h_id_9
+ ust_vpu_cvg_16h_id_10
+ ust_vpu_cvg_16h_id_11
+
+ ust_vpu_cvg_64h_id_0
+ ust_vpu_cvg_64h_id_1
+ ust_vpu_cvg_64h_id_2
+ ust_vpu_cvg_64h_id_3
+ ust_vpu_cvg_64h_id_4
+ ust_vpu_cvg_64h_id_5
+ ust_vpu_cvg_64h_id_6
+ ust_vpu_cvg_64h_id_7
+ ust_vpu_cvg_64h_id_8
+ ust_vpu_cvg_64h_id_9
+ ust_vpu_cvg_64h_id_10
+ ust_vpu_cvg_64h_id_11
+
+These tests are expected to finish in 1-2 days in untra-soc flow and have a coverage of 60%+.
+They target vpu execution core functionality and do not exercise the memory sub-system except to bring data into scratchpad or caches.

@@ -1,0 +1,5 @@
+Goal:
+Run test cacheops_lock_sw in L1D$ SCPmode
+
+Parameter(s):
+Core - This test will run on any Core (Thread 0 only) of any Neighborhood of any Shire.  

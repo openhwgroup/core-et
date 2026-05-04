@@ -1,0 +1,4 @@
+In order to test ESR read and write requests there is a test in ../esr folder. This test can be run:
+
+path: esperanto-soc/shire/noc_soc_tb/test/esr/
+command: runsim.pl --testlist simlists/rand_ld_st.sim --vcs --trace --keepPassed

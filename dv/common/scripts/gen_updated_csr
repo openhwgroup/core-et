@@ -1,0 +1,425 @@
+#!/bin/bash
+
+# Pick up some util functions for printing colorized messages and testing shell commands
+#
+source $REPOROOT/dv/common/scripts/bash_utils.sh
+
+# Set DEBUG Env var for additional logging
+#
+export DEBUG=1
+
+try cd $RTLROOT/ip/hal/csr
+
+export LM_LICENSE_FILE=27027@sc-jenkins01
+
+file=DW_apb_i2c
+try ipxact_2_csr ../${file}.xml
+try sed -i '1s;^;#ifndef _DW_apb_i2c\n#define _DW_apb_i2c\n;'  ${file}.csr
+# Many of the SNPS IP Xact have Extra Hierarchy which makes names longer than they need to be
+# We use sed to remove these extra layers
+try sed -i 's/group {//g' ${file}.csr            # This deletes the first group line
+try sed -i '/DW_apb_i2c_addr_block1;/d' ${file}.csr # This deletes the end } for the group
+try sed -i '/component {/,$d' ${file}.csr # Remove the component definition
+try sed -i 's/} DW_apb_i2c_APB_Slave;/} i2c;/g' ${file}.csr # shorten the name
+try sed -i -e '$a#endif' ${file}.csr
+try csr_2_dv $file
+
+file=DW_apb_ssi
+try ipxact_2_csr ../${file}.xml
+try sed -i '1s;^;#ifndef _DW_apb_ssi\n#define _DW_apb_ssi\n;'  ${file}.csr
+# Many of the SNPS IP Xact have Extra Hierarchy which makes names longer than they need to be
+# We use sed to remove these extra layers
+try sed -i 's/group {//g' ${file}.csr
+try sed -i '/ssi_address_block;/d' ${file}.csr
+try sed -i '/component {/,$d' ${file}.csr # Remove the component definition
+try sed -i 's/} DW_apb_ssi_APB_Slave;/} ssi;/g' ${file}.csr # shorten the name
+try sed -i -e '$a#endif' ${file}.csr
+try csr_2_dv $file
+
+
+file=DW_ahb_dmac
+try ipxact_2_csr ../${file}.xml
+#try cp ${file}.csr spio_${file}.csr
+try sed -i '1s;^;#ifndef _DW_ahb_dmac\n#define _DW_ahb_dmac\n;'  ${file}.csr
+#try sed -i '1s;^;#ifndef _spio_DW_ahb_dmac\n#define _spio_DW_ahb_dmac\n;'  spio_${file}.csr
+try sed -i '/component {/,$d' ${file}.csr # Remove the component definition
+try sed -i 's/} DW_ahb_dmac_AHB_Slave;/} dmac;/g' ${file}.csr # shorten the name
+try sed -i -e '$a#endif' ${file}.csr
+# 10/28/21
+try sed -i 's/AMBA_3_AHBLite/basic/' ${file}.csr #change this due to csrCompile chg after 2021_03 version
+try sed -i 's/AMBA_4_AXI/basic/' ${file}.csr #change this due to csrCompile chg after 2021_03 version
+try sed -i 's/property addressmap_bus_address_units = 1;//' ${file}.csr #change this due to csrCompile chg after 2021_03 version
+try sed -i 's/property minimum_access_size = 1;//' ${file}.csr #change this due to csrCompile chg after 2021_03 version
+try sed -i 's/property addressmap_wait_port;//' ${file}.csr #change this due to csrCompile chg after 2021_03 version
+try csr_2_dv $file
+#try sed -i '/component {/,$d' spio_${file}.csr # Remove the component definition
+#try sed -i 's/} DW_ahb_dmac_AHB_Slave;/} spio_dmac;/g' spio_${file}.csr # shorten the name
+#try sed -i -e '$a#endif' ${file}.csr
+#try csr_2_dv spio_$file
+
+#
+# FIXME: Names don't match. 2 identical copies
+# FIXME: This will require testcase updates
+#
+
+file=DW_apb_timers
+try ipxact_2_csr ../${file}.xml
+try sed -i '1s;^;#ifndef _DW_apb_timers\n#define _DW_apb_timers\n;'  ${file}.csr
+# Many of the SNPS IP Xact have Extra Hierarchy which makes names longer than they need to be
+# We use sed to remove these extra layers
+try sed -i '/component {/,$d' ${file}.csr # Remove the component definition
+try sed -i 's/group {//g' ${file}.csr
+try sed -i '/DW_apb_timers_addr_block;/d' ${file}.csr
+try sed -i 's/} spio_DW_apb_timers_APB_Slave;/} timers;/g' ${file}.csr # shorten the name
+try sed -i -e '$a#endif' ${file}.csr
+try csr_2_dv $file
+
+file=DW_apb_uart
+try ipxact_2_csr ../${file}.xml
+try sed -i '1s;^;#ifndef _DW_apb_uart\n#define _DW_apb_uart\n;'  ${file}.csr
+# Many of the SNPS IP Xact have Extra Hierarchy which makes names longer than they need to be
+# We use sed to remove these extra layers
+try sed -i '/component {/,$d' ${file}.csr # Remove the component definition
+try sed -i 's/group {//g' ${file}.csr
+try sed -i '/uart_address_block;/d' ${file}.csr
+try sed -i 's/} DW_apb_uart_APB_Slave;/} uart;/g' ${file}.csr # shorten the name
+try sed -i -e '$a#endif' ${file}.csr
+try csr_2_dv $file
+
+
+#
+# FIXME: Names don't match. 2 identical copies
+# FIXME: This will require testcase updates
+#
+file=DW_apb_wdt
+try ipxact_2_csr ../${file}.xml
+try sed -i '1s;^;#ifndef _DW_apb_wdt\n#define _DW_apb_wdt\n;'  ${file}.csr
+# Many of the SNPS IP Xact have Extra Hierarchy which makes names longer than they need to be
+# We use sed to remove these extra layers
+try sed -i '/component {/,$d' ${file}.csr # Remove the component definition
+try sed -i 's/group {//g' ${file}.csr
+try sed -i '/wdt_address_block;/d' ${file}.csr
+try sed -i 's/} DW_apb_wdt_APB_Slave;/} wdt;/g' ${file}.csr # shorten the name
+try sed -i -e '$a#endif' ${file}.csr
+try csr_2_dv $file
+
+file=DW_apb_wdt
+try ipxact_2_csr ../${file}.xml
+# Many of the SNPS IP Xact have Extra Hierarchy which makes names longer than they need to be
+# We use sed to remove these extra layers
+try sed -i '/component {/,$d' ${file}.csr # Remove the component definition
+try sed -i 's/group {//g' ${file}.csr
+try sed -i '/wdt_address_block;/d' ${file}.csr
+try sed -i 's/} spio_DW_apb_wdt_APB_Slave;/} wdt;/g' ${file}.csr # shorten the name
+try csr_2_dv $file
+
+
+#
+# 7/8/2021
+#
+file=acx6_dat4.dwc_ddrphy_top.ipxact
+try ipxact_2_csr ../${file}.xml
+# Many of the SNPS IP Xact have Extra Hierarchy which makes names longer than they need to be
+# We use sed to remove these extra layers
+#try sed -i '/component {/,$d' ${file}.csr # Remove the component definition
+#try sed -i 's/group {//g' ${file}.csr
+#try sed -i '/wdt_address_block;/d' ${file}.csr
+#try sed -i 's/} DW_apb_wdt_APB_Slave;/} wdt;/g' ${file}.csr # shorten the name
+#try csr_2_dv $file
+try sed -i '/component {/,$d' ${file}.csr # Remove the component definition
+try sed -i 's/} dwc_ddrphy_top_dwc_ddrphy_top;/} ddrphyx4;/g' ${file}.csr # shorten the name
+try cp ${file}.csr ${file}.csr.o
+gawk '{if(match($0,"property addressing")!=0) {print "//" $0;} else if (match($2,"\\[0x")!=0) {{s=$2;gsub("\\[|\\]","",s);s2=2*strtonum(s);s3="[0x" s2 "]";printf("%s [0x%x] %s\n",$1, s2,$3);}}else print $0;}'  ${file}.csr.o > ${file}.csr
+try csr_2_dv $file
+
+
+#
+# FIXME: SNPS_BUGS
+# FIXME: This controller has invalid sizes in the ip-xact
+# FIXME: Additionally these AXI ports at the end aren't real according to Tom Berg and
+#        therefore are being removed.
+#
+file=DWC_ddr_umctl2
+try ipxact_2_csr ../${file}.xml
+try sed -i '1s;^;#ifndef _DWC_ddr_umctl2\n#define _DWC_ddr_umctl2\n;'  ${file}.csr
+# Many of the SNPS IP Xact have Extra Hierarchy which makes names longer than they need to be
+# We use sed to remove these extra layers
+try sed -i 's/property size =/\/\/property size =/g' ${file}.csr
+try sed -i '/} DWC_ddr_umctl2_APB_SLAVE;/q' ${file}.csr
+try sed -i 's/} DWC_ddr_umctl2_APB_SLAVE;/} ddr;/g' ${file}.csr # shorten the name
+try sed -i -e '$a#endif' ${file}.csr
+try csr_2_dv $file
+
+#
+# FIXME: test these. old hals were wrong at 16 bits and are now correct at 32 bits
+# How did our testing work at all?
+# need to regress gpio tests
+#
+file=spio_gpio
+try ipxact_2_csr ../${file}.xml
+# Many of the SNPS IP Xact have Extra Hierarchy which makes names longer than they need to be
+# We use sed to remove these extra layers
+try sed -i '/component {/,$d' ${file}.csr # Remove the component definition
+try sed -i 's/group {//g' ${file}.csr
+try sed -i '/DW_apb_gpio_addr_block/d' ${file}.csr
+try sed -i 's/} spio_DW_apb_gpio_APB_Slave;/} spio_gpio;/g' ${file}.csr # shorten the name
+try csr_2_dv $file
+
+#
+# FIXME: test these. old hals were wrong at 16 bits and are now correct at 32 bits
+# How did our testing work at all?
+# need to regress gpio tests
+#
+file=pu_gpio
+try ipxact_2_csr ../${file}.xml
+# Many of the SNPS IP Xact have Extra Hierarchy which makes names longer than they need to be
+# We use sed to remove these extra layers
+try sed -i '/component {/,$d' ${file}.csr # Remove the component definition
+try sed -i 's/group {//g' ${file}.csr
+try sed -i '/DW_apb_gpio_addr_block/d' ${file}.csr
+try sed -i 's/} pu_DW_apb_gpio_APB_Slave;/} pu_gpio;/g' ${file}.csr # shorten the name
+try csr_2_dv $file
+
+file=DWC_mshc_crypto
+try ipxact_2_csr ../${file}.xml
+# Many of the SNPS IP Xact have Extra Hierarchy which makes names longer than they need to be
+# We use sed to remove these extra layers
+try sed -i '/component {/,$d' ${file}.csr # Remove the component definition
+try sed -i 's/} pu_DWC_mshc_crypto_AHB_Slave;/} emmc;/g' ${file}.csr # shorten the name
+try sed -i 's/DWC_mshc_crypto_block;/crypto;/g' ${file}.csr # shorten the group names
+try sed -i 's/DWC_mshc_crypto_phy_block;/crypto_phy;/g' ${file}.csr # shorten the group names
+try sed -i 's/DWC_mshc_crypto_vendor1_block;/crypto_vendor1;/g' ${file}.csr # shorten the group names
+try sed -i 's/DWC_mshc_crypto_embedded_control_block;/crypto_embedded_control;/g' ${file}.csr # shorten the group names
+try sed -i 's/DWC_mshc_crypto_vendor2_block;/crypto_vendor2;/g' ${file}.csr # shorten the group names
+# 10/28/21
+try sed -i 's/AMBA_3_AHBLite/basic/' ${file}.csr #change this due to csrCompile chg after 2021_03 version
+try sed -i 's/AMBA_4_AXI/basic/' ${file}.csr #change this due to csrCompile chg after 2021_03 version
+try sed -i 's/property addressmap_bus_address_units = 1;//' ${file}.csr #change this due to csrCompile chg after 2021_03 version
+try sed -i 's/property minimum_access_size = 1;//' ${file}.csr #change this due to csrCompile chg after 2021_03 version
+try sed -i 's/property addressmap_wait_port;//' ${file}.csr #change this due to csrCompile chg after 2021_03 version
+try csr_2_dv $file
+
+file=dwc_pcie4_phy_x4_ns
+try ipxact_2_csr ../${file}.xml
+# Many of the SNPS IP Xact have Extra Hierarchy which makes names longer than they need to be
+# We use sed to remove these extra layers
+try sed -i '/component {/,$d' ${file}.csr # Remove the component definition
+try sed -i 's/group {//g' ${file}.csr
+try sed -i '/ESM25_mem_map;/d' ${file}.csr
+try sed -i 's/} dwc_pcie4_phy_x4_ns_ESM25;/} pcie4_phy;/g' ${file}.csr # shorten the name
+try csr_2_dv $file
+
+file=DWC_pcie_subsystem_custom
+try ipxact_2_csr ../${file}.xml
+# Many of the SNPS IP Xact have Extra Hierarchy which makes names longer than they need to be
+# We use sed to remove these extra layers
+try sed -i '/component {/,$d' ${file}.csr # Remove the component definition
+//try sed -i 's/group {//g' ${file}.csr
+//try sed -i '/subsystem;/d' ${file}.csr
+//try sed -i 's/} DWC_pcie_subsystem_custom_APB_Slave;/} pcie_subsys;/g' ${file}.csr # shorten the name
+try csr_2_dv $file
+
+#
+# FIXME: File bug on SNPS for illegal name values 100us
+#
+file=DWC_pcie_dbi_cpcie_dsp
+try ipxact_2_csr ../${file}.xml
+try mv ${file}.csr  ${file}_4x8.csr
+try sed -i 's/PE0_DWC_pcie_ctl_AXI_Slave/PE0_DWC_RC_pcie_ctl_AXI_Slave/g' ${file}_4x8.csr # uniquify name
+try sed -i 's/PE0_DWC_pcie_ctl_DBI_Slave/PE0_DWC_RC_pcie_ctl_DBI_Slave/g' ${file}_4x8.csr # uniquify name
+try sed -i 's/} PE0_DWC_pcie_ctl;/} rc;/g' ${file}_4x8.csr # shorten the name
+gawk '{if($1=="component"){found=1;}if(found==1){$0="//" $0;}print $0;}'  ${file}_4x8.csr >  ${file}_4x8.csr.tmp
+try mv  ${file}_4x8.csr.tmp  ${file}_4x8.csr
+# 10/28/21
+try sed -i 's/AMBA_3_AHBLite/basic/' ${file}_4x8.csr #change this due to csrCompile chg after 2021_03 version
+try sed -i 's/AMBA_4_AXI/basic/' ${file}_4x8.csr #change this due to csrCompile chg after 2021_03 version
+try sed -i 's/property addressmap_bus_address_units = 1;//' ${file}_4x8.csr #change this due to csrCompile chg after 2021_03 version
+try sed -i 's/property minimum_access_size = 1;//' ${file}_4x8.csr #change this due to csrCompile chg after 2021_03 version
+try sed -i 's/property addressmap_wait_port;//' ${file}_4x8.csr #change this due to csrCompile chg after 2021_03 version
+try csr_2_dv ${file}_4x8
+try sed -i 's/PE0_DWC_RC_/PE0_DWC_/g'  $REPOROOT/dv/common/sw/ip/inc/${file}_4x8.h
+
+#
+# FIXME: File bug on SNPS for illgal name values 100us
+#
+file=DWC_pcie_dbi_cpcie_usp
+try ipxact_2_csr ../${file}.xml
+try mv ${file}.csr  ${file}_4x8.csr
+try sed -i 's/PE0_DWC_pcie_ctl_AXI_Slave/PE0_DWC_EP_pcie_ctl_AXI_Slave/g' ${file}_4x8.csr # uniquify name
+try sed -i 's/PE0_DWC_pcie_ctl_DBI_Slave/PE0_DWC_EP_pcie_ctl_DBI_Slave/g' ${file}_4x8.csr # uniquify name
+try sed -i 's/} PE0_DWC_pcie_ctl;/} ep;/g' ${file}_4x8.csr # shorten the name
+gawk '{if($1=="component"){found=1;}if(found==1){$0="//" $0;}print $0;}'  ${file}_4x8.csr >  ${file}_4x8.csr.tmp
+try mv  ${file}_4x8.csr.tmp  ${file}_4x8.csr
+# 10/28/21
+try sed -i 's/AMBA_3_AHBLite/basic/' ${file}_4x8.csr #change this due to csrCompile chg after 2021_03 version
+try sed -i 's/AMBA_4_AXI/basic/' ${file}_4x8.csr #change this due to csrCompile chg after 2021_03 version
+try sed -i 's/property addressmap_bus_address_units = 1;//' ${file}_4x8.csr #change this due to csrCompile chg after 2021_03 version
+try sed -i 's/property minimum_access_size = 1;//' ${file}_4x8.csr #change this due to csrCompile chg after 2021_03 version
+try sed -i 's/property addressmap_wait_port;//' ${file}_4x8.csr #change this due to csrCompile chg after 2021_03 version
+try csr_2_dv ${file}_4x8
+try sed -i 's/PE0_DWC_EP_/PE0_DWC_/g' $REPOROOT/dv/common/sw/ip/inc/${file}_4x8.h
+
+
+file=dwc_usb20_phy_1p_ms_otg0_ns
+try ipxact_2_csr ../${file}.xml
+try sed -i '/component {/,$d' ${file}.csr # Remove the component definition
+try sed -i 's/} dwc_usb20_phy_1p_ms_otg0_ns_HSP;/} usb20_phy;/g' ${file}.csr # shorten the name
+try sed -i 's/group {//g' ${file}.csr
+try sed -i '/HSP_mem_map;/d' ${file}.csr
+try csr_2_dv ${file}
+
+file=et_ns_noc_io_pcie_soc_ip
+try ipxact_2_csr ../${file}.xml
+try sed -i '/component {/,$d' ${file}.csr # Remove the component definition
+try sed -i 's/} ns_noc_io_pcie_soc_ip_memoryMap_rbm_m/} pcie_noc/g' ${file}.csr # shorten the name
+try sed -i 's/group {//g' ${file}.csr
+try sed -i '/noc_registers;/d' ${file}.csr
+try csr_2_dv ${file}
+
+file=et_ns_noc_io_pu_soc_ip
+try ipxact_2_csr ../${file}.xml
+try sed -i '/component {/,$d' ${file}.csr # Remove the component definition
+try sed -i 's/} ns_noc_io_pu_soc_ip_memoryMap_rbm_m/} pu_noc/g' ${file}.csr # shorten the name
+try sed -i 's/group {//g' ${file}.csr
+try sed -i '/noc_registers;/d' ${file}.csr
+try csr_2_dv ${file}
+
+file=et_ns_noc_io_spio_soc_ip
+try ipxact_2_csr ../${file}.xml
+try sed -i '/component {/,$d' ${file}.csr # Remove the component definition
+try sed -i 's/} ns_noc_io_spio_soc_ip_memoryMap_spio_sp_main0_srvcproc_m/} spio_noc/g' ${file}.csr # shorten the name
+try sed -i 's/group {//g' ${file}.csr
+try sed -i '/noc_registers;/d' ${file}.csr
+try csr_2_dv ${file}
+
+#
+# Can we shorten these? or are they in use?
+#
+# Semifore has a limitation here regarding translating IP-XACT.
+# The recommended fix to to duplicate the addresses as shown below with the sed
+# Sean has better things to do and fixed this with meld
+#
+
+file=mvls_dll_tn7_15m.ipxact
+#try ipxact_2_csr ../${file}.xml
+#try sed -i '/component {/,$d' ${file}.csr # Remove the component definition
+#try sed -i 's/} mvls_dll_tn7_15m_MAIN;/} dll;/g' ${file}.csr # shorten the name
+#try sed -i 's/group {//g' ${file}.csr
+#try sed -i '/ MAIN;/d' ${file}.csr
+try csr_2_dv ${file}
+
+file=mvls_tn7_hpdpll.ipxact
+#try ipxact_2_csr ../${file}.xml
+#try sed -i '1s;^;#ifndef _mvls_tn7_hpdpll.ipxact\n#define _mvls_tn7_hpdpll.ipxact\n;'  ${file}.csr
+#try sed -i -e '$a#endif' ${file}.csr
+#try sed -i '/component {/,$d' ${file}.csr # Remove the component definition
+#try sed -i 's/} mvls_tn7_hpdpll_MAIN;/} hpdpll;/g' ${file}.csr # shorten the name
+#try sed -i 's/group {//g' ${file}.csr
+#try sed -i '/ MAIN;/d' ${file}.csr
+#
+# 10/28/21 
+# IMPORTANT !! you need the following gawk ONLY IF you started from ipxact_2_csr
+# Otherwise it will double shift the offset address
+#gawk '{if(match($0,"0x")){s=$2;gsub("\\[","",s);gsub("\\]","",s);v=strtonum(s);v2=2*v;$2="[0x" v2 "]";printf("%s [0x%x] %s\n",$1,v2,$3); }else {print $0;}}' mvls_tn7_hpdpll.ipxact.csr > temp_mvls_tn7_hpdpll.ipxact.csr ; mv temp_mvls_tn7_hpdpll.ipxact.csr mvls_tn7_hpdpll.ipxact.csr
+try csr_2_dv ${file}
+
+file=mvls_tn7_lvdpll.ipxact
+#try ipxact_2_csr ../${file}.xml
+#try sed -i '/component {/,$d' ${file}.csr # Remove the component definition
+#try sed -i 's/} mvls_tn7_lvdpll_MAIN;/} lvdpll;/g' ${file}.csr # shorten the name
+#try sed -i 's/group {//g' ${file}.csr
+#try sed -i '/ MAIN;/d' ${file}.csr
+try csr_2_dv ${file}
+
+#
+# FIXME: test these. old hals were wrong at 16 bits and are now correct at 32 bits
+# How did our testing work at all?
+# need to regress gpio tests
+#
+file=pu_gpio
+try ipxact_2_csr ../${file}.xml
+# Many of the SNPS IP Xact have Extra Hierarchy which makes names longer than they need to be
+# We use sed to remove these extra layers
+try sed -i '/component {/,$d' ${file}.csr # Remove the component definition
+try sed -i 's/group {//g' ${file}.csr
+try sed -i '/DW_apb_gpio_addr_block/d' ${file}.csr
+try sed -i 's/} pu_DW_apb_gpio_APB_Slave;/} pu_gpio;/g' ${file}.csr # shorten the name
+try csr_2_dv $file
+
+
+file=pu_i3c
+try ipxact_2_csr ../${file}.xml
+# Many of the SNPS IP Xact have Extra Hierarchy which makes names longer than they need to be
+# We use sed to remove these extra layers
+try sed -i '/component {/,$d' ${file}.csr # Remove the component definition
+try sed -i 's/group {//g' ${file}.csr
+try sed -i '/DWC_mipi_i3c_block;/d' ${file}.csr
+try sed -i 's/} DWC_mipi_i3c_APB_Slave;/} i3c;/g' ${file}.csr # shorten the name
+try sed -i 's/property size = 1048576;//g' ${file}.csr  # FIXME: File bug on SNPS IP-XACT is invalid on size
+try csr_2_dv $file
+
+# These fifo's are supposed to be 4K according to the spec
+# but the ip-xact says 'h1000 instead of 'h400
+#
+# FIXME: Remaining issue of why we have to remove property addressing = "word";
+# According to semifore this is caused by  <ipxact:addressUnitBits>32</ipxact:addressUnitBits>
+# It should say 8 and not 32
+#
+file=pu_usb2_ctrl_dev_only
+try ipxact_2_csr ../${file}.xml
+# Many of the SNPS IP Xact have Extra Hierarchy which makes names longer than they need to be
+# We use sed to remove these extra layers
+try sed -i '/component {/,$d' ${file}.csr # Remove the component definition
+try sed -i 's/} devonly_DWC_otg_AHB_Slave;/} pu_usb2_dev;/g' ${file}.csr # shorten the name
+try sed -i 's/property memory_word_count = 4096;/property memory_word_count = 1024;/g' ${file}.csr  # FIXME: File bug on SNPS IP-XACT is invalid on size
+try sed -i 's/property memory_word_count = 131072;/property memory_word_count = 32768;/g' ${file}.csr  # FIXME: File bug on SNPS IP-XACT is invalid on size
+try sed -i 's/property size = 15360;/property size = 3840;/g' ${file}.csr  # FIXME: File bug on SNPS IP-XACT is invalid on size
+try sed -i 's/property addressing = "word";/\/\/property addressing = "word";/g' ${file}.csr  # FIXME: File bug on SNPS IP-XACT is invalid on size
+# 10/28/21
+try sed -i 's/AMBA_3_AHBLite/basic/' ${file}.csr #change this due to csrCompile chg after 2021_03 version
+try sed -i 's/AMBA_4_AXI/basic/' ${file}.csr #change this due to csrCompile chg after 2021_03 version
+try sed -i 's/property addressmap_bus_address_units = 1;//' ${file}.csr #change this due to csrCompile chg after 2021_03 version
+try sed -i 's/property minimum_access_size = 1;//' ${file}.csr #change this due to csrCompile chg after 2021_03 version
+try sed -i 's/property addressmap_wait_port;//' ${file}.csr #change this due to csrCompile chg after 2021_03 version
+try csr_2_dv $file
+
+# FIXME: Semifore bug filed against this one. to see if its their bug or SNPS
+#
+file=pu_usb2_ctrl_otg
+try ipxact_2_csr ../${file}.xml
+# Many of the SNPS IP Xact have Extra Hierarchy which makes names longer than they need to be
+# We use sed to remove these extra layers
+try sed -i '/component {/,$d' ${file}.csr # Remove the component definition
+try sed -i 's/} DWC_otg_AHB_Slave;/} pu_usb2_otg;/g' ${file}.csr # shorten the name
+try sed -i 's/property memory_word_count = 4096;/property memory_word_count = 1024;/g' ${file}.csr  # FIXME: File bug on SNPS IP-XACT is invalid on size
+try sed -i 's/property memory_word_count = 131072;/property memory_word_count = 32768;/g' ${file}.csr  # FIXME: File bug on SNPS IP-XACT is invalid on size
+try sed -i 's/property size = 15360;/property size = 3840;/g' ${file}.csr  # FIXME: File bug on SNPS IP-XACT is invalid on size
+try sed -i 's/property addressing = "word";/\/\/property addressing = "word";/g' ${file}.csr  # FIXME: File bug on SNPS IP-XACT is invalid on size
+# 10/28/21
+try sed -i 's/AMBA_3_AHBLite/basic/' ${file}.csr #change this due to csrCompile chg after 2021_03 version
+try sed -i 's/AMBA_4_AXI/basic/' ${file}.csr #change this due to csrCompile chg after 2021_03 version
+try sed -i 's/property addressmap_bus_address_units = 1;//' ${file}.csr #change this due to csrCompile chg after 2021_03 version
+try sed -i 's/property minimum_access_size = 1;//' ${file}.csr #change this due to csrCompile chg after 2021_03 version
+try sed -i 's/property addressmap_wait_port;//' ${file}.csr #change this due to csrCompile chg after 2021_03 version
+try csr_2_dv $file
+
+
+file=ultrasoc_si_base_1024_chan_32
+try ipxact_2_csr ../${file}.xml
+# Many of the SNPS IP Xact have Extra Hierarchy which makes names longer than they need to be
+# We use sed to remove these extra layers
+try sed -i '/component {/,$d' ${file}.csr # Remove the component definition
+try sed -i 's/} pu_static_Static_Memory_Map;/} pu_static_mem_map;/g' ${file}.csr # shorten the name
+try sed -i 's/property size = 20480;//g' ${file}.csr  # FIXME: File bug on SNPS IP-XACT is invalid on size
+try sed -i 's/property addressing = "word";/\/\/property addressing = "word";/g' ${file}.csr  # FIXME: File bug on SNPS IP-XACT is invalid on size
+try sed -i 's/group {//g' ${file}.csr
+try sed -i '/Static_Memory_Map_Address_Block/d' ${file}.csr
+try csr_2_dv $file
+
+file=ultrasoc_axi_communicator
+try ipxact_2_csr ../${file}.xml
+try sed -i '/component {/,$d' ${file}.csr # Remove the component definition
+try sed -i 's/} AXICommunicator_AXICommunicatorMemoryMap;/} usoc_axi_comm;/g' ${file}.csr # shorten the name
+try csr_2_dv ${file}
+
+

@@ -1,0 +1,1 @@
+srun -p dv-gpd run_io -a +define+USE_UART_VIP -s +UVM_TIMEOUT=1000000000 +DCACHE=on +ICACHE=on -t romTest -u uart_rom_test --no_cosim --fsdb

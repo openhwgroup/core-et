@@ -1,0 +1,5 @@
+Goal:
+Test Lock_VA (soft lock and zero out the line); self-checking.
+
+Parameter(s):
+Core - This test will run on any Core (Thread 0 only) of any Neighborhood of any Shire.  

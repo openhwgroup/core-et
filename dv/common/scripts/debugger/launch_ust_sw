@@ -1,0 +1,93 @@
+#!/usr/bin/bash
+
+# UltraSoc license
+export ultrasoc_license=1717@sc-slurm
+export UST_RESOURCES=/eng/cad/tools/usoc/UltraSoc/ultradevelop/share
+
+# This port can be any free TCP port on the system but it has be be known to tell OpenOCD below what port to connect to in the configuration file
+TCP_port=8888
+
+# File discovered-esperanto-si_head.xml to be in share/libmsg/
+discovery_xml=discovered-esperanto-si_head.xml
+
+# The machine name or IPv4 address to connect to.
+machine_name=localhost # sc-server07.esperanto.ai 
+
+# Hardware port that the debugger will try to connect to
+machine_port=$UST_SW_LINK_usb_PORT
+
+socket_mode=listen #connect
+
+# openOCD variables for configuration
+openOCD_config_file=$debugger_path/sp.cfg   # OpenOCD preferes to look in it hard coded paths for configuration files
+openOCD_bpam_id=abpam1                  # SPIO BPAM
+
+# =======================================
+# ============== UDA AGENT ==============
+# =======================================
+echo "LAUNCH UDA AGENT"
+
+# === UltraSoC agent command line options ===
+# The UltraSoC agent connected to the simulator, it provides the path for all other tools to connect to UltraSoC hardware network.
+echo " $debugger_path/udagent --discovery 'parallel-rediscover timeout:1000;100' "
+echo "                        --service-manager --smgr-port $TCP_port --config-manager "
+echo "                        --connector frame-link,$socket_mode,$machine_name,$machine_port --route-flows 2 "
+echo "                        --messages-xml :messages.xml --registry-xml :registry.xml --ddma "
+echo "                        --system-xml :$discovery_xml > $debugger_sim/udagent_log.log & "
+
+# udagent --dump 3 allows more verbose
+$debugger_path/udagent --discovery "parallel-rediscover timeout:10000;1000" \
+                       --service-manager --smgr-port $TCP_port --config-manager \
+                       --connector frame-link,$socket_mode,$machine_name,$machine_port --route-flows 2 \
+                       --messages-xml :messages.xml --registry-xml :registry.xml --ddma \
+                       --system-xml :$discovery_xml > $debugger_sim/udagent_log.log 2>&1 &
+
+
+# Wait for udagent to access the debug infrastructure and discover all the modules
+tail -f $debugger_sim/udagent_log.log | while read LOGLINE
+do
+   [[ "${LOGLINE}" == *"Modules found by parallel discovery"* ]] && pkill -P $$ tail
+done
+#sleep 300
+
+# =======================================
+# =============== OpenOCD ===============
+# =======================================
+# The OpenOCD configuration option is currently a minimal modification to pass command between the OpenOCD and the UltraSoC agent using a BPAM module instead of a JTAG interface.
+
+# ==== OpenOCD configuration ====
+cat > $openOCD_config_file <<EOF
+bindto 0.0.0.0
+interface ust_mmap
+ust_mmap_port $TCP_port
+ust_mmap_host $machine_name
+ust_mmap_bpam_name $openOCD_bpam_id
+
+set _CHIPNAME service-processor
+mmap newdap \$_CHIPNAME cpu -irlen 5 -ircapture 0x01 -irmask 0x1f -expected-id 0x1000563d
+set _TARGETNAME \$_CHIPNAME.cpu
+target create riscv_target riscv -chain-position \$_TARGETNAME
+
+riscv set_command_timeout_sec 120
+
+init
+halt
+EOF
+
+# ==== OpenOCD command line options ====
+echo "LAUNCH OPEN OCD"
+$debugger_path/openocd -f $openOCD_config_file -d3 &> $debugger_sim/openocd_log.log 2>&1 & # The ''-d3'' option enables a lot more debugging output and is optional.
+
+# remotelogfile is the output filename for RSP commands between GDB and OpenOCD, this is optional.
+set remotelogfile remote-gdb.txt
+
+# remotetimeout is the number of seconds to wait for command between GDB and OpenOCD, 3600 is very big but it means GDB will not retry commands and GDB will wait for a reply no matter how long it takes.
+set remotetimeout 3600
+
+# output-radix tells GDB to write numbers in hex instead of decimal. This can be changed if the user prefers another representation.
+set output-radix 16
+
+# pagination tells GDB to just write to the console and not to try and paginate its output.  This allows the scroll funcitonality in the console.  This is optional.
+set pagination 0
+
+

@@ -1,0 +1,27 @@
+#!/bin/csh -f
+
+set prog=${0}
+if ("${prog:h}" == "${prog:t}") then
+	set prog="./${prog}"
+endif
+set root=${prog:h}
+set mod=rof
+set jar="${root}/${mod}.jar"
+set json=$1
+if ("x" != "x${json}") then
+	#create rof directory
+	set rof=${json:h}/rof
+	rm -rf $rof
+	mkdir -p $rof
+	if ($status) exit 1
+endif
+(domainname -A && domainname -A | fgrep -iq esperanto) >& /dev/null
+if ("0" == "${status}") then
+	set host=sc-dv01
+else
+	set host=localhost
+endif
+set port=3004
+#spec mem: else takes 32G ???
+set cmd="java -Xmx10M -ea -Dsigurl.host=${host} -Dsigurl.port=${port} -cp $jar ${mod}.Main"
+exec ${cmd} ${*}

@@ -1,0 +1,6 @@
+fields,esr_ddrc_read_auto_precharge_hi,esr_ddrc_read_auto_precharge_lo,esr_ddrc_write_auto_precharge_hi,esr_ddrc_write_auto_precharge_lo
+width,1,1,1,1
+,,,,
+,,,,
+,,,,
+sum bits,4,,,

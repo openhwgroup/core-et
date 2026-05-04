@@ -1,0 +1,5 @@
+This test checks that the following CSRs generate an illegal exception
+ - porthead0..3
+ - portheadnb0..3
+ - portctrl0..3
+ - tensor_load_l2scp

@@ -1,0 +1,8 @@
+This is a reduced version of the softfloat library.
+The original can be found in $REPOROOT/emu/bemu.
+
+Notable Changes:
+ - Removed thread_local from global variables
+ - Changed include paths to be relative
+ - Removed some references to stdlib functions
+ - Removed files not needed for STING

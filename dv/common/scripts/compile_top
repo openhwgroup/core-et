@@ -1,0 +1,28 @@
+#!/bin/bash
+source $REPOROOT/dv/common/scripts/bash_utils.sh
+
+info "Building ATPG test $testdir in `pwd`"
+
+# Cleanup
+#rm -rf simv.daidir
+#rm simv
+
+echo "fsdbDumpvars 0 soc_top_tb_reset_pattern.U_soc_top +all +parameter ;run" > ucli.tcl
+echo "cmd=\`readlink -f \$0\`;debug_dir=\`dirname \$cmd\`;export DISABLE_TDC_DELETED_MSG=1;verdi -simflow -ssf \${debug_dir}/novas.fsdb " > debug_me
+chmod +x debug_me
+echo "./simv -ucli -i ucli.tcl | tee simv.log" > runme
+chmod +x runme
+
+vcs -sverilog -full64 -timescale=1ns/1fs -reportstats +libext+.v+.vh+.sv+.svh -j8 -kdb -debug_access -debug_region+lib+cell -ucli +vcs+lic+wait \
++define+ET_USE_ASIC_MEMS +define+USE_REAL_DDRC \
++incdir+$REPOROOT/physical/bist/ate/testbench/ \
+-f $RTLROOT/ip/synopsys/ddrc/ddrc_rtl.f \
+-f $RTLROOT/soctop/soctop_vcs.f \
+$RTLROOT/soctop/soc_top.v \
+$REPOROOT/physical/bist/ate/testbench/soc_top_tb_reset_pattern.v \
+$DDR_SS_DIR/src/top/ddr_ss_cc_constants.sv \
+"$@" \
+ | tee compile.log 2>&1
+
+info "run ./runme to execute simulation"
+info "run ./debug_me for Verdi debug"

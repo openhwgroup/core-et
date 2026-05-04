@@ -1,0 +1,7 @@
+#!/usr/bin/env python3.6
+
+import sys
+sys.path.insert(0, sys.path[0] + '/../lib')  #prepend
+#print('\n'.join(sys.path))
+from ETdv.licmon.lmslurm import main
+main()

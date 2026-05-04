@@ -1,0 +1,27 @@
+// Copyright (c) 2026 Ainekko
+// SPDX-License-Identifier: Apache-2.0
+
+//////////////////////////////////////////////////////////////////
+// Submodule filelists (-f of submodule _rtl.f only)
+//////////////////////////////////////////////////////////////////
+
+-f $RTLROOT/libs/libs_rtl.f
+-f $RTLROOT/shire/neigh/neigh_top_rtl.f
+-f $RTLROOT/cpu_subsystem/cpu_etl2axi/cpu_etl2axi_rtl.f
+-f $RTLROOT/cpu_subsystem/cpu_plic/cpu_plic_rtl.f
+-f $RTLROOT/cpu_subsystem/cpu_clint/cpu_clint_rtl.f
+
+//////////////////////////////////////////////////////////////////
+// Include directories (+incdir+ and references to $RTLROOT only)
+//////////////////////////////////////////////////////////////////
+
++incdir+$RTLROOT/inc
+
+//////////////////////////////////////////////////////////////////
+// RTL files/directories (-v, -y, and references to $RTLROOT only)
+//////////////////////////////////////////////////////////////////
+
+-y $RTLROOT/shire/shire_channel/icache
+-y $RTLROOT/shire/uncached
+-y $RTLROOT/cpu_subsystem
+

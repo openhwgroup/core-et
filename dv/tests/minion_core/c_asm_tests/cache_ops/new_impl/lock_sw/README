@@ -1,0 +1,6 @@
+Goal:
+Test CacheOp Lock_SW (hard-lock); added partial self-checking for the result (e.g. data=0; hard-lock will not be affected by Evict, etc)
+
+Parameter(s):
+Core - This test will run on any Core (Thread 0 only) of any Neighborhood of any Shire. 
+

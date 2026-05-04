@@ -1,0 +1,35 @@
+#!/bin/bash
+
+$REPOROOT/swx/glow/build.sh --skipRecompile
+
+# Compiles minion source code and prepares data to load into memory
+# Compilation is performed by running 'make' on env var $MINION_SRC_DIR
+# binary expected to be created is $MINION_SRC_DIR/$MINION_BIN
+
+filter="*$TESTFILTER/0"
+
+echo "Checking GLOW unittest...";
+$REPOROOT/swx/glow/build/tests/ETSOC/$TESTNAME --gtest_filter=$filter --runDir=$testRunDir
+if [ $? != 0 ]; then
+    echo "Unittest $TESTNAME failed" >&2
+    exit 1
+fi
+
+#define timestamp function get start time
+timestamp() {
+    echo $layer > $testRunDir/TimeStamp.log
+    date +"%s.%3N" >> $testRunDir/TimeStamp.log
+}
+
+# and create logs dir
+mkdir -p $testRunDir/logs || exit
+
+#get a time to know how long takes the rtl to be executed
+timestamp
+
+if [ $? != 0 ]; then
+    echo "Error detected in preTest\n" >&2
+    exit 1
+fi
+
+

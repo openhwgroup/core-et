@@ -1,0 +1,22 @@
+// Copyright (c) 2026 Ainekko
+// SPDX-License-Identifier: Apache-2.0
+
+`include "neigh.rdl"
+`include "cpu.rdl"
+`include "hart.rdl"
+`include "plic.rdl"
+
+addrmap Erbium_ESR {
+    name= "ESR Map of Erbium";
+    U_neigh User_neigh @0x100000;
+    D_neigh D_neigh @0x900000;
+    M_neigh Machine_neigh @0xd00000;
+    
+// cpu instantiations
+    U_cpu User_cpu @0x340000;
+    S_cpu Supervisor_cpu @0x740000;
+    D_cpu D_cpu @0xB5F000;
+    M_cpu Machine_cpu @0xF40000;
+// HART instantiations
+    D_hart_esr D_hart_esr @0x800000;
+};

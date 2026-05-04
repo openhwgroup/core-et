@@ -1,0 +1,58 @@
+#!/usr/bin/env python3.6
+
+import sys, os, re
+from functools import reduce
+
+sys.path.insert(0, sys.path[0] + '/../lib')  # prepend
+from ETdv.util import exec,eprint
+
+PROG = os.path.basename(sys.argv[0])
+
+"""
+Kill pid and all descendents.
+"""
+def _usage_error():
+    eprint(f"Usage: {PROG} user signal|NONE pid")
+    exit(1)
+
+
+def _error(msg, do_exit=True):
+    eprint(f'Error: {msg}.')
+    if do_exit: exit(1)
+
+
+def _process(argv):
+    user, signal, pid0 = argv
+    pid_ppid = exec(f'ps -u {user} -o pid,ppid').split()
+    assert 0 == len(pid_ppid) % 2
+    pid_by_ppid = {}
+    while 0 < len(pid_ppid):
+        pid = pid_ppid.pop(0)
+        ppid = pid_ppid.pop(0)
+        if pid != 'PID':
+            pid, ppid = int(pid), int(ppid)
+            if ppid not in pid_by_ppid.keys(): pid_by_ppid[ppid] = []
+            pid_by_ppid[ppid].append(pid)
+    pids = []
+    _add_pid(pids, pid_by_ppid, int(pid0))
+    pids.reverse() #children first
+    for p in pids:
+        print("DEBUG: "+exec(f'ps -p {p} -o pid,command'))
+    kcmd = f'kill -s {signal} {" ".join(list(map(lambda i: str(i), pids)))}'
+    print(f'{PROG}: {kcmd} ...')
+    exec(kcmd)
+
+def _add_pid(pids, pid_by_ppid, pid0):
+    pids.append(pid0)
+    if pid0 not in pid_by_ppid.keys(): return
+    for p in pid_by_ppid[pid0]:
+        _add_pid(pids, pid_by_ppid, p)
+
+def main(argv):
+    argc = len(argv)
+    if 3 != argc: _usage_error()
+    _process(argv)
+    exit(0)
+
+
+main(sys.argv[1:])

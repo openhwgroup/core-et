@@ -1,0 +1,202 @@
+### ##test List
+
+##########################################################################################
+# set default options. These will be sent to the sim as plusargs 
+#    option = value  # sim will be run with cmd line param +option=value
+#
+# special options:
+#   preSimCmd = command to run before launching the simulation
+#   postSimCmd = command to run after the simulation has completed
+#       all the parameters will be set as env vars before calling these commands
+#       they will be run from the ##test base directory ($ENV{##testPath})
+#       the ##test run dir can be found in $ENV{##testRunDir}
+#       non-zero exit status adds an error tO the ##test run
+#   timeout = max number of time to run
+#   LOG_LEVEL = global log level
+#   XXXX_LOG_LEVEL = log level for block named XXXX
+#   SEED = random seed
+#   TEST_PATH = relative path of the ##test directory. './' used if not specified.
+#   TAG = tag1 tag2 tag3 ... => space separated values determining tags for ##tests.
+#                               Script can then run only ##tests matching certain patterns)
+##########################################################################################
+LOG_LEVEL=1
+timeout=10000000000
+
+##########################################################################################
+# ##test list, with specific options to be sent as plusargs for the current ##test only
+# format is: ###test=binary [option=X option=Y... tag=tag1 tag=tag2 tag=tag3 ...]
+# the script will run $TEST_PATH/build/SIM/binary where SIM=vcs|verilog
+##########################################################################################
+
+#INPUT_COUNT = 1000000
+INPUT_COUNT = 10000
+
+MIN_IDLE=5
+MAX_IDLE=5
+#MIN_IDLE=1
+#MAX_IDLE=1
+COMPUTATIONAL=1
+
+
+simulator=vcs
+tag=nightly
+tag=computational
+
+
+UVM_TESTNAME=txfma_test_base 
+SEED=0
+test=txfma_tb TEST_TYPE=0   tag=intaddi       tag=b4
+test=txfma_tb TEST_TYPE=1   tag=intmull       tag=b4
+test=txfma_tb TEST_TYPE=2   tag=uintmulh      tag=b4
+test=txfma_tb TEST_TYPE=3   tag=intmulh       tag=b4
+test=txfma_tb TEST_TYPE=4   tag=intadd        tag=b4
+test=txfma_tb TEST_TYPE=5   tag=intsub        tag=b4 
+test=txfma_tb TEST_TYPE=6   tag=f32mul        tag=b4
+test=txfma_tb TEST_TYPE=7   tag=f32add        tag=b4
+test=txfma_tb TEST_TYPE=8   tag=f32sub        tag=b4
+test=txfma_tb TEST_TYPE=9   tag=f32madd       tag=b4
+test=txfma_tb TEST_TYPE=11  tag=f32nmadd      tag=b4
+test=txfma_tb TEST_TYPE=10  tag=f32msub       tag=b4
+test=txfma_tb TEST_TYPE=12  tag=f32nmsub      tag=b4
+test=txfma_tb TEST_TYPE=13  tag=f32min        tag=b4
+test=txfma_tb TEST_TYPE=14  tag=f32max        tag=b4
+INPUT_COUNT = 2600
+test=txfma_tb TEST_TYPE=15 tag=f16mul    tag=b4c
+INPUT_COUNT = 48 #moving from 53 to 48 due to changes for input random generation
+test=txfma_tb TEST_TYPE=16 tag=f16madd        tag=b4
+INPUT_COUNT = 500
+test=txfma_tb TEST_TYPE=17 tag=f1632mul       tag=b4
+test=txfma_tb TEST_TYPE=18 tag=f1632madd      tag=b4tag=debug
+INPUT_COUNT = 1000
+test=txfma_tb TEST_TYPE=18 tag=f1632madd tag=pp
+INPUT_COUNT = 10000
+test=txfma_tb TEST_TYPE=100 tag=all           tag=b4 tag=b4c
+
+  #bugs found at sw tests and not covered by txfma verification
+test=txfma_tb TEST_TYPE=0 force_operands=1 tag=force_operands #tag=b4
+
+
+SEED=1
+test=txfma_tb TEST_TYPE=0   tag=intaddi
+test=txfma_tb TEST_TYPE=1   tag=intmull
+test=txfma_tb TEST_TYPE=2   tag=uintmulh
+test=txfma_tb TEST_TYPE=3   tag=intmulh
+test=txfma_tb TEST_TYPE=4   tag=intadd  
+test=txfma_tb TEST_TYPE=5   tag=intsub  
+test=txfma_tb TEST_TYPE=6   tag=f32mul  
+test=txfma_tb TEST_TYPE=7   tag=f32add  
+test=txfma_tb TEST_TYPE=8   tag=f32sub  
+test=txfma_tb TEST_TYPE=9   tag=f32madd 
+test=txfma_tb TEST_TYPE=10  tag=f32msub 
+test=txfma_tb TEST_TYPE=11  tag=f32nmadd
+test=txfma_tb TEST_TYPE=12  tag=f32nmsub
+test=txfma_tb TEST_TYPE=13  tag=f32min
+test=txfma_tb TEST_TYPE=14  tag=f32max
+test=txfma_tb TEST_TYPE=15  tag=f16mul         
+test=txfma_tb TEST_TYPE=16  tag=f16madd        
+test=txfma_tb TEST_TYPE=17  tag=f1632mul       
+test=txfma_tb TEST_TYPE=18  tag=f1632madd      
+test=txfma_tb TEST_TYPE=100 tag=all
+
+
+SEED=2
+test=txfma_tb TEST_TYPE=0   tag=intaddi
+test=txfma_tb TEST_TYPE=1   tag=intmull
+test=txfma_tb TEST_TYPE=2   tag=uintmulh
+test=txfma_tb TEST_TYPE=3   tag=intmulh
+test=txfma_tb TEST_TYPE=4   tag=intadd  
+test=txfma_tb TEST_TYPE=5   tag=intsub  
+test=txfma_tb TEST_TYPE=6   tag=f32mul  
+test=txfma_tb TEST_TYPE=7   tag=f32add  
+test=txfma_tb TEST_TYPE=8   tag=f32sub  
+test=txfma_tb TEST_TYPE=9   tag=f32madd
+test=txfma_tb TEST_TYPE=10  tag=f32msub
+test=txfma_tb TEST_TYPE=11  tag=f32nmadd
+test=txfma_tb TEST_TYPE=12  tag=f32nmsub
+test=txfma_tb TEST_TYPE=13  tag=f32min
+test=txfma_tb TEST_TYPE=14  tag=f32max
+test=txfma_tb TEST_TYPE=15  tag=f16mul         
+test=txfma_tb TEST_TYPE=16  tag=f16madd        
+test=txfma_tb TEST_TYPE=17  tag=f1632mul       
+test=txfma_tb TEST_TYPE=18  tag=f1632madd         
+test=txfma_tb TEST_TYPE=100 tag=all  
+
+
+SEED=3
+test=txfma_tb TEST_TYPE=0   tag=intaddi
+test=txfma_tb TEST_TYPE=1   tag=intmull
+test=txfma_tb TEST_TYPE=2   tag=uintmulh
+test=txfma_tb TEST_TYPE=3   tag=intmulh
+test=txfma_tb TEST_TYPE=4   tag=intadd  
+test=txfma_tb TEST_TYPE=5   tag=intsub  
+test=txfma_tb TEST_TYPE=6   tag=f32mul
+test=txfma_tb TEST_TYPE=7   tag=f32add   tag=flag #underflow flag
+test=txfma_tb TEST_TYPE=8   tag=f32sub  
+test=txfma_tb TEST_TYPE=9   tag=f32madd
+test=txfma_tb TEST_TYPE=10  tag=f32msub
+test=txfma_tb TEST_TYPE=11  tag=f32nmadd
+test=txfma_tb TEST_TYPE=12  tag=f32nmsub
+test=txfma_tb TEST_TYPE=13  tag=f32min
+test=txfma_tb TEST_TYPE=14  tag=f32max
+test=txfma_tb TEST_TYPE=15  tag=f16mul         
+test=txfma_tb TEST_TYPE=16  tag=f16madd        
+test=txfma_tb TEST_TYPE=17  tag=f1632mul       
+test=txfma_tb TEST_TYPE=18  tag=f1632madd     
+test=txfma_tb TEST_TYPE=100 tag=all  
+
+SEED=4
+test=txfma_tb TEST_TYPE=0   tag=intaddi
+test=txfma_tb TEST_TYPE=1   tag=intmull
+test=txfma_tb TEST_TYPE=2   tag=uintmulh
+test=txfma_tb TEST_TYPE=3   tag=intmulh
+test=txfma_tb TEST_TYPE=4   tag=intadd  
+test=txfma_tb TEST_TYPE=5   tag=intsub  
+test=txfma_tb TEST_TYPE=6   tag=f32mul  
+test=txfma_tb TEST_TYPE=7   tag=f32add  
+test=txfma_tb TEST_TYPE=8   tag=f32sub  
+test=txfma_tb TEST_TYPE=9   tag=f32madd
+test=txfma_tb TEST_TYPE=10  tag=f32msub
+test=txfma_tb TEST_TYPE=11  tag=f32nmadd
+test=txfma_tb TEST_TYPE=12  tag=f32nmsub
+test=txfma_tb TEST_TYPE=13  tag=f32min
+test=txfma_tb TEST_TYPE=14  tag=f32max
+test=txfma_tb TEST_TYPE=15  tag=f16mul         
+test=txfma_tb TEST_TYPE=16  tag=f16madd        
+test=txfma_tb TEST_TYPE=17  tag=f1632mul       
+test=txfma_tb TEST_TYPE=18  tag=f1632madd       
+test=txfma_tb TEST_TYPE=100 tag=all 
+
+
+
+
+LOG_LEVEL=2
+SEED=0
+testfloat_operands=1
+preSimCmd=scripts/preTest ui32 1
+test=txfma_tb TEST_TYPE=0  tag=intaddi tag=testfloat 
+test=txfma_tb TEST_TYPE=2  tag=uintmulh tag=testfloat
+
+preSimCmd=scripts/preTest i32 1
+test=txfma_tb TEST_TYPE=1  tag=intmull tag=testfloat
+test=txfma_tb TEST_TYPE=3  tag=intmulh tag=testfloat
+test=txfma_tb TEST_TYPE=4  tag=intadd  tag=testfloat
+test=txfma_tb TEST_TYPE=5  tag=intsub  tag=testfloat
+
+preSimCmd=scripts/preTest f32 3
+test=txfma_tb TEST_TYPE=6  tag=f32mul   tag=testfloat
+test=txfma_tb TEST_TYPE=7  tag=f32add   tag=testfloat
+test=txfma_tb TEST_TYPE=8  tag=f32sub   tag=testfloat
+test=txfma_tb TEST_TYPE=9  tag=f32madd  tag=testfloat
+test=txfma_tb TEST_TYPE=10 tag=f32msub  tag=testfloat
+test=txfma_tb TEST_TYPE=11 tag=f32nmadd tag=testfloat
+test=txfma_tb TEST_TYPE=12 tag=f32nmsub tag=testfloat
+test=txfma_tb TEST_TYPE=13 tag=f32min   tag=testfloat
+test=txfma_tb TEST_TYPE=14 tag=f32max   tag=testfloat
+
+preSimCmd=scripts/preTest f16 3
+test=txfma_tb TEST_TYPE=15 tag=f16mul    tag=testfloat
+test=txfma_tb TEST_TYPE=16 tag=f16madd   tag=testfloat
+
+preSimCmd=scripts/preTest f16 3
+test=txfma_tb TEST_TYPE=17 tag=f1632mul  tag=testfloat
+test=txfma_tb TEST_TYPE=18 tag=f1632madd tag=testfloat

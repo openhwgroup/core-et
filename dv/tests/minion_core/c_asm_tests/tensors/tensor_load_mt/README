@@ -1,0 +1,23 @@
+Goal:
+Directed self-checking test that exercices the basic functionality of the tensor load
+
+Details:
+Each hart issues a series for stores to warm-up the L1 cache, then evicts everything
+from the L1 and reconfigures the L1 as scratchpad.
+
+Then it tries to fill up the L1 scratchpad with data using tensor loads and reads back the evicted
+data before the reconfiguration of the L1 cache. Tensor load address is always unique amongst all
+harts (based on the minion/thread id)
+
+Machine trap handler is configured in this test in such way that the test would branch to DEAD, should an exception occur.
+Tensor data are being preloaded at @_binary_blob_bin_start
+
+Changes for #ifdef POSTSI_UST:
+0) note: L1D$ size is 16 * 4 * 64(byte) = 4KB;
+1) reduce the data size / memory allocation to fit within 64KB "data.raw";
+2) assume the test runs in one minion (default "neigh" build);
+
+
+Parameter(s):
+Core - This test will run on any Core (Thread 0 only) of any Neighborhood of any Shire. 
+

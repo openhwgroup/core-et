@@ -1,0 +1,2 @@
+Goal:
+Run test cacheops_evict_va in L1D$ SCP mode

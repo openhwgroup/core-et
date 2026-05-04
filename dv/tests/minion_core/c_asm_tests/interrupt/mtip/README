@@ -1,0 +1,8 @@
+Goal:
+Test timer interrupt MTIP.
+
+Details:
+t0: will loop, wfi in each iteration. When awaken by timer interrupt (programmed by t2) it increments the number of received interrupts, gives credits to t2 and wfi again.
+t1: will be awakening to the timer interrupt together with t0. It does not modify the state and just wfi again
+t2: programs the timer that will interrupt t0/t1, and waits for fcc credits. t0 gives it credits when it processes the interrupt 
+

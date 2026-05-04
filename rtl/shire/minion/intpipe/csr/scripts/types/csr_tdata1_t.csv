@@ -1,0 +1,12 @@
+fields,ttype,dmode,maskmax,ZERO,hit-ZERO,select-ZERO,timing,action_msb_ZERO,action,chain-ZERO,match-MSB-ZERO,match,m,ZERO,s,u,execute,store,load
+width,4,1,6,32,1,1,1,5,1,1,3,1,1,1,1,1,1,1,1
+RO,YES,NO,YES,NO,NO,NO,YES,NO,NO,NO,,NO,NO,NO,NO,NO,NO,NO,NO
+ROValue,4'h2,,6'h6,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+sum bits,64,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+bit idx,63:60,59,58:53,52:21,20,19,18,17:13,12,11,10:8,7,6,5,4,3,2,1,0
+,,,"Note: because we only support type=2, trigger specific data fields (59 LSB) correspond to this type of trigger",,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,
+,,,,action is 6 bits... but only LSB is used.. so the field has been divided in 2 parts (where 5 MSB are hardwired to 0),,,,,,,,,,,,,,,
+,,,,"match field => we only support 0..3, so only 2 LSB are used",,,,,,,,,,,,,,,

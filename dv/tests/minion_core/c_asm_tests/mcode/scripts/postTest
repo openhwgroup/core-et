@@ -1,0 +1,8 @@
+# Gets commit log and IPC
+
+echo "Parsing simulation outputs..."
+cd $testRunDir
+mv test.log logs/shire.out
+$testPath/scripts/get_commits_from_log.pl < logs/shire.out > logs/shire.commit
+$testPath/scripts/get_ipc.pl logs/shire.commit 5000
+$MINION_DIAGS/mcode/scripts/parse_shire_commit.pl < logs/shire.commit

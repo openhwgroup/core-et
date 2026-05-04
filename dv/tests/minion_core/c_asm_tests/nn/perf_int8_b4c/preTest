@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Compiles minion source code and prepares data to load into memory
+# Compilation is performed by running 'make' on env var $MINION_SRC_DIR
+# binary expected to be created is $MINION_SRC_DIR/$MINION_BIN
+
+[ ! -d "$MINION_SRC_DIR" ] &&  echo "env var MINION_SRC_DIR ($MINION_SRC_DIR) is not a directory" && exit 1
+
+echo "Generating test...";
+cd $REPOROOT/nn/checker
+./check_dnn.pl -prototxt ../nets/PTPX.prototxt -precision_mode 3 -caffe_path $DNN_VECTORS/ResNet50/resnetfish_ET/INT8/ -skip_caffe_golden_check 1 -kernel_dir perf_int8_b4c
+echo "Copying test...";
+cp -a $REPOROOT/nn/checker/perf_int8_b4c/* $testRunDir
+
+# and create logs dir
+mkdir -p $testRunDir/logs || exit
+

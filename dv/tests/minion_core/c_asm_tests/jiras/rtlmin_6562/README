@@ -1,0 +1,5 @@
+Goal:
+Specific test case for RTLMIN-6562. When a hart takes an interrupt it should start fetching instructions immediately
+This test makes memory access that takes enough time to trigger a thread timeout. A helper hart triggers an IPI so the memory harts trap to a handler that has the TEST_PASS sequeance.
+
+Unforntualy, we can finish before the memory request is fulfilled because validationX CSRs can't be accessed while the dcache is busy so, inside the trap handler, the hart spins until the memory request finish

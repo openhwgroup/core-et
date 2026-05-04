@@ -1,0 +1,24 @@
+Goal:
+Exercise the Tensor Load SetupB (non-cooperative) + TensorFMA32 (first-pass) sequence, including the cancellation case (unpaired Tensor Load TenB followed by another Tensor Load Tenb).
+
+Parameter(s):
+Core - This test will run on any Core (even thread) of any Neighborhood of any Shire. Only 1 Core (even thread) is expected to be enabled.
+
+Details
+The test runs in both threads, 0 and 1. The test does 3 loops:
+
+   - Loop 0: 1 back-to-back TensorLoad (16 lines) + 5 back-to-back TensorLoad TenB (1  line ) + 1 TFMA32A (first-pass)
+   - Loop 1: 7 back-to-back TensorLoad (1  line ) + 7 back-to-back TensorLoad TenB (1  line ) + 1 TFMA32A (first-pass) 
+   - Loop 2: 6 back-to-back TensorLoad (1  line ) + 5 back-to-back TensorLoad Tenb (16 lines) + 1 TFMA32A (wrong pairing that generates a tensor_error)
+
+If the 'SELF_CHECK' variable is set, the last iteration of each loop will be self-checked. The operations that are self-checked are the TensorLoad TenB + TensorFMA32A following these steps:
+   1) Tensor Wait to make sure the previous operation is done 
+   2) Dump the whole L1SCP content and the VPU RF content (32 registers, 8 lanes per register) in a memory region (stack)
+   3) Execute the TensorLoad TenB + TensorFMA sequence
+   4) Tensor Wait to make sure the current operation is done
+   5) Dump the whole L1SCP content and the VPU RF content (32 registers, 8 lanes per register) in a memory region (stack)
+   6) Model the TensorLoad TenB + TensorFMA32A behaviour using RISC-V basic instructions.
+        - This model will perform the same loads as the Tensor Load operation into the pre-l1scp memory region from 2)
+        - This model will perform the same operations as the TensorFMA32A into the pre-vpurf memory region from 2)
+        - Will compare the modified L1SCP memory content (pre-l1scp) against the memory content from 5) (post-l1scp). These two regions must contain the exact same data. This specially important when we mix TL non-tenb and TL tenb, to make sure TL TenB does not write into the SCP.
+        - Will compare the modified VPURF memory content (pre-vpurf) against the memory content from 5) (post-vpurf). These two regions must contain the exact same data. This will verify that the TensorLoad TenB and the TFMA32A works as expected. Similarly, this is also useful for the wrong pairing case (loop 2), where the VPU RF content should not be modified at all.

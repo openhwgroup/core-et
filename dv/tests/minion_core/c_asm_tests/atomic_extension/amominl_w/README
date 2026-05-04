@@ -1,0 +1,6 @@
+Goal:
+Test instruction amominl.w (local atomic MIN operation by word);
+self-checking (by doing a subsequent local_atomic to direct access L2 data)
+
+Parameter(s):
+Core - This test will run on any Core (even thread) of any Neighborhood of any Shire. Only 1 Core (even thread) is expected to be enabled.

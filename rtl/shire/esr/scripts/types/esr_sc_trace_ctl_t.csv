@@ -1,0 +1,6 @@
+fields,esr_sc_trace_filter_reqq_id_enable,esr_sc_trace_filter_reqq_id,esr_sc_trace_filter_port_enable,esr_sc_trace_filter_port,esr_sc_trace_filter_source_enable,esr_sc_trace_filter_source,esr_sc_trace_filter_l2_enable,esr_sc_trace_filter_l3_enable,esr_sc_trace_filter_fsm_enable,esr_sc_trace_type_hot_enable
+width,1,6,1,3,1,10,1,1,1,12
+,,,,,,,,,,
+,,,,,,,,,,
+,,,,,,,,,,
+sum bits,37,,,,,,,,,

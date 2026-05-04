@@ -1,0 +1,6 @@
+# Minion atomics: executable and assembler source file
+t_famoswapl_pi
+t_amocmpswapl_w
+t_amocmpswapg_w
+t_amocmpswapl_d
+t_amocmpswapg_d

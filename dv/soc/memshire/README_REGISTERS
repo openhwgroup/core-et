@@ -1,0 +1,8 @@
+README for how to run ralgen to generate UVM register models
+
+Step 1:  Edit ms_regs.ralf to add/edit register definitions
+Step 2:  Run this command:  ralgen -uvm -t ms_regs ms_regs.ralf
+Step 3:  Manual edits...
+             a) comment-out the "import uvm_pkg" line
+             b) in vim run this command: %s/build_coverage(UVM_NO_COVERAGE)/ UVM_NO_COVERAGE
+

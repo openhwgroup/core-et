@@ -1,0 +1,7 @@
+Goal:
+Test following Global Scalar Atomics Ops, word (32-bit):
+amoswapg.w, amoandg.w, amoorg.w, amoxorg.w, amoaddg.w, amoming.w, amomaxg.w, amominug.w, amomaxug.w;
+with self-checking code. 
+
+Parameter(s):
+Core - This test will run on any Core of any Neighborhood of any Shire. 

@@ -1,0 +1,12 @@
+{
+"vcsruntime_net": 75,  
+"vcscompiler_net": 85,
+"vip-amba-ahb-svt": 80,
+"vip-amba-apb-svt": 110,
+"vip-pcie-g4-svt": 70,
+"vt_vcs_xpropruntime": 100,
+"mvsim": 85,
+"vip-i2c-svt": 100,
+"ICCompilerII": 100,
+"design-compiler": 100
+}

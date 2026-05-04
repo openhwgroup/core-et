@@ -1,0 +1,16 @@
+fcc_flb
+====================================================================================================
+Description:
+    This test does some basic checking of synchronization using FCC and FLB. 
+    test0: All enabled HART(s) in a shire participate on an FLB and then wait for an FCC
+           credit. The last HART that reaches the FCC, unlocks all the HART(s).
+    test1: Same as test0 but instead of using a single FLB, the test use
+           2 FLBs (odd and even harts). Last Odd/Even HART unlock the others of the same
+           type
+
+Parametrization:
+    -DOVER_PARAMS: Enables parametrization
+    -DSHIRE_MASK: et-dvrun-style mask with the shires where should run the test
+    -DMINION_MASK: et-dvrun-style mask with the minions in a shire that should run the test
+    -DTHREAD_MASK: et-dvrun-style mask with the threads in a minion that should run the test
+

@@ -1,0 +1,99 @@
+
+=======================
+HOW TO USE THE DEBUGGER
+=======================
+
+1. Source the environment variables to get access to all our licenses
+                                source env.sh
+
+2. 	Launch the simulation, udagent and openOCD by executing run_debugger script:
+
+								$REPOROOT/dv/common/scripts/debugger/run_debugger
+
+    2.1 If there is no simulation, the script will run a very simple python test using
+        the IOShire standalone to create the build and simulation environment needed.
+
+    2.2 Then, the rerun script will be changed to make it reusable in different runs and
+        to disable the python script executed in section 2.1 in order to allow the debugger
+        use the same socket.
+
+    2.3 The run_debugger script looks for a free port and sets the environment variables properly
+        before launching the simulation and the UDAgent and OpenOCD.
+
+	2.4 Two log files will be created in the test run directory: openocd_log.log and 
+        udagent_log.log
+
+	2.5 UDAgent performs a discovery process to reach all the IOShire UltraSoc modules,
+		you will see in the udagent log two tables that contain the modules to be discovered
+		and the modules that have been discovered and the transactions between the udagent and 
+        the simulator.
+
+	2.6 Once openOCD is launched, the script will finish and run the UDAgent and openOCD as a 
+		background process. 
+
+	2.7 The openOCD log contain the information of the transactions between the udagent
+		and the simulation.
+
+3. 	On a different terminal you will have to wait until openOCD allows the GDB to connect, 
+    in order to know when the GDB can connect you will have to grep the openOCD log file using 
+    the next command:
+
+						tail -f openocd_log.log  | grep Listening
+
+	Wait until you are able to see the next line:
+	"Info : 263 205394 server.c:311 add_service(): Listening on port 3333 for gdb connections"
+
+
+4. 	Once openOCD allows the GDB to connect, open a new shell (or reuse the one in section 3) 
+    and open the GDB by running the next command:
+
+								./debugger/launch_gdb
+
+	4.1 Connect to the openOCD through remote target by running the next command:
+							target remote <machine>:3333
+
+					<machine> = {localhost, sc-server07, sc-server05,...}
+
+	4.2 It will take around 10-20 minutes to connect GDB with the openOCD. 
+
+	4.3 In addition, you can see if the port for GDB has been opened by running netstat and
+		looking for machine port 3333 service by running the next command:
+
+								    netstat -lt4
+
+
+5. 	Once you're connected and you have the GBD prompt available you will be able to start using
+	the debugger. Take into account, that each command will take several minutes/hours since VCS is very
+	slow.
+
+
+
+=======================
+DEBUGGER LAYERS
+=======================
+
+	 -----------
+	|			|	
+	|	 GDB	|
+	|			|
+	 -----------
+
+	 -----------
+	|			|
+	|  openOCD	|
+	|			|
+	 -----------
+
+	 -----------
+	|			|
+	|  udagent  |
+	|			|
+	 -----------
+
+	 -----------
+	|			|
+	| Simulator	|
+	|			|
+	 -----------
+
+

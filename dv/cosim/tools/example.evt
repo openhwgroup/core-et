@@ -1,0 +1,30 @@
+module example; # Start with a module name
+
+# This is an example event file (.evt)
+
+# CONSTANTS allow you to define local variables
+# They are not rendered in the header files
+const FOO = 4;
+
+# They support simple arithmetic operations (+,-,*,/,%)
+const BAR = FOO * 10;
+
+# EVENTS will be rendered as unpacked structs
+# Each event has a unique name and a series of fields
+event SomeEvent {
+    foo: u32,
+    bar: i64,
+}
+
+# The following types are supported:
+# - Signed integer:   i8, i16, i32, i64
+# - Unsigend integer: u8, u16, u32, u64
+# - Boolean: bool (this is equivalent to i8)
+# - Floating-point: f32, f64
+
+# You can also declare arrays (these will be unpacked as well)
+event SomeOtherEvent {
+    foo: u32[4],     # Simple array
+    bar: u64[FOO-1], # Also supports constants and calculations
+}
+

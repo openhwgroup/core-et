@@ -1,0 +1,5 @@
+fields,reserved,error,exception,busy,havereset,resumeack,running,halted
+width,57,1,1,1,1,1,1,1
+RO,NO,NO,NO,YES,YES,YES,YES,YES
+,,,,,,,,
+sum bits,64,,,,,,,

@@ -1,0 +1,8 @@
+# Gets commit log and IPC
+
+echo "Parsing simulation outputs..."
+cd $testRunDir
+$RISCV/bin/spike-dasm < test.log > logs/shire.out
+$REPOROOT/test/shire/shiretop/scripts/get_commits_from_log.pl < logs/shire.out > logs/shire.commit
+rm -rf test.log
+rm -rf $REPOROOT/nn/checker/perf_b4c

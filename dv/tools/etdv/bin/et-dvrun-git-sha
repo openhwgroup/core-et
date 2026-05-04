@@ -1,0 +1,11 @@
+#!/bin/csh -f
+
+if (! $?REPOROOT) then
+	exit 0
+endif
+if (! -d $REPOROOT) then
+	exit 0
+endif
+cd $REPOROOT
+git rev-parse HEAD
+exit 0

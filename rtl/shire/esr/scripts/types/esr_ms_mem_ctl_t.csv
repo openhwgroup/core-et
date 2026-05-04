@@ -1,0 +1,6 @@
+fields,esr_ms_mc_en,esr_ms_addr_mask,esr_ms_addr_debug_mc_bit_sel,esr_ms_addr_mc_bit_sel,esr_ms_addr_remove_bit_sel3,esr_ms_addr_remove_bit_sel2,esr_ms_addr_remove_bit_sel1,esr_ms_addr_remove_bit_sel0
+width,2,12,6,6,6,6,6,6
+,,,,,,,,
+,,,,,,,,
+,,,,,,,,
+sum bits,50,,,,,,,

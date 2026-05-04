@@ -1,0 +1,8 @@
+[project]
+name = "mtg"
+version = "0.1.0"
+description = "Random test generator for ET chips"
+requires-python = ">=3.7"
+dependencies = [
+    "mako",
+]

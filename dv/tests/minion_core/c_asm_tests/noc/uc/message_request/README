@@ -1,0 +1,4 @@
+In order to test the message requests a machine learning test is used.
+
+path: esperanto-soc/nn/checker
+command: ./check_dnn.pl -prototxt ../nets/FB/Single/SOFTMAX_49152_B10_REAL.prototxt -seed 1 -precision_mode 1 -keep_results 0

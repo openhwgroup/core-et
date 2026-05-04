@@ -1,0 +1,3 @@
+Goal:
+Test basic Lock_VA & Unlock_VA Operations when Minion_Feature_ESR DISABLE_ULOCK_UNLOCK_BIT is set to 1 (will cause trap).
+

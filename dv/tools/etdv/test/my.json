@@ -1,0 +1,51 @@
+[{"filename": "/Users/kpfalzer/projects/etdv/test/simple.etdv.py",
+"name": "my_config",
+"builds": [{"name": "my_buildA",
+"run_cmd": "\ncat <<L1 > ${ETDV_RUNDIR}/runme\n#!/bin/csh -f\necho Error:here\nsleep \\$1\nexit 0\nL1\nchmod +x ${ETDV_RUNDIR}/runme\n",
+"check_cmd": "echo pass > $TARGET",
+"slurmopts": "-slurmOpts1=val -L mylic1:1,mylic2",
+"test_slurmopts": "-L lic3 --time=56",
+"tests": [{"name": "my_test_2",
+"run_cmd": "${ETDV_BUILD_RUNDIR}/runme 2",
+"check_cmd": "echo pass > $TARGET",
+"tags": ["smoke","random"],
+"slurmopts": "-L lic2 --time=34"
+},{"name": "my_test_5",
+"run_cmd": "${ETDV_BUILD_RUNDIR}/runme 5",
+"check_cmd": "echo pass > $TARGET",
+"tags": ["smoke","random"],
+"slurmopts": "-L lic2 --time=34"
+},{"name": "my_test_10",
+"run_cmd": "${ETDV_BUILD_RUNDIR}/runme 10",
+"check_cmd": "echo pass > $TARGET",
+"tags": ["smoke","random"],
+"slurmopts": "-L lic2 --time=34"
+},{"name": "test_nightly",
+"run_cmd": "${ETDV_BUILD_RUNDIR}/runme 3",
+"check_cmd": "echo pass > $TARGET",
+"tags": ["nightly","nightly","nightly"]
+}]
+},{"name": "my_buildB",
+"run_cmd": "\ncat <<L1 > ${ETDV_RUNDIR}/runme\n#!/bin/csh -f\necho Error:here\nsleep \\$1\nexit 0\nL1\nchmod +x ${ETDV_RUNDIR}/runme\n",
+"check_cmd": "echo pass > $TARGET",
+"tests": [{"name": "my_test_2",
+"run_cmd": "echo hello\n${ETDV_BUILD_RUNDIR}/runme 2\necho world\n",
+"check_cmd": "echo pass > $TARGET",
+"tags": ["smoke","random"]
+},{"name": "my_test_5",
+"run_cmd": "echo hello\n${ETDV_BUILD_RUNDIR}/runme 5\necho world\n",
+"check_cmd": "echo pass > $TARGET",
+"tags": ["smoke","random"]
+},{"name": "my_test_10",
+"run_cmd": "echo hello\n${ETDV_BUILD_RUNDIR}/runme 10\necho world\n",
+"check_cmd": "echo pass > $TARGET",
+"tags": ["smoke","random"]
+},{"name": "test_nightly",
+"run_cmd": "${ETDV_BUILD_RUNDIR}/runme 3",
+"check_cmd": "echo pass > $TARGET",
+"tags": "nightly",
+"slurmopts": "-testSlurmOpts1=val"
+}]
+}],
+"env": ["REPOROOT"]
+}]

@@ -1,0 +1,7 @@
+Goal:
+Specific test case for VERIF-511. This test generates the condition for Virtual Memory accesses crossing boundaries because
+they are the first access, they will have a TLB miss. Each access increments the address by 4KB (which is tthe default page
+size) and so each access should generate a new miss.
+
+Details:
+This looks like a test case for a VERIF/Scoreboard related bug. The testcase however maybe interesting enough for RTL/Silicon.

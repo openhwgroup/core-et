@@ -1,0 +1,40 @@
+#!/bin/sh
+
+cur_dir=`/bin/pwd`
+
+full_name=`echo "$0" | sed -e 's@^\./@@'`
+prog_name=`echo "${full_name}" | sed -e 's@^.*/@@'`
+full_path=`echo "${full_name}" | sed -e 's@^\(.*\)/[^/][^/]*$@\1@'`
+
+if [ "${full_path}" != "" ] ; then
+   cd ${full_path}/..
+   full_path=`/bin/pwd`
+else
+   cd ..
+   full_path=`/bin/pwd`
+fi
+
+src_path="${full_path}/src"
+
+cd ${cur_dir}
+
+if [ ! -e "${src_path}" ] ; then
+   echo "${prog_name}: could not find source path \"${src_path}\""
+   exit 1
+fi
+
+if [ ! $?VCS_HOME ] ; then
+   echo "${prog_name}: VCS_HOME is not defined"
+   exit 1
+fi
+
+if [ ! -e "${VCS_HOME}/include" ] ; then
+      echo "${prog_name}: could not find \"${VCS_HOME}/include\"  env var VCS_HOME is likely not set correctly"
+      exit 1
+fi
+
+echo "gcc -c -o et_event_log.o -m64 -Wall -fPIC ${src_path}/et_event_log.c -I${VCS_HOME}/include"
+gcc -c -o et_event_log.o -m64 -Wall -fPIC ${src_path}/et_event_log.c -I${lib_path}/include -I${VCS_HOME}/include
+
+echo "gcc -m64 -shared -o libet_event_log.so *.o -lm -ldl -lz"
+gcc -m64 -shared -o libet_event_log.so *.o -lm -ldl -lz

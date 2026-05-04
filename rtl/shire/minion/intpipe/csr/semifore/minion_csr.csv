@@ -1,0 +1,875 @@
+"Offset","Position","Title","Identifier","Array","Access","Type","Reset Value","Reset Mask","Description","Documentation Source","Group","Is Implemented?","RISCV Privilege Level"
+,,"","minion_csr",,"R/W","addressmap",,,"",,,,
+"0x0",,"User status register","ustatus","","R","register","0","0xffffffffffffffff","This register is not implemented.","RISC-V Unprivileged","UserTrapSetup","0","user"
+,"[63:0]","User status register","ustatus","","R","status","0",,"This register is not implemented.","RISC-V Unprivileged","UserTrapSetup","0","user"
+"0x1",,"Floating-Point Accrued Exceptions","fflags","","R/W","register","0","0xffffffffffffffff","","RISC-V Unprivileged","UserFloatingPoint",,"user"
+,"[0]","Inexact","NX","","R/W","configuration","0",,"Hardware sets this bit on an Inexact result.",,,,
+,"[1]","Underflow","UF","","R/W","configuration","0",,"Hardware sets this bit when an underflow condition occurs.",,,,
+,"[2]","Overflow","OF","","R/W","configuration","0",,"Hardware sets this bit when an overflow condition occurs.",,,,
+,"[3]","Divide by Zero","DZ","","R/W","configuration","0",,"Hardware sets this bit when a divide-by-zero condition occurs.",,,,
+,"[4]","Invalid Operation","NV","","R/W","configuration","0",,"Hardware sets this bit when an invalid operation occurs.",,,,
+,"[31]","InputDenorm flag","eflags","","R/W0C","configuration","0",,"The sticky InputDenorm flag is added to the machine state to indicate that an input denormal value was flushed to zero in a floating point operation. The InputDenorm flag can be read by software from either fcsr[31] or from fflags[31]. The InputDenorm flag can be cleared by software by an explicit write to fcsr or fflags.","PRM-0",,,
+"0x2",,"Floating-Point Dynamic Rounding Mode","frm","","R/W","register","0","0xffffffffffffffff","","RISC-V Unprivileged","UserFloatingPoint",,"user"
+,"[2:0]","Rounding Mode","FRM","","R/W","configuration","0",,"000: RNE. Round to nearest, Ties to even.
+001: RTZ. Round towards zero.
+010: RDN. Round down (towards negative inifinity).
+011: RUP. Round up (towards positive inifinity).
+100: RMM. Round to nearest. Ties to max magnitude.
+101 - 111: Invalid, reserved.",,,,
+"0x3",,"Floating-Point Control and Status","fcsr","","R/W","register","0","0xffffffffffffffff","","RISC-V spec, Volume I, Section 11.2","UserFloatingPoint",,"user"
+,"[0]","Inexact","NX","","R/W","configuration","0",,"Hardware sets this bit on an Inexact error condition.",,,,
+,"[1]","Underflow","UF","","R/W","configuration","0",,"Hardware sets this bit on an underflow condition.",,,,
+,"[2]","Overflow","OF","","R/W","configuration","0",,"Hardware sets this bit on an overflow condition.",,,,
+,"[3]","Divide by Zero","DZ","","R/W","configuration","0",,"Hardware sets this bit on an divide-by-zero condition.",,,,
+,"[4]","Invalid Operation","NV","","R/W","configuration","0",,"Hardware sets this bit on an invalid operation.",,,,
+,"[7:5]","Rounding Mode","FRM","","R/W","configuration","0",,"This bit is set when a Rounding Mode condition occurs. This field is encoded as follows:
+000: RNE. Round to nearest, Ties to even
+001: RTZ. Round towards zero.
+010: RDN. Round down (towards negative inifinity).
+011: RUP. Round up (towards positive inifinity).
+100: RMM. Round to nearest. Ties to max magnitude.
+101 - 110: Invalid, reserved.
+111: In instruction’s rm field, selects dynamic rounding mode; In the Rounding Mode register, this encoding is invalid.","RISC-V spec, Volume I, Section 11.2",,,
+,"[31]","InputDenorm flag","eflags","","R/W0C","configuration","0",,"The sticky InputDenorm flag is added to the machine state to indicate that an input denormal value was flushed to zero in a floating point operation. The InputDenorm flag can be read by software from either fcsr[31] or from fflags[31]. The InputDenorm flag can be cleared by software by an explicit write to fcsr or fflags.","PRM-0",,,
+"0x4",,"User interrupt-enable register","uie","","R","register","0","0xffffffffffffffff","This register is not implemented.","RISC-V Unprivileged","UserTrapSetup","0","user"
+,"[63:0]","User interrupt-enable register","uie","","R","status","0",,"This register is not implemented.","RISC-V Unprivileged","UserTrapSetup","0","user"
+"0x5",,"User trap handler base address","utvec","","R","register","0","0xffffffffffffffff","This register is not implemented.","RISC-V Unprivileged","UserTrapSetup","0","user"
+,"[63:0]","User trap handler base address","utvec","","R","status","0",,"This register is not implemented.","RISC-V Unprivileged","UserTrapSetup","0","user"
+"0x40",,"Scratch register for user trap handlers","uscratch","","R","register","0","0xffffffffffffffff","This register is not implemented.","RISC-V Unprivileged","UserTrapHandling","0","user"
+,"[63:0]","Scratch register for user trap handlers","uscratch","","R","status","0",,"This register is not implemented.","RISC-V Unprivileged","UserTrapHandling","0","user"
+"0x41",,"User exception program counter","uepc","","R","register","0","0xffffffffffffffff","This register is not implemented.","RISC-V Unprivileged","UserTrapHandling","0","user"
+,"[63:0]","User exception program counter","uepc","","R","status","0",,"This register is not implemented.","RISC-V Unprivileged","UserTrapHandling","0","user"
+"0x42",,"User trap cause","ucause","","R","register","0","0xffffffffffffffff","This register is not implemented.","RISC-V Unprivileged","UserTrapHandling","0","user"
+,"[63:0]","User trap cause","ucause","","R","status","0",,"This register is not implemented.","RISC-V Unprivileged","UserTrapHandling","0","user"
+"0x43",,"User bad address or instruction","utval","","R","register","0","0xffffffffffffffff","This register is not implemented.","RISC-V Unprivileged","UserTrapHandling","0","user"
+,"[63:0]","User bad address or instruction","utval","","R","status","0",,"This register is not implemented.","RISC-V Unprivileged","UserTrapHandling","0","user"
+"0x44",,"User interrupt pending","uip","","R","register","0","0xffffffffffffffff","This register is not implemented.","RISC-V Unprivileged","UserTrapHandling","0","user"
+,"[63:0]","User interrupt pending","uip","","R","status","0",,"This register is not implemented.","RISC-V Unprivileged","UserTrapHandling","0","user"
+"0x100",,"Supervisor status register","sstatus","","R/W","register","0","0xffffffffffffffff","The sstatus register is an SXLEN-bit read/write register keeps track of the processor’s current operating state. This register is encoded as follows. All values not shown are reserved.
+63: SD.
+33:32: UXL. The UXL field controls the value of XLEN for U-mode, termed UXLEN, which may differ from the value of XLEN for S-mode, termed SXLEN. The encoding of UXL is the same as that of the MXL field of the misa register. See the misa register for more information.
+19: MXR. The MXR (Make eXecutable Readable) bit modifies the privilege with which loads access virtual memory. When MXR = 0, only loads from pages marked readable will succeed. When MXR = 1, loads from pages marked either readable or executable (R = 1 or X = 1) will succeed. MXR has no effect when page-based virtual memory is not in effect.
+18: SUM. The SUM (Supervisor User Memory) access bit modifies the privilege with which S-mode loads and stores access virtual memory. When SUM = 0, S-mode memory accesses to pages that are accessible by U-mode will fault. When SUM = 1, these accesses are permitted. SUM has no effect when page-based virtual memory is not in effect, nor when executing in U-mode.
+16:15: XS[1:0]. The XS field represents a summary of all extensions’ status and is encoded the same as FS[1:0] in bits 14:13.
+14:13: FS[1:0]. The FS field encodes the status of the floating-point unit and it encoded as follows: 00: OFF. 01: INITIAL (none dirty or clean, some on. 10: CLEAN. None dirty, some clean. 11: DIRTY, some dirty.
+8: SPP. The SPP bit indicates the privilege level at which a hart was executing before entering supervisor mode.
+5: SPIE. The SPIE bit indicates whether supervisor-level interrupts were enabled prior to taking a supervisor-level trap.
+4: UPIE. The UPIE bit indicates whether user-level interrupts were enabled prior to taking a user-level trap.
+1: SIE. The SIE bit enables or disables all interrupts in supervisor mode. When SIE is clear, interrupts are not taken while in supervisor mode.
+0: UIE. The UIE bit enables or disables all interrupts in user mode. When SIE is clear, interrupts are not taken while in user mode. ","RISC-V spec, volume II, Section 4.1.1.","SupervisorTrapHandling",,"supervisor"
+,"[63:0]","Supervisor status register","sstatus","","R/W","configuration","0",,"The sstatus register is an SXLEN-bit read/write register keeps track of the processor’s current operating state. This register is encoded as follows. All values not shown are reserved.
+63: SD.
+33:32: UXL. The UXL field controls the value of XLEN for U-mode, termed UXLEN, which may differ from the value of XLEN for S-mode, termed SXLEN. The encoding of UXL is the same as that of the MXL field of the misa register. See the misa register for more information.
+19: MXR. The MXR (Make eXecutable Readable) bit modifies the privilege with which loads access virtual memory. When MXR = 0, only loads from pages marked readable will succeed. When MXR = 1, loads from pages marked either readable or executable (R = 1 or X = 1) will succeed. MXR has no effect when page-based virtual memory is not in effect.
+18: SUM. The SUM (Supervisor User Memory) access bit modifies the privilege with which S-mode loads and stores access virtual memory. When SUM = 0, S-mode memory accesses to pages that are accessible by U-mode will fault. When SUM = 1, these accesses are permitted. SUM has no effect when page-based virtual memory is not in effect, nor when executing in U-mode.
+16:15: XS[1:0]. The XS field represents a summary of all extensions’ status and is encoded the same as FS[1:0] in bits 14:13.
+14:13: FS[1:0]. The FS field encodes the status of the floating-point unit and it encoded as follows: 00: OFF. 01: INITIAL (none dirty or clean, some on. 10: CLEAN. None dirty, some clean. 11: DIRTY, some dirty.
+8: SPP. The SPP bit indicates the privilege level at which a hart was executing before entering supervisor mode.
+5: SPIE. The SPIE bit indicates whether supervisor-level interrupts were enabled prior to taking a supervisor-level trap.
+4: UPIE. The UPIE bit indicates whether user-level interrupts were enabled prior to taking a user-level trap.
+1: SIE. The SIE bit enables or disables all interrupts in supervisor mode. When SIE is clear, interrupts are not taken while in supervisor mode.
+0: UIE. The UIE bit enables or disables all interrupts in user mode. When SIE is clear, interrupts are not taken while in user mode. ","RISC-V spec, volume II, Section 4.1.1.","SupervisorTrapHandling",,"supervisor"
+"0x102",,"Supervisor exception delegation register","sedeleg","","R/W","register","0","0xffffffffffffffff","This register is not used.",,"SupervisorTrapHandling","0","supervisor"
+,"[63:0]","Supervisor exception delegation register","sedeleg","","R/W","configuration","0",,"This register is not used.",,"SupervisorTrapHandling","0","supervisor"
+"0x103",,"Supervisor interrupt delegation register","sideleg","","R/W","register","0","0xffffffffffffffff","This register is not used.",,"SupervisorTrapHandling","0","supervisor"
+,"[63:0]","Supervisor interrupt delegation register","sideleg","","R/W","configuration","0",,"This register is not used.",,"SupervisorTrapHandling","0","supervisor"
+"0x104",,"Supervisor interrupt-enable register","sie","","R/W","register","0","0xffffffffffffffff","Supervisor interrupt enable register. This register is encoded as follows.
+Bit 9: SEIE. Supervisor external interrupt enable.
+Bit 8: UEIE. Machine external interrupt enable.
+Bit 5: STIE. Supervisor timer interrupt enable.
+Bit 4: UTIE. User timer interrupt enable.
+Bit 1: SSIE. Supervisor software interrupt enable.
+Bit 0: USIE. User software interrupt enable.",,"SupervisorTrapHandling",,"supervisor"
+,"[63:0]","Supervisor interrupt-enable register","sie","","R/W","configuration","0",,"Supervisor interrupt enable register. This register is encoded as follows.
+Bit 9: SEIE. Supervisor external interrupt enable.
+Bit 8: UEIE. Machine external interrupt enable.
+Bit 5: STIE. Supervisor timer interrupt enable.
+Bit 4: UTIE. User timer interrupt enable.
+Bit 1: SSIE. Supervisor software interrupt enable.
+Bit 0: USIE. User software interrupt enable.",,"SupervisorTrapHandling",,"supervisor"
+"0x105",,"Supervisor trap handler base address","stvec","","R/W","register","0","0xffffffffffffffff","The stvec register stores the trap vector configuration, consisting of a vector base address (BASE) and a vector mode (MODE). Bits 64:2 store the BASE address, and bits 1:0 store the MODE. Two modes are supported, meaning that the MODE field is encoded as follows:
+MODE = 00: Direct. All exceptions set the PC to BASE.
+MODE = 01: Vectored. Asynchronout interrupts set PC to (BASE + 4 x Cause)",,"SupervisorTrapHandling",,"supervisor"
+,"[63:0]","Supervisor trap handler base address","stvec","","R/W","configuration","0",,"The stvec register stores the trap vector configuration, consisting of a vector base address (BASE) and a vector mode (MODE). Bits 64:2 store the BASE address, and bits 1:0 store the MODE. Two modes are supported, meaning that the MODE field is encoded as follows:
+MODE = 00: Direct. All exceptions set the PC to BASE.
+MODE = 01: Vectored. Asynchronout interrupts set PC to (BASE + 4 x Cause)",,"SupervisorTrapHandling",,"supervisor"
+"0x106",,"Supervisor counter enable","scounteren","","R/W","register","0","0xffffffffffffffff","",,"SupervisorTrapHandling",,"supervisor"
+,"[8:0]","Supervisor counter enable","scounteren","","R/W","configuration","0",,"This register stores the enable bits for each one of the counters in supervisor mode. These bits control the availability of the hardware performance-monitoring counters to the next-lowest privilege mode.  This means that U-mode and S-mode cannot access hpmcounter9 - hpmcounter31. Attempting to access these CSR's in U-mode or S-mode results in an illegal instruction exception. These bits are encoded as follows:
+0: CY. Setting this bit enables the cycle counter.
+1: TM. Setting this bit enables the time counter.
+2: IR. Setting this bit enables the instruction retire counter.
+7:3: HPM 3 - 7.  These bits enable hpmcounter 0 through hpmcounter 4.
+31:8: Reserved.",,"SupervisorTrapHandling",,
+"0x140",,"Scratch register for supervisor trap handlers","sscratch","","R/W","register","",,"The sscratch register is an SXLEN-bit read/write register, dedicated for use by the supervisor.
+Typically, sscratch is used to hold a pointer to the hart-local supervisor context while the hart is
+executing user code. At the beginning of a trap handler, sscratch is swapped with a user register
+to provide an initial working register.",,"SupervisorTrapSetup",,"supervisor"
+,"[63:0]","Scratch register for supervisor trap handlers","sscratch","","R/W","configuration","",,"The sscratch register is an SXLEN-bit read/write register, dedicated for use by the supervisor.
+Typically, sscratch is used to hold a pointer to the hart-local supervisor context while the hart is
+executing user code. At the beginning of a trap handler, sscratch is swapped with a user register
+to provide an initial working register.",,"SupervisorTrapSetup",,"supervisor"
+"0x141",,"Supervisor exception program counter","sepc","","R/W","register","",,"The sepc register is an MXLEN-bit read/write register. The low-order bit of sepc (sepc[0]) is always zero. On implementations that support only IALIGN = 32, the two low bits (mepc[1:0]) are always zero.",,"SupervisorTrapSetup",,"supervisor"
+,"[63:0]","Supervisor exception program counter","sepc","","R/W","configuration","",,"The sepc register is an MXLEN-bit read/write register. The low-order bit of sepc (sepc[0]) is always zero. On implementations that support only IALIGN = 32, the two low bits (mepc[1:0]) are always zero.",,"SupervisorTrapSetup",,"supervisor"
+"0x142",,"Supervisor trap cause","scause","","R/W","register","",,"The scause register is an MXLEN-bit read-write register. When a trap is taken into S-mode, scause is written with a code indicating the event that caused the trap. Otherwise, scause is never written by the implementation, though it may be explicitly written by software. In this register, the uppermost bit is the INTERRUPT bit. The remaining bits are the EXCEPTION CODE. The encoding of the EXCEPTION CODE field depends on the state of the INTERRUPT bit. For more information, refer to Table 4.2 in the RISC-V spec, Volume II.","RISC-V spec, volume II, Section 4.1.10.","SupervisorTrapSetup",,"supervisor"
+,"[63:0]","Supervisor trap cause","scause","","R/W","configuration","",,"The scause register is an MXLEN-bit read-write register. When a trap is taken into S-mode, scause is written with a code indicating the event that caused the trap. Otherwise, scause is never written by the implementation, though it may be explicitly written by software. In this register, the uppermost bit is the INTERRUPT bit. The remaining bits are the EXCEPTION CODE. The encoding of the EXCEPTION CODE field depends on the state of the INTERRUPT bit. For more information, refer to Table 4.2 in the RISC-V spec, Volume II.","RISC-V spec, volume II, Section 4.1.10.","SupervisorTrapSetup",,"supervisor"
+"0x143",,"Supervisor bad address or instruction","stval","","R/W","register","",,"The stval register is an SXLEN-bit read-write register. When a trap is taken into S-mode, stval is written with exception-specific information to assist software in handling the trap.","RISC-V spec, volume II, Section 4.1.11.","SupervisorTrapSetup",,"supervisor"
+,"[63:0]","Supervisor bad address or instruction","stval","","R/W","configuration","",,"The stval register is an SXLEN-bit read-write register. When a trap is taken into S-mode, stval is written with exception-specific information to assist software in handling the trap.","RISC-V spec, volume II, Section 4.1.11.","SupervisorTrapSetup",,"supervisor"
+"0x144",,"Supervisor interrupt pending","sip","","R/W","register","",,"Supervisor mode interrupt pending register. This register is encoded as follows.
+Bit 9: SEIP. Supervisor external interrupt pending.
+Bit 8: UEIP. Machine external interrupt pending.
+Bit 5: STIP. Supervisor timer interrupt pending.
+Bit 4: UTIP. User timer interrupt pending.
+Bit 1: SSIP. Supervisor software interrupt pending.
+Bit 0: USIP. User software interrupt pending.",,"SupervisorTrapSetup",,"supervisor"
+,"[63:0]","Supervisor interrupt pending","sip","","R/W","configuration","",,"Supervisor mode interrupt pending register. This register is encoded as follows.
+Bit 9: SEIP. Supervisor external interrupt pending.
+Bit 8: UEIP. Machine external interrupt pending.
+Bit 5: STIP. Supervisor timer interrupt pending.
+Bit 4: UTIP. User timer interrupt pending.
+Bit 1: SSIP. Supervisor software interrupt pending.
+Bit 0: USIP. User software interrupt pending.",,"SupervisorTrapSetup",,"supervisor"
+"0x180",,"Supervisor address translation and protection","satp","","R/W","register","0","0xffffffffffffffff","The Supervisor Address Translation and Protection (SATP) register is a 64-bit read/write register that controls S-mode address translation and protection. There is a single SATP register shared among the two harts of the processor. The bit assignments for this register are as follows:
+63:60, MODE. This 4-bit field selects the address translation schement and is encoded as follows. When MODE = Bare, M-mode virtual addresses are equal to M-mode physical addresses, and there is no additional memory protection. In this case, the remaining fields in MATP have no effect. All values not shown are reserved.
+0000: No address translation or protection.
+1000: Page-based 39-bit virtual addressing.
+1001: Page-based 48-bit virtual addressing.
+
+59:44 ASID. The address space identifier (ASID) facilitates address-translation fences on a per-address-space basis. 
+43:0 PPN. Physical page number. This field stores the physical page number (PPN) of the root page table, i.e., its physical address divided by 4KiB.",,"SupervisorProtectionTranslation",,"supervisor"
+,"[63:0]","Supervisor address translation and protection","satp","","R/W","configuration","0",,"The Supervisor Address Translation and Protection (SATP) register is a 64-bit read/write register that controls S-mode address translation and protection. There is a single SATP register shared among the two harts of the processor. The bit assignments for this register are as follows:
+63:60, MODE. This 4-bit field selects the address translation schement and is encoded as follows. When MODE = Bare, M-mode virtual addresses are equal to M-mode physical addresses, and there is no additional memory protection. In this case, the remaining fields in MATP have no effect. All values not shown are reserved.
+0000: No address translation or protection.
+1000: Page-based 39-bit virtual addressing.
+1001: Page-based 48-bit virtual addressing.
+
+59:44 ASID. The address space identifier (ASID) facilitates address-translation fences on a per-address-space basis. 
+43:0 PPN. Physical page number. This field stores the physical page number (PPN) of the root page table, i.e., its physical address divided by 4KiB.",,"SupervisorProtectionTranslation",,"supervisor"
+"0x300",,"Machine status register","mstatus","","R/W","register","",,"The mstatus register is an MXLEN-bit read/write register that keeps track of and controls the hart’s current operating state. Restricted views of the mstatus register appear as the sstatus and ustatus registers in the S-level and U-level ISAs respectively. For more information, refer to Section 3.1.6 of the RISC-V Privileged Architecture Specification, Volume II.",,"MachineTrapSetup",,"machine"
+,"[63:0]","Machine status register","mstatus","","R/W","configuration","",,"The mstatus register is an MXLEN-bit read/write register that keeps track of and controls the hart’s current operating state. Restricted views of the mstatus register appear as the sstatus and ustatus registers in the S-level and U-level ISAs respectively. For more information, refer to Section 3.1.6 of the RISC-V Privileged Architecture Specification, Volume II.",,"MachineTrapSetup",,"machine"
+"0x301",,"ISA and extensions","misa","","R/W","register","0x8000000000941124","0xffffffffffffffff","The misa CSR is a WARL read-write register reporting the ISA supported by the hart. This register is encoded as follows:
+63:62 - MXL[1:0]. A value of 10 in this bit indicates a 64-bit register width. Other values are 01 (32-bit) and 11 (128-bit).
+61:26 - WLRL. Write legal and read legal values.
+25:0 - EXTENSION. The Extensions field encodes the presence of the standard extensions, with a single bit per letter of the alphabet (bit 0 encodes presence of extension “A” , bit 1 encodes presence of extension “B”, through to bit 25 which encodes “Z”). For the definition of each letter, refer to Table 3-2 of the RISC-V Privileged Architecture Specification, Volume II.",,"MachineTrapSetup",,"machine"
+,"[63:0]","ISA and extensions","misa","","R/W","configuration","0x8000000000941124",,"The misa CSR is a WARL read-write register reporting the ISA supported by the hart. This register is encoded as follows:
+63:62 - MXL[1:0]. A value of 10 in this bit indicates a 64-bit register width. Other values are 01 (32-bit) and 11 (128-bit).
+61:26 - WLRL. Write legal and read legal values.
+25:0 - EXTENSION. The Extensions field encodes the presence of the standard extensions, with a single bit per letter of the alphabet (bit 0 encodes presence of extension “A” , bit 1 encodes presence of extension “B”, through to bit 25 which encodes “Z”). For the definition of each letter, refer to Table 3-2 of the RISC-V Privileged Architecture Specification, Volume II.",,"MachineTrapSetup",,"machine"
+"0x302",,"Machine exception delegation register","medeleg","","R/W","register","",,"By default, all traps at any privilege level are handled in machine mode, though a machine-mode handler can redirect traps back to the appropriate level with the MRET instruction. To increase performance, implementations can provide individual read/write bits within medeleg and mideleg to indicate that certain exceptions and interrupts should be processed directly by a lower privilege level. The machine exception delegation register (medeleg) and machine interrupt delegation register (mideleg) are MXLEN-bit read/write registers.
+
+In systems with all three privilege modes (M/S/U), setting a bit in medeleg or mideleg will delegate the corresponding trap in S-mode or U-mode to the S-mode trap handler. If U-mode traps are supported, S-mode may in turn set corresponding bits in the sedeleg and sideleg registers to delegate traps that occur in U-mode to the U-mode trap handler. In systems with S-mode, the medeleg and mideleg registers must exist, whereas the sedeleg and sideleg registers should only exist if the N extension for user-mode interrupts is also implemented. For an encoding of this register, refer to Table 3-6 of the RISC-V specification, volume II.","Section 3.1.8, RISC-V Volume II","MachineTrapSetup",,"machine"
+,"[63:0]","Machine exception delegation register","medeleg","","R/W","configuration","",,"By default, all traps at any privilege level are handled in machine mode, though a machine-mode handler can redirect traps back to the appropriate level with the MRET instruction. To increase performance, implementations can provide individual read/write bits within medeleg and mideleg to indicate that certain exceptions and interrupts should be processed directly by a lower privilege level. The machine exception delegation register (medeleg) and machine interrupt delegation register (mideleg) are MXLEN-bit read/write registers.
+
+In systems with all three privilege modes (M/S/U), setting a bit in medeleg or mideleg will delegate the corresponding trap in S-mode or U-mode to the S-mode trap handler. If U-mode traps are supported, S-mode may in turn set corresponding bits in the sedeleg and sideleg registers to delegate traps that occur in U-mode to the U-mode trap handler. In systems with S-mode, the medeleg and mideleg registers must exist, whereas the sedeleg and sideleg registers should only exist if the N extension for user-mode interrupts is also implemented. For an encoding of this register, refer to Table 3-6 of the RISC-V specification, volume II.","Section 3.1.8, RISC-V Volume II","MachineTrapSetup",,"machine"
+"0x303",,"Machine interrupt delegation register","mideleg","","R/W","register","",,"This register is organized like the medeleg register. See medeleg description above.","Section 3.1.8, RISC-V Volume II","MachineTrapSetup",,"machine"
+,"[63:0]","Machine interrupt delegation register","mideleg","","R/W","configuration","",,"This register is organized like the medeleg register. See medeleg description above.","Section 3.1.8, RISC-V Volume II","MachineTrapSetup",,"machine"
+"0x304",,"Machine interrupt-enable register","mie","","R/W","register","",,"Interrupt enable register. This register is encoded as follows.
+Bit 11: MEIE. Machine external interrupt enable.
+Bit 9: SEIE. Supervisor external interrupt enable.
+Bit 8: UEIE. Machine external interrupt enable.
+Bit 7: MTIE. Machine timer interrupt enable.
+Bit 5: STIE. Supervisor timer interrupt enable.
+Bit 4: UTIE. User timer interrupt enable.
+Bit 3: MSIE. Machine software interrupt enable.
+Bit 1: SSIE. Supervisor software interrupt enable.
+Bit 0: USIE. User software interrupt enable.","Section 3.1.9, RISC-V Volume II","MachineTrapSetup",,"machine"
+,"[63:0]","Machine interrupt-enable register","mie","","R/W","configuration","",,"Interrupt enable register. This register is encoded as follows.
+Bit 11: MEIE. Machine external interrupt enable.
+Bit 9: SEIE. Supervisor external interrupt enable.
+Bit 8: UEIE. Machine external interrupt enable.
+Bit 7: MTIE. Machine timer interrupt enable.
+Bit 5: STIE. Supervisor timer interrupt enable.
+Bit 4: UTIE. User timer interrupt enable.
+Bit 3: MSIE. Machine software interrupt enable.
+Bit 1: SSIE. Supervisor software interrupt enable.
+Bit 0: USIE. User software interrupt enable.","Section 3.1.9, RISC-V Volume II","MachineTrapSetup",,"machine"
+"0x305",,"Machine trap-handler base address","mtvec","","R/W","register","",,"The mtvec register stores the trap vector configuration, consisting of a vector base address (BASE) and a vector mode (MODE). Bits 64:2 store the BASE address, and bits 1:0 store the MODE. Two modes are supported, meaning that the MODE field is encoded as follows:
+MODE = 00: Direct. All exceptions set the PC to BASE.
+MODE = 01: Vectored. Asynchronout interrupts set PC to (BASE + 4 x Cause)","Section 3.1.7, RISC-V Volume II","MachineTrapSetup",,"machine"
+,"[63:0]","Machine trap-handler base address","mtvec","","R/W","configuration","",,"The mtvec register stores the trap vector configuration, consisting of a vector base address (BASE) and a vector mode (MODE). Bits 64:2 store the BASE address, and bits 1:0 store the MODE. Two modes are supported, meaning that the MODE field is encoded as follows:
+MODE = 00: Direct. All exceptions set the PC to BASE.
+MODE = 01: Vectored. Asynchronout interrupts set PC to (BASE + 4 x Cause)","Section 3.1.7, RISC-V Volume II","MachineTrapSetup",,"machine"
+"0x306",,"Machine counter enable","mcounteren","","R/W","register","0x0000000000000000","0xfffffffffffffe00","",,"MachineTrapSetup",,"machine"
+,"[8:0]","Machine counter enable","mcounteren","","R/W","configuration","",,"This register stores the enable bits for each one of the counters. These bits control the availability of the hardware performance-monitoring counters to the next-lowest privileged mode.  This means that U-mode and S-mode cannot access hpmcounter9 - hpmcounter31. Attempting to access these CSR's in U-mode or S-mode results in an illegal instruction exception. These bits are encoded as follows:
+0: CY. Setting this bit enables the cycle counter.
+1: TM. Setting this bit enables the time counter.
+2: IR. Setting this bit enables the instruction retire counter.
+7:3: HPM 3 - 7.  These bits enable hpmcounter 0 through hpmcounter 4.
+31:8: Reserved.","Section 3.1.12, RISC-V Spec Volume II",,,"machine"
+"0x323",,"Machine performance-monitoring event selector for Core","mhpmevent3","","R/W","register","",,"Counters 3 to 6 can be used for minion events. The counters are differentiated per thread, so in total there are 8 physical counters, 4 per thread. Each of them can be programmed with the following events:
+0: No count                  6: DCACHE_ACCESS0        12: L2_EVICT_REQ            18: TFMA_WAIT_TENB         24: TFMA_INST        
+1: MCYCLE                     7: DCACHE_ACCESS1        13: L2_EVICT_REQ_REJ   19: TIMA_OPS                         25: TFMA_OPS         
+2: RETIRED_INST0      8: DCACHE_MISSES0         14:  TL_INST                        20: TXFMA_OPS16        
+3: RETIRED_INST1      9: DCACHE_MISSES1         15:  TL_OPS                         21: TXFMA_OPS32      
+4: BRANCHES0          10: L2_MISS_REQ                  16: TS_INST                        22: TRANS_OPS         
+5: BRANCHES1          11: L2_MISS_REQ_REJ         17: TS_OPS                         23: SHORT_OPS        ",,"MachineCounterSetup",,"machine"
+,"[63:0]","Machine performance-monitoring event selector for Core","mhpmevent3","","R/W","configuration","",,"Counters 3 to 6 can be used for minion events. The counters are differentiated per thread, so in total there are 8 physical counters, 4 per thread. Each of them can be programmed with the following events:
+0: No count                  6: DCACHE_ACCESS0        12: L2_EVICT_REQ            18: TFMA_WAIT_TENB         24: TFMA_INST        
+1: MCYCLE                     7: DCACHE_ACCESS1        13: L2_EVICT_REQ_REJ   19: TIMA_OPS                         25: TFMA_OPS         
+2: RETIRED_INST0      8: DCACHE_MISSES0         14:  TL_INST                        20: TXFMA_OPS16        
+3: RETIRED_INST1      9: DCACHE_MISSES1         15:  TL_OPS                         21: TXFMA_OPS32      
+4: BRANCHES0          10: L2_MISS_REQ                  16: TS_INST                        22: TRANS_OPS         
+5: BRANCHES1          11: L2_MISS_REQ_REJ         17: TS_OPS                         23: SHORT_OPS        ",,"MachineCounterSetup",,"machine"
+"0x324",,"Machine performance-monitoring event selector for Core","mhpmevent4","","R/W","register","",,"",,"MachineCounterSetup",,"machine"
+,"[63:0]","Machine performance-monitoring event selector for Core","mhpmevent4","","R/W","configuration","",,"",,"MachineCounterSetup",,"machine"
+"0x325",,"Machine performance-monitoring event selector for Core","mhpmevent5","","R/W","register","",,"",,"MachineCounterSetup",,"machine"
+,"[63:0]","Machine performance-monitoring event selector for Core","mhpmevent5","","R/W","configuration","",,"",,"MachineCounterSetup",,"machine"
+"0x326",,"Machine performance-monitoring event selector for Core","mhpmevent6","","R/W","register","",,"",,"MachineCounterSetup",,"machine"
+,"[63:0]","Machine performance-monitoring event selector for Core","mhpmevent6","","R/W","configuration","",,"",,"MachineCounterSetup",,"machine"
+"0x327",,"Machine performance-monitoring event selector for Neigh","mhpmevent7","","R/W","register","",,"Counters 7 and 8 can be used for neighborhood events. These are differentiated per thread, so in total there are 4 physical counters. The events that can be selected are: 
+0: NOCOUNT 
+1 - 7: TBD",,"MachineCounterSetup",,"machine"
+,"[63:0]","Machine performance-monitoring event selector for Neigh","mhpmevent7","","R/W","configuration","",,"Counters 7 and 8 can be used for neighborhood events. These are differentiated per thread, so in total there are 4 physical counters. The events that can be selected are: 
+0: NOCOUNT 
+1 - 7: TBD",,"MachineCounterSetup",,"machine"
+"0x328",,"Machine performance-monitoring event selector for Neigh","mhpmevent8","","R/W","register","",,"",,"MachineCounterSetup",,"machine"
+,"[63:0]","Machine performance-monitoring event selector for Neigh","mhpmevent8","","R/W","configuration","",,"",,"MachineCounterSetup",,"machine"
+"0x329",,"Machine performance-monitoring event selector","mhpmevent9","","R/W","register","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+,"[63:0]","Machine performance-monitoring event selector","mhpmevent9","","R/W","configuration","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+"0x32a",,"Machine performance-monitoring event selector","mhpmevent10","","R/W","register","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+,"[63:0]","Machine performance-monitoring event selector","mhpmevent10","","R/W","configuration","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+"0x32b",,"Machine performance-monitoring event selector","mhpmevent11","","R/W","register","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+,"[63:0]","Machine performance-monitoring event selector","mhpmevent11","","R/W","configuration","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+"0x32c",,"Machine performance-monitoring event selector","mhpmevent12","","R/W","register","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+,"[63:0]","Machine performance-monitoring event selector","mhpmevent12","","R/W","configuration","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+"0x32d",,"Machine performance-monitoring event selector","mhpmevent13","","R/W","register","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+,"[63:0]","Machine performance-monitoring event selector","mhpmevent13","","R/W","configuration","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+"0x32e",,"Machine performance-monitoring event selector","mhpmevent14","","R/W","register","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+,"[63:0]","Machine performance-monitoring event selector","mhpmevent14","","R/W","configuration","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+"0x32f",,"Machine performance-monitoring event selector","mhpmevent15","","R/W","register","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+,"[63:0]","Machine performance-monitoring event selector","mhpmevent15","","R/W","configuration","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+"0x330",,"Machine performance-monitoring event selector","mhpmevent16","","R/W","register","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+,"[63:0]","Machine performance-monitoring event selector","mhpmevent16","","R/W","configuration","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+"0x331",,"Machine performance-monitoring event selector","mhpmevent17","","R/W","register","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+,"[63:0]","Machine performance-monitoring event selector","mhpmevent17","","R/W","configuration","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+"0x332",,"Machine performance-monitoring event selector","mhpmevent18","","R/W","register","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+,"[63:0]","Machine performance-monitoring event selector","mhpmevent18","","R/W","configuration","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+"0x333",,"Machine performance-monitoring event selector","mhpmevent19","","R/W","register","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+,"[63:0]","Machine performance-monitoring event selector","mhpmevent19","","R/W","configuration","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+"0x334",,"Machine performance-monitoring event selector","mhpmevent20","","R/W","register","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+,"[63:0]","Machine performance-monitoring event selector","mhpmevent20","","R/W","configuration","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+"0x335",,"Machine performance-monitoring event selector","mhpmevent21","","R/W","register","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+,"[63:0]","Machine performance-monitoring event selector","mhpmevent21","","R/W","configuration","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+"0x336",,"Machine performance-monitoring event selector","mhpmevent22","","R/W","register","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+,"[63:0]","Machine performance-monitoring event selector","mhpmevent22","","R/W","configuration","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+"0x337",,"Machine performance-monitoring event selector","mhpmevent23","","R/W","register","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+,"[63:0]","Machine performance-monitoring event selector","mhpmevent23","","R/W","configuration","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+"0x338",,"Machine performance-monitoring event selector","mhpmevent24","","R/W","register","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+,"[63:0]","Machine performance-monitoring event selector","mhpmevent24","","R/W","configuration","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+"0x339",,"Machine performance-monitoring event selector","mhpmevent25","","R/W","register","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+,"[63:0]","Machine performance-monitoring event selector","mhpmevent25","","R/W","configuration","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+"0x33a",,"Machine performance-monitoring event selector","mhpmevent26","","R/W","register","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+,"[63:0]","Machine performance-monitoring event selector","mhpmevent26","","R/W","configuration","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+"0x33b",,"Machine performance-monitoring event selector","mhpmevent27","","R/W","register","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+,"[63:0]","Machine performance-monitoring event selector","mhpmevent27","","R/W","configuration","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+"0x33c",,"Machine performance-monitoring event selector","mhpmevent28","","R/W","register","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+,"[63:0]","Machine performance-monitoring event selector","mhpmevent28","","R/W","configuration","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+"0x33d",,"Machine performance-monitoring event selector","mhpmevent29","","R/W","register","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+,"[63:0]","Machine performance-monitoring event selector","mhpmevent29","","R/W","configuration","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+"0x33e",,"Machine performance-monitoring event selector","mhpmevent30","","R/W","register","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+,"[63:0]","Machine performance-monitoring event selector","mhpmevent30","","R/W","configuration","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+"0x33f",,"Machine performance-monitoring event selector","mhpmevent31","","R/W","register","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+,"[63:0]","Machine performance-monitoring event selector","mhpmevent31","","R/W","configuration","",,"This register is not implemented.",,"MachineCounterSetup","0","machine"
+"0x340",,"Scratch register for machine trap handler","mscratch","","R/W","register","",,"The mscratch register is dedicated for use by machine mode. Typically, it is used to hold a pointer to a machine-mode hart-local context space and swapped with a user register upon entry to an M-mode trap handler.","Section 3.1.14, RISC-V Spec Volume II","MachineTrapHandling",,"machine"
+,"[63:0]","Scratch register for machine trap handler","mscratch","","R/W","configuration","",,"The mscratch register is dedicated for use by machine mode. Typically, it is used to hold a pointer to a machine-mode hart-local context space and swapped with a user register upon entry to an M-mode trap handler.","Section 3.1.14, RISC-V Spec Volume II","MachineTrapHandling",,"machine"
+"0x341",,"Machine exception program counter","mepc","","R/W","register","",,"The mepc register is an MXLEN-bit read/write register. The low-order bit of mepc (mepc[0]) is always zero. On implementations that support only IALIGN = 32, the two low bits (mepc[1:0]) are always zero.","Section 3.1.15, RISC-V Spec Volume II","MachineTrapHandling",,"machine"
+,"[63:0]","Machine exception program counter","mepc","","R/W","configuration","",,"The mepc register is an MXLEN-bit read/write register. The low-order bit of mepc (mepc[0]) is always zero. On implementations that support only IALIGN = 32, the two low bits (mepc[1:0]) are always zero.","Section 3.1.15, RISC-V Spec Volume II","MachineTrapHandling",,"machine"
+"0x342",,"Machine trap cause","mcause","","R/W","register","",,"The mcause register is an MXLEN-bit read-write register. When a trap is taken into M-mode, mcause is written with a code indicating the event that caused the trap. Otherwise, mcause is never written by the implementation, though it may be explicitly written by software. In this register, the uppermost bit is the INTERRUPT bit. The remaining bits are the EXCEPTION CODE. The encoding of the EXCEPTION CODE field depends on the state of the INTERRUPT bit. For more information, refer to Table 3.6 in the RISC-V spec, Volume II.","Section 3.1.16, RISC-V Spec Volume II","MachineTrapHandling",,"machine"
+,"[63:0]","Machine trap cause","mcause","","R/W","configuration","",,"The mcause register is an MXLEN-bit read-write register. When a trap is taken into M-mode, mcause is written with a code indicating the event that caused the trap. Otherwise, mcause is never written by the implementation, though it may be explicitly written by software. In this register, the uppermost bit is the INTERRUPT bit. The remaining bits are the EXCEPTION CODE. The encoding of the EXCEPTION CODE field depends on the state of the INTERRUPT bit. For more information, refer to Table 3.6 in the RISC-V spec, Volume II.","Section 3.1.16, RISC-V Spec Volume II","MachineTrapHandling",,"machine"
+"0x343",,"Machine bad address or instruction","mtval","","R/W","register","",,"The mtval register is an MXLEN-bit read-write register. When a trap is taken into M-mode, mtval is either set to zero or written with exception-specific information to assist software in handling the trap. Otherwise, mtval is never written by the implementation, though it may be explicitly written by software. The hardware platform will specify which exceptions must set mtval informatively and which may unconditionally set it to zero.","Section 3.1.17, RISC-V Spec Volume II","MachineTrapHandling",,"machine"
+,"[63:0]","Machine bad address or instruction","mtval","","R/W","configuration","",,"The mtval register is an MXLEN-bit read-write register. When a trap is taken into M-mode, mtval is either set to zero or written with exception-specific information to assist software in handling the trap. Otherwise, mtval is never written by the implementation, though it may be explicitly written by software. The hardware platform will specify which exceptions must set mtval informatively and which may unconditionally set it to zero.","Section 3.1.17, RISC-V Spec Volume II","MachineTrapHandling",,"machine"
+"0x344",,"Machine interrupt pending","mip","","R/W","register","",,"Machine mode interrupt pending register. This register is encoded as follows.
+Bit 11: MEIP. Machine external interrupt pending.
+Bit 9: SEIP. Supervisor external interrupt pending.
+Bit 8: UEIP. Machine external interrupt pending.
+Bit 7: MTIP. Machine timer interrupt pending.
+Bit 5: STIP. Supervisor timer interrupt pending.
+Bit 4: UTIP. User timer interrupt pending.
+Bit 3: MSIP. Machine software interrupt pending.
+Bit 1: SSIP. Supervisor software interrupt pending.
+Bit 0: USIP. User software interrupt pending.","Section 3.1.9, RISC-V Spec Volume II","MachineTrapHandling",,"machine"
+,"[63:0]","Machine interrupt pending","mip","","R/W","configuration","",,"Machine mode interrupt pending register. This register is encoded as follows.
+Bit 11: MEIP. Machine external interrupt pending.
+Bit 9: SEIP. Supervisor external interrupt pending.
+Bit 8: UEIP. Machine external interrupt pending.
+Bit 7: MTIP. Machine timer interrupt pending.
+Bit 5: STIP. Supervisor timer interrupt pending.
+Bit 4: UTIP. User timer interrupt pending.
+Bit 3: MSIP. Machine software interrupt pending.
+Bit 1: SSIP. Supervisor software interrupt pending.
+Bit 0: USIP. User software interrupt pending.","Section 3.1.9, RISC-V Spec Volume II","MachineTrapHandling",,"machine"
+"0x3a0",,"Physical memory protection configuration","pmpcfg0","","R/W","register","0","0xffffffffffffffff"," This register is not implemented but is explained in Section 3.6.1 of the RISC-V spec, volume II. ","Section 3.6.1, RISC-V Spec Volume II","MachineMemoryProtection","0","machine"
+,"[63:0]","Physical memory protection configuration","pmpcfg0","","R/W","configuration","0",," This register is not implemented but is explained in Section 3.6.1 of the RISC-V spec, volume II. ","Section 3.6.1, RISC-V Spec Volume II","MachineMemoryProtection","0","machine"
+"0x3a2",,"Physical memory protection configuration","pmpcfg2","","R/W","register","0","0xffffffffffffffff"," This register is not implemented but is explained in Section 3.6.1 of the RISC-V spec, volume II. ",,"MachineMemoryProtection","0","machine"
+,"[63:0]","Physical memory protection configuration","pmpcfg2","","R/W","configuration","0",," This register is not implemented but is explained in Section 3.6.1 of the RISC-V spec, volume II. ",,"MachineMemoryProtection","0","machine"
+"0x3b0",,"Physical memory protection address register","pmpaddr0","","R/W","register","0","0xffffffffffffffff","This register is not used.",,"MachineMemoryProtection","0","machine"
+,"[63:0]","Physical memory protection address register","pmpaddr0","","R/W","configuration","0",,"This register is not used.",,"MachineMemoryProtection","0","machine"
+"0x3b1",,"Physical memory protection address register","pmpaddr1","","R/W","register","0","0xffffffffffffffff","This register is not used.",,"MachineMemoryProtection","0","machine"
+,"[63:0]","Physical memory protection address register","pmpaddr1","","R/W","configuration","0",,"This register is not used.",,"MachineMemoryProtection","0","machine"
+"0x3b2",,"Physical memory protection address register","pmpaddr2","","R/W","register","0","0xffffffffffffffff","This register is not used.",,"MachineMemoryProtection","0","machine"
+,"[63:0]","Physical memory protection address register","pmpaddr2","","R/W","configuration","0",,"This register is not used.",,"MachineMemoryProtection","0","machine"
+"0x3b3",,"Physical memory protection address register","pmpaddr3","","R/W","register","0","0xffffffffffffffff","This register is not used.",,"MachineMemoryProtection","0","machine"
+,"[63:0]","Physical memory protection address register","pmpaddr3","","R/W","configuration","0",,"This register is not used.",,"MachineMemoryProtection","0","machine"
+"0x3b4",,"Physical memory protection address register","pmpaddr4","","R/W","register","0","0xffffffffffffffff","This register is not used.",,"MachineMemoryProtection","0","machine"
+,"[63:0]","Physical memory protection address register","pmpaddr4","","R/W","configuration","0",,"This register is not used.",,"MachineMemoryProtection","0","machine"
+"0x3b5",,"Physical memory protection address register","pmpaddr5","","R/W","register","0","0xffffffffffffffff","This register is not used.",,"MachineMemoryProtection","0","machine"
+,"[63:0]","Physical memory protection address register","pmpaddr5","","R/W","configuration","0",,"This register is not used.",,"MachineMemoryProtection","0","machine"
+"0x3b6",,"Physical memory protection address register","pmpaddr6","","R/W","register","0","0xffffffffffffffff","This register is not used.",,"MachineMemoryProtection","0","machine"
+,"[63:0]","Physical memory protection address register","pmpaddr6","","R/W","configuration","0",,"This register is not used.",,"MachineMemoryProtection","0","machine"
+"0x3b7",,"Physical memory protection address register","pmpaddr7","","R/W","register","0","0xffffffffffffffff","This register is not used.",,"MachineMemoryProtection","0","machine"
+,"[63:0]","Physical memory protection address register","pmpaddr7","","R/W","configuration","0",,"This register is not used.",,"MachineMemoryProtection","0","machine"
+"0x3b8",,"Physical memory protection address register","pmpaddr8","","R/W","register","0","0xffffffffffffffff","This register is not used.",,"MachineMemoryProtection","0","machine"
+,"[63:0]","Physical memory protection address register","pmpaddr8","","R/W","configuration","0",,"This register is not used.",,"MachineMemoryProtection","0","machine"
+"0x3b9",,"Physical memory protection address register","pmpaddr9","","R/W","register","0","0xffffffffffffffff","This register is not used.",,"MachineMemoryProtection","0","machine"
+,"[63:0]","Physical memory protection address register","pmpaddr9","","R/W","configuration","0",,"This register is not used.",,"MachineMemoryProtection","0","machine"
+"0x3ba",,"Physical memory protection address register","pmpaddr10","","R/W","register","0","0xffffffffffffffff","This register is not used.",,"MachineMemoryProtection","0","machine"
+,"[63:0]","Physical memory protection address register","pmpaddr10","","R/W","configuration","0",,"This register is not used.",,"MachineMemoryProtection","0","machine"
+"0x3bb",,"Physical memory protection address register","pmpaddr11","","R/W","register","0","0xffffffffffffffff","This register is not used.",,"MachineMemoryProtection","0","machine"
+,"[63:0]","Physical memory protection address register","pmpaddr11","","R/W","configuration","0",,"This register is not used.",,"MachineMemoryProtection","0","machine"
+"0x3bc",,"Physical memory protection address register","pmpaddr12","","R/W","register","0","0xffffffffffffffff","This register is not used.",,"MachineMemoryProtection","0","machine"
+,"[63:0]","Physical memory protection address register","pmpaddr12","","R/W","configuration","0",,"This register is not used.",,"MachineMemoryProtection","0","machine"
+"0x3bd",,"Physical memory protection address register","pmpaddr13","","R/W","register","0","0xffffffffffffffff","This register is not used.",,"MachineMemoryProtection","0","machine"
+,"[63:0]","Physical memory protection address register","pmpaddr13","","R/W","configuration","0",,"This register is not used.",,"MachineMemoryProtection","0","machine"
+"0x3be",,"Physical memory protection address register","pmpaddr14","","R/W","register","0","0xffffffffffffffff","This register is not used.",,"MachineMemoryProtection","0","machine"
+,"[63:0]","Physical memory protection address register","pmpaddr14","","R/W","configuration","0",,"This register is not used.",,"MachineMemoryProtection","0","machine"
+"0x3bf",,"Physical memory protection address register","pmpaddr15","","R/W","register","0","0xffffffffffffffff","This register is not used.",,"MachineMemoryProtection","0","machine"
+,"[63:0]","Physical memory protection address register","pmpaddr15","","R/W","configuration","0",,"This register is not used.",,"MachineMemoryProtection","0","machine"
+"0x7a0",,"Debug/Trace trigger register select","tselect","","R/W","register","0","0xffffffffffffffff","This register determines which trigger is accessible through the other trigger registers. The set of accessible triggers must start at 0, and be contiguous. Writes of values greater than or equal to the number of supported triggers may result in a diff-_x000B_erent value in this register than what was written. To verify that what they wrote is a valid index, debuggers can read back the value and check that tselect holds what they wrote. Since triggers can be used both by Debug Mode and M-mode, the debugger must restore this register if it modifies it.","RISC-V Debug, Sec 5.2","DebugTraceRegisters",,"machine"
+,"[63:0]","Debug/Trace trigger register select","tselect","","R/W","configuration","0",,"This register determines which trigger is accessible through the other trigger registers. The set of accessible triggers must start at 0, and be contiguous. Writes of values greater than or equal to the number of supported triggers may result in a diff-_x000B_erent value in this register than what was written. To verify that what they wrote is a valid index, debuggers can read back the value and check that tselect holds what they wrote. Since triggers can be used both by Debug Mode and M-mode, the debugger must restore this register if it modifies it.","RISC-V Debug, Sec 5.2","DebugTraceRegisters",,"machine"
+"0x7a1",,"First Debug/Trace trigger data register","tdata1","","R/W","register","0x0000000000000000","0xffffffff00000000","","RISC-V Debug","DebugTraceRegisters",,"machine"
+,"[26:0]","Trigger specific data","data","","R/W","configuration","",,"Trigger specific data. ",,,,
+,"[27]","Debug mode.","dmode","","R/W","configuration","",,"0: Both Debug and M-mode can write the tdata registers at the selected tselect.
+1: Only Debug Mode can write the tdata registers at the selected tselect. Writes from other modes are ignored. This bit is only writable from Debug Mode.",,,,
+,"[31:28]","Type of trigger.","trigger","","R/W","configuration","",,"This 4-bit field ndicates the type of trigger. This field is encoded as follows:
+0: No trigger at this tselect.
+1: Trigger not implemented.
+2: Address/data match trigger. The remaining bits in this register act as described in mcontrol.
+3: Instruction count trigger. The remaining bits in this register act as described in icount.
+4: Interrupt trigger. The remaining bits in this register act as described in itrigger.
+5: Exception trigger. The remaining bits in this register act as described in etrigger. 
+6 - 14: Reserved.
+15:  This trigger exists (so enumeration shouldn't terminate), but is not currently available.","Section 5.2.2 of RISC-V debug spec.",,,"machine"
+"0x7a2",,"Second Debug/Trace trigger data register","tdata2","","R/W","register","",,"Trigger-specific data. If XLEN is less than DXLEN, writes to this register are sign-extended.","RISC-V Debug","DebugTraceRegisters",,"machine"
+,"[63:0]","Second Debug/Trace trigger data register","tdata2","","R/W","configuration","",,"Trigger-specific data. If XLEN is less than DXLEN, writes to this register are sign-extended.","RISC-V Debug","DebugTraceRegisters",,"machine"
+"0x7a3",,"Third Debug/Trace trigger data register","tdata3","","R/W","register","",,"Trigger-specific data. If XLEN is less than DXLEN, writes to this register are sign extended. This register is currently not implemented.","RISC-V Debug","DebugTraceRegisters","0","machine"
+,"[63:0]","Third Debug/Trace trigger data register","tdata3","","R/W","configuration","",,"Trigger-specific data. If XLEN is less than DXLEN, writes to this register are sign extended. This register is currently not implemented.","RISC-V Debug","DebugTraceRegisters","0","machine"
+"0x7a4",,"trigger info","tinfo","","R/W","register","",,"The info field occupies the lower 16-bits of this register. In this field, there is one bit for each possible type enumerated in
+tdata1. Bit N corresponds to type N. If the bit is set, then that type is supported by the currently selected trigger. If the currently selected trigger doesn't exist, this field contains 1. If type is not writable, this register may be unimplemented, in which case reading it causes an illegal instruction exception. In this case the debugger can read the only supported type from
+tdata1 This field is cirrently not implemented. ","RISC-V Debug","DebugTraceRegisters","0","machine"
+,"[63:0]","trigger info","tinfo","","R/W","configuration","",,"The info field occupies the lower 16-bits of this register. In this field, there is one bit for each possible type enumerated in
+tdata1. Bit N corresponds to type N. If the bit is set, then that type is supported by the currently selected trigger. If the currently selected trigger doesn't exist, this field contains 1. If type is not writable, this register may be unimplemented, in which case reading it causes an illegal instruction exception. In this case the debugger can read the only supported type from
+tdata1 This field is cirrently not implemented. ","RISC-V Debug","DebugTraceRegisters","0","machine"
+"0x7b0",,"Debug control and status register","dcsr","","R/W","register","0x0000000000000000","0xffffffff0fff4020","","ET-SoC databook, section 9.9.2.1","DebugModeRegisters",,"debug"
+,"[1:0]","Privilege level when debug mode was entered.","prv","","R/W","configuration","",,"Contains the privilege level the hart was operating in when Debug Mode was entered. A debugger can change this value to change the hart's privilege level when exiting Debug Mode. Not all privilege levels are supported on all harts. If the encoding written is not supported or the
+debugger is not allowed to change to it, the hart may change to any supported privilege level. This field is encoded as follows:
+0: User/Application
+1: Supervisor
+3: Machine ",,,,"debug"
+,"[2]","Execute single instructions in debug mode.","step","","R/W","configuration","",,"When set and not in Debug Mode, the hart will only execute a single instruction and then enter Debug Mode. If the instruction does not complete due to an exception, the hart will immediately enter Debug Mode before executing the trap handler, with appropriate exception registers set. The debugger must not change the value of this bit while the hart is running",,,,"debug"
+,"[3]","NMI pending enable.","nmip","","R","configuration","",,"When set, there is a Non-Maskable-Interrupt (NMI) pending for the hart. Since an NMI can indicate a hardware error condition, reliable debugging may no longer be possible once this bit becomes set.",,,,"debug"
+,"[4]","MPRV enable.","mpvren","","R/W","configuration","",,"0: MPRV in mstatus is ignored in Debug mode.
+1: MPRV in mstatus takes effect in Debug mode. ",,,,"debug"
+,"[8:6]","Why debug mode was entered.","cause","","R","configuration","",,"Explains why Debug Mode was entered. When there are multiple reasons to enter Debug Mode in a single cycle, hardware should set cause
+to the cause with the highest priority.
+1: An ebreak instruction was executed. (priority 3)
+2: The Trigger Module caused a breakpoint exception. (priority 4, highest)
+3: The debugger requested entry to Debug Mode using haltreq. (priority 1)
+4: The hart single stepped because step was set. (priority 0, lowest)
+5: The hart halted directly out of reset due to resethaltreq. It is also acceptable to report 3 when this happens. (priority 2)",,,,"debug"
+,"[9]","Stop timers while in Debug mode.","stoptime","","R/W","configuration","",,"0: Increment timers as usual.
+1: Don't increment any hart-local timers while in Debug Mode.",,,,"debug"
+,"[10]","Stop counters while in Debug mode.","stopcount","","R/W","configuration","",,"0: Increment counters as usual.
+1: Don't increment any counters while in Debug Mode or on ebreak instructions that cause entry into Debug Mode. These counters include the cycle and instret CSRs. This is preferred for most debugging scenarios.",,,,"debug"
+,"[11]","Interrupt single-stepping.","stepie","","R/W","configuration","",,"0: Interrupts are disabled during single stepping.
+1: Interrupts are enabled during single stepping. Implementations may hardwire this bit to 0. In that case interrupt behavior can be emulated by the debugger. The debugger must not change the value of this bit while the hart is running.",,,,"debug"
+,"[12]","Ebreak instructions in U-mode.","ebreaku","","R/W","configuration","",,"0: ebreak instructions in U-mode behave as described in the Privileged Spec.
+1: ebreak instructions in U-mode enter Debug Mode.",,,,"debug"
+,"[13]","Ebreak instructions in S-mode.","ebreaks","","R/W","configuration","",,"0: ebreak instructions in S-mode behave as described in the Privileged Spec.
+1: ebreak instructions in S-mode enter Debug Mode.",,,,"debug"
+,"[15]","Ebreak instructions in M-mode.","ebreakm","","R/W","configuration","",,"0: ebreak instructions in M-mode behave as described in the Privileged Spec.
+1: ebreak instructions in M-mode enter Debug Mode.",,,,"debug"
+,"[31:28]","Debug version.","xdebugver","","R","configuration","",,"0: No external debug support.
+4: External debug support exists.
+15: There is external debug support, but it does not conform to any available version of this spec.",,,,"debug"
+"0x7b1",,"Debug PC","dpc","","R/W","register","",,"Upon entry to debug mode, dpc is updated with the virtual address of the next instruction to be executed. When resuming, the hart's PC is updated to the virtual address stored in dpc. A debugger may write dpc to change where the hart resumes. See Section 4.8.2 of the RISC-B Debug Specification.","RISC-V Debug","DebugModeRegisters",,"debug"
+,"[63:0]","Debug PC","dpc","","R/W","configuration","",,"Upon entry to debug mode, dpc is updated with the virtual address of the next instruction to be executed. When resuming, the hart's PC is updated to the virtual address stored in dpc. A debugger may write dpc to change where the hart resumes. See Section 4.8.2 of the RISC-B Debug Specification.","RISC-V Debug","DebugModeRegisters",,"debug"
+"0x7b2",,"Debug scratch register","dscratch0","","R/W","register","",,"Debug scratch register. A debugger must not write to this register unless hartinfo explicitly mentions it (the Debug Module may use this register internally).","RISC-V Debug","DebugModeRegisters",,"debug"
+,"[63:0]","Debug scratch register","dscratch0","","R/W","configuration","",,"Debug scratch register. A debugger must not write to this register unless hartinfo explicitly mentions it (the Debug Module may use this register internally).","RISC-V Debug","DebugModeRegisters",,"debug"
+"0x7b8",,"Debug Data register","ddata0","","R/W","register","",,"ddata0 register. This register is not listed in the RISC-V debug spec.","RISC-V Debug","DebugModeRegisters",,"debug"
+,"[63:0]","Debug Data register","ddata0","","R/W","configuration","",,"ddata0 register. This register is not listed in the RISC-V debug spec.","RISC-V Debug","DebugModeRegisters",,"debug"
+"0x7c0",,"Machine address translation and protection","matp","","R/W","register","",,"The Machine Address Translation and Protection (MATP) register is a 64-bit read/write register that controls M-mode address translation and protection. There is a single MATP register shared among the two harts of the processor. The bit assignments for this register are as follows:
+63:60, MODE. This 4-bit field selects the address translation schement and is encoded as follows. When MODE = Bare, M-mode virtual addresses are equal to M-mode physical addresses, and there is no additional memory protection. In this case, the remaining fields in MATP have no effect. All values not shown are reserved.
+0000: No address translation or protection.
+1000: Page-based 39-bit virtual addressing.
+1001: Page-based 48-bit virtual addressing.
+
+59: L bit. Setting this bit permits writes to this register. Clearing the bit disallows writes to this register. 
+43:0 PPN. Physical page number. This field stores the physical page number (PPN) of the root page table, i.e., its physical address divided by 4KiB.","PRM-0, Section 17.1.","ET_SpecificCSRs",,"machine"
+,"[63:0]","Machine address translation and protection","matp","","R/W","configuration","",,"The Machine Address Translation and Protection (MATP) register is a 64-bit read/write register that controls M-mode address translation and protection. There is a single MATP register shared among the two harts of the processor. The bit assignments for this register are as follows:
+63:60, MODE. This 4-bit field selects the address translation schement and is encoded as follows. When MODE = Bare, M-mode virtual addresses are equal to M-mode physical addresses, and there is no additional memory protection. In this case, the remaining fields in MATP have no effect. All values not shown are reserved.
+0000: No address translation or protection.
+1000: Page-based 39-bit virtual addressing.
+1001: Page-based 48-bit virtual addressing.
+
+59: L bit. Setting this bit permits writes to this register. Clearing the bit disallows writes to this register. 
+43:0 PPN. Physical page number. This field stores the physical page number (PPN) of the root page table, i.e., its physical address divided by 4KiB.","PRM-0, Section 17.1.","ET_SpecificCSRs",,"machine"
+"0x7cd",,"Mask to implement instruction in mcode","minstmask","","R/W","register","0x0000000000000000","0xfffffffe00000000","MINSTMASK CSRs are used to cause a trap to M-code when the minion decodes a certain instruction pattern. The instruction pattern is applied *after* expanding RVC compressed instructions. Given a 32b instruction named inst, if the following expression evaluates to true then a trap to M-mode will be taken with mcause set to 0x1e and mtval holding the 32b of inst: ((inst[31:0] & minstmask[31:0]) == (minstmatch[31:0] & minstmask[31:0])) && minstmask[32]. Instruction matching can be disabled by setting minstmask[32] to zero.","PRM-0","ET_SpecificCSRs",,"machine"
+,"[32:0]","Mask value","minstmask","","R/W","configuration","",,"",,,,
+"0x7ce",,"Value to match to the instruction bits anded with minstmask to trap to mcode","minstmatch","","R/W","register","0x0000000000000000","0xffffffff00000000","MINSTMASK and MINSTMATCH CSRs are used to cause a trap to M-code when the minion decodes a certain instruction pattern. The instruction pattern is applied *after* expanding RVC compressed instructions. Given a 32b instruction named inst, if the following expression evaluates to true then a trap to M-mode will be taken with mcause set to 0x1e and mtval holding the 32b of inst: ((inst[31:0] & minstmask[31:0]) == (minstmatch[31:0] & minstmask[31:0])) && minstmask[32]. Instruction matching can be disabled by setting minstmask[32] to zero.","PRM-0","ET_SpecificCSRs",,"machine"
+,"[31:0]","Instruction opcode match value (after RVC)","minstmatch","","R/W","configuration","",,"",,,,
+"0x7cf",,"Chicken bits for acquire and release operations","amofence_ctrl","","R/W","register","",,"",,,"0","machine"
+,"[63:0]","Chicken bits for acquire and release operations","amofence_ctrl","","R/W","configuration","",,"",,,"0","machine"
+"0x7d0",,"Cache Invalidate ","cacheInvalidate","","R/W","register","0x0000000000000000","0xfffffffffffffffc","This register can trigger invalidation of various cache structures used by the Minion core.","PRM-0","ET_SpecificCSRs",,"machine"
+,"[0]","Invalidate I-Cache","i_cache_invalidate","","R/W","configuration","",,"Writing 0 into bit 0 does not affect the instruction cache.  Writing a 1 into bit 0 of this CSR invalidates the instruction cache connected to the Minion core that issues the instruction.",,,,
+,"[1]","Invalidate Data TLB, Instruction TLB, PTW Cache","tlb_ptw_invalidate","","R/W","configuration","",," Writing a 1 into bit 1 of this CSR invalidates the data TLB, the instruction TLB, and the PTW (page table walker) cache connected to the Minion core that issues the instruction. Writing 0 into bit 1 does not affect the TLBs nor the PTW.",,,,
+"0x7d1",,"Power gate txfma and trans from 2 to 7","msleep_txfma_27","","R/W","register","",,"This register is not implemented.",,"ET_SpecificCSRs","0","machine"
+,"[63:0]","Power gate txfma and trans from 2 to 7","msleep_txfma_27","","R/W","configuration","",,"This register is not implemented.",,"ET_SpecificCSRs","0","machine"
+"0x7d2",,"Enable some shadow registers in umode (hartid, sleep_txfma...)","menable_shadows","","R/W","register","0x0000000000000000","0xfffffffffffffffe","This register controls the availability of the MHARTID register to U-mode and S-mode.","PRM-0","ET_SpecificCSRs",,"machine"
+,"[0]","","menable_shadows","","R/W","configuration","",,"When MENABLE_SHADOWS[0] is clear, attempts to read the HARTID register will cause an illegal instruction exception. When MENABLE_SHADOWS[0] is set, access to HARTID is permitted.",,,,
+"0x7d3",,"csr to allow exclusive access for a thread","excl_mode","","R/W","register","0x0000000000000000","0xfffffffffffffffe","Sometimes, it is desirable for a hart to execute alone on the processor core (i.e., with all other harts stopped/paused). This can be achieved through an IPI-based mechanism, but it is slow (see at the end for details). To accelerate this operation the  CSR allows a hart to request exclusive access to the minion (halting the other thread).","PRM-0","ET_SpecificCSRs",,"machine"
+,"[0]","","excl_mode","","R/W","configuration","",,"",,,,
+"0x7d4",,"controls what instruction using the txfma will trap if sleep_txfma is on","mtxfma_sleep_traps","","R/W","register","",,"This register is not implemented.",,"ET_SpecificCSRs","0","machine"
+,"[63:0]","controls what instruction using the txfma will trap if sleep_txfma is on","mtxfma_sleep_traps","","R/W","configuration","",,"This register is not implemented.",,"ET_SpecificCSRs","0","machine"
+"0x7d5",,"","mbusaddr","","R/W","register","0x0000000000000000","0xffffff0000000000","","PRM-0","ET_SpecificCSRs",,"machine"
+,"[39:0]","Address that caused a dcache bus error","mbusaddr","","R/W","configuration","",,"This 40-bit values stores the address that caused the data cache bus error.",,,,
+"0x7d6",,"PC that got a dcache bus error","mbuspc","","R/W","register","",,"This register stores the program counter value when the data cache bus error occurred.",,"ET_SimulationSpecific",,"machine"
+,"[63:0]","PC that got a dcache bus error","mbuspc","","R/W","configuration","",,"This register stores the program counter value when the data cache bus error occurred.",,"ET_SimulationSpecific",,"machine"
+"0x7e0",,"Supervisory Scratchpad Control","mcache_control","","R/W","register","0x0000000000000000","0xfffffffffffffffc","See PRM-8 for complete details. The mcache_control register is a 64b read/write register. The mcache_control register keeps track of and controls the Minion D-cache current operation state. A restricted view of the mcache_control register appears as ucache_control register in the U-level ISA. This register is encoded as follows:
+63:2, Reserved.
+1: SCPENABLE. 
+0: D1SPLIT. 
+These two bits work together as follows to support the following three modes of operation:
+1. Shared mode (C0). When D1Split is 0, the L1 dcache is dynamically shared among the two harts of the minion.  In this mode, the value of SCPEnable is ignored.
+2. Split mode (C1). When D1Split is 1 and SCPEnable is 0, the L1 dcache is hard-partitioned across the two harts and each hart can only access its own partition. In the first Esperanto implementation, hart0 will have access to sets 0-7 in the cache, while hart1 will have access to sets 14-15 in the cache. Sets 8-13 are inaccessible to either hart.
+3. Scratchpad mode (C2). When D1Split is 1 and SCPEnable is 1, the L1 dcache is hard-partitioned across the two harts and each hart can only access its own partition. In the first Esperanto implementation, hart0 will have access to sets 12-13 in the cache, while hart1 will have access to sets 14-15 in the cache. In addition, sets 0-11 are turned into a scratchpad area usable only by hart0 using tensor instructions.","PRM-8, Section 1.1.1.","ET_CacheControl",,"machine"
+,"[0]","","D1Split","","R/W","configuration","",,"When D1Split is 0, the L1 dcache is dynamically shared among the two harts of the minion. In this mode, the value of SCPEnable is ignored.",,,,
+,"[1]","","SCPEnable","","R/W","configuration","",,"Split Mode: When D1Split is 1 and SCPEnable is 0, the L1 dcache is hard-partitioned across the two harts and each hart can only access its own partition. In the first Esperanto implementation, hart0 will have access to sets 0-7 in the cache, while hart1 will have access to sets 14-15 in the cache. Sets 8-13 are inaccessible to either hart.
+Scratchpad Mode: When D1Split is 1 and SCPEnable is 1, the L1 dcache is hard-partitioned across the two harts and each hart can only access its own partition. In the first Esperanto implementation, hart0 will have access to sets 12-13 in the cache, while hart1 will have access to sets 14-15 in the cache. In addition, sets 0-11 are turned into a scratchpad area usable only by hart0 using tensor instructions.",,,,
+"0x7f9",,"Evict Set/Way Cache operation","co_evict_sw","","R/W","register","0x0000000000000000","0x73fffffffffc3f30","M-code software can cause the eviction of a particular set-way in the L1 data cache. Using the PA found in cache <L1>[<set>,<way>], hardware writes-back (if needed) the line containing PA from all cache levels between <L1> and <DestLevel-1> to level <DestLevel>. The line containing PA is invalidated in all levels from <L1> through <DestLevel-1>. The operation is repeated as many times as indicated by xs[3:0]+1, linearly increasing the set and wrapping over to the next cache way if set overflows. When xs[63] is 1, then the n-th operation is skipped (i.e., the cache line is not operated upon) if the n-th tensor_mask bit is clear. If <set>,<way> specifies a line allocated to the scratchpad or a line that is hard-locked, then this operation is a NOP. If <DestLevel> is <L1> then this operation is a NOP.","PRM-8","ET_CacheControl",,"machine"
+,"[3:0]","Number of Lines (minus 1)","num_lines","","R/W","configuration","",,"This 4-bit field contains the number of lines (minus 1). Maximum value is 0xF.",,,,
+,"[7:6]","Way","way","","R/W","configuration","",,"This 2-bit field contains the number of ways. Maximum value is 0x3.",,,,
+,"[17:14]","Set","set","","R/W","configuration","",,"This 4-bit field contains the number of sets. Maximum value is 0xF.",,,,
+,"[59:58]","Destination Level ","dest_level","","R/W","configuration","",,"The values are as follows: 
+00 - L1
+01 - L2
+10 - L3
+11 - MEM",,,,
+,"[63]","Use the tensor_mask CSR","use_tensor_mask","","R/W","configuration","",,"",,,,
+"0x7fb",,"Flush Set/Way Cache operation","co_flush_sw","","R/W","register","0x0000000000000000","0x73fffffffffc3f30","M-code software can cause the flushing of a particular set-way in the L1 data cache. Using the PA found in cache <L1>[<set>,<way>], hardware writes-through (if needed) the line containing PA from all cache levels between <L1> and <DestLevel-1> to level <DestLevel>. At the end of the operation, levels <L1> through <DestLevel-1> will keep a clean copy of the line containing PA if it was already present.The operation is repeated as many times as indicated by xs[3:0]+1, linearly increasing the set and wrapping over to the next cache way if set overflows. When xs[63] is 1, then the n-th operation is skipped (i.e., the cache line is not operated upon) if the n-th tensor_mask bit is clear.If <set>,<way> specifies a line allocated to the scratchpad, then this operation is a NOP.If <DestLevel> is <L1> then this operation is a NOP.","PRM-8","ET_CacheControl",,"machine"
+,"[3:0]","Number of Lines (minus 1)","num_lines","","R/W","configuration","",,"Number of Lines (minus 1)",,,,
+,"[7:6]","Way","way","","R/W","configuration","",,"Way. This field specifies the way of the L1 cache in C0 mode, ignoring the actual value of mcache_control.",,,,
+,"[17:14]","Set","set","","R/W","configuration","",,"Set. This field specifies the set of the L1 cache in C0 mode, ignoring the actual value of mcache_control.",,,,
+,"[59:58]","Destination Level ","dest_level","","R/W","configuration","",,"The values are as follows: 
+00 - L1. If <DestLevel> is <L1>, then this operation is a NOP.
+01 - L2
+10 - L3
+11 - MEM",,,,
+,"[63]","Use the tensor_mask CSR","use_tensor_mask","","R/W","configuration","",,"",,,,
+"0x7fd",,"Hard-Lock and Zero particular Set/Way Cache operation","co_lock_sw","","R/W","register","0x0000000000000000","0xfe7fff000000003f","The line at address {xs[39:6],6b0} is zeroed and locked into the L1 at the set derived from the current L1 indexing function, which depends on the value of mcache_control, and the way indicated by  tensxs[56:55]. If the requested set/way specifies a line that has been soft-locked using LockVA (see later), the soft-lock will be ignored (i.e., the line will be still cleared and hard-locked). Implementation: The line is marked as modified in the L1 cache, as is customary with any newly written line.","PRM-8","ET_CacheControl",,"machine"
+,"[39:6]","Physical Address","pa","","R/W","configuration","",,"Physical Address. Indicates the physical address in the cache to be locked.",,,,
+,"[56:55]","Way","way","","R/W","configuration","",,"Way. Indicates the way in the cache to be locked.",,,,
+"0x7ff",,"Unlock Set/Way Cache operation","co_unlock_sw","","R/W","register","0x0000000000000000","0xfe7ffffffffffc3f","The line at the set indicated by set xs[9:6] and way indicated by xs[62:55] is unconditionally unlocked, whether the line was hard- or soft-locked. Applying this operation to a non-locked line does not cause any action.Only the N low-order bits of xs[62:55] are used to encode the cache way, where N is log2 of the associativity of the cache. Fields xs[9:6] and xs[56:55] specify the set and way of the L1 cache in C0 mode, ignoring the actual value of mcache_control. Implementation: Unlocking only removes the locked attribute from the particular set-way. It does not alter its modified state (which was set when the line was locked and zeroed).","PRM-8","ET_CacheControl",,"machine"
+,"[9:6]","Set","set","","R/W","configuration","",,"Physical Address. Indicates the physical address in the cache to be unlocked.",,,,
+,"[56:55]","Way","way","","R/W","configuration","",,"Way. Indicates the way in the cache to be unlocked.",,,,
+"0x800",,"tensor_reduce control","tensor_reduce","","R/W","register","0x0000000000000000","0xc1fffffff0800004","Tensor reductions instructions are the pseudo-instructions encoded as writes to CSR 0x800 (tensor_reduce). These instructions can be used to transfer and operate on tensor data among harts. It is the responsibility of the software to make sure that the appropriate conditions mentioned in PRM-10 are met when using these instructions otherwise the behavior of the system becomes undefined. The instructions covered here are: TensorSend, TensorRecv, TensorReduce, TensorBroadcast.","PRM-10","ET_TensorExtension",,"user"
+,"[1:0]","Encoding to determine which Tensor Reduce Op","tensor_op_encoding","","R/W","configuration","",,"See PRM-10 for complete details. For the tensor reduce instruction, this field contains a value of 2'b11.
+00 - TensorSend
+01 - TensorRecv
+10 - TensorBroadcast
+11 - TensorReduce",,,,
+,"[6:3]","","tree_depth","","R/W","configuration","",,"Tree depth. This field is in the PRM-10 register descriptions, so I added it here. Note that this field overlaps with bits [15:3].",,,,
+,"[15:7]","Minion ID","minion_id","","R/W","configuration","",,"This field is not in the PRM-10 register description.",,,,
+,"[22:16]","Number of FP regs","num_regs","","R/W","configuration","",,"Number of floating-point registers. The Ax values to be sent are stored in bits [22:16] consecutive floating-point registers starting from the register number specified in bits [61:57], wrapping around to f0 when reaching f31.
+The Ay values to be operated on are stored in bits [22:16] consecutive floating-point registers starting from the register number specified in bits [61:57], wrapping around to f0 when reaching f31.
+The Az values are stored in bits [22:16] consecutive floating-point registers starting from the register number specified in bits [61:57], wrapping around to f0 when reaching f31.
+If bits [22:16] encode a value of 0, then no operation is performed.",,,,
+,"[27:24]","Sub-operation to be performed","sub_op","","R/W","configuration","",,"Some pseudo-instructions like TensorRecv/TensorReduce/TensorBroadcast use this field to encode sub-operations to be performed. The TensorReduce pseudo-instruction allows a group of up to 1024 harts, on different Minions (but only hart 0 of the Minion), to communicate values held in floating-point registers to collectively calculate a reduction function A=f(A0,...,An-1). The function to be performed is specified in bits [27:24]. The encoding of this field is as follows:
+ 
+0000 - fadd. The fadd reduction operation uses the rounding mode specified in FRM.
+0010 - fmax
+0011 - fmin
+0100 - iadd
+0110 - imax
+0111 - imin
+1000 - fget
+
+If bits [27:24] encodes ‘fadd’ and frm encodes an invalid rounding mode, an illegal instruction trap is generated, even if bits [22:16] encodes a value of 0.
+If bits [27:24] encodes a non-existent function and the Minion is a receiver, then the operation is not performed and tensor_error[9] is set, even if bits [22:16] encodes a value of 0.",,,,
+,"[61:57]","Starting FP register","start_reg","","R/W","configuration","",,"Starting floating-point register.",,,,
+"0x801",,"tensor_fma control","tensor_fma","","R/W","register","0x0000000000000000","0x7e0007ffffec0c00","TensorFMA instructions are the pseudo-instructions encoded as writes to CSR 0x801 (tensor_fma). Bits [3:1] of the source operand value encodes one of the TensorFMA variants described below. When bits [3:1] do not encode one of the operations listed in this document then an illegal instruction exception trap is raised.","PRM-10","ET_TensorExtension",,"user"
+,"[0]","Clear source FP registers before starting operation","set_clear","","R/W","configuration","",,"See PRM-10 for complete details.
+TensorFMA32/TensorFMA16A32 - If set to 1 then the source floating-point registers are cleared before starting the operation
+TensorIMA8A32 - If set to 0, initial value of TenC is added to the result.",,,,
+,"[3:1]","Tensor Type","tensor_type","","R/W","configuration","",,"See PRM-10 for complete details
+000 - TensorFMA32
+001 - TensorFMA16A32
+011 - TensorIMA8A32",,,,
+,"[9:4]","Starting L1 scratchpad cache line where matrix A is stored","l1scp_start_line_a","","R/W","configuration","",,"Starting L1 scratchpad cache line where matrix A is stored.",,,,
+,"[17:12]","Starting L1 scratchpad cache line where matrix B is stored, ignored when xs[20] =1","l1scp_start_line_b","","R/W","configuration","",,"Starting L1 scratchpad cache line where matrix B is stored, ignored when bit [20] = 1.",,,,
+,"[20]","Location of matrix B (0=L1 scratchpad, 1=memory)","loc_b","","R/W","configuration","",,"Location of matrix B
+0 = L1 scratchpad
+1 = Memory",,,,
+,"[46:43]","A matrix starting column (inside the L1 scratchpad line) for the operation divided by SIZE.","a_start_col","","R/W","configuration","",,"A matrix starting column (inside the L1 scratchpad line) for the operation divided by SIZE.",,,,
+,"[50:47]","A matrix number of columns divided by SIZE (minus 1)","a_num_cols","","R/W","configuration","",,"A matrix number of columns divided by SIZE (minus 1).
+TensorIMA8A32: SIZE = 4
+TensorFMA16A32: SIZE = 2
+TensorFMA32: SIZE = 1",,,,
+,"[54:51]","A matrix number of rows (minus 1)","a_num_rows","","R/W","configuration","",,"A matrix number of rows (minus 1).",,,,
+,"[56:55]","B matrix number of columns divided by 4 (minus 1)","b_num_cols","","R/W","configuration","",,"B matrix number of columns divided by 4 (minus 1).",,,,
+,"[63]","Use tensor_mask CSR to skip operations in an A row granularity","use_tensor_mask","","R/W","configuration","",,"When this bit is set, use the tensor_mask CSR to skip operations in an A row granularity.",,,,
+"0x802",,"convolution size: sets tensor_mask indirectly","tensor_conv_size","","R/W","register","0x0000000000000000","0x00ff000000ff0000","This CSR specifies the number of rows and columns of the 2D array used for convolutions. Additionally, this CSR specifies how many elements (in terms of number of rows and columns) to step over when performing the next memory operation in a TensorLoad/CacheOp-generated sequence of operations. Reading this register returns a value of 0.
+
+When this register is written, the hardware computes a new value for tensor_mask indicating which TensorLoad/CacheOp accesses fall within the 2D array and which outside of it, as shown in tensor_mask CSR.","PRM-10","ET_TensorExtension",,"user"
+,"[15:0]","Number of Columns","ncol","","R/W","configuration","",,"Number of columns, interpreted as unsigned integer.",,,,
+,"[31:24]","Column Step","scol","","R/W","configuration","",,"Column step, interpreted as signed integer.",,,,
+,"[47:32]","Number of Rows","nrow","","R/W","configuration","",,"Number of rows, interpreted as unsigned integer.",,,,
+,"[63:56]","Row Step","srow","","R/W","configuration","",,"Row step, interpreted as signed integer.",,,,
+"0x803",,"convolution control: sets tensor_mask indirectly","tensor_conv_ctrl","","R/W","register","0x0000000000000000","0xffff0000ffff0000","This CSR encodes the location of a TensorLoad instruction inside a large 2D array, in terms of a starting row number and a starting column number of the array. The array dimensions are specified in the tensor_conv_size CSR. The starting row and column numbers can specify negative offsets to indicate that the TensorLoad is starting outside the 2D array. 
+Reading this register returns a value of 0.
+When this register is written, the hardware computes a new value for tensor_mask indicating which TensorLoad/CacheOp accesses fall within the 2D array and which outside of it, as shown in tensor_mask CSR.","PRM-10","ET_TensorExtension",,"user"
+,"[15:0]","Starting Column","colstart","","R/W","configuration","",,"Interpreted as a signed integer.",,,,
+,"[47:32]","Starting Row","rowstart","","R/W","configuration","",,"Interpreted as a signed integer.",,,,
+"0x804",,"Cooperation Info used by TensorLoad","tensor_cooperation","","R/W","register","0x0000000000000000","0xfffffffffffffff8","The tensor_coop CSR is used to reduce L2 bandwidth when several harts on different Minions (but only hart 0 of the Minion) in the same neighborhood are requesting the same cache line(s) using TensorLoad instructions. The fields coopneighmask and coopminmask define which hart 0s will participate in the cooperative TensorLoad. Cooperative TensorLoads, from hart 0s specified by the (coopid, coopneighmask, coopminmask) tuple must use the same address, TensorLoad variant, and tensor_mask value, otherwise it depends on the implementation which address/variant will be used for reading from memory, although it is guaranteed to be the address/variant of one of the participating cooperative TensorLoads. 
+
+For the purposes of this operation, address means: Physical address if virtual memory is disabled. A cooperative TensorLoad instruction from a hart specified in the (coopid, coopneighmask, coopminmask) tuple cannot complete until all other harts specified in the same (coopid, coopneighmask, coopminmask) tuple have executed a cooperative TensorLoad instruction. Concurrently executing cooperative TensorLoads with the same coopid inside a neighborhood leads to undefined behavior. This means that inside a shire, multiple TensorLoads with the same coopid can execute concurrently only if their corresponding coopneighmask values do not overlap, otherwise the behavior of the system becomes undefined. If SW wants to re-use a coopid, it must use some external synchronization mechanism to guarantee that the execution of the last TensorLoad with the same coopid has completed across all cooperating harts before executing the new TensorLoad instruction. Note: Look for a separate document called Minion Shire Coop Toad which has some examples of TensorLoad-related thread synchronization cases. Reading the tensor_coop register returns a value of 0.","PRM-10","ET_TensorExtension",,"user"
+,"[0]","Neighborhood cooperation mask","coopneighmask","","R/W","configuration","",,"Coopneighmask is a bit mask, where the n-th bit corresponds to the n-th neighborhood in a shire.",,,,
+,"[1]","Minion cooperation mask","coopminmask","","R/W","configuration","",,"Coopminmask is a bit mask, where the n-th bit corresponds to the n-th Minion in a neighborhood.",,,,
+,"[2]","Cooperation ID","coopid","","R/W","configuration","",,"Coopid is an integer, in the range 0-15, used by hardware to coordinate simultaneous cooperative loads across multiple minions and neighborhoods.",,,,
+"0x805",,"Mask info used by TensorLoad ","tensor_mask","","R/W","register","0x0000000000000000","0xffffffffffff0000","The TensorLoad, TensorFMA and CacheOp instructions can operate under the control of the tensor_mask CSR. The tensor_mask CSR contains one bit for each of the destination lines that TensorLoad can potentially write into the scratchpad. The value of the tensor_mask CSR can be set either directly or indirectly by writing into the tensor_conv_size or tensor_conv_ctrl CSRs, which will cause the computation of a mask that will be written into the tensor_mask CSR. See pseudo-code operation in PRM-10.","PRM-10","ET_TensorExtension",,"user"
+,"[15:0]","Tensor Mask","tensormask","","R/W","configuration","",,"",,,,
+"0x806",,"Quantization pseudo-instruction","tensor_quant","","R/W","register","0x0000000000000000","0xc0001f0000000000","The TensorQuant pseudo-instruction performs a sequence of up to 10 transformations to a matrix A. Each transformation is executed sequentially, starting with the transformation located in position 0 of the list (xs[3:0]) up to position 9 (xs[39:36]). Each transformation writes its result into A. If a transformation has the encoding 0 (LAST), no more transformations will be executed. Transformations that operate on floating-point values use the rounding mode specified in FRM.The A matrix is stored in N=(xs[54:51]+1)*(xs[56:55]+1)/2 consecutive floating-point registers starting from the register number specified in xs[61:57], wrapping around to f0 when reaching f31. There are currently 11 transformation functions, including LAST, encoded. See PRM-10 for more details.  Note that there are 11 transformations in PRM-10, not 10 as listed below.","PRM-10, Section 1.5.1.","ET_TensorExtension",,"user"
+,"[3:0]","Transformation 0","transform_0","","R/W","configuration","",,"LAST: Do not perform any more transformations",,,,
+,"[7:4]","Transformation 1","transform_1","","R/W","configuration","",,"INT32_TO_FP32: Convert all elements of A from INT32 to FP32.",,,,
+,"[11:8]","Transformation 2","transform_2","","R/W","configuration","",,"FP32_TO_INT32: Convert all elements of A from FP32 to INT32.",,,,
+,"[15:12]","Transformation 3","transform_3","","R/W","configuration","",,"RELU: Convert all negative INT32 values in A to 0",,,,
+,"[19:16]","Transformation 4","transform_4","","R/W","configuration","",,"INT32_ADD_ROW: Read a vector of sixteen INT32 values from the L1 scratchpad, and add the first N elements to every row of the INT32 matrix A, where N is the number of columns of A.",,,,
+,"[23:20]","Transformation 5","transform_5","","R/W","configuration","",,"INT32_ADD_COL: Read a vector of sixteen INT32 values from the L1 scratchpad, and add the first N elements to every column of the INT32 matrix A, where N is the number of rows of A.",,,,
+,"[27:24]","Transformation 6","transform_6","","R/W","configuration","",,"FP32_MUL_ROW: Read a vector of sixteen FP32 values from the L1 scratchpad, and multiply the first N elements with every row of the FP32 matrix A, where N is the number of columns of A.",,,,
+,"[31:28]","Transformation 7","transform_7","","R/W","configuration","",,"FP32_MUL_COL: Read a vector of sixteen FP32 values from the L1 scratchpad, and multiply the first N elements with every column of the FP32 matrix A, where N is the number of rows of A.",,,,
+,"[35:32]","Transformation 8","transform_8","","R/W","configuration","",,"SATINT8: Clamp all elements of A from INT32 to the range [-128, 127]. The values are stored in the low-order byte of each element.",,,,
+,"[39:36]","Transformation 9","transform_9","","R/W","configuration","",,"SATUINT8: Clamp all elements of A from INT32 to the range [0, 255]. The values are stored in the low-order byte of each element.",,,,
+,"[50:45]","L1 scratchpad cache line where the first vector is stored","l1scp_start_line","","R/W","configuration","",,"L1 scratchpad cache line where the first vector is stored",,,,
+,"[54:51]","A matrix number of rows (minus 1)","a_matrix_num_rows","","R/W","configuration","",,"A matrix number of rows (minus 1)",,,,
+,"[56:55]","A matrix number of columns divided by 4 (minus 1)","a_matrix_num_cols","","R/W","configuration","",,"A matrix number of columns divided by 4 (minus 1)",,,,
+,"[61:57]","Start register","start_reg","","R/W","configuration","",,"",,,,
+"0x807",,"","tex_send","","R/W","register","",,"Technically, this belongs to the Esperanto Texturization Extension. However, it is currently using offsets in Tensor Extension.","PRM-14","ET_TensorExtension",,"user"
+,"[63:0]","","tex_send","","R/W","configuration","",,"Technically, this belongs to the Esperanto Texturization Extension. However, it is currently using offsets in Tensor Extension.","PRM-14","ET_TensorExtension",,"user"
+"0x808",,"","tensor_error","","R/W","register","0x0000000000000000","0xfffffffffffffc05","The tensor_error register records miscellaneous error conditions occurred during the execution of tensor pseudo-instructions and cache management operations. When the execution of a tensor or cache management instruction generates a synchronous fault, the tensor_error register is updated with the fault condition and no trap is generated. Asynchronous faults (i.e., a bus errors) generated by tensor or cache management instructions are not captured in tensor_error and are not suppressed. The various fault bits in tensor_error register are never cleared by the hardware (i.e., the bits are sticky). It is the responsibility of the software to clear tensor_error. The value of tensor_error is guaranteed to be up-to-date only after executing a TensorWait instruction. Software is expected to, at least periodically, read the value of tensor_error to check for problems found during the execution of such instructions.","PRM-10, Section 1.1.5.","ET_TensorExtension",,"user"
+,"[1]","TensorLoad configured with wrong transform field","wrong_tload_txform","","R/W0C","configuration","",,"TensorLoad configured with wrong transform field.",,,,
+,"[3]","Fast Credit Counter Overflow","fcc_overflow","","R/W0C","configuration","",,"Fast Credit Counter Overflow.",,,,
+,"[4]","L1 scratchpad disabled when operation requires it","l1_scp_disabled","","R/W0C","configuration","",,"L1 scratchpad disabled when operation requires it.",,,,
+,"[5]","LockSW failed","lock_sw_failed","","R/W0C","configuration","",,"LockSW failed.",,,,
+,"[6]","Invalid combination of TensorStore cooperation and size","ill_tb_tfma_pair","","R/W0C","configuration","",,"Invalid combination of TensorStore cooperation and size.",,,,
+,"[7]","Tensor Load/Store or Cache-op generated Memory Fault","mem_fault","","R/W0C","configuration","",,"Tensor Load/Store or Cache-op generated Memory Fault.",,,,
+,"[8]","Illegal tensor send/recv partner or illegal reduction operation specified","inv_comb_store_size","","R/W0C","configuration","",,"Illegal tensor send/recv partner or illegal reduction operation specified.",,,,
+,"[9]","illegal_tensor_send_rcv","illegal_tensor_send_rcv","","R/W0C","configuration","",,"illegal_tensor_send_rcv.",,,,
+"0x810",,"Scratchpad Control for DCache","ucache_control","","R/W","register","0x0000000000000200","0xffffffffffffffe0","User-level software, executing on thread 0 of a Minion core, can set the SCPEnable bit using the ucache_control CSR, which is an alias of the mcache_control register that only allows changing SCPEnable. Note that writes to SCPEnable while D1Split is zero or from thread 1 of a Minion core are ignored, and do not change the cache configuration. User-level software, from both threads of a Minion core, is also allowed to set the CacheOp control fields of ucache_control.",,"ET_CacheControl",,"user"
+,"[0]","","D1Split","","R","status","",,"Read-only shadow of mcache_control[0]",,,,
+,"[1]","","SCPEnable","","R/W","configuration","",,"Shadow of mcache_control[1]. Writeable by thread 0 when D1Split equals 1",,,,
+,"[4:2]","","CacheOp_RepRate","","R/W","configuration","",,"CacheOp_RepRate is a 3 bit field that encodes the repeat rate at which the above cache operations can inject requests into the system. The 3 bit field encodes the log2 of the number of cycles to be inserted in between requests. Thus a value of 6 would represent that the cache op engine would wait 64 cycles before injecting the next cache op request into the system. A value of 0 indicates no delay and should be used for maximum throughput on the above operations.",,,,
+,"[10:6]","","CacheOp_Max","","R/W","configuration","8",,"CacheOp_Max is a 5 bit field that encodes the number of outstanding requests that the above instructions may issue from a given minion. Encoding 0 indicates no limit. Other values, from 1 to 31, encode the maximum number of requests injected into the L2/L3",,,,
+"0x81f",,"user level prefetch cache operation","co_prefetch_va","","R/W","register","0x0000000000000000","0x73ff000000000030","User-level software can prefetch a particular address from memory with this Cache op pseudo-instruction.","PRM-8","ET_CacheControl",,"user"
+,"[3:0]","Number of Lines (minus 1)","num_lines","","R/W","configuration","",,"This field stores the number of lines (minus 1). Maximum value is 15",,,,
+,"[47:6]","Virtual Address[47:6]","va","","R/W","configuration","",,"This field stores bits 47:6 of the virtual address",,,,
+,"[59:58]","Destination Level","dest_level","","R/W","configuration","",,"The values are as follows: 
+00 - L1
+01 - L2
+10 - L3
+11 - MEM",,,,
+,"[63]","Use the tensor_mask CSR","use_tensor_mask","","R/W","configuration","",,"",,,,
+"0x820",,"Fast Local Barrier","flb","","R/W","register","0x0000000000000000","0xffffffffffffe000","The FLBarrier pseudo-instruction allows one minion to join one of the 32 barriers. The instruction atomically increments the barrier counter specified in xs[4:0]. After incrementing, the barrier counter is compared to the value xs[12:5]+1. On match, xd is set to 1 and the barrier counter is reset to zero. Otherwise, xd is set to 0. Notice that if software erroneously provides an xs[12:5] value smaller than the current value in the barrier counter, the atomic increment will still unconditionally happen and xd will be set to 0.",,"ET_FastLocalBarrier",,"user"
+,"[4:0]","Barrier Number","barrier_number","","R/W","configuration","",,"Barrier number.",,,,
+,"[12:5]","Match Value - 1","match_value","","R/W","configuration","",,"Match value.",,,,
+"0x821",,"Fast Credit Counter","fcc","","R/W","register","0x0000000000000000","0xfffffffffffffffe","Writing this register will block if the selected credit counter value is zero, until a credit or an interrupt is received. If the selected counter value is larger than zero, then it atomically decrements by one. Note that accesses that do not write the register, such as CSRRS/CSRRC with x0, or CSRSSI/CSRRCI with 0, do not block nor decrement the counter.",,"ET_FastCreditCounter",,"user"
+,"[0]","Selected Credit Counter Index","counter_index","","R/W","configuration","",,"",,,,
+"0x822",,"Stall CSR (wait for redirect)","stall","","R/W","register","",,"When read, this u-mode CSR stalls the hart, similarly to issuing a WFI in m-mode. If an interrupt is delivered to the core, caused by writing the IPI_REDIRECT_TRIGGER ESR with a bit corresponding to the hart set, and the IPI_REDIRECT_FILTER ESR has the bit corresponding to the hart set, and the hart was in U-mode, then the hart will vector to the location configured in the IPI_REDIRECT_PC ESR. If the hart was not stalled on the STALL CSR or the hart is not in u-mode, then the hart will trap with cause 0x10. Reading this register returns a 0x0 value.","PRM-0, Section 16.6.","ET_SpecificCSRs",,"user"
+,"[63:0]","Stall CSR (wait for redirect)","stall","","R/W","configuration","",,"When read, this u-mode CSR stalls the hart, similarly to issuing a WFI in m-mode. If an interrupt is delivered to the core, caused by writing the IPI_REDIRECT_TRIGGER ESR with a bit corresponding to the hart set, and the IPI_REDIRECT_FILTER ESR has the bit corresponding to the hart set, and the hart was in U-mode, then the hart will vector to the location configured in the IPI_REDIRECT_PC ESR. If the hart was not stalled on the STALL CSR or the hart is not in u-mode, then the hart will trap with cause 0x10. Reading this register returns a 0x0 value.","PRM-0, Section 16.6.","ET_SpecificCSRs",,"user"
+"0x830",,"","tensor_wait","","R/W","register","0x0000000000000000","0xfffffffffffffff0","Due to the high concurrency offered by the different Esperanto Tensor instructions, it is sometimes necessary for software to wait for a previously issued tensor instruction (or cacheop) before proceeding. To this end, the TensorWait CSR register is provided. The full table of event ID(s) is available in PRM-10. To wait for the completion of an L1 prefetch instruction, Software must execute a TensorWait with ID = 6, followed by a FENCE instruction. At most one event can be waited-for concurrently. Software uses any of the CSR write instructions to write the ID into the TensorWait CSR. If specified event is still in progress, then the write blocks until the event finishes (or an interrupt occurs). Otherwise it behaves like a NOP. Returns value 0 in 'xd'.","PRM-10","ET_TensorExtension",,"user"
+,"[3:0]","ID of the event to wait for","event_id","","R/W","configuration","",,"Field encoding is as follows:
+0x0 - TensorLoad_0. TensorLoad to L1 Scratchpad with ID = 0 is complete.
+0x1 - TensorLoad_1. TensorLoad to L1 Scratchpad with ID = 1 is complete.
+0x2 - TensorLoad2_0. TensorLoadL2 with ID = 0 is complete.
+0x3 - TensorLoad2_1. TensorLoadL2 with ID = 1 is complete.
+0x4 - Prefetch_0. Prefetch to L2/L3 with ID = 0 is complete.
+0x5 - Prefetch_1. Prefetch to L2/L3 with ID = 1 is complete.
+0x6 - Cacheop. All previous Cacheops are complete.
+0x7 - TensorFMA. TensorFMA is complete.
+0x8 - TensorStore. TensorStore/TensorStoreFromScp  is complete.
+0x9 - TensorReduce. TensorReduce is complete.
+0xA - TensorQuant. TensorQuant is complete.",,,,
+"0x83f",,"","tensor_load","","R/W","register","0x0000000000000000","0x000f000000000030","TensorLoad is a pseudo-instruction that loads data from memory (bypassing the L1) into the L1 scratchpad. The data to be loaded is specified using a base address, a stride, and a count of cache lines to be loaded specified in xs. The data is written into the L1 scratchpad at the provided starting cache line (xs[58:53]). TensorLoad supports cooperative operation with the other Minions in the same neighborhood. The tensor_mask CSR controls which cache lines are loaded from memory. Tensor Load operations implicitly use x31[47:6] for the stride value, x31[0] for ID. For more information, please refer to PRM-10. ","PRM-10","ET_TensorExtension",,"user"
+,"[3:0]","Number of Lines (minus 1)","num_lines","","R/W","configuration","",,"",,,,
+,"[47:6]","Virtual Address ","va","","R/W","configuration","",,"Lower 6-bits omitted",,,,
+,"[52]","Is Tensor B?","is_tensor_b","","R/W","configuration","",,"if (TensorLoadSetupB) value = 1, else value = 0",,,,
+,"[58:53]","L1 Scratchpad starting cache line","l1_scp_start_cl","","R/W","configuration","",,"L1 Scratchpad starting cache line,",,,,
+,"[61:59]","Tensor Load variant","tensor_load_variant","","R/W","configuration","",,"Look at PRM-10 for complete details.  Some examples shown below (potentially incomplete)
+000 - TensorLoad
+001 - TensorLoadInterleave8
+010 - TensorLoadInterleave16
+101 - TensorLoadTranspose8
+110 - TensorLoadTranspose16
+111 - TensorLoadTranspose32",,,,
+,"[62]","Cooperative TensorLoad","coop_tload","","R/W","configuration","",,"Cooperative TensorLoad",,,,
+,"[63]","Use the tensor_massk CSlR","use_tensor_mask","","R/W","configuration","",,"Use the tensor_massk CSlR",,,,
+"0x840",,"Gather/Scatter Progress","gsc_progress","","R/W","register","0x0000000000000000","0xfffffffffffffff8","The Gather/Scatter Progress (GSC_PROGRESS) register is a 3-bit read/write register, holding an integer value. The value of the register denotes the next element to be processed by a Gather or Scatter SIMD operation.","PRM-0",,,"user"
+,"[2:0]","Gather/Scatter Progress value N","gsc_progress","","R/W","configuration","",,"When a gather or scatter operation is interrupted halfway through its execution while processing the n-th element of a vector, and the processing of the n-th element is not complete, then the GSC_PROGRESS register is written with the value n. When a gather or scatter instruction executes successfully the value of GSC_PROGRESS is set to 0.",,,,
+"0x85f",,"","tensor_load_l2scp","","R/W","register","",,"See PRM-10 for complete details. Translates the given VA to a PA, issues a read request to the next hierarchy level after L2 and writes the data in the L2 scratchpad position specified by the instruction. If NumLines > 0, it adds the stride in the x31 register to the VA, increments the L2 scratchpad destination by 1 and repeats the operation as many times as indicated by the NumLines field. Always returns 0 in xd. Implicitly uses register x31[47:6] for the stride value, x31[0] for ID.","PRM-10","ET_TensorExtension",,"user"
+,"[3:0]","NumLines (minus 1)","num_lines","","R/W","configuration","",,"NumLines (minus 1)",,,,
+,"[5:4]","L2 Scratchpad starting cache line (PhysAddr[7:6])","l2scp_start_line_7_6","","R/W","configuration","",,"L2 Scratchpad starting cache line (PhysAddr[7:6])",,,,
+,"[47:6]","Virtual Address (bits [47:6])","va","","R/W","configuration","",,"Virtual Address (bits [47:6])",,,,
+,"[62:48]","L2 scratchpad starting cache line (PhysAddr[22:8])","l2scp_start_line_22_8","","R/W","configuration","",,"L2 scratchpad starting cache line (PhysAddr[22:8])",,,,
+,"[63]","Use the tensor_mask CSR","use_tensor_mask","","R/W","configuration","",,"Use the tensor_mask CSR",,,,
+"0x87f",,"","tensor_store","","R/W","register","0x0000000000000000","0x000000000000000f","","PRM-10","ET_TensorExtension",,"user"
+,"[47:4]","Virtual Address","va","","R/W","configuration","",,"For TensorStore bits 47:4 are used for VA. For TensorStoreFromSCP bits 47:6 are used for VA. Lower order bits are omitted. ",,,,
+,"[48]","Encoding to determine which Tensor Store Op","tensor_op_encoding","","R/W","configuration","",,"0 - TensorStore; 1 - TensorStoreFromSCP",,,,
+,"[50:49]","Number of minions to cooperate with (minus 1)","num_coop_minions","","R/W","configuration","",,"Used for TensorStore only. Unused for TensorStoreFromSCP.",,,,
+,"[54:51]","Number of Rows/Lines","num_rows","","R/W","configuration","",,"For TensorStore, A-matrix number of rows (minus 1), for TensorStoreFromSCP number of lines (minus 1)",,,,
+,"[61:55]","Start Register/L1SCP Starting Cacheline","start_size","","R/W","configuration","",,"For TensorStore:
+[61:57] - Start Register
+[56:55] - A-Matrix row size in groups of 16B (minus 1); MUST be a power of 2
+For TensorStoreFromSCP:
+[61:56] - L1SCP Starting Cache Line
+[55]: Reserved",,,,
+,"[63:62]","Register/L1SCP stride (minus 1)","stride","","R/W","configuration","",,"",,,,
+"0x89f",,"User-level Evict VA Cache operation","co_evict_va","","R/W","register","0x0000000000000000","0x73ff000000000030","User-level software can cause the eviction of a particular address from the L1 data cache. Translates the given VA to a PA and writes-back (if needed) the line containing PA from all cache levels between <L1> and <DestLevel-1> to level <DestLevel>. The line containing PA is invalidated in all levels from <L1> through <DestLevel-1>.If NumLines > 0, the stride located in register x31 is added to the VA and the operation is repeated as many times as indicated by the NumLines field. When xs[63] is 1, then the n-th operation is skipped (i.e., the cache line is not operated upon) if the n-th tensor_mask bit is clear. If the VA specifies a line that is hard-locked, then this operation is a NOP. If <DestLevel> is <L1> then this operation is a NOP.If address translation is disabled the Virtual Address field in xs specifies a Physical Address. If the Physical Address is outside the SoC address space then this operation is a NOP. The ID field in x31 is used to identify the operation for the purposes of the TensorWait pseudo-instruction.","PRM-8, Section 1.2.","ET_CacheControl",,"user"
+,"[3:0]","Number of Lines (minus 1)","num_lines","","R/W","configuration","",,"Number of lines -1. ",,,,
+,"[47:6]","Virtual Address[47:6]","va","","R/W","configuration","",,"Virtual Address[47:6].",,,,
+,"[59:58]","Destination Level","dest_level","","R/W","configuration","",,"The values are as follows: 
+00 - L1
+01 - L2
+10 - L3
+11 - MEM",,,,
+,"[63]","Use the tensor_mask CSR","use_tensor_mask","","R/W","configuration","",,"",,,,
+"0x8bf",,"User-level Flush VA Cache operation","co_flush_va","","R/W","register","0x0000000000000000","0x73ff000000000030","User-level software can cause the flushing of a particular address from the L1 data cache. Translates the given VA to a PA, and writes-through (if needed) the line containing PA from all cache levels between <L1> and <DestLevel-1> to level <DestLevel>. At the end of the operation, levels <L1> through <DestLevel-1> will keep a clean copy of the line containing PA. If NumLines > 0, the stride located in register x31 is added to the VA and the operation is repeated as many times as indicated by the NumLines field. When xs[63] is 1, then the n-th operation is skipped (i.e., the cache line is not operated upon) if the n-th tensor_mask bit is clear. If <DestLevel> is <L1> then this operation is a NOP. If address translation is disabled the Virtual Address field in xs specifies a Physical Address. If the Physical Address is outside the SoC address space then this operation is a NOP. The ID field in x31 is used to identify the operation for the purposes of the TensorWait pseudo-instruction.","PRM-8","ET_CacheControl",,"user"
+,"[3:0]","Number of Lines (minus 1)","num_lines","","R/W","configuration","",,"Number of Lines -1.",,,,
+,"[47:6]","Virtual Address[47:6]","va","","R/W","configuration","",,"Virtual Address[47:6].",,,,
+,"[59:58]","Destination Level","dest_level","","R/W","configuration","",,"The values are as follows: 
+00 - L1
+01 - L2
+10 - L3
+11 - MEM",,,,
+,"[63]","Use the tensor_mask CSR","use_tensor_mask","","R/W","configuration","",,"",,,,
+"0x8cc",,"user level control for msg port0","umsg_port0","","R/W","register","",,"This register is not implemented.",,"ET_Messaging","0","user"
+,"[63:0]","user level control for msg port0","umsg_port0","","R/W","configuration","",,"This register is not implemented.",,"ET_Messaging","0","user"
+"0x8cd",,"user level control for msg port1","umsg_port1","","R/W","register","",,"This register is not implemented.",,"ET_Messaging","0","user"
+,"[63:0]","user level control for msg port1","umsg_port1","","R/W","configuration","",,"This register is not implemented.",,"ET_Messaging","0","user"
+"0x8ce",,"user level control for msg port2","umsg_port2","","R/W","register","",,"This register is not implemented.",,"ET_Messaging","0","user"
+,"[63:0]","user level control for msg port2","umsg_port2","","R/W","configuration","",,"This register is not implemented.",,"ET_Messaging","0","user"
+"0x8cf",,"user level control for msg port3","umsg_port3","","R/W","register","",,"This register is not implemented.",,"ET_Messaging","0","user"
+,"[63:0]","user level control for msg port3","umsg_port3","","R/W","configuration","",,"This register is not implemented.",,"ET_Messaging","0","user"
+"0x8d0",,"CSR used by validation in simulation. ","validation0","","R/W","register","",,"Non synthesized. Not available/present in Silicon.","Wiki Page","ET_SimulationSpecific",,"user"
+,"[63:0]","CSR used by validation in simulation. ","validation0","","R/W","configuration","",,"Non synthesized. Not available/present in Silicon.","Wiki Page","ET_SimulationSpecific",,"user"
+"0x8d1",,"CSR used by validation in simulation. ","validation1","","R/W","register","",,"Non synthesized. Not available/present in Silicon.","Wiki Page","ET_SimulationSpecific",,"user"
+,"[63:0]","CSR used by validation in simulation. ","validation1","","R/W","configuration","",,"Non synthesized. Not available/present in Silicon.","Wiki Page","ET_SimulationSpecific",,"user"
+"0x8d2",,"CSR used by validation in simulation. ","validation2","","R/W","register","",,"Non synthesized. Not available/present in Silicon.","Wiki Page","ET_SimulationSpecific",,"user"
+,"[63:0]","CSR used by validation in simulation. ","validation2","","R/W","configuration","",,"Non synthesized. Not available/present in Silicon.","Wiki Page","ET_SimulationSpecific",,"user"
+"0x8d3",,"CSR used by validation in simulation. ","validation3","","R/W","register","",,"Non synthesized. Not available/present in Silicon.","Wiki Page","ET_SimulationSpecific",,"user"
+,"[63:0]","CSR used by validation in simulation. ","validation3","","R/W","configuration","",,"Non synthesized. Not available/present in Silicon.","Wiki Page","ET_SimulationSpecific",,"user"
+"0x8d5",,"Shadow of msleep_txfma_27","sleep_txfma_27","","R/W","register","",,"This register is not implemented. ",,"ET_SpecificCSRs","0","user"
+,"[63:0]","Shadow of msleep_txfma_27","sleep_txfma_27","","R/W","configuration","",,"This register is not implemented. ",,"ET_SpecificCSRs","0","user"
+"0x8df",,"User-Level Lock VA Cache operation","co_lock_va","","R/W","register","0x0000000000000000","0x7fff000000000030","User-level software can soft-lock and zero a cache line with this Cache op pseudo-instruction. ","PRM-8","ET_CacheControl",,"user"
+,"[3:0]","Number of Lines (minus 1)","num_lines","","R/W","configuration","",,"Number of lines. If more than one line is selected using this field, then the VA is incremented by the stride, and the process repeats as many times as indicated by xs[3:0]+1.",,,,
+,"[47:6]","Virtual Address[47:6]","va","","R/W","configuration","",,"This field contains the virtual address of the lock operation.",,,,
+,"[63]","Use the tensor_mask CSR","use_tensor_mask","","R/W","configuration","",,"When set, use the tensor_mask CSR. When xs[63] is 1, then the n-th operation is skipped (i.e., the cache line is not operated upon) if the n-th tensor_mask bit is clear.",,,,
+"0x8ff",,"User-Level Unlock VA Cache operation","co_unlock_va","","R/W","register","0x0000000000000000","0x7fff000000000030","User-level software can unlock a soft-locked cache line with this Cache op pseudo-instruction. ","PRM-8","ET_CacheControl",,"user"
+,"[3:0]","Number of Lines (minus 1)","num_lines","","R/W","configuration","",,"If NumLines > 0, it adds the strides in the x31 registers to the VA and repeats the operation as many times as indicated by the NumLines field.",,,,
+,"[47:6]","Virtual Address[47:6]","va","","R/W","configuration","",,"This field contains the virtual address of the unlock operation.",,,,
+,"[63]","Use the tensor_mask CSR","use_tensor_mask","","R/W","configuration","",,"When xs[63] is 1, then the n-th operation is skipped (i.e., the cache line is not operated upon) if the n-th tensor_mask bit is clear.",,,,
+"0x9cc",,"super level control for msg port0","smsg_port0","","R/W","register","",,"These 64-bit registers indicate the blocking control for each port in Supervisor mode. Each register is encoded as follows:
+0: EnablePort. If set to 1 the port is enabled, otherwise the port is disabled.
+1: Enable OutOfBand data on this port.
+4: Umode. If set to 1, user mode software can operate the port using PORTHEAD0…PORTHEAD3 and PORTHEADNB0…PORTHEADNB3.
+7:5: LogMsgSize. Logarithm of the message size in Bytes. Valid values: 2..5. Writing a value lower than 2 stores the value 2 in the field. Writing a value greater than 5 stores the value 5 in the field.
+11:8: MaxMsgs. Maximum number of messages the port can hold - 1.
+23:16: Set. Indicates the first set in the L1 cache where storage starts. The valid range of values for this field is 0...15. Attempting to write a value N greater than 15 sets the value of the field to (N mod 16).
+31:24: Way. Indicates the L1 cache way where storage starts. All sets belonging to this port must be on the same way. The valid range of values for this field is 0...3. Attempting to write a value N greater than 3 sets the value of the field to (N mod 4).
+
+",,"ET_Messaging",,"supervisor"
+,"[63:0]","super level control for msg port0","smsg_port0","","R/W","configuration","",,"These 64-bit registers indicate the blocking control for each port in Supervisor mode. Each register is encoded as follows:
+0: EnablePort. If set to 1 the port is enabled, otherwise the port is disabled.
+1: Enable OutOfBand data on this port.
+4: Umode. If set to 1, user mode software can operate the port using PORTHEAD0…PORTHEAD3 and PORTHEADNB0…PORTHEADNB3.
+7:5: LogMsgSize. Logarithm of the message size in Bytes. Valid values: 2..5. Writing a value lower than 2 stores the value 2 in the field. Writing a value greater than 5 stores the value 5 in the field.
+11:8: MaxMsgs. Maximum number of messages the port can hold - 1.
+23:16: Set. Indicates the first set in the L1 cache where storage starts. The valid range of values for this field is 0...15. Attempting to write a value N greater than 15 sets the value of the field to (N mod 16).
+31:24: Way. Indicates the L1 cache way where storage starts. All sets belonging to this port must be on the same way. The valid range of values for this field is 0...3. Attempting to write a value N greater than 3 sets the value of the field to (N mod 4).
+
+",,"ET_Messaging",,"supervisor"
+"0x9cd",,"super level control for msg port1","smsg_port1","","R/W","register","",,"",,"ET_Messaging",,"supervisor"
+,"[63:0]","super level control for msg port1","smsg_port1","","R/W","configuration","",,"",,"ET_Messaging",,"supervisor"
+"0x9ce",,"super level control for msg port2","smsg_port2","","R/W","register","",,"",,"ET_Messaging",,"supervisor"
+,"[63:0]","super level control for msg port2","smsg_port2","","R/W","configuration","",,"",,"ET_Messaging",,"supervisor"
+"0x9cf",,"super level control for msg port3","smsg_port3","","R/W","register","",,"",,"ET_Messaging",,"supervisor"
+,"[63:0]","super level control for msg port3","smsg_port3","","R/W","configuration","",,"",,"ET_Messaging",,"supervisor"
+"0xb00",,"Machine cycle counter","mcycle","","R/W","register","0","0xffffffffffffffff","This register is hardwired to 0. This means that writes to the register are ignored, and reads always return 0.","PRM-0","MachineCounterTimers","0","machine"
+,"[63:0]","Machine cycle counter","mcycle","","R/W","configuration","0",,"This register is hardwired to 0. This means that writes to the register are ignored, and reads always return 0.","PRM-0","MachineCounterTimers","0","machine"
+"0xb02",,"Machine instructions-retired counter","minstret","","R/W","register","0","0xffffffffffffffff","This register is hardwired to 0. This means that writes to the register are ignored, and reads always return 0.","PRM-0","MachineCounterTimers","0","machine"
+,"[63:0]","Machine instructions-retired counter","minstret","","R/W","configuration","0",,"This register is hardwired to 0. This means that writes to the register are ignored, and reads always return 0.","PRM-0","MachineCounterTimers","0","machine"
+"0xb03",,"Machine performance-monitoring counter","mhpmcounter3","","R/W","register","0","0xffffffffffffffff","Machine performance monitoring counter 3. This counter countes Minion events. See Event register at offset 0x323 below.",,"MachineCounterTimers",,"machine"
+,"[63:0]","Machine performance-monitoring counter","mhpmcounter3","","R/W","configuration","0",,"Machine performance monitoring counter 3. This counter countes Minion events. See Event register at offset 0x323 below.",,"MachineCounterTimers",,"machine"
+"0xb04",,"Machine performance-monitoring counter","mhpmcounter4","","R/W","register","0","0xffffffffffffffff","Machine performance monitoring counter 4. This counter countes Minion events. See Event register at offset 0x324 below.",,"MachineCounterTimers",,"machine"
+,"[63:0]","Machine performance-monitoring counter","mhpmcounter4","","R/W","configuration","0",,"Machine performance monitoring counter 4. This counter countes Minion events. See Event register at offset 0x324 below.",,"MachineCounterTimers",,"machine"
+"0xb05",,"Machine performance-monitoring counter","mhpmcounter5","","R/W","register","0","0xffffffffffffffff","Machine performance monitoring counter 5. This counter countes Minion events. See Event register at offset 0x325 below.",,"MachineCounterTimers",,"machine"
+,"[63:0]","Machine performance-monitoring counter","mhpmcounter5","","R/W","configuration","0",,"Machine performance monitoring counter 5. This counter countes Minion events. See Event register at offset 0x325 below.",,"MachineCounterTimers",,"machine"
+"0xb06",,"Machine performance-monitoring counter","mhpmcounter6","","R/W","register","0","0xffffffffffffffff","Machine performance monitoring counter 6. This counter countes Minion events. See Event register at offset 0x326 below.",,"MachineCounterTimers",,"machine"
+,"[63:0]","Machine performance-monitoring counter","mhpmcounter6","","R/W","configuration","0",,"Machine performance monitoring counter 6. This counter countes Minion events. See Event register at offset 0x326 below.",,"MachineCounterTimers",,"machine"
+"0xb07",,"Machine performance-monitoring counter","mhpmcounter7","","R/W","register","0","0xffffffffffffffff","Machine performance monitoring counter 7. This counter countes Neighborhood events. See Event register at offset 0x327 below.",,"MachineCounterTimers",,"machine"
+,"[63:0]","Machine performance-monitoring counter","mhpmcounter7","","R/W","configuration","0",,"Machine performance monitoring counter 7. This counter countes Neighborhood events. See Event register at offset 0x327 below.",,"MachineCounterTimers",,"machine"
+"0xb08",,"Machine performance-monitoring counter","mhpmcounter8","","R/W","register","0","0xffffffffffffffff","Machine performance monitoring counter 8. This counter counts Neighborhood events. See Event register at offset 0x328 below.",,"MachineCounterTimers",,"machine"
+,"[63:0]","Machine performance-monitoring counter","mhpmcounter8","","R/W","configuration","0",,"Machine performance monitoring counter 8. This counter counts Neighborhood events. See Event register at offset 0x328 below.",,"MachineCounterTimers",,"machine"
+"0xb09",,"Machine performance-monitoring counter","mhpmcounter9","","R/W","register","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+,"[63:0]","Machine performance-monitoring counter","mhpmcounter9","","R/W","configuration","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+"0xb0a",,"Machine performance-monitoring counter","mhpmcounter10","","R/W","register","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+,"[63:0]","Machine performance-monitoring counter","mhpmcounter10","","R/W","configuration","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+"0xb0b",,"Machine performance-monitoring counter","mhpmcounter11","","R/W","register","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+,"[63:0]","Machine performance-monitoring counter","mhpmcounter11","","R/W","configuration","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+"0xb0c",,"Machine performance-monitoring counter","mhpmcounter12","","R/W","register","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+,"[63:0]","Machine performance-monitoring counter","mhpmcounter12","","R/W","configuration","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+"0xb0d",,"Machine performance-monitoring counter","mhpmcounter13","","R/W","register","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+,"[63:0]","Machine performance-monitoring counter","mhpmcounter13","","R/W","configuration","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+"0xb0e",,"Machine performance-monitoring counter","mhpmcounter14","","R/W","register","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+,"[63:0]","Machine performance-monitoring counter","mhpmcounter14","","R/W","configuration","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+"0xb0f",,"Machine performance-monitoring counter","mhpmcounter15","","R/W","register","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+,"[63:0]","Machine performance-monitoring counter","mhpmcounter15","","R/W","configuration","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+"0xb10",,"Machine performance-monitoring counter","mhpmcounter16","","R/W","register","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+,"[63:0]","Machine performance-monitoring counter","mhpmcounter16","","R/W","configuration","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+"0xb11",,"Machine performance-monitoring counter","mhpmcounter17","","R/W","register","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+,"[63:0]","Machine performance-monitoring counter","mhpmcounter17","","R/W","configuration","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+"0xb12",,"Machine performance-monitoring counter","mhpmcounter18","","R/W","register","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+,"[63:0]","Machine performance-monitoring counter","mhpmcounter18","","R/W","configuration","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+"0xb13",,"Machine performance-monitoring counter","mhpmcounter19","","R/W","register","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+,"[63:0]","Machine performance-monitoring counter","mhpmcounter19","","R/W","configuration","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+"0xb14",,"Machine performance-monitoring counter","mhpmcounter20","","R/W","register","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+,"[63:0]","Machine performance-monitoring counter","mhpmcounter20","","R/W","configuration","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+"0xb15",,"Machine performance-monitoring counter","mhpmcounter21","","R/W","register","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+,"[63:0]","Machine performance-monitoring counter","mhpmcounter21","","R/W","configuration","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+"0xb16",,"Machine performance-monitoring counter","mhpmcounter22","","R/W","register","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+,"[63:0]","Machine performance-monitoring counter","mhpmcounter22","","R/W","configuration","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+"0xb17",,"Machine performance-monitoring counter","mhpmcounter23","","R/W","register","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+,"[63:0]","Machine performance-monitoring counter","mhpmcounter23","","R/W","configuration","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+"0xb18",,"Machine performance-monitoring counter","mhpmcounter24","","R/W","register","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+,"[63:0]","Machine performance-monitoring counter","mhpmcounter24","","R/W","configuration","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+"0xb19",,"Machine performance-monitoring counter","mhpmcounter25","","R/W","register","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+,"[63:0]","Machine performance-monitoring counter","mhpmcounter25","","R/W","configuration","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+"0xb1a",,"Machine performance-monitoring counter","mhpmcounter26","","R/W","register","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+,"[63:0]","Machine performance-monitoring counter","mhpmcounter26","","R/W","configuration","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+"0xb1b",,"Machine performance-monitoring counter","mhpmcounter27","","R/W","register","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+,"[63:0]","Machine performance-monitoring counter","mhpmcounter27","","R/W","configuration","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+"0xb1c",,"Machine performance-monitoring counter","mhpmcounter28","","R/W","register","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+,"[63:0]","Machine performance-monitoring counter","mhpmcounter28","","R/W","configuration","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+"0xb1d",,"Machine performance-monitoring counter","mhpmcounter29","","R/W","register","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+,"[63:0]","Machine performance-monitoring counter","mhpmcounter29","","R/W","configuration","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+"0xb1e",,"Machine performance-monitoring counter","mhpmcounter30","","R/W","register","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+,"[63:0]","Machine performance-monitoring counter","mhpmcounter30","","R/W","configuration","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+"0xb1f",,"Machine performance-monitoring counter","mhpmcounter31","","R/W","register","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+,"[63:0]","Machine performance-monitoring counter","mhpmcounter31","","R/W","configuration","",,"This register is not used.",,"MachineCounterTimers","0","machine"
+"0xc00",,"Cycle counter for RDCYCLE instruction","cycle","","R","register","0","0xffffffffffffffff","The CYCLE register is implemented as read-only, hardwired to 0. This means that writing the register traps execution with illegal instruction exception, and reading the register always returns 0.",,"UserCounterTimers",,"user"
+,"[63:0]","Cycle counter for RDCYCLE instruction","cycle","","R","status","0",,"The CYCLE register is implemented as read-only, hardwired to 0. This means that writing the register traps execution with illegal instruction exception, and reading the register always returns 0.",,"UserCounterTimers",,"user"
+"0xc01",,"Timer for RDTIME instruction","time","","R","register","0","0xffffffffffffffff","The TIME register is not implemented in hardware. Accessing this register traps execution with an illegal instruction exception. Its functionality can be provided using trap-and-emulate (this is one of the methods specifically suggested in the RISC-V spec).",,"UserCounterTimers",,"user"
+,"[63:0]","Timer for RDTIME instruction","time","","R","status","0",,"The TIME register is not implemented in hardware. Accessing this register traps execution with an illegal instruction exception. Its functionality can be provided using trap-and-emulate (this is one of the methods specifically suggested in the RISC-V spec).",,"UserCounterTimers",,"user"
+"0xc02",,"Instructions-retired counter for RDINSTRET instr","instret","","R","register","0","0xffffffffffffffff","The INSTRET register is implemented as read-only, hardwired to 0. This means that writing the register traps execution with illegal instruction exception, and reading the register always returns 0.",,"UserCounterTimers",,"user"
+,"[63:0]","Instructions-retired counter for RDINSTRET instr","instret","","R","status","0",,"The INSTRET register is implemented as read-only, hardwired to 0. This means that writing the register traps execution with illegal instruction exception, and reading the register always returns 0.",,"UserCounterTimers",,"user"
+"0xc03",,"Performance-Monitoring counter","hpmcounter3","","R","register","0","0xffffffffffffffff","Hardware performance monitor counter 3.","See PRM-0 for all","UserCounterTimers",,"user"
+,"[63:0]","Performance-Monitoring counter","hpmcounter3","","R","status","0",,"Hardware performance monitor counter 3.","See PRM-0 for all","UserCounterTimers",,"user"
+"0xc04",,"Performance-Monitoring counter","hpmcounter4","","R","register","0","0xffffffffffffffff","Hardware performance monitor counter 4.",,"UserCounterTimers",,"user"
+,"[63:0]","Performance-Monitoring counter","hpmcounter4","","R","status","0",,"Hardware performance monitor counter 4.",,"UserCounterTimers",,"user"
+"0xc05",,"Performance-Monitoring counter","hpmcounter5","","R","register","0","0xffffffffffffffff","Hardware performance monitor counter 5.",,"UserCounterTimers",,"user"
+,"[63:0]","Performance-Monitoring counter","hpmcounter5","","R","status","0",,"Hardware performance monitor counter 5.",,"UserCounterTimers",,"user"
+"0xc06",,"Performance-Monitoring counter","hpmcounter6","","R","register","0","0xffffffffffffffff","Hardware performance monitor counter 6.",,"UserCounterTimers",,"user"
+,"[63:0]","Performance-Monitoring counter","hpmcounter6","","R","status","0",,"Hardware performance monitor counter 6.",,"UserCounterTimers",,"user"
+"0xc07",,"Performance-Monitoring counter","hpmcounter7","","R","register","0","0xffffffffffffffff","Hardware performance monitor counter 7.",,"UserCounterTimers",,"user"
+,"[63:0]","Performance-Monitoring counter","hpmcounter7","","R","status","0",,"Hardware performance monitor counter 7.",,"UserCounterTimers",,"user"
+"0xc08",,"Performance-Monitoring counter","hpmcounter8","","R","register","0","0xffffffffffffffff","Hardware performance monitor counter 8.",,"UserCounterTimers",,"user"
+,"[63:0]","Performance-Monitoring counter","hpmcounter8","","R","status","0",,"Hardware performance monitor counter 8.",,"UserCounterTimers",,"user"
+"0xc09",,"Performance-Monitoring counter","hpmcounter9","","R","register","0","0xffffffffffffffff","This register is not implemented.",,"UserCounterTimers","0","user"
+,"[63:0]","Performance-Monitoring counter","hpmcounter9","","R","status","0",,"This register is not implemented.",,"UserCounterTimers","0","user"
+"0xc0a",,"Performance-Monitoring counter","hpmcounter10","","R","register","0","0xffffffffffffffff","This register is not implemented.",,"UserCounterTimers","0","user"
+,"[63:0]","Performance-Monitoring counter","hpmcounter10","","R","status","0",,"This register is not implemented.",,"UserCounterTimers","0","user"
+"0xc0b",,"Performance-Monitoring counter","hpmcounter11","","R","register","0","0xffffffffffffffff","This register is not implemented.",,"UserCounterTimers","0","user"
+,"[63:0]","Performance-Monitoring counter","hpmcounter11","","R","status","0",,"This register is not implemented.",,"UserCounterTimers","0","user"
+"0xc0c",,"Performance-Monitoring counter","hpmcounter12","","R","register","0","0xffffffffffffffff","This register is not implemented.",,"UserCounterTimers","0","user"
+,"[63:0]","Performance-Monitoring counter","hpmcounter12","","R","status","0",,"This register is not implemented.",,"UserCounterTimers","0","user"
+"0xc0d",,"Performance-Monitoring counter","hpmcounter13","","R","register","0","0xffffffffffffffff","This register is not implemented.",,"UserCounterTimers","0","user"
+,"[63:0]","Performance-Monitoring counter","hpmcounter13","","R","status","0",,"This register is not implemented.",,"UserCounterTimers","0","user"
+"0xc0e",,"Performance-Monitoring counter","hpmcounter14","","R","register","0","0xffffffffffffffff","This register is not implemented.",,"UserCounterTimers","0","user"
+,"[63:0]","Performance-Monitoring counter","hpmcounter14","","R","status","0",,"This register is not implemented.",,"UserCounterTimers","0","user"
+"0xc0f",,"Performance-Monitoring counter","hpmcounter15","","R","register","0","0xffffffffffffffff","This register is not implemented.",,"UserCounterTimers","0","user"
+,"[63:0]","Performance-Monitoring counter","hpmcounter15","","R","status","0",,"This register is not implemented.",,"UserCounterTimers","0","user"
+"0xc10",,"Performance-Monitoring counter","hpmcounter16","","R","register","0","0xffffffffffffffff","This register is not implemented.",,"UserCounterTimers","0","user"
+,"[63:0]","Performance-Monitoring counter","hpmcounter16","","R","status","0",,"This register is not implemented.",,"UserCounterTimers","0","user"
+"0xc11",,"Performance-Monitoring counter","hpmcounter17","","R","register","0","0xffffffffffffffff","This register is not implemented.",,"UserCounterTimers","0","user"
+,"[63:0]","Performance-Monitoring counter","hpmcounter17","","R","status","0",,"This register is not implemented.",,"UserCounterTimers","0","user"
+"0xc12",,"Performance-Monitoring counter","hpmcounter18","","R","register","0","0xffffffffffffffff","This register is not implemented.",,"UserCounterTimers","0","user"
+,"[63:0]","Performance-Monitoring counter","hpmcounter18","","R","status","0",,"This register is not implemented.",,"UserCounterTimers","0","user"
+"0xc13",,"Performance-Monitoring counter","hpmcounter19","","R","register","0","0xffffffffffffffff","This register is not implemented.",,"UserCounterTimers","0","user"
+,"[63:0]","Performance-Monitoring counter","hpmcounter19","","R","status","0",,"This register is not implemented.",,"UserCounterTimers","0","user"
+"0xc14",,"Performance-Monitoring counter","hpmcounter20","","R","register","0","0xffffffffffffffff","This register is not implemented.",,"UserCounterTimers","0","user"
+,"[63:0]","Performance-Monitoring counter","hpmcounter20","","R","status","0",,"This register is not implemented.",,"UserCounterTimers","0","user"
+"0xc15",,"Performance-Monitoring counter","hpmcounter21","","R","register","0","0xffffffffffffffff","This register is not implemented.",,"UserCounterTimers","0","user"
+,"[63:0]","Performance-Monitoring counter","hpmcounter21","","R","status","0",,"This register is not implemented.",,"UserCounterTimers","0","user"
+"0xc16",,"Performance-Monitoring counter","hpmcounter22","","R","register","0","0xffffffffffffffff","This register is not implemented.",,"UserCounterTimers","0","user"
+,"[63:0]","Performance-Monitoring counter","hpmcounter22","","R","status","0",,"This register is not implemented.",,"UserCounterTimers","0","user"
+"0xc17",,"Performance-Monitoring counter","hpmcounter23","","R","register","0","0xffffffffffffffff","This register is not implemented.",,"UserCounterTimers","0","user"
+,"[63:0]","Performance-Monitoring counter","hpmcounter23","","R","status","0",,"This register is not implemented.",,"UserCounterTimers","0","user"
+"0xc18",,"Performance-Monitoring counter","hpmcounter24","","R","register","0","0xffffffffffffffff","This register is not implemented.",,"UserCounterTimers","0","user"
+,"[63:0]","Performance-Monitoring counter","hpmcounter24","","R","status","0",,"This register is not implemented.",,"UserCounterTimers","0","user"
+"0xc19",,"Performance-Monitoring counter","hpmcounter25","","R","register","0","0xffffffffffffffff","This register is not implemented.",,"UserCounterTimers","0","user"
+,"[63:0]","Performance-Monitoring counter","hpmcounter25","","R","status","0",,"This register is not implemented.",,"UserCounterTimers","0","user"
+"0xc1a",,"Performance-Monitoring counter","hpmcounter26","","R","register","0","0xffffffffffffffff","This register is not implemented.",,"UserCounterTimers","0","user"
+,"[63:0]","Performance-Monitoring counter","hpmcounter26","","R","status","0",,"This register is not implemented.",,"UserCounterTimers","0","user"
+"0xc1b",,"Performance-Monitoring counter","hpmcounter27","","R","register","0","0xffffffffffffffff","This register is not implemented.",,"UserCounterTimers","0","user"
+,"[63:0]","Performance-Monitoring counter","hpmcounter27","","R","status","0",,"This register is not implemented.",,"UserCounterTimers","0","user"
+"0xc1c",,"Performance-Monitoring counter","hpmcounter28","","R","register","0","0xffffffffffffffff","This register is not implemented.",,"UserCounterTimers","0","user"
+,"[63:0]","Performance-Monitoring counter","hpmcounter28","","R","status","0",,"This register is not implemented.",,"UserCounterTimers","0","user"
+"0xc1d",,"Performance-Monitoring counter","hpmcounter29","","R","register","0","0xffffffffffffffff","This register is not implemented.",,"UserCounterTimers","0","user"
+,"[63:0]","Performance-Monitoring counter","hpmcounter29","","R","status","0",,"This register is not implemented.",,"UserCounterTimers","0","user"
+"0xc1e",,"Performance-Monitoring counter","hpmcounter30","","R","register","0","0xffffffffffffffff","This register is not implemented.",,"UserCounterTimers","0","user"
+,"[63:0]","Performance-Monitoring counter","hpmcounter30","","R","status","0",,"This register is not implemented.",,"UserCounterTimers","0","user"
+"0xc1f",,"Performance-Monitoring counter","hpmcounter31","","R","register","0","0xffffffffffffffff","This register is not implemented.",,"UserCounterTimers","0","user"
+,"[63:0]","Performance-Monitoring counter","hpmcounter31","","R","status","0",,"This register is not implemented.",,"UserCounterTimers","0","user"
+"0xcc0",,"non blocking read of FCC registers","nb_fcc","","R","register","0x0000000000000000","0xffffffff00000000","Reading from this read-only register returns the current value in the two credit counters of the hart. This operation is non-blocking.","PRM-0","ET_FastCreditCounter",,"user"
+,"[15:0]","Credit Counter 0 value","credit_0","","R","status","",,"Returns the value of the hart's first credit counter in bits [15:0].",,,,
+,"[31:16]","Credit Counter 1 value","credit_1","","R","status","",,"Returns the value of the hart's second credit counter in bits [31:16].",,,,
+"0xcc8",,"user level head port for msg port0","porthead0","","R","register","",,"Each of these four 'blocking' registers are encoded as follows:
+0: OOB. The out-of-band bit of the message if OutOfBand data is enabled on this port, otherwise zero.
+9:1:  Offset. Offset of a message’s first byte within the port storage area. The offset is aligned to a 2-byte boundary.",,"ET_Messaging",,"user"
+,"[63:0]","user level head port for msg port0","porthead0","","R","status","",,"Each of these four 'blocking' registers are encoded as follows:
+0: OOB. The out-of-band bit of the message if OutOfBand data is enabled on this port, otherwise zero.
+9:1:  Offset. Offset of a message’s first byte within the port storage area. The offset is aligned to a 2-byte boundary.",,"ET_Messaging",,"user"
+"0xcc9",,"user level head port for msg port1","porthead1","","R","register","",,"",,"ET_Messaging",,"user"
+,"[63:0]","user level head port for msg port1","porthead1","","R","status","",,"",,"ET_Messaging",,"user"
+"0xcca",,"user level head port for msg port2","porthead2","","R","register","",,"",,"ET_Messaging",,"user"
+,"[63:0]","user level head port for msg port2","porthead2","","R","status","",,"",,"ET_Messaging",,"user"
+"0xccb",,"user level head port for msg port3","porthead3","","R","register","",,"",,"ET_Messaging",,"user"
+,"[63:0]","user level head port for msg port3","porthead3","","R","status","",,"",,"ET_Messaging",,"user"
+"0xccc",,"user level headnb nonblocking port for msg port0","portheadnb0","","R","register","",,"Each of these four 'non-blocking' registers are encoded as follows. All values not shown are reserved.
+0: OOB. The out-of-band bit of the message if OutOfBand data is enabled on this port, otherwise zero.
+9:1:  Offset. Offset of a message’s first byte within the port storage area. The offset is aligned to a 2-byte boundary.
+63:  Empty. Set to ‘1’ if the port is empty, otherwise ‘0’.",,"ET_Messaging",,"user"
+,"[63:0]","user level headnb nonblocking port for msg port0","portheadnb0","","R","status","",,"Each of these four 'non-blocking' registers are encoded as follows. All values not shown are reserved.
+0: OOB. The out-of-band bit of the message if OutOfBand data is enabled on this port, otherwise zero.
+9:1:  Offset. Offset of a message’s first byte within the port storage area. The offset is aligned to a 2-byte boundary.
+63:  Empty. Set to ‘1’ if the port is empty, otherwise ‘0’.",,"ET_Messaging",,"user"
+"0xccd",,"user level headnb nonblocking port for msg port1","portheadnb1","","R","register","",,"",,"ET_Messaging",,"user"
+,"[63:0]","user level headnb nonblocking port for msg port1","portheadnb1","","R","status","",,"",,"ET_Messaging",,"user"
+"0xcce",,"user level headnb nonblocking port for msg port2","portheadnb2","","R","register","",,"",,"ET_Messaging",,"user"
+,"[63:0]","user level headnb nonblocking port for msg port2","portheadnb2","","R","status","",,"",,"ET_Messaging",,"user"
+"0xccf",,"user level headnb nonblocking port for msg port3","portheadnb3","","R","register","",,"",,"ET_Messaging",,"user"
+,"[63:0]","user level headnb nonblocking port for msg port3","portheadnb3","","R","status","",,"",,"ET_Messaging",,"user"
+"0xcd0",,"Shadow of mhartid","hartid","","R","register","",,"This register is a read-only shadow of the MHARTID register, and permits U-mode and S-mode code to read the ID of the hardware thread running the code. Attempting to read the HARTID register when MENABLE_SHADOWS[0] is 0 will cause an illegal instruction exception.","PRM-0","ET_SpecificCSRs",,"user"
+,"[63:0]","Shadow of mhartid","hartid","","R","status","",,"This register is a read-only shadow of the MHARTID register, and permits U-mode and S-mode code to read the ID of the hardware thread running the code. Attempting to read the HARTID register when MENABLE_SHADOWS[0] is 0 will cause an illegal instruction exception.","PRM-0","ET_SpecificCSRs",,"user"
+"0xf11",,"Vendor ID","mvendorid","","R","register","0x00000000000005e5","0xffffffffffffffff","The mvendorid CSR is a 32-bit read-only register providing the JEDEC manufacturer ID of the provider of the core. This register must be readable in any implementation, but a value of 0 can be returned to indicate the field is not implemented or that this is a non-commercial implementation. This register is encoded as follows:
+31:7 - BANK. 
+6:0 - OFFSET.
+For more information, refer to  Section 3.1.2 of the RISC-V Privileged Architecture Specification, Volume II.","Section 3.1.2, RISC-V Volume II","MachineInformation",,"machine"
+,"[63:0]","Vendor ID","mvendorid","","R","status","0x00000000000005e5",,"The mvendorid CSR is a 32-bit read-only register providing the JEDEC manufacturer ID of the provider of the core. This register must be readable in any implementation, but a value of 0 can be returned to indicate the field is not implemented or that this is a non-commercial implementation. This register is encoded as follows:
+31:7 - BANK. 
+6:0 - OFFSET.
+For more information, refer to  Section 3.1.2 of the RISC-V Privileged Architecture Specification, Volume II.","Section 3.1.2, RISC-V Volume II","MachineInformation",,"machine"
+"0xf12",,"Architecture ID","marchid","","R","register","0x8000000000000001","0xffffffffffffffff","The marchid CSR is a 64 bit read-only register encoding the base microarchitecture of the hart.  The combination of mvendorid and marchid should uniquely identify the type of hart microarchitecture that is implemented. For more information, refer to  Section 3.1.3 of the RISC-V Privileged Architecture Specification, Volume II.","Section 3.1.3, RISC-V Volume II","MachineInformation",,"machine"
+,"[63:0]","Architecture ID","marchid","","R","status","0x8000000000000001",,"The marchid CSR is a 64 bit read-only register encoding the base microarchitecture of the hart.  The combination of mvendorid and marchid should uniquely identify the type of hart microarchitecture that is implemented. For more information, refer to  Section 3.1.3 of the RISC-V Privileged Architecture Specification, Volume II.","Section 3.1.3, RISC-V Volume II","MachineInformation",,"machine"
+"0xf13",,"Implementation ID","mimpid","","R","register","",,"The mimpid CSR provides a unique encoding of the version of the processor implementation. For more information, refer to  Section 3.1.4 of the RISC-V Privileged Architecture Specification, Volume II.","Section 3.1.4, RISC-V Volume II","MachineInformation",,"machine"
+,"[63:0]","Implementation ID","mimpid","","R","status","",,"The mimpid CSR provides a unique encoding of the version of the processor implementation. For more information, refer to  Section 3.1.4 of the RISC-V Privileged Architecture Specification, Volume II.","Section 3.1.4, RISC-V Volume II","MachineInformation",,"machine"
+"0xf14",,"Hardware Thread ID","mhartid","","R","register","",,"Unique HART-ID for all HARTs in the SOC. Value = (ShireID * 64) + (NeighID * 4) + (CoreID * 2) + HartID (within core)","Section 3.1.5, RISC-V Volume II","MachineInformation",,"machine"
+,"[63:0]","Hardware Thread ID","mhartid","","R","status","",,"Unique HART-ID for all HARTs in the SOC. Value = (ShireID * 64) + (NeighID * 4) + (CoreID * 2) + HartID (within core)","Section 3.1.5, RISC-V Volume II","MachineInformation",,"machine"
+"0xfc0",,"Dcache submodule status","dcache_debug","","R","register","",,"This register shows the status of state machines inside the DCache. It is for low-level debug only. ","Xavier Reves by email","ET_SpecificCSRs",,"machine"
+,"[63:0]","Dcache submodule status","dcache_debug","","R","status","",,"This register shows the status of state machines inside the DCache. It is for low-level debug only. ","Xavier Reves by email","ET_SpecificCSRs",,"machine"

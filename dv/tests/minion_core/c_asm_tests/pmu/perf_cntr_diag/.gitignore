@@ -1,0 +1,8 @@
+*
+!*.*
+!*/
+*.hex
+*.mem
+*.dasm
+*.swp
+data.raw

@@ -1,0 +1,3 @@
+#!/bin/bash
+cd $RTLROOT/ip/movellus/HPDPLL/latest/modes
+make_pll_hal -d . -n hpdpll -o  $REPOROOT/dv/common/sw/ip/inc/movellus_hpdpll_modes_config.h

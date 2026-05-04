@@ -1,0 +1,7 @@
+*.swp
+build/*
+testme
+scratch/*
+!scratch/Makefile
+!scratch/*.cpp
+!scratch/*.h

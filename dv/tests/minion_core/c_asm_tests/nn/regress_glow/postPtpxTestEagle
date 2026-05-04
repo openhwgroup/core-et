@@ -1,0 +1,8 @@
+#!/bin/bash
+
+testRunDir=$1
+echo "Testing Ptpx cycles execution"
+echo $ETDV_RUNDIR
+
+$REPOROOT/nn/elastic/discovercycles.py --path $ETDV_RUNDIR --check 7000 25000
+

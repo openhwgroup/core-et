@@ -1,0 +1,17 @@
+// Copyright (c) 2026 Ainekko
+// SPDX-License-Identifier: Apache-2.0
+
+//////////////////////////////////////////////////////////////////
+// Submodule filelists (-f of submodule _vcs_defines.f only)
+//////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////
+// Module+Simulation specific defines (+define+ only)
+//////////////////////////////////////////////////////////////////
+
+// Simulate function of standard cells only (not timing)
+
+// FIX-ME: Sean removed this as this define as it breaks SDF annotation
+// FIX-ME: We don't know why this was added in the first place
+//
+//+define+VIRL_functiononly

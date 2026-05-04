@@ -1,0 +1,13 @@
+Goal:
+The purpose of the test is to test various less common setup of the tensor quant instruction. Used to check both latency and correctness.
+
+Details:
+Cases testsed:
+1. 6 rows / 3 cols w/o SCP access (6/3 are just arbitrary)
+2. 6 rows / 3 cols w SCP access
+3. Start from a non-0 register to make sure we wrap-around
+4. Start from a non-0 SCP line
+5. Combine 3 and 4.
+6. A single transformation 10 times (RELU arbitrarily selected)
+7. Have valid transformation after LAST_TRANS to make sure we correctly terminate the instruction
+	 

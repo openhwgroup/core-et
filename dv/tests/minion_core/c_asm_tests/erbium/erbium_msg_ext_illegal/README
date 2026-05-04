@@ -1,0 +1,8 @@
+This test tries to access every port-message location in the ET-SoC1
+memory map and the equivalent one in the Erbium memory map. There is
+no number of threads expected to be running but the test designer
+expects the whole neighborhood to be running so all the possible
+combiation of sender hart + destination port are covered
+
+The test expect that all these accesses end up in a access fault
+exception since messagess extensions is removed in erbium.

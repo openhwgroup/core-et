@@ -1,0 +1,6 @@
+fields,mode,lock,ZERO,ZERO,ppn
+width,4,1,15,16,28
+RO,YES,YES,NO,NO,YES
+ROValue,4'b0,1'b0,,,28'b0
+,,,,,
+sum bits,64,,,,

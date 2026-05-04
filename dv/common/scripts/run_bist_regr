@@ -1,0 +1,6 @@
+#!/bin/bash  -e
+cd $REPOROOT
+. env.sh
+et-dvrun --config $REPOROOT/dv/tests/ioshire/io.etdv.py --status --timeout 2880 --make -j 8 -s --noclean --runroot $TESTRUN --tags bisted_rtl --uarg use_test_counts --uarg clean_on_pass --uarg CM=func --project dv --group ${JOB_BASE_NAME} --detail \"${sha}:\"
+touch ${REPOROOT}/regress.summary 
+touch ${REPOROOT}/.regression_done 

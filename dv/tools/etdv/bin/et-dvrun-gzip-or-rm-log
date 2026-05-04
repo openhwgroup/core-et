@@ -1,0 +1,58 @@
+#!/bin/csh -f
+
+set cmd=${0:t}
+
+if (3 != ${#argv}) then
+	cat <<L1
+
+Usage: ${cmd} 0|CLEAN|RM|GZIP status log
+
+L1
+	exit 1
+endif
+
+set egrep=/usr/bin/egrep
+set gzip=/usr/bin/gzip
+set rm=/bin/rm 
+
+set action=$1
+if (1 > `echo $action | ${egrep} -c '^(CLEAN|KEEP_LOG|RM_LOG|GZIP_LOG)$'`) then
+	echo "${cmd}: Error: ${action}: invalid action."
+	exit 1
+endif
+
+set stat=$2
+set log=$3
+
+if ("KEEP_LOG" == "${action}") then
+    exit 0
+endif
+
+${egrep} -iq pass ${stat}
+if (${status}) then
+    exit 0
+endif
+
+set gzipOpts="--best -f"
+
+switch (${action})
+	case "RM_LOG":
+		${rm} -f $log
+		breaksw
+	case "GZIP_LOG":
+		${gzip} ${gzipOpts} $log
+		breaksw
+	case "CLEAN":
+		${gzip} ${gzipOpts} $log
+		set type=${log:t:r}
+		if ("testme" != "${type}") then
+		    exit 0
+		endif
+		#continue only if testme
+		set dir=${log:h}
+		set xcept="status,${type},${type}.log.gz,test.vdb,.metrix.json"
+		et-dvrun-cleanup $dir $xcept
+endsw
+
+exit 0
+

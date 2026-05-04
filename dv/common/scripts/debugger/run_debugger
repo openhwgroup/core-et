@@ -1,0 +1,41 @@
+#!/usr/bin/bash
+
+# This script configures the environment and launches the IOShire standalone simulation.
+
+# [Waiting for Sean to confirm if the simulation keeps running until the socket is closed, or if the
+#  the simulation finishes depending on the python PID. If its the first case we also have to worry about
+#  the debugger being so slow that the simulation timeouts looking for the port. Otherwise,If the simulator
+#  looks for python PID, we need to change that]
+
+debugger_path=$REPOROOT/dv/common/scripts/debugger
+debugger_rundir=$TESTRUN/ioshire/ioshire_debugger
+debugger_sim=$TESTRUN/ioshire/ioshire_debugger/sim
+
+if [ ! -d "$debugger_rundir" ]; then
+    echo "There is no simulation to run the debugger. Simulation is going to be executed."
+    # Launch the simulator
+    et-dvrun --config $REPOROOT/dv/tests/ioshire/io.etdv.py \
+             --make -j 8 -s --runroot $TESTRUN \
+             -t ioshire_debugger \
+             --uarg trace --noslurm --keep_pass --noclean
+else
+    echo "IOShire simulation environment exists. Proceding to launch the ultrasoc software"
+fi
+
+# Change the rerun script to make it reusable
+cp $debugger_path/rerun $debugger_sim/rerun
+
+# Set environment file to be loaded before the simulation starts
+source $debugger_path/preTestSoc_ust                 
+source $debugger_sim/$simEnvironmentFile                  
+
+echo "UltraSoc debug reserved port is $UST_SW_LINK_usb_PORT";
+echo "UltraSoc debug port mode is $UST_SW_LINK_usb_MODE";
+
+cd $debugger_sim
+./rerun &
+cd $REPOROOT
+sleep 5 
+
+# Start the debugger
+source $debugger_path/launch_ust_sw

@@ -1,0 +1,6 @@
+Goal:
+This test exposes a bypass network bug where T1 WB stage bypasses data to T0 ID stage.
+See: https://esperantotech.atlassian.net/browse/RTLMIN-2600
+
+Parameter(s):
+Core - This test will run on any Core (even thread) of any Neighborhood of any Shire. Only 1 Core (even thread) is expected to be enabled.

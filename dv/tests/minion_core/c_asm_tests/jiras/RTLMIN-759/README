@@ -1,0 +1,6 @@
+Goal:
+Specific test case for RTLMIN-759. There is a mismatch between BEMU and RTL when executing a FMIN of
+positive zero and negative zero (result should be negative zero).
+
+Parameter(s):
+Core - This test will run on any Core (even thread) of any Neighborhood of any Shire. Only 1 Core (even thread) is expected to be enabled.

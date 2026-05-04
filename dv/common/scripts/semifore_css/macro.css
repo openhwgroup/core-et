@@ -1,0 +1,7 @@
+{ -smfr-header-sections: -smfr-template-macros; }
+{ -smfr-member-macros: -smfr-lsb, -smfr-width, -smfr-field-mask; }
+{ -smfr-field-mask-macro-suffix: "_MASK"; }
+{ -smfr-lsb-macro-suffix: "_SHIFT"; }
+{ -smfr-width-macro-suffix: "_WIDTH"; }
+{ -smfr-integer-literal-suffix: none; }
+{ -smfr-body-comments: -smfr-source, -smfr-title, -smfr-description; }

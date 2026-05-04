@@ -1,0 +1,29 @@
+#!/bin/csh -f
+
+set script="${1}"
+set lockfn="${2}"
+rm -f $lockfn
+set short="${script:t}"
+if ("testme" == "${short}") then
+	set jobname="${short}.${script:h:h:h:h:t}.${script:h:h:h:t}.${script:h:h:t}.${script:h:t}"
+	set lic="vcsruntime_net"
+else
+	set jobname="${short}.${script:h:h:h:t}.${script:h:h:t}.${script:h:t}"
+	set lic="vcscompiler_net"
+endif
+set spinlock="spinlock.`/bin/hostname -s`.$$.${jobname}"
+
+echo "BEGIN: `date`: wait for spinlock jobname: ${spinlock} ..."
+set client=`which et-dvrun`
+set client=${client:h:h}/slac/bin/client_cmd
+while (1)
+	$client request $lic $spinlock
+	if ("0" == "${status}") then
+		echo "END: `date`: got spinlock"
+		echo $spinlock > $lockfn
+		exit 0
+	endif
+	sleep 60
+end
+echo "ERROR: never got spinlock"
+exit 1

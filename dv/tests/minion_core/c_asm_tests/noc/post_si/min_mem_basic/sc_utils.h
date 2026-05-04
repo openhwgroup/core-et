@@ -1,0 +1,1 @@
+../min_mem_amo_basic/sc_utils.h

@@ -1,0 +1,5 @@
+fields,MPROT_EN,MMODE_SIZE,SMODE_SIZE
+width,1,4,4
+,,,,
+,,,,
+sum bits,9,,

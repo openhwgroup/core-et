@@ -1,0 +1,146 @@
+// Copyright (c) 2026 Ainekko
+// SPDX-License-Identifier: Apache-2.0
+
+addrmap U_neigh {
+	name = "U_neigh";
+	alignment = 8;
+	default regwidth = 64;
+	default sw = rw;
+	
+
+	reg {
+		name = "ipi_redirect_pc";
+		field {sw=rw; desc = "In bits 47:0 of this register, user-level software writes the 48 least significant bits of a target virtual PC of a redirect IPI for all the 
+			harts in a given neighborhood.Also, bit 0 of the PC is always 0";} ipi_redirect_pc[47:0] = 0x0;
+	} ipi_redirect_pc @ 0x40;
+
+};
+
+addrmap M_neigh {
+	name = "M_neigh";
+	alignment = 8;
+	default regwidth = 64;
+	default sw = rw;
+
+
+	reg {
+		name = "minion_boot";
+		field {sw=rw; desc = "Each neighborhood contains a MINION_BOOT ESR that determines the initial PC of the Minions in the neighborhood after reset. This register holds the 48 least significant bits of the reset PC, bits 63:48 of the PC are ignored on writes. Software must make sure that fetching from the PC value written in this register will not generate any faults.";} minion_boot[47:0] = 0x02008000;
+	} minion_boot @ 0x18;
+
+	reg {
+		name = "mprot";
+		field {sw=rw; desc = "Size of the MRAM region which can be only accessed by Smode. The size is 4KB*(2^SMODE_SIZE) - 4KB*(2^MMODE_SIZE) starting at offset 4KB*(2^MMODE_SIZE) in the MRAM.";} smode_size[3:0] = 0x0;
+		field {sw=rw; desc = "Size of the MRAM region which can be only accessed by Mmode. The size is 4KB*(2^MMODE_SIZE) starting at offset 0 in the MRAM.";} mmode_size[7:4] = 0x0;
+		field {sw=rw; desc = "Enable privilege based memory protection.";} mprot_en[8:8] = 0x0;
+	} mprot @ 0x38;
+
+	reg {
+		name = "pmu_ctrl";
+		field {sw=rw; desc = "Set this bit to disable the clock";} disable_clock[0:0] = 0x0;
+	} pmu_ctrl @ 0x68;
+
+	reg {
+		name = "neigh_chicken";
+		field {sw=rw; desc = "Setting this bit bypasses the instruction cache.";} bypass_icache[0:0] = 0x0;
+		field {sw=rw; desc = "Setting this bit bypasses the data cache.";} bypass_dcache[1:1]=0x0 ;
+		field {sw=rw; desc = "If enabled, all traffic from agents specified by the force_all_agents and agent_forced fields in the neighborhood will be routed to the destination specified in the dest_fifo field.";} force_dest_fifo[2:2] = 0x0;
+		field {sw=rw; desc = "Destination to which requests are routed when the force_dest_fifo bit of this register is set:";} dest_fifo[4:3] = 0x0;
+		field {sw=rw; desc = "When the force_dest_fifo bit and this bit are set, requests from all agents in the neighborhood go to the FIFO selected by the dest_fifo field.";} force_all_agents[5:5] = 0x0;
+		field {sw=rw; desc = "When the force_dest_fifo bit is set and the force_all_agents bit is clear, this field selects agents from which requests will be forced to go to the FIFO selected by the dest_fifo field. 0: Requests are routed to the corresponding bank FIFO, according to the destination address.
+            1: Requests are routed to the UC FIFO. 2-3: Reserved";} agent_forced[6:6] = 0x0;
+	} neigh_chicken @ 0x70;
+
+	reg {
+		name = "icache_err_log_ctl";
+		field {sw=rw; desc = "This 3-bit field is used to enable or prevent certain categories of logged errors from generating interrupts or sending error responses. In general, single-bit ECC errors should not generate an interrupt. Software may choose whether the ECC error counter saturation should generate an interrupt. Each bit has a specific meaning: Bit 0 enables single-bit ECC errors, Bit 1 enables double-bit ECC errors, and Bit 2 enables ECC counter saturation. Error codes that are not enabled are still logged but have lower priority than errors that generate interrupts. Masked interrupts do not prevent subsequent unmasked errors from being recorded. When an enabled interrupt error overwrites a masked error, the multiple error bit is not set, and multiple masked errors also do not cause the multiple error bit to be set. The multiple error bit is intended to indicate that a fatal error was missed.";} err_interrupt_enable[2:0] = 0x6;
+	} icache_err_log_ctl @ 0x78;
+
+	reg {
+		name = "icache_err_log_info";
+		field {sw=rw; desc = "When set, this bit indicates an error has occurred and that the register contents are valid. This can be cleared by writing a 1 to this field and writing the matching code to err_code.";} valid[0:0] = 0x0;
+		field {sw=rw; desc = "When set, this bit indicates that multiple errors have occurred. When an error is detected, the esr_icache_err_log_info register records the details of the first error encountered. Any subsequent errors set this bit to indicate that another fatal error occurred, but their details are not recorded.";} multi[1:1] = 0x0;
+		field {sw=rw; desc = "The error detected was enabled by esr_icache_err_log_ctl.err_interrupt_enable. Error codes that are not enabled are still logged, but they have lower priority than errors that generate interrupts.";} enabled[2:2] = 0x0;
+		field {sw=r; } reserved[3:3] ;
+		field {sw=rw; desc = "This 4-bit field indicates the type of error. This field is used to determine how to decode the info bits in positions 63:8.
+			  0: ECC single-bit error
+              1: ECC double-bit error
+              2: ECC error counter saturation";} err_code[7:4] = 0x0;
+		field {sw=rw; desc = "Additional information about the error. The format of this field is dependent upon the type of error.
+			SBE_DBE format:
+				- Bits 14:8: set. This field indicates the way that contained the error
+				- Bits 16:15: way. This field indicates the way that contained the error
+				- Bits 47:40: error_bits.  Indicates which doubleword contained the error. The error_bits field is multi-hot.
+			ECC_Saturation format:
+				- Bit 52: double. This bit indicates the type of error counter that saturated and is encoded as follows:
+					0: The single-bit error counter saturated.
+					1: The double-bit error counter saturated.";} info[63:8] ;
+	} icache_err_log_info @ 0x80;
+
+	reg {
+		name = "icache_err_log_address";
+		field {sw=r; desc = "This register contains the physical address (PA) associated with the error if it is available.";} icache_err_log_address_f0[33:0] = 0x0;
+	} icache_err_log_address @ 0x88;
+
+	reg {
+		name = "icache_sbe_dbe_counts";
+		desc="Single-bit errors (SBEs) are corrected so normal processing can continue, and no error response is sent to the requesting core because the request was processed correctly. SBEs should be logged locally, and no action should be taken.
+		Double-bit errors (DBEs) cannot be corrected and are considered fatal, requiring immediate reporting. SBE and DBE responses occur once per ECC protection, meaning one error bit per dword in the cache line (8 bits). 
+		The SBE counter is 8 bits and saturates at 255, while the DBE counter is 3 bits and saturates at 7. All fields of this register are read-only. Writing all ones to a field clears its respective counter. 
+		If a counter saturates, it can be error-logged as described in the icache_err_log_info register.
+		";
+		field {sw=rw; desc = "This field stores the data RAM single-bit error count.";} sbe_counts[7:0] = 0x0;
+		field {sw=rw; desc = "This field stores the data RAM double-bit error count.";} dbe_counts[10:8] ;
+	} icache_sbe_dbe_counts @ 0x90;
+
+};
+
+addrmap D_neigh {
+	name = "D_neigh";
+	alignment = 8;
+	default regwidth = 64;
+	default sw = rw;
+
+	reg {
+		name = "hactrl";
+		field {sw=rw; desc = "The n-th bit selects the n-th hart in the neighborhood, if hasel is 1. Non-selected harts ignore the reset (except ndmreset), halt and resume requests from the DM.";} hawindow[15:0] = 0x0;
+		field {sw=rw; desc = "The n-th bit selects the n-th hart in the neighborhood (independent of the value of hasel). Non-selected harts ignore the reset (except ndmreset), halt and resume requests from the DM.";} hart_mask[31:16] = 0x0;
+		field {sw=r; desc = "Each bit in this field corresponds to one hart in the neighborhood. While a given resethalt bit is asserted, the corresponding hart will halt upon the next deassertion of its reset. These bits are set for all selected harts when the setresethaltreq bit in the RISC-V Debug Module Control register (DMCTRL) is written. 
+			This field is cleared for all selected harts when the clrresethaltreq bit in the DMCTRL register is written.";} resethalt[47:32] = 0x0;
+	} hactrl @ 0xFF80;
+
+	reg {
+		name = "hastatus0";
+		field {sw=r; desc = "Each bit in this field corresponds to one of the 16 harts in the neighborhood. The sticky halted bit for a hart is asserted when the hart is in Debug Mode, and hardware clears this bit when the hart receives a reset or resume request.";} halted[15:0] = 0x0;
+		field {sw=r; desc = "Each bit in this field corresponds to one of the 16 harts in the neighborhood. The sticky running bit for each hart is asserted when a hart finishes resuming execution, and hardware clears this bit when a hart receives a reset or halt request.";} running[31:16] = 0x0;
+		field {sw=r; desc = "Each bit in this field corresponds to one of the 16 harts in the neighborhood. The sticky resumeack bit for a hart is asserted when a hart finishes resuming execution, and hardware clears this bit whenever the resumereq bit in the RISC-V Debug Module Control register (DMCTRL) is deasserted.";} resumeack[47:32] = 0x0;
+		field {sw=r; desc = "Each bit in this field corresponds to one of the 16 harts in the neighborhood. The sticky havereset bit for a hart is asserted when a hart exits reset, and hardware clears this bit whenever the ackhavereset bit in the RISC-V Debug Module Control register (DMCTRL) is written.
+			 Each ET-Minion core contains two harts; however, it is not possible to reset an individual hart within an ET-Minion core. Therefore, the havereset field can be implemented as eight physical bits, with bits 2m and 2m+1 corresponding to the m-th Minion hardwired to the same value.
+			 For example, bits 0 and 1 correspond to the two harts in Minion core 0, but only one of these bits is required to reset both threads. Similarly, bits 2 and 3 correspond to ET-Minion core 1, and so on";} havereset[63:48] = 0x0;
+	} hastatus0 @ 0xFF88;
+
+	reg {
+		name = "hastatus1";
+		field {sw=r; desc = "Each bit in this field corresponds to one of the 16 harts in the neighborhood, and a bit is set to 1 while the corresponding hart executes an Abstract Command or a Program Buffer program.";} busy[15:0] = 0x0;
+		field {sw=rw; desc = "Each bit in this field corresponds to one of the 16 harts in the neighborhood. A bit is set to 1 if the execution of an Abstract Command or a Program Buffer program by the corresponding hart generates an exception. These bits are sticky and must be cleared using an explicit write to the register.";} exception[31:16] = 0x0;
+		field {sw=rw; desc = "Each bit in this field corresponds to one of the 16 harts in the neighborhood. A bit is set to 1 if the execution of an Abstract Command or a Program Buffer program by the corresponding hart cannot complete, but no exception is generated. 
+			Examples of this include writes to ET-Minion core registers such as abscmd, axprogbuf0, axprogbuf1, nxprogbuf0, nxprogbuf1, and so on. These bits are sticky and must be cleared using an explicit write to the register.";} error[47:32] = 0x0;
+	} hastatus1 @ 0xFF90;
+
+	reg {
+		name = "and_or_tree_IO";
+		field {sw=r; desc = "Hardware sets this bit whenever any of the 16 bits of the halted field in the Esperanto Neighborhood Hart Status 0 register for the selected harts is set, and the hasel bit in the RISC-V Debug Module Control register (DMCTRL) is 1.";} anyhalted[0:0] ;
+		field {sw=r; desc = "Hardware sets this bit when all 16 bits of the halted field in the Esperanto Neighborhood Hart Status 0 register for the selected harts are set, and the hasel bit in the RISC-V Debug Module Control register (DMCTRL) is 1.";} allhalted[1:1] ;
+		field {sw=r; desc = "Hardware sets this bit whenever any of the 16 bits of the running field in the Esperanto Neighborhood Hart Status 0 register for the selected harts is set, and the hasel bit in the RISC-V Debug Module Control register (DMCTRL) is 1.";} anyrunning[2:2] ;
+		field {sw=r; desc = "Hardware sets this bit whenever all 16 bits of the running field in the Esperanto Neighborhood Hart Status 0 register for the selected harts are set, and the hasel bit in the RISC-V Debug Module Control register (DMCTRL) is 1.";} allrunning[3:3] ;
+		field {sw=r; desc = "Hardware sets this bit whenever any of the 16 bits of the resumeack field in the Esperanto Neighborhood Hart Status 0 register for the selected harts is set, and the hasel bit in the RISC-V Debug Module Control register (DMCTRL) is 1.";} anyresumeack[4:4] ;
+		field {sw=r; desc = "Hardware sets this bit whenever any of the 16 bits of the resumeack field in the Esperanto Neighborhood Hart Status 0 register for the selected harts is set, and the hasel bit in the RISC-V Debug Module Control register (DMCTRL) is 1.";} allresumeack[5:5] ;
+		field {sw=r; desc = "Hardware sets this bit whenever any 16 bits of the havereset field in the Esperanto Neighborhood Hart Status 0 register for the selected harts are set, and the hasel bit in the RISC-V Debug Module Control register (DMCTRL) is 1.";} anyhavereset[6:6] ;
+		field {sw=r; desc = "Hardware sets this bit whenever all of the 16 bits of the havereset field in the Esperanto Neighborhood Hart Status 0 register for the selected harts is set, and the hasel bit in the RISC-V Debug Module Control register (DMCTRL) is 1.";} allhavereset[7:7] ;
+		field {sw=r; desc = "Hardware sets this bit when any of the selected harts in the neighborhood are unavailable, and the hasel bit in the RISC-V Debug Module Control register (DMCTRL) is 1. A selected hart is considered unavailable if both HASTATUS0.halted[n] and HASTATUS0.running[n] are 0.";} anyunavailable[8:8] ;
+		field {sw=r; desc = "Hardware sets this bit when any of the harts in the neighborhood are selected, and the hasel bit in the RISC-V Debug Module Control register (DMCTRL) is 1.";} anyselected[9:9] ;
+	} and_or_tree_IO @ 0xFF98;
+
+};
+
+

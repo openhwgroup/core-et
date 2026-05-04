@@ -1,0 +1,3 @@
+Goal:
+Test FCC between T0 and T1 when Minion_Feature_ESR DISABLE_MTHREADING_BIT is set to 1. 
+

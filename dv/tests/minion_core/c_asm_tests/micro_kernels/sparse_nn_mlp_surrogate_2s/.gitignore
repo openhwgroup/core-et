@@ -1,0 +1,9 @@
+# All generated files
+build
+sparse_nn_mlp_surrogate_2s
+memImage.hex
+net_desc.mem
+weights.mem
+offsets.mem
+scales.mem
+

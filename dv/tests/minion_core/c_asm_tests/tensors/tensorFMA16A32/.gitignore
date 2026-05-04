@@ -1,0 +1,6 @@
+*.hex
+*.mem
+tensor_fma16a32
+tensor_fma16a32_arows
+tensor_fma16a32_acomb
+tensor_fma16a32_acols

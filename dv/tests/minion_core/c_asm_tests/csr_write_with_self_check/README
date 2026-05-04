@@ -1,0 +1,6 @@
+Goal:
+A sampling of CSRs are written and read and there are some self-checks in place for the read values. There may need
+to be a separate test that properly checks each bit for the attribute access mode and also checks all CSRs.
+
+Parameter(s):
+Core - This test will run on any Core (even thread) of any Neighborhood of any Shire. Only 1 Core (even thread) is expected to be enabled.

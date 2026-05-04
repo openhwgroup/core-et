@@ -1,0 +1,11 @@
+Goal:
+The test executes many tensor stores combined with other operations to toggle the 'tensor_store_req_fifo' from the 'gen_fifo.v' file.
+
+
+Details:
+The objective is to fill one FIFO that is instantiated in the Tensor_Store_Buffer module, which is in the Neighborhood and handles the Cooperative Tensor Store operations (combines data from the cooperating Minions).
+The FIFO is a pipeline stage after the arbiter of the "North" and "South" tensor store blocks and is connected to the general Neighborhood arbiter that determines the order in which the requests can go to the L2.
+
+If there are only Cooperative Tensor Store operations from the Minions to the Tensor_Store_Buffer, the FIFO will never become full as the arbiter in the Neighborhood will simply open the door to this module. We need other intense activity so that the FIFO gets some back pressure and finally becomes full. The activity here comes with the hand of Tensor Load requests from the other Minions. Now we have 5 modules accessing the arbiter: 4 Minions doing Tensor Loads (read requests) and 1 block combining data from other Minions and doing Cooperative Tensor Loads (write requests).
+
+More details of the test can be found on VERIF-1906.

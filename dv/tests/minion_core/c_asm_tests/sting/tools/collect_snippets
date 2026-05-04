@@ -1,0 +1,46 @@
+#!/bin/bash
+
+set -eu
+
+die() { echo "$*" >&2; exit 1; }
+
+[ $# -eq 1 ] || die "Usage: $(basename $0) <conf>"
+
+rm -f _all_conf _all_snps
+touch _all_conf _all_snps
+
+echo "$MINION_DIAGS/sting/conf/snippets.conf" >> _all_conf
+
+STING_BOARD_CONF=$STING_ROOT/conf.d/platform/rv64_triton/16c_board.conf
+
+get_snippets() {
+   cat $@ \
+      | grep -v '^\s*#' \
+      | grep -o 'SNP_[a-z]\w*' \
+      | sort | uniq | tee -a _all_snps
+}
+
+# get all imports for this config
+get_imports() {
+   full_path=$(readlink -f $1)
+   echo -e "$2+ $full_path" >&2
+   grep -q $full_path _all_conf && return
+   echo $full_path >> _all_conf
+   conf_dir=$(dirname $1)
+   awk '/^\s*import/{gsub(/"/, "", $2); print $2}' $1 \
+      | while read path ; do
+         real_path=$(eval echo $path)
+         [[ $real_path == /* ]] || real_path=$conf_dir/$real_path
+         [ -f $real_path ] || continue
+         get_imports $real_path "$2  "
+      done
+   get_snippets $full_path | while read snp ; do
+      echo "$2  - $snp" >&2
+   done
+}
+
+get_imports $1 ""
+
+cat _all_snps | sort | uniq
+
+rm -f _all_conf _all_snps

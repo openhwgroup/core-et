@@ -1,0 +1,5 @@
+Goal:
+Test basic Graphics Operations when Minion_Feature_ESR TRAP_ON_GFX_BIT is set to 1 (will cause trap).
+
+Parameter(s):
+Core - This test will run on any Core (even thread) of any Neighborhood of any Shire. Only 1 Core (even thread) is expected to be enabled.

@@ -1,0 +1,8 @@
+# RTL TEST SUCCESS
+rtlpass=`grep "TEST HAS PASSED" testme.log | wc -l`
+if [ $rtlpass -gt 0 ]; then
+  echo ${MINION_BIN}_RTL_SIMULATION:1 > summary.txt
+else
+  echo ${MINION_BIN}_RTL_SIMULATION:0 >> summary.txt
+fi
+

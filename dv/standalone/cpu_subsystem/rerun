@@ -1,0 +1,12 @@
+#!/bin/sh
+
+TEST_NAME=$1;
+
+export NOVAS_FSDB_FILE=trace.fsdb
+
+if [ -x vbuild/simv ] ; then
+   echo "vbuild/simv $* +verbose_mesh +verbosity=UVM_FULL +DEFAULT_LOG_LEVEL=1 +verbosity=UVM_FULL +EMU_LOG_LEVEL=1 -licwait 5 +verbositySC_SB=HIGH +verbosityNEIGH_SB=HIGH +l $TEST_NAME=1 +verbosityMINION_SB=HIGH +PRINT_EMU_DEBUG=1 +CHECKER=1" > run.log
+   vbuild/simv $* +verbose_mesh +verbosity=UVM_FULL +DEFAULT_LOG_LEVEL=1 +verbosity=UVM_FULL +EMU_LOG_LEVEL=1 -licwait 5 +verbositySC_SB=HIGH +verbosityNEIGH_SB=HIGH +l $TEST_NAME=1 +verbosityMINION_SB=HIGH +PRINT_EMU_DEBUG=1 +CHECKER=1 |& tee -a run.log
+else 
+   echo "vbuild/simv is not build yet. Please execute ./rebuild"
+fi

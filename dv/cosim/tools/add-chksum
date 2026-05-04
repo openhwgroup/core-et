@@ -1,0 +1,8 @@
+#!/bin/bash
+
+add_chksum() {
+   chksum=$(grep -ve '// CHECKSUM' $1 | md5sum | awk '{print $1}')
+   sed -i "s|%CHECKSUM%|$chksum|" $1
+}
+
+for file ; do add_chksum $file ; done

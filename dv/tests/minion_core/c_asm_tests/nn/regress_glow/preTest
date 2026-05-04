@@ -1,0 +1,16 @@
+#!/bin/bash
+
+$REPOROOT/swx/glow/build.sh --skipRecompile
+
+# Compiles minion source code and prepares data to load into memory
+# Compilation is performed by running 'make' on env var $MINION_SRC_DIR
+# binary expected to be created is $MINION_SRC_DIR/$MINION_BIN
+
+[ ! -d "$MINION_SRC_DIR" ] &&  echo "env var MINION_SRC_DIR ($MINION_SRC_DIR) is not a directory" && exit 1
+
+echo "Checking GLOW unittest...";
+$REPOROOT/swx/glow/build/tests/ETSOC/$TESTNAME --dis_master_minion --gtest_filter=$TESTFILTER --fileload=$FILELOAD --runDir=$testRunDir 
+
+# and create logs dir
+mkdir -p $testRunDir/logs || exit
+

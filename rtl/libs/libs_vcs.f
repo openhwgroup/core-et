@@ -1,0 +1,21 @@
+// Copyright (c) 2026 Ainekko
+// SPDX-License-Identifier: Apache-2.0
+
+//////////////////////////////////////////////////////////////////
+// Global simulation file list (only arguments below)
+//////////////////////////////////////////////////////////////////
+
+-f $RTLROOT/inc/common_vcs.f
+
+//////////////////////////////////////////////////////////////////
+// Standard module arguments (only arguments below)
+//////////////////////////////////////////////////////////////////
+
+// Defines for simulation
+-f $RTLROOT/libs/libs_vcs_defines.f
+
+// Hard macro behavioral models
+-f $RTLROOT/libs/libs_hm_behav.f
+
+// Primary RTL filelist
+-f $RTLROOT/libs/libs_rtl.f

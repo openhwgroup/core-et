@@ -1,0 +1,1 @@
+../gate_basic_static/Makefile

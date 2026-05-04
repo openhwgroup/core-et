@@ -1,0 +1,8 @@
+#!/usr/bin/env python3.6
+
+import sys
+
+sys.path.insert(0, sys.path[0] + '/../lib')  # prepend
+from ETdv.dvrun.check_log import main
+
+main(sys.argv)

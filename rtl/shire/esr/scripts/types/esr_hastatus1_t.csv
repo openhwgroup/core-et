@@ -1,0 +1,5 @@
+fields,error,exception,busy
+width,16,16,16
+RO,NO,NO,YES
+,,,
+sum bits,48,,

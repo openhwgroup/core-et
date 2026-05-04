@@ -1,0 +1,7 @@
+This test checks for Cacheops configurations that should behave like a NOP in erbium
+ - evict/flush va/sw to L3 or MEM
+ - prefetch to L2, L3 or MEM
+
+Since the cache is transparent to the software, this test relies on
+the D$ scoreboard to verify the functionality while the C test are
+just the stimulus.

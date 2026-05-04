@@ -1,0 +1,150 @@
+### ###test List
+
+##########################################################################################
+# set default options. These will be sent to the sim as plusargs 
+#    option = value  # sim will be run with cmd line param +option=value
+#
+# special options:
+#   preSimCmd = command to run before launching the simulation
+#   postSimCmd = command to run after the simulation has completed
+#       all the parameters will be set as env vars before calling these commands
+#       they will be run from the ###test base directory ($ENV{###testPath})
+#       the ###test run dir can be found in $ENV{###testRunDir}
+#       non-zero exit status adds an error tO the ###test run
+#   timeout = max number of time to run
+#   LOG_LEVEL = global log level
+#   XXXX_LOG_LEVEL = log level for block named XXXX
+#   SEED = random seed
+#   TEST_PATH = relative path of the ###test directory. './' used if not specified.
+#   TAG = tag1 tag2 tag3 ... => space separated values determining tags for ###tests.
+#                               Script can then run only ###tests matching certain patterns)
+##########################################################################################
+LOG_LEVEL=1
+timeout=1000000000
+
+##########################################################################################
+# ###test list, with specific options to be sent as plusargs for the current ###test only
+# format is: ####test=binary [option=X option=Y... tag=tag1 tag=tag2 tag=tag3 ...]
+# the script will run $TEST_PATH/build/SIM/binary where SIM=vcs|verilog
+##########################################################################################
+
+#INPUT_COUNT = 1000000
+INPUT_COUNT = 10000
+
+MIN_IDLE=5
+MAX_IDLE=5
+PAC_INT=1
+
+simulator=vcs
+tag=nightly
+tag=pac_int
+UVM_TESTNAME=swizz_test_base 
+
+#test=swizz_tb TEST_TYPE=7 force_operands=1 tag=force_operands
+
+#SEED=0
+PARAM=0
+test=swizz_tb TEST_TYPE=0   tag=int_min      
+test=swizz_tb TEST_TYPE=1   tag=int_max     
+test=swizz_tb TEST_TYPE=2   tag=not
+test=swizz_tb TEST_TYPE=3   tag=and
+test=swizz_tb TEST_TYPE=4   tag=or
+test=swizz_tb TEST_TYPE=5   tag=xor
+test=swizz_tb TEST_TYPE=6   tag=sll
+test=swizz_tb TEST_TYPE=7   tag=srl 
+test=swizz_tb TEST_TYPE=8   tag=sra
+test=swizz_tb TEST_TYPE=9   tag=feq
+test=swizz_tb TEST_TYPE=10  tag=fle
+test=swizz_tb TEST_TYPE=11  tag=flt
+test=swizz_tb TEST_TYPE=12  tag=fltu
+test=swizz_tb TEST_TYPE=13  tag=andi
+test=swizz_tb TEST_TYPE=14  tag=slli
+test=swizz_tb TEST_TYPE=15  tag=fbci
+test=swizz_tb TEST_TYPE=16  tag=srai
+test=swizz_tb TEST_TYPE=17  tag=srli
+test=swizz_tb TEST_TYPE=18  tag=packrepb  
+test=swizz_tb TEST_TYPE=19  tag=packreph  tag=b4c
+test=swizz_tb TEST_TYPE=20  tag=sat8
+test=swizz_tb TEST_TYPE=21  tag=minu      
+test=swizz_tb TEST_TYPE=22  tag=maxu
+
+#SEED=1
+PARAM=1
+test=swizz_tb TEST_TYPE=0   tag=int_min      
+test=swizz_tb TEST_TYPE=1   tag=int_max     
+test=swizz_tb TEST_TYPE=2   tag=not
+test=swizz_tb TEST_TYPE=3   tag=and
+test=swizz_tb TEST_TYPE=4   tag=or
+test=swizz_tb TEST_TYPE=5   tag=xor
+test=swizz_tb TEST_TYPE=6   tag=sll
+test=swizz_tb TEST_TYPE=7   tag=srl 
+test=swizz_tb TEST_TYPE=8   tag=sra
+test=swizz_tb TEST_TYPE=9   tag=feq
+test=swizz_tb TEST_TYPE=10  tag=fle
+test=swizz_tb TEST_TYPE=11  tag=flt
+test=swizz_tb TEST_TYPE=12  tag=fltu
+test=swizz_tb TEST_TYPE=13  tag=andi
+test=swizz_tb TEST_TYPE=14  tag=slli
+test=swizz_tb TEST_TYPE=15  tag=fbci
+test=swizz_tb TEST_TYPE=16  tag=srai
+test=swizz_tb TEST_TYPE=17  tag=srli
+test=swizz_tb TEST_TYPE=18  tag=packrepb  
+test=swizz_tb TEST_TYPE=19  tag=packreph  
+test=swizz_tb TEST_TYPE=20  tag=sat8
+
+#SEED=2
+PARAM=2
+test=swizz_tb TEST_TYPE=0   tag=int_min      
+test=swizz_tb TEST_TYPE=1   tag=int_max     
+test=swizz_tb TEST_TYPE=2   tag=not
+test=swizz_tb TEST_TYPE=3   tag=and
+test=swizz_tb TEST_TYPE=4   tag=or
+test=swizz_tb TEST_TYPE=5   tag=xor
+test=swizz_tb TEST_TYPE=6   tag=sll
+test=swizz_tb TEST_TYPE=7   tag=srl 
+test=swizz_tb TEST_TYPE=8   tag=sra
+test=swizz_tb TEST_TYPE=9   tag=feq
+test=swizz_tb TEST_TYPE=10  tag=fle
+test=swizz_tb TEST_TYPE=11  tag=flt
+test=swizz_tb TEST_TYPE=12  tag=fltu
+test=swizz_tb TEST_TYPE=13  tag=andi
+test=swizz_tb TEST_TYPE=14  tag=slli
+test=swizz_tb TEST_TYPE=15  tag=fbci
+test=swizz_tb TEST_TYPE=16  tag=srai
+test=swizz_tb TEST_TYPE=17  tag=srli
+test=swizz_tb TEST_TYPE=18  tag=packrepb  
+test=swizz_tb TEST_TYPE=19  tag=packreph 
+test=swizz_tb TEST_TYPE=20  tag=sat8 
+
+#SEED=3
+PARAM=3
+test=swizz_tb TEST_TYPE=0   tag=int_min      
+test=swizz_tb TEST_TYPE=1   tag=int_max    
+test=swizz_tb TEST_TYPE=2   tag=not
+test=swizz_tb TEST_TYPE=3   tag=and
+test=swizz_tb TEST_TYPE=4   tag=or
+test=swizz_tb TEST_TYPE=5   tag=xor
+test=swizz_tb TEST_TYPE=6   tag=sll
+test=swizz_tb TEST_TYPE=7   tag=srl 
+test=swizz_tb TEST_TYPE=8   tag=sra
+test=swizz_tb TEST_TYPE=9   tag=feq
+test=swizz_tb TEST_TYPE=10  tag=fle
+test=swizz_tb TEST_TYPE=11  tag=flt
+test=swizz_tb TEST_TYPE=12  tag=fltu
+test=swizz_tb TEST_TYPE=13  tag=andi
+test=swizz_tb TEST_TYPE=14  tag=slli
+test=swizz_tb TEST_TYPE=15  tag=fbci
+test=swizz_tb TEST_TYPE=16  tag=srai
+test=swizz_tb TEST_TYPE=17  tag=srli
+test=swizz_tb TEST_TYPE=18  tag=packrepb  
+test=swizz_tb TEST_TYPE=19  tag=packreph  
+test=swizz_tb TEST_TYPE=20  tag=sat8
+
+
+
+
+
+
+
+
+  

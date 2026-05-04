@@ -1,0 +1,6 @@
+Goal:
+Generate many exceptions/traps through many iterations and self-check values such as cause and epc.
+
+Parameter(s):
+Core - This test will run on any Core of any Neighborhood of any Shire. 
+

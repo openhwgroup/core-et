@@ -1,0 +1,11 @@
+#!/bin/bash
+
+die() { echo "$*" >&2; exit 1; }
+
+verify_chksum() {
+   chksum=$(grep -ve '// CHECKSUM' $1 | md5sum | awk '{print $1}')
+   found=$(awk '/CHECKSUM/ && NR==1 { print $3 }' $1)
+   [ "$chksum" == "$found" ] || echo "warning: wrong checksum for $1"
+}
+
+for file ; do verify_chksum $file ; done

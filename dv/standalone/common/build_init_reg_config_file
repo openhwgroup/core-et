@@ -1,0 +1,66 @@
+#!/bin/bash
+
+full_name="$0"
+script_name=`expr "$0" : '.*/\(.*\)' '|' "$0"`
+
+usage='
+usage: '"${script_name}"' [ options ]
+
+       '"${script_name}"' is used to generate an init_reg_config_file for use during gate compiles.
+       If no options are given, an empty file is created.
+
+       The following options are available:
+
+       -memshire_west_side: Create entries for memshire_west_side and memshire_west.
+       -memshire_east_side: Create entries for memshire_east_side and memshire_east.
+       -memshire_west:      Create entries for memshire_west.
+       -memshire_east:      Create entries for memshire_east.
+       -h:                  Print this help message.
+'
+
+#
+# Parse options
+#
+memshire_west_side=""
+memshire_east_side=""
+memshire_west=""
+memshire_east=""
+any_option=""
+while [ $# -gt 0 ] ; do
+   case $1 in
+      -memshire_west_side) any_option="1"; memshire_west_side="1"; memshire_west="1";;
+      -memshire_east_side) any_option="1"; memshire_east_side="1"; memshire_east="1";;
+      -memshire_west)      any_option="1"; memshire_west="1";;
+      -memshire_east)      any_option="1"; memshire_east="1";;
+      -h*)                 echo "${usage}"
+                           exit 0;;
+      *)                   echo "${script_name}: \"$1\" is an invalid argument; use \"-h\" for usage information"
+                           exit 1;;
+   esac
+   shift
+done
+
+if [ "${any_option}" == "" ] ; then
+   cat /dev/null > init_reg_config_file
+   exit 0
+fi
+
+echo "defaultvalue x" > init_reg_config_file
+
+if [ "${memshire_west_side}" != "" ] ; then
+   echo "modtree memshire_west_side 0 0" >> init_reg_config_file
+fi
+
+if [ "${memshire_west}" != "" ] ; then
+   echo "modtree memshire_west_top 0 0" >> init_reg_config_file
+fi
+
+if [ "${memshire_east_side}" != "" ] ; then
+   echo "modtree memshire_east_side 0 0" >> init_reg_config_file
+fi
+
+if [ "${memshire_east}" != "" ] ; then
+   echo "modtree memshire_east_top 0 0" >> init_reg_config_file
+fi
+
+exit 0

@@ -1,0 +1,15 @@
+Goal:
+Exercise the Tensor Load L2SCP.
+
+Details:
+The test only runs in thread 0 of each minion and currently it is limited to the Neigh-0. The test does a 'for' loop (size of the loop can be controlled with the 'LOOP_SIZE' define).
+In each loop iteration, the minion 0 will execute a Tensor Load L2SCP, while the remaining minions of the same Neigh will wait for an FCC credit.
+Once the minion 0 finishes the Tensor Load L2SCP, it will send and FCC credit to all the minions (including itself).
+Each minion will wake up once it receives the FCC credit and it will self-check that the memory content from where the Tensor Load L2SCP loaded the values, matches with the content inside the L2SCP.
+
+The test exercises 4 different scenarios:
+   - L2 SCP starting cache line set to 0 and accessing the L2SCP using a memory address with Shire id bits ([30:23]) set to the actual shire id during the self-check
+   - L2 SCP starting cache line set to 16 and accessing the L2SCP using a memory address with Shire id bits ([30:23]) set to 0xFFFF (local shire) during the self-check 
+   - L2 SCP starting cache line set to 32 and accessing the L2SCP using a memory address with Shire id bits ([30:23]) set to the actual shire id during the self-check
+   - L2 SCP starting cache line set to 0x202C and acessing the L2SCP using a memory address with Shire id bits ([30:23]) set to 0xFFFF (local shire) during the self-check
+   - Random L2SCP destination start and number of lines. Randomly choose if use or not the tensor mask and also randomly decide if self-check accesses the L2SCP using 0xFFFF or the actual shire id in bits [30:23]

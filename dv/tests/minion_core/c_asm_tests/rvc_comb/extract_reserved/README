@@ -1,0 +1,3 @@
+Simple test to extract the RVC instructions that are supposed to be reserved, but map to a valid non-RVC (ET-custom) instruction.
+ * test.v => verilog test generating the rvc expander table (16bits in => 32 bits out)
+ * parse.py => takes the simulation log, and parses (compiling, then disassembling) the illegal instruction in RVC that map to a valid non-RVC instruction

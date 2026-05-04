@@ -1,0 +1,11 @@
+Goal:
+The purpose of this test is to check that tensor_error bits are set correctly in different scenarios.
+
+Details:
+First, illegal tensor reduce send partner is set in order to test out tensor_error bit 9 is set as expected.
+Second, in order to check that tensor_error bit 1 is set correctly, illegal Tensor Load Transformation is issued.
+Next block of code is testing that tensor_error bit 7 is set after a memory fault.
+Last one is testing that tensor_error bit 3 is set as a consequence of a FCC overflow.
+There are 4 more scenarios tbd:  SCP DISABLED, Illegal TL1 / FMA pairing, LockSW failed, Invalid Tensor Store Coop/Size
+
+

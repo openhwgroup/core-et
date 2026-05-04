@@ -1,0 +1,21 @@
+#!/bin/csh -f
+
+if (2 != $#argv) then
+	echo "Usage: ${0:t} dir except[,except]..."
+	exit 1
+endif
+
+set dir=$1
+set xc=`echo $2 | sed 's/,/|/g'`
+set xc="^(${xc})"'$'
+
+if (! -d $dir) then
+	exit 0
+endif
+cd $dir
+foreach i (*)
+	if (0 == `echo $i | egrep -c ${xc}`) then
+		rm -rf $i
+	endif
+end
+exit 0

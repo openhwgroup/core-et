@@ -1,0 +1,70 @@
+#!/bin/bash
+
+# Pick up some util functions for printing colorized messages and testing shell commands
+#
+source $REPOROOT/dv/common/scripts/bash_utils.sh
+
+# Set DEBUG Env var for additional logging
+#
+export DEBUG=1
+try mkdir -p $RTLROOT/ip/hal/csr/doc
+try mkdir -p $RTLROOT/ip/hal/csr/inc
+try mkdir -p $RTLROOT/ip/hal/csr/src
+
+try $RTLROOT/ip/hal/csr/make_all_csr
+try cp $REPOROOT/dv/common/sw/ip/inc/*.html                      $RTLROOT/ip/hal/csr/doc
+try cp $REPOROOT/dv/tests/ioshire/sw/inc/hal_device.h            $RTLROOT/ip/hal/csr/inc
+try cp $REPOROOT/dv/tests/ioshire/sw/inc/pu_plic_intr_device.h   $RTLROOT/ip/hal/csr/inc
+try cp $REPOROOT/dv/tests/ioshire/sw/inc/spio_plic_intr_device.h $RTLROOT/ip/hal/csr/inc
+try cp ${REPOROOT}/dv/tests/ioshire/sw/inc/local_interrupts.h    $RTLROOT/ip/hal/csr/inc
+try cp ${REPOROOT}/dv/tests/ioshire/sw/inc/sp_exceptions.h       $RTLROOT/ip/hal/csr/inc
+try cp ${REPOROOT}/dv/common/sw/ip/inc/*.h                       $RTLROOT/ip/hal/csr/inc
+try cp ${REPOROOT}/dv/common/sw/ip/src/*                         $RTLROOT/ip/hal/csr/src
+try cd $RTLROOT/ip/hal/csr
+
+#
+# FUTURE: replace this application specific hack with a general purpose solution
+#
+# PCIE Author (William Earler) made some modifications to addrmap and group structs to make packing work for his code.
+# SP Firmware did not make such modifications to their HALs.  I wish this is consistent and don't understand why one
+# SW engineer made such hacks and another did not.  I don't want to risk breaking anything so I will just mimic William
+# hacks here rather than create a general purpose solution.
+#
+#try sed -i 's/} Pshire_t/} __attribute__ ((__packed__)) Pshire_t/g'      pshire_esr.h
+#try sed -i 's/} Pshire_t/} __attribute__ ((__packed__)) Pshire_usr0_t/g' pshire_esr.h
+#try sed -i 's/} Pshire_t/} __attribute__ ((__packed__)) Pshire_usr1_t/g' pshire_esr.h
+
+#try sed -i 's/} PE0_DWC_pcie_ctl_DBI_Slave_PF0_TYPE0_HDR_t/} __attribute__ ((__packed__)) PE0_DWC_pcie_ctl_DBI_Slave_PF0_TYPE0_HDR_t/g' DWC_pcie_dbi_cpcie_usp_4x8.h
+#try sed -i 's/} PE0_DWC_pcie_ctl_DBI_Slave_PF0_PM_CAP_t/} __attribute__ ((__packed__)) PE0_DWC_pcie_ctl_DBI_Slave_PF0_PM_CAP_t/g' DWC_pcie_dbi_cpcie_usp_4x8.h
+#try sed -i 's/} PE0_DWC_pcie_ctl_DBI_Slave_PF0_MSI_CAP_t/} __attribute__ ((__packed__)) PE0_DWC_pcie_ctl_DBI_Slave_PF0_MSI_CAP_t/g' DWC_pcie_dbi_cpcie_usp_4x8.h
+#try sed -i 's/} PE0_DWC_pcie_ctl_DBI_Slave_PF0_PCIE_CAP_t/} __attribute__ ((__packed__)) PE0_DWC_pcie_ctl_DBI_Slave_PF0_PCIE_CAP_t/g' DWC_pcie_dbi_cpcie_usp_4x8.h
+#try sed -i 's/} PE0_DWC_pcie_ctl_DBI_Slave_PF0_MSIX_CAP_t/} __attribute__ ((__packed__)) PE0_DWC_pcie_ctl_DBI_Slave_PF0_MSIX_CAP_t/g' DWC_pcie_dbi_cpcie_usp_4x8.h
+#try sed -i 's/} PE0_DWC_pcie_ctl_DBI_Slave_PF0_AER_CAP_t/} __attribute__ ((__packed__)) PE0_DWC_pcie_ctl_DBI_Slave_PF0_AER_CAP_t/g' DWC_pcie_dbi_cpcie_usp_4x8.h
+#try sed -i 's/} PE0_DWC_pcie_ctl_DBI_Slave_PF0_VC_CAP_t/} __attribute__ ((__packed__)) PE0_DWC_pcie_ctl_DBI_Slave_PF0_VC_CAP_t/g' DWC_pcie_dbi_cpcie_usp_4x8.h
+#try sed -i 's/} PE0_DWC_pcie_ctl_DBI_Slave_PF0_SPCIE_CAP_t/} __attribute__ ((__packed__)) PE0_DWC_pcie_ctl_DBI_Slave_PF0_SPCIE_CAP_t/g' DWC_pcie_dbi_cpcie_usp_4x8.h
+#try sed -i 's/} PE0_DWC_pcie_ctl_DBI_Slave_PF0_PL16G_CAP_t/} __attribute__ ((__packed__)) PE0_DWC_pcie_ctl_DBI_Slave_PF0_PL16G_CAP_t/g' DWC_pcie_dbi_cpcie_usp_4x8.h
+#try sed -i 's/} PE0_DWC_pcie_ctl_DBI_Slave_PF0_MARGIN_CAP_t/} __attribute__ ((__packed__)) PE0_DWC_pcie_ctl_DBI_Slave_PF0_MARGIN_CAP_t/g' DWC_pcie_dbi_cpcie_usp_4x8.h
+#try sed -i 's/} PE0_DWC_pcie_ctl_DBI_Slave_PF0_TPH_CAP_t/} __attribute__ ((__packed__)) PE0_DWC_pcie_ctl_DBI_Slave_PF0_TPH_CAP_t/g' DWC_pcie_dbi_cpcie_usp_4x8.h
+#try sed -i 's/} PE0_DWC_pcie_ctl_DBI_Slave_PF0_LTR_CAP_t/} __attribute__ ((__packed__)) PE0_DWC_pcie_ctl_DBI_Slave_PF0_LTR_CAP_t/g' DWC_pcie_dbi_cpcie_usp_4x8.h
+#try sed -i 's/} PE0_DWC_pcie_ctl_DBI_Slave_PF0_L1SUB_CAP_t/} __attribute__ ((__packed__)) PE0_DWC_pcie_ctl_DBI_Slave_PF0_L1SUB_CAP_t/g' DWC_pcie_dbi_cpcie_usp_4x8.h
+#try sed -i 's/} PE0_DWC_pcie_ctl_DBI_Slave_PF0_LNR_CAP_t/} __attribute__ ((__packed__)) PE0_DWC_pcie_ctl_DBI_Slave_PF0_LNR_CAP_t/g' DWC_pcie_dbi_cpcie_usp_4x8.h
+#try sed -i 's/} PE0_DWC_pcie_ctl_DBI_Slave_PF0_RAS_DES_CAP_t/} __attribute__ ((__packed__)) PE0_DWC_pcie_ctl_DBI_Slave_PF0_RAS_DES_CAP_t/g' DWC_pcie_dbi_cpcie_usp_4x8.h
+#try sed -i 's/} PE0_DWC_pcie_ctl_DBI_Slave_PF0_VSECRAS_CAP_t/} __attribute__ ((__packed__)) PE0_DWC_pcie_ctl_DBI_Slave_PF0_VSECRAS_CAP_t/g' DWC_pcie_dbi_cpcie_usp_4x8.h
+#try sed -i 's/} PE0_DWC_pcie_ctl_DBI_Slave_PF0_DLINK_CAP_t/} __attribute__ ((__packed__)) PE0_DWC_pcie_ctl_DBI_Slave_PF0_DLINK_CAP_t/g' DWC_pcie_dbi_cpcie_usp_4x8.h
+#try sed -i 's/} PE0_DWC_pcie_ctl_DBI_Slave_PF0_RESBAR_CAP_t/} __attribute__ ((__packed__)) PE0_DWC_pcie_ctl_DBI_Slave_PF0_RESBAR_CAP_t/g' DWC_pcie_dbi_cpcie_usp_4x8.h
+#try sed -i 's/} PE0_DWC_pcie_ctl_DBI_Slave_PF0_VF_RESBAR_CAP_t/} __attribute__ ((__packed__)) PE0_DWC_pcie_ctl_DBI_Slave_PF0_VF_RESBAR_CAP_t/g' DWC_pcie_dbi_cpcie_usp_4x8.h
+#try sed -i 's/} PE0_DWC_pcie_ctl_DBI_Slave_PF0_PORT_LOGIC_t/} __attribute__ ((__packed__)) PE0_DWC_pcie_ctl_DBI_Slave_PF0_PORT_LOGIC_t/g' DWC_pcie_dbi_cpcie_usp_4x8.h
+#try sed -i 's/} PE0_DWC_pcie_ctl_DBI_Slave_PF0_TYPE0_HDR_DBI2_t/} __attribute__ ((__packed__)) PE0_DWC_pcie_ctl_DBI_Slave_PF0_TYPE0_HDR_DBI2_t/g' DWC_pcie_dbi_cpcie_usp_4x8.h
+#try sed -i 's/} PE0_DWC_pcie_ctl_DBI_Slave_PF0_PCIE_CAP_DBI2_t/} __attribute__ ((__packed__)) PE0_DWC_pcie_ctl_DBI_Slave_PF0_PCIE_CAP_DBI2_t/g' DWC_pcie_dbi_cpcie_usp_4x8.h
+#try sed -i 's/} PE0_DWC_pcie_ctl_DBI_Slave_PF0_MSIX_CAP_DBI2_t/} __attribute__ ((__packed__)) PE0_DWC_pcie_ctl_DBI_Slave_PF0_MSIX_CAP_DBI2_t/g' DWC_pcie_dbi_cpcie_usp_4x8.h
+#try sed -i 's/} PE0_DWC_pcie_ctl_DBI_Slave_PF0_TPH_CAP_DBI2_t/} __attribute__ ((__packed__)) PE0_DWC_pcie_ctl_DBI_Slave_PF0_TPH_CAP_DBI2_t/g' DWC_pcie_dbi_cpcie_usp_4x8.h
+#try sed -i 's/} PE0_DWC_pcie_ctl_DBI_Slave_PF0_ATU_CAP_t/} __attribute__ ((__packed__)) PE0_DWC_pcie_ctl_DBI_Slave_PF0_ATU_CAP_t/g' DWC_pcie_dbi_cpcie_usp_4x8.h
+#try sed -i 's/} PE0_DWC_pcie_ctl_DBI_Slave_PF0_DMA_CAP_t/} __attribute__ ((__packed__)) PE0_DWC_pcie_ctl_DBI_Slave_PF0_DMA_CAP_t/g' DWC_pcie_dbi_cpcie_usp_4x8.h
+#try sed -i 's/} PE0_DWC_pcie_ctl_DBI_Slave_t/} __attribute__ ((__packed__)) PE0_DWC_pcie_ctl_DBI_Slave_t/g' DWC_pcie_dbi_cpcie_usp_4x8.h
+
+try tar -czf $REPOROOT/etsoc_hal.tgz src inc
+try cd $RTLROOT/ip/hal/csr/doc
+try tar -czf $REPOROOT/etsoc_haldoc.tgz .
+
+info "SW HAL path=$REPOROOT/etsoc_hal.tgz"
+info "SW DOC path=$REPOROOT/etsoc_haldoc.tgz"

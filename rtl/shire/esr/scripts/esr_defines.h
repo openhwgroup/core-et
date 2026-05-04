@@ -1,0 +1,762 @@
+
+#ifndef _ESR_DEFINES_H_
+#define _ESR_DEFINES_H_
+
+#include <inttypes.h>
+
+// Type definitions
+typedef enum
+  {
+   PRV_U = 0,
+   PRV_S = 1,
+   PRV_D = 2,
+   PRV_M = 3,
+   PRV_INVALID
+  } esr_prot_t;
+
+typedef enum
+  {
+   esr_region_HART,
+   esr_region_NEIGH,
+   esr_region_CACHE,
+   esr_region_RBOX,
+   esr_region_SHIRE,
+   esr_region_UNKNOWN
+} esr_region_t;
+
+typedef  enum
+  {
+   esr_access_RO,
+   esr_access_RW,
+   esr_access_INVALID
+  } esr_access_t;
+
+typedef uint64_t esr_address_t;
+
+
+// ESR region 'base address' field - bit [31] == 1 for ESR region
+#define ESR_REGION             0x0080000000ULL  // ESR Region bit [31] == 1
+#define ESR_REGION_MASK        0x0080000000ULL  // Mask to determine if address is in the ESR region (bit [31])
+#define ESR_REGION_MASK_SHIFT  31
+
+// ESR region 'pp' field in bits [23:22] - MOVED from [31:30]
+#define ESR_REGION_PROT_MASK   0x0000C00000ULL  // ESR Region Protection is defined in bits [23:22]
+#define ESR_REGION_PROT_SHIFT  22               // Bits to shift to get the ESR Region Protection defined in bits [23:22]
+
+// REMOVED: Shire ID field (was bits [29:22])
+// Shire ID functionality has been removed from the address map
+// Bits [30:24] are now available for future use or part of extended addressing
+
+// ESR region 'subregion' field in bits [21:20] - UNCHANGED
+#define ESR_SREGION_MASK       0x0000300000ULL  // The ESR Region is defined by bits [21:20]
+#define ESR_SREGION_SHIFT      20               // Bits to shift to get Region, Region is defined in bits [21:20]
+
+// ESR region 'extregion' field in bits [21:17] (when 'subregion' is 2'b11) - UNCHANGED
+#define ESR_SREGION_EXT_MASK   0x00003E0000ULL  // The ESR Extended Region is defined by bits [21:17]
+#define ESR_SREGION_EXT_SHIFT  17               // Bits to shift to get Extended Region, Extended Region is defined in bits [21:17]
+
+// ESR region 'hart' field in bits [19:12] (when 'subregion' is 2'b00) - UNCHANGED
+#define ESR_HART_MASK          0x00000FF000ULL  // On HART ESR Region the HART is defined in bits [19:12]
+#define ESR_HART_SHIFT         12               // On HART ESR Region bits to shift to get the HART defined in bits [19:12]
+
+// ESR region 'neighborhood' field in bits [19:16] (when 'subregion' is 2'b01) - UNCHANGED
+#define ESR_NEIGH_MASK         0x00000F0000ULL  // On Neighborhood ESR Region Neighborhood is defined when bits [19:16]
+#define ESR_NEIGH_SHIFT        16               // On Neighborhood ESR Region bits to shift to get the Neighborhood defined in bits [19:16]
+#define ESR_NEIGH_OFFSET       0x0000010000ULL  // On Neighborhood ESR Region the Neighborhood is defined by bits [19:16]
+#define ESR_NEIGH_BROADCAST    15               // On Neighborhood ESR Region Neighborhood Broadcast is defined when bits [19:16] == 4'b1111
+
+// ESR region 'bank' field in bits [16:13] (when 'subregion' is 2'b11) - UNCHANGED
+#define ESR_BANK_MASK          0x000001E000ULL  // On Shire Cache ESR Region Bank is defined in bits [16:13]
+#define ESR_BANK_SHIFT         13               // On Shire Cache ESR Region bits to shift to get Bank defined in bits [16:13]
+
+// ESR region 'ESR' field in bits [xx:3] (depends on 'subregion' and 'extregion' fields) - UNCHANGED
+#define ESR_HART_ESR_MASK      0x0000000FF8ULL  // On HART ESR Region the ESR is defined by bits [11:3]
+#define ESR_NEIGH_ESR_MASK     0x000000FFF8ULL  // On Neighborhood ESR Region the ESR is defined in bits [15:3]
+#define ESR_SC_ESR_MASK        0x0000001FF8ULL  // On Shire Cache ESR Region the ESR is defined in bits [12:3]
+#define ESR_SHIRE_ESR_MASK     0x000001FFF8ULL  // On Shire ESR Region the ESR is defined in bits [16:3]
+#define ESR_RBOX_ESR_MASK      0x000001FFF8ULL  // On RBOX ESR Region the ESR is defined in bits [16:3]
+#define ESR_ESR_ID_SHIFT       3
+
+// Base addresses for the various ESR subregions (updated with bit 31 set, no Shire ID)
+#define ESR_HART_REGION        0x0080000000ULL  // HART ESR Region is at bit[31]==1, region [21:20] == 2'b00
+#define ESR_NEIGH_REGION       0x0080100000ULL  // Neighborhood ESR Region is at bit[31]==1, region [21:20] == 2'b01
+#define ESR_CACHE_REGION       0x0080300000ULL  // Shire Cache ESR Region is at bit[31]==1, region [21:20] == 2'b11 and [19:17] == 3'b000
+#define ESR_RBOX_REGION        0x0080320000ULL  // RBOX ESR Region is at bit[31]==1, region [21:20] == 2'b11 and [19:17] == 3'b001
+#define ESR_SHIRE_REGION       0x0080340000ULL  // Shire ESR Region is at bit[31]==1, region [21:20] == 2'b11 and [19:17] == 3'b010
+
+// Return true or false depending on the address belonging to certain regions
+#define ESR_IS_HART_REGION(ad)  ((((ad) >> 20) & 3) == 0 && ( ((ad) >> 11 ) & 1) == 0) // HART ESR Region is at region [21:20] == 2'b00 and [11] == 1'b0
+#define ESR_IS_NEIGH_REGION(ad) ((((ad) >> 20) & 3) == 1)                              // Neighborhood ESR Region is at region [21:20] == 2'b01
+#define ESR_IS_CACHE_REGION(ad) ((((ad) >> 20) & 3) == 3 && (((ad) >> 17) & 7) == 0)   // Shire Cache ESR Region is at region [21:20] == 2'b11 and [19:17] == 2'b000
+#define ESR_IS_RBOX_REGION(ad)  ((((ad) >> 20) & 3) == 3 && (((ad) >> 17) & 7) == 1)   // RBOX ESR Region is at region [21:20] == 2'b11 and [19:17] == 2'b001
+#define ESR_IS_SHIRE_REGION(ad) ((((ad) >> 20) & 3) == 3 && (((ad) >> 17) & 7) == 2)   // Shire ESR Region is at region [21:20] == 2'b11 and [19:17] == 2'b010
+
+// Helper macros to construct ESR addresses in the various subregions
+// NOTE: Shire ID parameter removed since Shire ID field no longer exists in address map
+
+#define ESR_HART(prot, hart, name) \
+    (((uint64_t)ESR_HART_REGION) | \
+     (((uint64_t)prot) << ESR_REGION_PROT_SHIFT) | \
+     (((uint64_t)hart) << ESR_HART_SHIFT) | \
+     ((uint64_t)ESR_HART_ ## name))
+
+#define ESR_NEIGH(neigh, name) \
+    (((uint64_t)ESR_NEIGH_REGION) | \
+     (((uint64_t)ESR_NEIGH_ ## name ##_PROT) << ESR_REGION_PROT_SHIFT) | \
+     (((uint64_t)neigh) << ESR_NEIGH_SHIFT) | \
+     (((uint64_t)ESR_NEIGH_ ## name ##_REGNO) << 3))
+
+#define ESR_CACHE(bank, name) \
+    (((uint64_t)ESR_CACHE_REGION) | \
+     (((uint64_t)ESR_CACHE_ ## name ##_PROT) << ESR_REGION_PROT_SHIFT) | \
+     (((uint64_t)bank) << ESR_BANK_SHIFT) | \
+     (((uint64_t)ESR_CACHE_ ## name ##_REGNO) << 3))
+
+#define ESR_RBOX(name) \
+    (((uint64_t)ESR_RBOX_REGION) | \
+     (((uint64_t)ESR_RBOX_## name ##_PROT) << ESR_REGION_PROT_SHIFT) | \
+     (((uint64_t)ESR_RBOX_ ## name ##_REGNO) << 3))
+
+#define ESR_SHIRE(name) \
+    (((uint64_t)ESR_SHIRE_REGION) | \
+     (((uint64_t)ESR_SHIRE_ ## name ##_PROT) << ESR_REGION_PROT_SHIFT) | \
+     (((uint64_t)ESR_SHIRE_ ## name ##_REGNO) << 3))
+
+// Hart ESRs
+#define ESR_HART_0                      0x000   /* PP = 0b00 */
+#define ESR_HART_PORT0                  0x800   /* PP = 0b00 */
+#define ESR_HART_PORT1                  0x840   /* PP = 0b00 */
+#define ESR_HART_PORT2                  0x880   /* PP = 0b00 */
+#define ESR_HART_PORT3                  0x8C0   /* PP = 0b00 */
+
+// Neighborhood ESRs
+//BEGIN autogenerated ESR address definitions for NEIGH
+
+#define ESR_NEIGH_MINION_BOOT_REGNO 0x3
+#define ESR_NEIGH_MINION_BOOT_PROT PRV_M
+#define ESR_NEIGH_MINION_BOOT_ACCESS esr_access_RW
+
+#define ESR_NEIGH_MPROT_REGNO 0x4
+#define ESR_NEIGH_MPROT_PROT PRV_M
+#define ESR_NEIGH_MPROT_ACCESS esr_access_RW
+
+#define ESR_NEIGH_IPI_REDIRECT_PC_REGNO 0x8
+#define ESR_NEIGH_IPI_REDIRECT_PC_PROT PRV_U
+#define ESR_NEIGH_IPI_REDIRECT_PC_ACCESS esr_access_RW
+
+#define ESR_NEIGH_HACTRL_REGNO 0x1ff0
+#define ESR_NEIGH_HACTRL_PROT PRV_D
+#define ESR_NEIGH_HACTRL_ACCESS esr_access_RW
+
+#define ESR_NEIGH_HASTATUS0_REGNO 0x1ff1
+#define ESR_NEIGH_HASTATUS0_PROT PRV_D
+#define ESR_NEIGH_HASTATUS0_ACCESS esr_access_RO
+
+#define ESR_NEIGH_HASTATUS1_REGNO 0x1ff2
+#define ESR_NEIGH_HASTATUS1_PROT PRV_D
+#define ESR_NEIGH_HASTATUS1_ACCESS esr_access_RW
+
+#define ESR_NEIGH_AND_OR_TREEL0_REGNO 0x1ff3
+#define ESR_NEIGH_AND_OR_TREEL0_PROT PRV_D
+#define ESR_NEIGH_AND_OR_TREEL0_ACCESS esr_access_RO
+
+#define ESR_NEIGH_PMU_CTRL_REGNO 0xd
+#define ESR_NEIGH_PMU_CTRL_PROT PRV_M
+#define ESR_NEIGH_PMU_CTRL_ACCESS esr_access_RW
+
+#define ESR_NEIGH_NEIGH_CHICKEN_REGNO 0xe
+#define ESR_NEIGH_NEIGH_CHICKEN_PROT PRV_M
+#define ESR_NEIGH_NEIGH_CHICKEN_ACCESS esr_access_RW
+
+#define ESR_NEIGH_ICACHE_ERR_LOG_CTL_REGNO 0xf
+#define ESR_NEIGH_ICACHE_ERR_LOG_CTL_PROT PRV_M
+#define ESR_NEIGH_ICACHE_ERR_LOG_CTL_ACCESS esr_access_RW
+
+#define ESR_NEIGH_ICACHE_ERR_LOG_INFO_REGNO 0x10
+#define ESR_NEIGH_ICACHE_ERR_LOG_INFO_PROT PRV_M
+#define ESR_NEIGH_ICACHE_ERR_LOG_INFO_ACCESS esr_access_RW
+
+#define ESR_NEIGH_ICACHE_ERR_LOG_ADDRESS_REGNO 0x11
+#define ESR_NEIGH_ICACHE_ERR_LOG_ADDRESS_PROT PRV_M
+#define ESR_NEIGH_ICACHE_ERR_LOG_ADDRESS_ACCESS esr_access_RO
+
+#define ESR_NEIGH_ICACHE_SBE_DBE_COUNTS_REGNO 0x12
+#define ESR_NEIGH_ICACHE_SBE_DBE_COUNTS_PROT PRV_M
+#define ESR_NEIGH_ICACHE_SBE_DBE_COUNTS_ACCESS esr_access_RW
+//END autogenerated ESR address definitions for NEIGH
+
+// ShireCache ESRs
+//BEGIN autogenerated ESR address definitions for CACHE_BANK
+
+#define ESR_CACHE_SC_L3_SHIRE_SWIZZLE_CTL_REGNO 0x0
+#define ESR_CACHE_SC_L3_SHIRE_SWIZZLE_CTL_PROT PRV_M
+#define ESR_CACHE_SC_L3_SHIRE_SWIZZLE_CTL_ACCESS esr_access_RW
+
+#define ESR_CACHE_SC_REQQ_CTL_REGNO 0x1
+#define ESR_CACHE_SC_REQQ_CTL_PROT PRV_M
+#define ESR_CACHE_SC_REQQ_CTL_ACCESS esr_access_RW
+
+#define ESR_CACHE_SC_PIPE_CTL_REGNO 0x2
+#define ESR_CACHE_SC_PIPE_CTL_PROT PRV_M
+#define ESR_CACHE_SC_PIPE_CTL_ACCESS esr_access_RW
+
+#define ESR_CACHE_SC_L2_CACHE_CTL_REGNO 0x3
+#define ESR_CACHE_SC_L2_CACHE_CTL_PROT PRV_M
+#define ESR_CACHE_SC_L2_CACHE_CTL_ACCESS esr_access_RW
+
+#define ESR_CACHE_SC_L3_CACHE_CTL_REGNO 0x4
+#define ESR_CACHE_SC_L3_CACHE_CTL_PROT PRV_M
+#define ESR_CACHE_SC_L3_CACHE_CTL_ACCESS esr_access_RW
+
+#define ESR_CACHE_SC_SCP_CACHE_CTL_REGNO 0x5
+#define ESR_CACHE_SC_SCP_CACHE_CTL_PROT PRV_M
+#define ESR_CACHE_SC_SCP_CACHE_CTL_ACCESS esr_access_RW
+
+#define ESR_CACHE_SC_IDX_COP_SM_CTL_REGNO 0x6
+#define ESR_CACHE_SC_IDX_COP_SM_CTL_PROT PRV_M
+#define ESR_CACHE_SC_IDX_COP_SM_CTL_ACCESS esr_access_RW
+
+#define ESR_CACHE_SC_IDX_COP_SM_PHYSICAL_INDEX_REGNO 0x7
+#define ESR_CACHE_SC_IDX_COP_SM_PHYSICAL_INDEX_PROT PRV_M
+#define ESR_CACHE_SC_IDX_COP_SM_PHYSICAL_INDEX_ACCESS esr_access_RW
+
+#define ESR_CACHE_SC_IDX_COP_SM_DATA0_REGNO 0x8
+#define ESR_CACHE_SC_IDX_COP_SM_DATA0_PROT PRV_M
+#define ESR_CACHE_SC_IDX_COP_SM_DATA0_ACCESS esr_access_RW
+
+#define ESR_CACHE_SC_IDX_COP_SM_DATA1_REGNO 0x9
+#define ESR_CACHE_SC_IDX_COP_SM_DATA1_PROT PRV_M
+#define ESR_CACHE_SC_IDX_COP_SM_DATA1_ACCESS esr_access_RW
+
+#define ESR_CACHE_SC_IDX_COP_SM_ECC_REGNO 0xa
+#define ESR_CACHE_SC_IDX_COP_SM_ECC_PROT PRV_M
+#define ESR_CACHE_SC_IDX_COP_SM_ECC_ACCESS esr_access_RW
+
+#define ESR_CACHE_SC_ERR_LOG_CTL_REGNO 0xb
+#define ESR_CACHE_SC_ERR_LOG_CTL_PROT PRV_M
+#define ESR_CACHE_SC_ERR_LOG_CTL_ACCESS esr_access_RW
+
+#define ESR_CACHE_SC_ERR_LOG_INFO_REGNO 0xc
+#define ESR_CACHE_SC_ERR_LOG_INFO_PROT PRV_M
+#define ESR_CACHE_SC_ERR_LOG_INFO_ACCESS esr_access_RW
+
+#define ESR_CACHE_SC_ERR_LOG_ADDRESS_REGNO 0xd
+#define ESR_CACHE_SC_ERR_LOG_ADDRESS_PROT PRV_M
+#define ESR_CACHE_SC_ERR_LOG_ADDRESS_ACCESS esr_access_RO
+
+#define ESR_CACHE_SC_SBE_DBE_COUNTS_REGNO 0xe
+#define ESR_CACHE_SC_SBE_DBE_COUNTS_PROT PRV_M
+#define ESR_CACHE_SC_SBE_DBE_COUNTS_ACCESS esr_access_RW
+
+#define ESR_CACHE_SC_REQQ_DEBUG_CTL_REGNO 0xf
+#define ESR_CACHE_SC_REQQ_DEBUG_CTL_PROT PRV_M
+#define ESR_CACHE_SC_REQQ_DEBUG_CTL_ACCESS esr_access_RW
+
+#define ESR_CACHE_SC_REQQ_DEBUG0_REGNO 0x10
+#define ESR_CACHE_SC_REQQ_DEBUG0_PROT PRV_M
+#define ESR_CACHE_SC_REQQ_DEBUG0_ACCESS esr_access_RO
+
+#define ESR_CACHE_SC_REQQ_DEBUG1_REGNO 0x11
+#define ESR_CACHE_SC_REQQ_DEBUG1_PROT PRV_M
+#define ESR_CACHE_SC_REQQ_DEBUG1_ACCESS esr_access_RO
+
+#define ESR_CACHE_SC_REQQ_DEBUG2_REGNO 0x12
+#define ESR_CACHE_SC_REQQ_DEBUG2_PROT PRV_M
+#define ESR_CACHE_SC_REQQ_DEBUG2_ACCESS esr_access_RO
+
+#define ESR_CACHE_SC_REQQ_DEBUG3_REGNO 0x13
+#define ESR_CACHE_SC_REQQ_DEBUG3_PROT PRV_M
+#define ESR_CACHE_SC_REQQ_DEBUG3_ACCESS esr_access_RO
+
+#define ESR_CACHE_SC_ECO_CTL_REGNO 0x14
+#define ESR_CACHE_SC_ECO_CTL_PROT PRV_M
+#define ESR_CACHE_SC_ECO_CTL_ACCESS esr_access_RW
+
+#define ESR_CACHE_SC_PERFMON_CTL_STATUS_REGNO 0x17
+#define ESR_CACHE_SC_PERFMON_CTL_STATUS_PROT PRV_M
+#define ESR_CACHE_SC_PERFMON_CTL_STATUS_ACCESS esr_access_RW
+
+#define ESR_CACHE_SC_PERFMON_CYC_CNTR_REGNO 0x18
+#define ESR_CACHE_SC_PERFMON_CYC_CNTR_PROT PRV_M
+#define ESR_CACHE_SC_PERFMON_CYC_CNTR_ACCESS esr_access_RW
+
+#define ESR_CACHE_SC_PERFMON_P0_CNTR_REGNO 0x19
+#define ESR_CACHE_SC_PERFMON_P0_CNTR_PROT PRV_M
+#define ESR_CACHE_SC_PERFMON_P0_CNTR_ACCESS esr_access_RW
+
+#define ESR_CACHE_SC_PERFMON_P1_CNTR_REGNO 0x1a
+#define ESR_CACHE_SC_PERFMON_P1_CNTR_PROT PRV_M
+#define ESR_CACHE_SC_PERFMON_P1_CNTR_ACCESS esr_access_RW
+
+#define ESR_CACHE_SC_PERFMON_P0_QUAL_REGNO 0x1b
+#define ESR_CACHE_SC_PERFMON_P0_QUAL_PROT PRV_M
+#define ESR_CACHE_SC_PERFMON_P0_QUAL_ACCESS esr_access_RW
+
+#define ESR_CACHE_SC_PERFMON_P1_QUAL_REGNO 0x1c
+#define ESR_CACHE_SC_PERFMON_P1_QUAL_PROT PRV_M
+#define ESR_CACHE_SC_PERFMON_P1_QUAL_ACCESS esr_access_RW
+
+#define ESR_CACHE_SC_IDX_COP_SM_CTL_USER_REGNO 0x20
+#define ESR_CACHE_SC_IDX_COP_SM_CTL_USER_PROT PRV_U
+#define ESR_CACHE_SC_IDX_COP_SM_CTL_USER_ACCESS esr_access_RW
+
+#define ESR_CACHE_SC_TRACE_ADDRESS_ENABLE_REGNO 0x3f0
+#define ESR_CACHE_SC_TRACE_ADDRESS_ENABLE_PROT PRV_D
+#define ESR_CACHE_SC_TRACE_ADDRESS_ENABLE_ACCESS esr_access_RW
+
+#define ESR_CACHE_SC_TRACE_ADDRESS_VALUE_REGNO 0x3f1
+#define ESR_CACHE_SC_TRACE_ADDRESS_VALUE_PROT PRV_D
+#define ESR_CACHE_SC_TRACE_ADDRESS_VALUE_ACCESS esr_access_RW
+
+#define ESR_CACHE_SC_TRACE_CTL_REGNO 0x3f2
+#define ESR_CACHE_SC_TRACE_CTL_PROT PRV_D
+#define ESR_CACHE_SC_TRACE_CTL_ACCESS esr_access_RW
+//END autogenerated ESR address definitions for CACHE_BANK
+
+// RBOX ESRs
+//BEGIN autogenerated ESR address definitions for RBOX
+
+#define ESR_RBOX_CONFIG_REGNO 0x0
+#define ESR_RBOX_CONFIG_PROT PRV_U
+#define ESR_RBOX_CONFIG_ACCESS esr_access_RW
+
+#define ESR_RBOX_IN_BUF_PG_REGNO 0x1
+#define ESR_RBOX_IN_BUF_PG_PROT PRV_U
+#define ESR_RBOX_IN_BUF_PG_ACCESS esr_access_RW
+
+#define ESR_RBOX_IN_BUF_CFG_REGNO 0x2
+#define ESR_RBOX_IN_BUF_CFG_PROT PRV_U
+#define ESR_RBOX_IN_BUF_CFG_ACCESS esr_access_RW
+
+#define ESR_RBOX_OUT_BUF_PG_REGNO 0x3
+#define ESR_RBOX_OUT_BUF_PG_PROT PRV_U
+#define ESR_RBOX_OUT_BUF_PG_ACCESS esr_access_RW
+
+#define ESR_RBOX_OUT_BUF_CFG_REGNO 0x4
+#define ESR_RBOX_OUT_BUF_CFG_PROT PRV_U
+#define ESR_RBOX_OUT_BUF_CFG_ACCESS esr_access_RW
+
+#define ESR_RBOX_STATUS_REGNO 0x5
+#define ESR_RBOX_STATUS_PROT PRV_U
+#define ESR_RBOX_STATUS_ACCESS esr_access_RO
+
+#define ESR_RBOX_START_REGNO 0x6
+#define ESR_RBOX_START_PROT PRV_U
+#define ESR_RBOX_START_ACCESS esr_access_RW
+
+#define ESR_RBOX_CONSUME_REGNO 0x7
+#define ESR_RBOX_CONSUME_PROT PRV_U
+#define ESR_RBOX_CONSUME_ACCESS esr_access_RW
+//END autogenerated ESR address definitions for RBOX
+
+// Shire ESRs
+//BEGIN autogenerated ESR address definitions for SHIRE_OTHER
+
+#define ESR_SHIRE_MINION_FEATURE_REGNO 0x0
+#define ESR_SHIRE_MINION_FEATURE_PROT PRV_M
+#define ESR_SHIRE_MINION_FEATURE_ACCESS esr_access_RW
+
+#define ESR_SHIRE_THREAD1_DISABLE_REGNO 0x2
+#define ESR_SHIRE_THREAD1_DISABLE_PROT PRV_M
+#define ESR_SHIRE_THREAD1_DISABLE_ACCESS esr_access_RW
+
+#define ESR_SHIRE_IPI_REDIRECT_TRIGGER_REGNO 0x10
+#define ESR_SHIRE_IPI_REDIRECT_TRIGGER_PROT PRV_U
+#define ESR_SHIRE_IPI_REDIRECT_TRIGGER_ACCESS esr_access_RW
+
+#define ESR_SHIRE_IPI_REDIRECT_FILTER_REGNO 0x11
+#define ESR_SHIRE_IPI_REDIRECT_FILTER_PROT PRV_M
+#define ESR_SHIRE_IPI_REDIRECT_FILTER_ACCESS esr_access_RW
+
+#define ESR_SHIRE_IPI_TRIGGER_REGNO 0x12
+#define ESR_SHIRE_IPI_TRIGGER_PROT PRV_M
+#define ESR_SHIRE_IPI_TRIGGER_ACCESS esr_access_RW
+
+#define ESR_SHIRE_IPI_TRIGGER_CLEAR_REGNO 0x13
+#define ESR_SHIRE_IPI_TRIGGER_CLEAR_PROT PRV_M
+#define ESR_SHIRE_IPI_TRIGGER_CLEAR_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FCC_CREDINC_0_REGNO 0x18
+#define ESR_SHIRE_FCC_CREDINC_0_PROT PRV_U
+#define ESR_SHIRE_FCC_CREDINC_0_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FCC_CREDINC_1_REGNO 0x19
+#define ESR_SHIRE_FCC_CREDINC_1_PROT PRV_U
+#define ESR_SHIRE_FCC_CREDINC_1_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FCC_CREDINC_2_REGNO 0x1a
+#define ESR_SHIRE_FCC_CREDINC_2_PROT PRV_U
+#define ESR_SHIRE_FCC_CREDINC_2_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FCC_CREDINC_3_REGNO 0x1b
+#define ESR_SHIRE_FCC_CREDINC_3_PROT PRV_U
+#define ESR_SHIRE_FCC_CREDINC_3_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER0_REGNO 0x20
+#define ESR_SHIRE_FAST_LOCAL_BARRIER0_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER0_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER1_REGNO 0x21
+#define ESR_SHIRE_FAST_LOCAL_BARRIER1_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER1_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER2_REGNO 0x22
+#define ESR_SHIRE_FAST_LOCAL_BARRIER2_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER2_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER3_REGNO 0x23
+#define ESR_SHIRE_FAST_LOCAL_BARRIER3_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER3_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER4_REGNO 0x24
+#define ESR_SHIRE_FAST_LOCAL_BARRIER4_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER4_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER5_REGNO 0x25
+#define ESR_SHIRE_FAST_LOCAL_BARRIER5_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER5_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER6_REGNO 0x26
+#define ESR_SHIRE_FAST_LOCAL_BARRIER6_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER6_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER7_REGNO 0x27
+#define ESR_SHIRE_FAST_LOCAL_BARRIER7_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER7_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER8_REGNO 0x28
+#define ESR_SHIRE_FAST_LOCAL_BARRIER8_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER8_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER9_REGNO 0x29
+#define ESR_SHIRE_FAST_LOCAL_BARRIER9_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER9_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER10_REGNO 0x2a
+#define ESR_SHIRE_FAST_LOCAL_BARRIER10_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER10_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER11_REGNO 0x2b
+#define ESR_SHIRE_FAST_LOCAL_BARRIER11_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER11_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER12_REGNO 0x2c
+#define ESR_SHIRE_FAST_LOCAL_BARRIER12_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER12_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER13_REGNO 0x2d
+#define ESR_SHIRE_FAST_LOCAL_BARRIER13_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER13_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER14_REGNO 0x2e
+#define ESR_SHIRE_FAST_LOCAL_BARRIER14_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER14_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER15_REGNO 0x2f
+#define ESR_SHIRE_FAST_LOCAL_BARRIER15_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER15_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER16_REGNO 0x30
+#define ESR_SHIRE_FAST_LOCAL_BARRIER16_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER16_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER17_REGNO 0x31
+#define ESR_SHIRE_FAST_LOCAL_BARRIER17_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER17_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER18_REGNO 0x32
+#define ESR_SHIRE_FAST_LOCAL_BARRIER18_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER18_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER19_REGNO 0x33
+#define ESR_SHIRE_FAST_LOCAL_BARRIER19_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER19_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER20_REGNO 0x34
+#define ESR_SHIRE_FAST_LOCAL_BARRIER20_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER20_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER21_REGNO 0x35
+#define ESR_SHIRE_FAST_LOCAL_BARRIER21_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER21_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER22_REGNO 0x36
+#define ESR_SHIRE_FAST_LOCAL_BARRIER22_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER22_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER23_REGNO 0x37
+#define ESR_SHIRE_FAST_LOCAL_BARRIER23_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER23_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER24_REGNO 0x38
+#define ESR_SHIRE_FAST_LOCAL_BARRIER24_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER24_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER25_REGNO 0x39
+#define ESR_SHIRE_FAST_LOCAL_BARRIER25_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER25_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER26_REGNO 0x3a
+#define ESR_SHIRE_FAST_LOCAL_BARRIER26_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER26_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER27_REGNO 0x3b
+#define ESR_SHIRE_FAST_LOCAL_BARRIER27_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER27_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER28_REGNO 0x3c
+#define ESR_SHIRE_FAST_LOCAL_BARRIER28_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER28_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER29_REGNO 0x3d
+#define ESR_SHIRE_FAST_LOCAL_BARRIER29_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER29_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER30_REGNO 0x3e
+#define ESR_SHIRE_FAST_LOCAL_BARRIER30_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER30_ACCESS esr_access_RW
+
+#define ESR_SHIRE_FAST_LOCAL_BARRIER31_REGNO 0x3f
+#define ESR_SHIRE_FAST_LOCAL_BARRIER31_PROT PRV_U
+#define ESR_SHIRE_FAST_LOCAL_BARRIER31_ACCESS esr_access_RW
+
+#define ESR_SHIRE_MTIME_REGNO 0x40
+#define ESR_SHIRE_MTIME_PROT PRV_M
+#define ESR_SHIRE_MTIME_ACCESS esr_access_RW
+
+#define ESR_SHIRE_MTIMECMP_REGNO 0x41
+#define ESR_SHIRE_MTIMECMP_PROT PRV_M
+#define ESR_SHIRE_MTIMECMP_ACCESS esr_access_RW
+
+#define ESR_SHIRE_TIME_CONFIG_REGNO 0x42
+#define ESR_SHIRE_TIME_CONFIG_PROT PRV_M
+#define ESR_SHIRE_TIME_CONFIG_ACCESS esr_access_RW
+
+#define ESR_SHIRE_MTIME_LOCAL_TARGET_REGNO 0x43
+#define ESR_SHIRE_MTIME_LOCAL_TARGET_PROT PRV_M
+#define ESR_SHIRE_MTIME_LOCAL_TARGET_ACCESS esr_access_RW
+
+#define ESR_SHIRE_THREAD0_DISABLE_REGNO 0x48
+#define ESR_SHIRE_THREAD0_DISABLE_PROT PRV_M
+#define ESR_SHIRE_THREAD0_DISABLE_ACCESS esr_access_RW
+
+#define ESR_SHIRE_SHIRE_COOP_MODE_REGNO 0x52
+#define ESR_SHIRE_SHIRE_COOP_MODE_PROT PRV_S
+#define ESR_SHIRE_SHIRE_COOP_MODE_ACCESS esr_access_RW
+
+#define ESR_SHIRE_ICACHE_UPREFETCH_REGNO 0x5f
+#define ESR_SHIRE_ICACHE_UPREFETCH_PROT PRV_U
+#define ESR_SHIRE_ICACHE_UPREFETCH_ACCESS esr_access_RW
+
+#define ESR_SHIRE_ICACHE_SPREFETCH_REGNO 0x60
+#define ESR_SHIRE_ICACHE_SPREFETCH_PROT PRV_S
+#define ESR_SHIRE_ICACHE_SPREFETCH_ACCESS esr_access_RW
+
+#define ESR_SHIRE_ICACHE_MPREFETCH_REGNO 0x61
+#define ESR_SHIRE_ICACHE_MPREFETCH_PROT PRV_M
+#define ESR_SHIRE_ICACHE_MPREFETCH_ACCESS esr_access_RW
+
+#define ESR_SHIRE_CLK_GATE_CTRL_REGNO 0x62
+#define ESR_SHIRE_CLK_GATE_CTRL_PROT PRV_M
+#define ESR_SHIRE_CLK_GATE_CTRL_ACCESS esr_access_RW
+
+#define ESR_SHIRE_SM_CONFIG_REGNO 0x3ff2
+#define ESR_SHIRE_SM_CONFIG_PROT PRV_D
+#define ESR_SHIRE_SM_CONFIG_ACCESS esr_access_RW
+
+#define ESR_SHIRE_SM_TRIGGER_REGNO 0x3ff3
+#define ESR_SHIRE_SM_TRIGGER_PROT PRV_D
+#define ESR_SHIRE_SM_TRIGGER_ACCESS esr_access_RW
+
+#define ESR_SHIRE_SM_MATCH_REGNO 0x3ff5
+#define ESR_SHIRE_SM_MATCH_PROT PRV_D
+#define ESR_SHIRE_SM_MATCH_ACCESS esr_access_RO
+
+#define ESR_SHIRE_SM_FILTER0_REGNO 0x3ff6
+#define ESR_SHIRE_SM_FILTER0_PROT PRV_D
+#define ESR_SHIRE_SM_FILTER0_ACCESS esr_access_RO
+
+#define ESR_SHIRE_SM_FILTER1_REGNO 0x3ff7
+#define ESR_SHIRE_SM_FILTER1_PROT PRV_D
+#define ESR_SHIRE_SM_FILTER1_ACCESS esr_access_RO
+
+#define ESR_SHIRE_SM_FILTER2_REGNO 0x3ff8
+#define ESR_SHIRE_SM_FILTER2_PROT PRV_D
+#define ESR_SHIRE_SM_FILTER2_ACCESS esr_access_RO
+
+#define ESR_SHIRE_SM_DATA0_REGNO 0x3ff9
+#define ESR_SHIRE_SM_DATA0_PROT PRV_D
+#define ESR_SHIRE_SM_DATA0_ACCESS esr_access_RO
+
+#define ESR_SHIRE_SM_DATA1_REGNO 0x3ffa
+#define ESR_SHIRE_SM_DATA1_PROT PRV_D
+#define ESR_SHIRE_SM_DATA1_ACCESS esr_access_RO
+
+#define ESR_SHIRE_DMCTRL_REGNO 0x3ff1
+#define ESR_SHIRE_DMCTRL_PROT PRV_D
+#define ESR_SHIRE_DMCTRL_ACCESS esr_access_RW
+//END autogenerated ESR address definitions for SHIRE_OTHER
+#define ESR_SHIRE_BROADCAST0                0x1FFF0
+#define ESR_SHIRE_BROADCAST1                0x1FFF8
+
+//BEGIN autogenerated ESR address definitions for MEMSHIRE
+
+#define ESR_MEMSHIRE_MS_MEM_CTL_REGNO 0x0
+#define ESR_MEMSHIRE_MS_MEM_CTL_PROT PRV_D
+#define ESR_MEMSHIRE_MS_MEM_CTL_ACCESS esr_access_RW
+
+#define ESR_MEMSHIRE_MS_ATOMIC_SM_CTL_REGNO 0x1
+#define ESR_MEMSHIRE_MS_ATOMIC_SM_CTL_PROT PRV_D
+#define ESR_MEMSHIRE_MS_ATOMIC_SM_CTL_ACCESS esr_access_RW
+
+#define ESR_MEMSHIRE_MS_MEM_REVISION_ID_REGNO 0x2
+#define ESR_MEMSHIRE_MS_MEM_REVISION_ID_PROT PRV_D
+#define ESR_MEMSHIRE_MS_MEM_REVISION_ID_ACCESS esr_access_RO
+
+#define ESR_MEMSHIRE_MS_CLK_GATE_CTL_REGNO 0x3
+#define ESR_MEMSHIRE_MS_CLK_GATE_CTL_PROT PRV_D
+#define ESR_MEMSHIRE_MS_CLK_GATE_CTL_ACCESS esr_access_RW
+
+#define ESR_MEMSHIRE_MS_MEM_STATUS_REGNO 0x4
+#define ESR_MEMSHIRE_MS_MEM_STATUS_PROT PRV_D
+#define ESR_MEMSHIRE_MS_MEM_STATUS_ACCESS esr_access_RO
+//END autogenerated ESR address definitions for MEMSHIRE
+
+//BEGIN autogenerated ESR address definitions for DDRC
+
+#define ESR_DDRC_DDRC_RESET_CTL_REGNO 0x0
+#define ESR_DDRC_DDRC_RESET_CTL_PROT PRV_D
+#define ESR_DDRC_DDRC_RESET_CTL_ACCESS esr_access_RW
+
+#define ESR_DDRC_DDRC_CLOCK_CTL_REGNO 0x1
+#define ESR_DDRC_DDRC_CLOCK_CTL_PROT PRV_D
+#define ESR_DDRC_DDRC_CLOCK_CTL_ACCESS esr_access_RW
+
+#define ESR_DDRC_DDRC_MAIN_CTL_REGNO 0x2
+#define ESR_DDRC_DDRC_MAIN_CTL_PROT PRV_D
+#define ESR_DDRC_DDRC_MAIN_CTL_ACCESS esr_access_RW
+
+#define ESR_DDRC_DDRC_SCRUB1_REGNO 0x3
+#define ESR_DDRC_DDRC_SCRUB1_PROT PRV_D
+#define ESR_DDRC_DDRC_SCRUB1_ACCESS esr_access_RW
+
+#define ESR_DDRC_DDRC_SCRUB2_REGNO 0x4
+#define ESR_DDRC_DDRC_SCRUB2_PROT PRV_D
+#define ESR_DDRC_DDRC_SCRUB2_ACCESS esr_access_RW
+
+#define ESR_DDRC_DDRC_U0_MRR_DATA_REGNO 0x5
+#define ESR_DDRC_DDRC_U0_MRR_DATA_PROT PRV_D
+#define ESR_DDRC_DDRC_U0_MRR_DATA_ACCESS esr_access_RO
+
+#define ESR_DDRC_DDRC_U1_MRR_DATA_REGNO 0x6
+#define ESR_DDRC_DDRC_U1_MRR_DATA_PROT PRV_D
+#define ESR_DDRC_DDRC_U1_MRR_DATA_ACCESS esr_access_RO
+
+#define ESR_DDRC_DDRC_MRR_STATUS_REGNO 0x7
+#define ESR_DDRC_DDRC_MRR_STATUS_PROT PRV_D
+#define ESR_DDRC_DDRC_MRR_STATUS_ACCESS esr_access_RW
+
+#define ESR_DDRC_DDRC_INT_STATUS_REGNO 0x8
+#define ESR_DDRC_DDRC_INT_STATUS_PROT PRV_D
+#define ESR_DDRC_DDRC_INT_STATUS_ACCESS esr_access_RO
+
+#define ESR_DDRC_DDRC_INT_CRITICAL_EN_REGNO 0x9
+#define ESR_DDRC_DDRC_INT_CRITICAL_EN_PROT PRV_D
+#define ESR_DDRC_DDRC_INT_CRITICAL_EN_ACCESS esr_access_RW
+
+#define ESR_DDRC_DDRC_INT_NORMAL_EN_REGNO 0xa
+#define ESR_DDRC_DDRC_INT_NORMAL_EN_PROT PRV_D
+#define ESR_DDRC_DDRC_INT_NORMAL_EN_ACCESS esr_access_RW
+
+#define ESR_DDRC_DDRC_ERR_INT_LOG_REGNO 0xb
+#define ESR_DDRC_DDRC_ERR_INT_LOG_PROT PRV_D
+#define ESR_DDRC_DDRC_ERR_INT_LOG_ACCESS esr_access_RW
+
+#define ESR_DDRC_DDRC_DEBUG_SIGS_MASK0_REGNO 0xc
+#define ESR_DDRC_DDRC_DEBUG_SIGS_MASK0_PROT PRV_D
+#define ESR_DDRC_DDRC_DEBUG_SIGS_MASK0_ACCESS esr_access_RW
+
+#define ESR_DDRC_DDRC_DEBUG_SIGS_MASK1_REGNO 0xd
+#define ESR_DDRC_DDRC_DEBUG_SIGS_MASK1_PROT PRV_D
+#define ESR_DDRC_DDRC_DEBUG_SIGS_MASK1_ACCESS esr_access_RW
+
+#define ESR_DDRC_DDRC_SCRATCH_REGNO 0xe
+#define ESR_DDRC_DDRC_SCRATCH_PROT PRV_M
+#define ESR_DDRC_DDRC_SCRATCH_ACCESS esr_access_RW
+
+#define ESR_DDRC_DDRC_TRACE_CTL_REGNO 0xf
+#define ESR_DDRC_DDRC_TRACE_CTL_PROT PRV_D
+#define ESR_DDRC_DDRC_TRACE_CTL_ACCESS esr_access_RW
+
+#define ESR_DDRC_DDRC_PERFMON_CTL_STATUS_REGNO 0x10
+#define ESR_DDRC_DDRC_PERFMON_CTL_STATUS_PROT PRV_M
+#define ESR_DDRC_DDRC_PERFMON_CTL_STATUS_ACCESS esr_access_RW
+
+#define ESR_DDRC_DDRC_PERFMON_CYC_CNTR_REGNO 0x11
+#define ESR_DDRC_DDRC_PERFMON_CYC_CNTR_PROT PRV_M
+#define ESR_DDRC_DDRC_PERFMON_CYC_CNTR_ACCESS esr_access_RW
+
+#define ESR_DDRC_DDRC_PERFMON_P0_CNTR_REGNO 0x12
+#define ESR_DDRC_DDRC_PERFMON_P0_CNTR_PROT PRV_M
+#define ESR_DDRC_DDRC_PERFMON_P0_CNTR_ACCESS esr_access_RW
+
+#define ESR_DDRC_DDRC_PERFMON_P1_CNTR_REGNO 0x13
+#define ESR_DDRC_DDRC_PERFMON_P1_CNTR_PROT PRV_M
+#define ESR_DDRC_DDRC_PERFMON_P1_CNTR_ACCESS esr_access_RW
+
+#define ESR_DDRC_DDRC_PERFMON_P0_QUAL_REGNO 0x14
+#define ESR_DDRC_DDRC_PERFMON_P0_QUAL_PROT PRV_M
+#define ESR_DDRC_DDRC_PERFMON_P0_QUAL_ACCESS esr_access_RW
+
+#define ESR_DDRC_DDRC_PERFMON_P1_QUAL_REGNO 0x15
+#define ESR_DDRC_DDRC_PERFMON_P1_QUAL_PROT PRV_M
+#define ESR_DDRC_DDRC_PERFMON_P1_QUAL_ACCESS esr_access_RW
+
+#define ESR_DDRC_DDRC_PERFMON_P0_QUAL2_REGNO 0x16
+#define ESR_DDRC_DDRC_PERFMON_P0_QUAL2_PROT PRV_M
+#define ESR_DDRC_DDRC_PERFMON_P0_QUAL2_ACCESS esr_access_RW
+
+#define ESR_DDRC_DDRC_PERFMON_P1_QUAL2_REGNO 0x17
+#define ESR_DDRC_DDRC_PERFMON_P1_QUAL2_PROT PRV_M
+#define ESR_DDRC_DDRC_PERFMON_P1_QUAL2_ACCESS esr_access_RW
+//END autogenerated ESR address definitions for DDRC
+
+//BEGIN autogenerated ESR address definitions for SPIO
+
+#define ESR_SPIO_SPDMCTRL_REGNO 0x2
+#define ESR_SPIO_SPDMCTRL_PROT PRV_D
+#define ESR_SPIO_SPDMCTRL_ACCESS esr_access_RW
+
+#define ESR_SPIO_SPHASTATUS_REGNO 0x3
+#define ESR_SPIO_SPHASTATUS_PROT PRV_D
+#define ESR_SPIO_SPHASTATUS_ACCESS esr_access_RW
+//END autogenerated ESR address definitions for SPIO
+
+
+// Broadcast ESR fields
+#define ESR_BROADCAST_PROT_MASK              0x1800000000000000ULL // Region protection is defined in bits [60:59] in esr broadcast data write.
+#define ESR_BROADCAST_PROT_SHIFT             59
+#define ESR_BROADCAST_ESR_SREGION_MASK       0x07C0000000000000ULL // bits [21:17] in Memory Shire Esr Map. Esr region.
+#define ESR_BROADCAST_ESR_SREGION_MASK_SHIFT 54
+#define ESR_BROADCAST_ESR_ADDR_MASK          0x003FFF0000000000ULL // bits[17:3] in Memory Shire Esr Map. Esr address
+#define ESR_BROADCAST_ESR_ADDR_SHIFT         40
+#define ESR_BROADCAST_ESR_SHIRE_MASK         0x000000FFFFFFFFFFULL // bit mask Shire to spread the broadcast bits
+#define ESR_BROADCAST_ESR_MAX_SHIRES         ESR_BROADCAST_ESR_ADDR_SHIFT
+
+// ESR reset values
+#define ESR_SHIRE_CONFIG_CONST_RESET_VAL     0x392A000ULL
+
+// Shire defines
+#define SHIRE_MASTER 32
+#define SHIRE_OWN    0xFF
+
+// Thread defines
+#define THREAD_0 0
+#define THREAD_1 1
+
+// FCC defines
+#define FCC_0    0
+#define FCC_1    1
+
+#endif
+

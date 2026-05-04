@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Compiles minion source code and prepares data to load into memory
+# Compilation is performed by running 'make' on env var $MINION_SRC_DIR
+# binary expected to be created is $MINION_SRC_DIR/$MINION_BIN
+
+[ ! -d "$MINION_SRC_DIR" ] &&  echo "env var MINION_SRC_DIR ($MINION_SRC_DIR) is not a directory" && exit 1
+
+echo "Generating test...";
+cd $REPOROOT/nn/checker
+./check_dnn.pl -prototxt ../nets/b4c.prototxt -seed 1 -kernel_dir func_b4c
+echo "Copying test...";
+cp -a $REPOROOT/nn/checker/func_b4c/* $testRunDir
+
+# and create logs dir
+mkdir -p $testRunDir/logs || exit
+

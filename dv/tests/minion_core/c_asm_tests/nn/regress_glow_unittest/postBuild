@@ -1,0 +1,4 @@
+#!/bin/bash
+
+echo "Compiling glow ETSOC backend...";
+$REPOROOT/swx/glow/build.sh --skipRecompile

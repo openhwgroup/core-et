@@ -1,0 +1,113 @@
+#!/bin/bash -fe
+
+# Sean add -e to exit on error
+# Add -x to shebang line above to see output echo'd
+
+cur_dir=`/bin/pwd`
+tb_type="cpu_subsystem"
+
+if [ "${REPOROOT}" == "" ] ; then
+   echo "ENV VAR: REPOROOT is not defined."
+   export REPOROOT=`git rev-parse --show-toplevel`
+   echo "\$REPOROOT inferred to be $REPOROOT"
+fi
+
+if [ "${REPOROOT}" == "" ] ; then
+   echo "REPOROOT is not defined."
+   exit 1
+fi
+
+if [ ! -d "${REPOROOT}" ] ; then
+   echo 'cannot find "'"${REPOROOT}"'"'
+   exit 1
+fi
+
+if [ ! -d vbuild ] ; then
+   mkdir vbuild
+fi
+
+
+args=""
+debug_args=""
+vcs_args=""
+bemu_args=""
+vcs_to_eol=""
+verilator=""
+
+while [ $# -gt 0 ] ; do
+   if [ "${vcs_to_eol}" != "" ] ; then
+      if [ "${vcs_args}" == "" ] ; then
+         vcs_args="$1"
+      else
+         vcs_args="${vcs_args} $1"
+      fi
+   else
+      case "$1" in
+         +dump=0)
+            debug_args='export VCS_DEBUG=0; export BUILD_VERDI_IMAGE=';;
+         +dump=*)
+            debug_args='export VCS_DEBUG=1; export BUILD_VERDI_IMAGE="-kdb"';;
+         -kdb)
+            debug_args='export VCS_DEBUG=2; export BUILD_VERDI_IMAGE="-kdb"';;
+         -no_bemu)
+             bemu_args='export ENABLE_BEMU=0';;
+         -verilator)
+             verilator_args='export VERILATOR=1';;
+         +*)
+            arg_val=`echo "$1" | sed -e 's/=0[xX]/=\\\\'"'h/"`
+            if [ "${vcs_args}" == "" ] ; then
+               vcs_args="${arg_val}"
+            else
+               vcs_args="${vcs_args} ${arg_val}"
+            fi;;
+         -vcs)
+            vcs_to_eol="1";;
+         -*)
+            if [ "${vcs_args}" == "" ] ; then
+               vcs_args="$1"
+            else
+               vcs_args="${vcs_args} $1"
+            fi;;
+         *)
+            arg_val=`echo "$1" | sed -e 's/^\([^ ][^ ]*\) \(..*\)$/\1\" \2\"/'`
+            if [ "${args}" == "" ] ; then
+               args="${arg_val}"
+            else
+               args="${args} ${arg_val}"
+            fi;;
+      esac
+   fi
+   shift
+done
+
+if [ "${debug_args}" != "" ] ; then
+   echo "${debug_args}"
+   eval ${debug_args}
+fi
+
+if [ "${bemu_args}" != "" ] ; then
+   echo "${bemu_args}"
+   eval ${bemu_args}
+fi
+
+if [ "${verilator_args}" != "" ] ; then
+   echo "${verilator_args}"
+   eval ${verilator_args}
+fi
+
+if [ "${vcs_args}" != "" ] ; then
+   if [ "${VCS_EXTRA_DEFINES}" == "" ] ; then
+      echo 'export VCS_EXTRA_DEFINES="'"${VCS_EXTRA_DEFINES} ${vcs_args}"'"'
+      export VCS_EXTRA_DEFINES="${VCS_EXTRA_DEFINES} ${vcs_args}"
+   else
+      echo 'export VCS_EXTRA_DEFINES="'"${vcs_args}"'"'
+      export VCS_EXTRA_DEFINES="${vcs_args}"
+   fi
+fi
+
+echo "make -f ${REPOROOT}/dv/standalone/${tb_type}/Makefile ${args} all"
+if [ "${args}" == "" ] ; then
+   eval make -f ${REPOROOT}/dv/standalone/${tb_type}/Makefile all
+else
+   eval make -f ${REPOROOT}/dv/standalone/${tb_type}/Makefile ${args} all
+fi

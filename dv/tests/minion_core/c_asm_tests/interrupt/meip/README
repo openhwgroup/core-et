@@ -1,0 +1,12 @@
+Goal:
+Test external interrupt MEIP.
+
+Details:
+t0: will loop, stalling in each iteration. 
+    When awaken by external interrupt (programmed by t1) it increments 
+    the number of received interrupts.
+    Then it gives FCC credits to t1 and stalls again.
+t1: programs the external device that will interrupt t0, 
+    and waits for FCC credits. 
+    t0 gives it credits when it processes the interrupt. 
+

@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Pick up some util functions for printing colorized messages and testing shell commands
+#
+source $REPOROOT/dv/common/scripts/bash_utils.sh
+
+# Set DEBUG Env var for additional logging
+#
+export DEBUG=1
+
+#csrCompile -v -c $REPOROOT/dv/common/scripts/semifore_css/macro.css -I . -t h $1.csr    -o $REPOROOT/dv/common/sw/ip/inc/$1_macro
+#csrCompile -v -c $REPOROOT/dv/common/scripts/semifore_css/type.css  -I . -t h $1.csr    -o $REPOROOT/dv/common/sw/ip/inc/$1
+
+try csrCompile -v  -c $REPOROOT/dv/common/scripts/semifore_css/etsoc_esr.css -I . -I ../ -t html $1.csr -o $REPOROOT/dv/common/sw/ip/inc/$1
+try csrCompile -v  -c $REPOROOT/dv/common/scripts/semifore_css/et_soc.css -I . -I ../ -t h    $1.csr -o $REPOROOT/dv/common/sw/ip/inc/$1
+
+try sed -i 's/FIXME title check/FIX ME SNPS title check/g' $REPOROOT/dv/common/sw/ip/inc/$1.html
+
+# temp fix to cast 32 bit x in header file into 64 bit 
+#gawk '{ if (match($0,">>") || match($0,"<<")) {split($3,a,")");split($5,b,")");if ((match($0,"<<") && a[1]>31) || (match($0,">>") && b[1]>31)) {gsub("\\(x\\)","\((uint64_t)x\)");gsub("\\(r\\)","\((uint64_t)r\)");}} print $0;}' $REPOROOT/dv/common/sw/ip/inc/$1.h > $1.tempcsr.h && mv $1.tempcsr.h $REPOROOT/dv/common/sw/ip/inc/$1.h
+gawk '{ if (match($0,">>") || match($0,"<<")) {if ((match($0,"<<") && match($0,"ull")) || (match($0,">>") && match($0,"ull"))) {gsub("\\(x\\)","\((uint64_t)x\)");}} print $0;}' $REPOROOT/dv/common/sw/ip/inc/$1.h > $1.tempcsr.h && mv $1.tempcsr.h $REPOROOT/dv/common/sw/ip/inc/$1.h
+

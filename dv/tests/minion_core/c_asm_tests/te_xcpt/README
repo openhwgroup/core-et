@@ -1,0 +1,3 @@
+Goal:
+This test generates multiple trap exceptions and checks whether the traps generated were actually observed in the handler. If the
+traps are not observed, it fails the test.

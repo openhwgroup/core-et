@@ -1,0 +1,11 @@
+{ -smfr-header-sections: -smfr-enum-definitions, -smfr-type-definitions; }
+{ -smfr-struct-bitfield-mode: -smfr-lsb-first; }
+{ -smfr-struct-bitfield-union-mode: -smfr-union; }
+{ -smfr-struct-bitfield-union-bitfields-identifier: "B"; }
+{ -smfr-uint32-identifier: "R"; }
+{ -smfr-type-identifier-suffix: "_t"; }
+{ -smfr-pointer-type-prefix: ""; }
+{ -smfr-struct-bitfield-union-identifier: "";}
+{ -smfr-type-modifier-style: none; }
+{ -smfr-body-comments: -smfr-source, -smfr-title, -smfr-description; }
+{ -smfr-header-standard-include-files: "stdint.h"; }

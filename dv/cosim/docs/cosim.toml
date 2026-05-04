@@ -1,0 +1,31 @@
+# This is the full config file with the default values
+start_pc      = 0x8000001000    # Compute Shire Start PC
+spio_start_pc = 0x0040000000    # Service Processor Start PC
+ctrl_start_pc = 0x8000001000    # Master Shire Start PC
+mem_desc      = "mem_desc.txt"  # Defines memory regions + contents
+max_commits = 0           # Stop execution after N commits (0 == No limit)
+max_errors  = 1           # Downgrade to warnings after N errors (0 == No limit)
+log_level = "warning"     # Default log level (Cosim + BEMU)
+log_path  = ""            # Path to log file (empty string == stdout)
+                          # Note: appending `.lz4` will compress the file
+log_limit = 0             # Set maximum size of log file (0 == No limit)
+# log_limit = 5M          # This would set the log limit to 5 MB
+log_files = 1             # Set number of rotating log files (0 == Overwrite file in place)
+# log_files = 10          # This would create 10 files (log, log.1, log.2, ..., log.10)
+sample_pending = 45       # Sample head of queue every N pending instructions
+tload_debug    = false    # Enable extra debug logs for tensor_load instructions
+# minion_stats = false      # Statistics for retires per minion (statistics_minion.log)
+# event_stats  = false      # Statistics for different DPI events (cosim_evt.stats)
+
+# Settings related to the Cosim Checker(/BEMU)
+[checker]
+enabled     = false      # Downgrades errors to warnings (if not enabled)
+bypassed    = false      # Completely bypasses the checker module
+# log_level = "debug"    # Overwrites log level for Checker/BEMU only(!)
+                         # Note: BEMU uses the global log_level by default
+# log_window = [ 0, 1000 ]  # Only set log level in this cycle window
+
+# Settings related to monitoring DPI events
+[monitor]
+enabled     = false              # Monitor DPI events
+trace_path  = "cosim_evt.trace"  # Path to where the events are stored

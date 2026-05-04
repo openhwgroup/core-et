@@ -1,0 +1,799 @@
+#!/eng/dvtools/release/ruby/2.4.2/bin/ruby
+# Hack the GEM_PATH To Karls Libary
+ENV['GEM_PATH']="/eng/dvtools/release/ruby/mygems"
+Gem.clear_paths
+
+require 'optparse'
+require 'fileutils'
+require 'logger'
+require 'awesome_print'
+require_relative 'rblib/et_log'
+require_relative 'rblib/object_stash'
+require 'builder'
+require 'tempfile'
+require 'fileutils'
+
+#@@usage="usage: $0 {-h} {-v <verbose level>} {-s <grid number>}"
+
+include ET_LOG
+
+$shire_dict = {34 => "sp", 32 => "msMin"}
+
+class MergeRec
+  attr_accessor :filename,:size, :map
+
+  def initialize
+    @filename="unknown"
+  end
+end
+
+class Func
+  attr_accessor :name,:file,:start_addr,:end_addr,:cov,:insn_cov_percent,:latency,:best_latency,:worst_latency,:status,:total_lines, :lines_covered,:num_insn,:cov_insn,:line_num,:waived,:waiver_reason
+
+  def initialize
+    @cov={}
+    @file="unknown"
+    @line_num=0
+    @num_insn=0
+    @cov_insn=0
+    @name="unknown"
+    @start_addr=0
+    @end_addr=0
+    @latency=0
+    @status=""
+    @waived=false
+    @waiver_reason=""
+    @best_latency=nil
+    @worst_latency=0
+  end # end constructor
+
+  def to_array
+   if @waived
+     temp_waiver = @waiver_reason
+   else
+     temp_waiver = ""
+   end
+   [] << "#{@file}:#{@line_num}" << @name  << @num_insn << @cov_insn << @best_latency << @worst_latency << @status << (@insn_cov_percent * 100).to_i << @waiver_reason << @start_addr << @end_addr
+  end
+end # end class
+
+class Cov_rec
+  attr_accessor :count,:cycle,:tests,:instruction,:waived
+
+  def initialize
+    @count=0
+    @cycle=0
+    @instruction=""
+    @tests=[]
+    @insn_cov_percent=0
+    @latency=0
+    @waived=false
+  end
+
+end # end class Func
+
+def file_edit(filename, regexp, replacement)
+  Tempfile.open(".#{File.basename(filename)}", File.dirname(filename)) do |tempfile|
+    File.open(filename).each do |line|
+      tempfile.puts line.gsub(regexp, replacement)
+    end
+    tempfile.fdatasync
+    tempfile.close
+    stat = File.stat(filename)
+    FileUtils.chown stat.uid, stat.gid, tempfile.path
+    FileUtils.chmod stat.mode, tempfile.path
+    FileUtils.mv tempfile.path, filename
+  end
+end
+
+def setup_repo options
+
+   # Is $REPOROOT defined and is it a valid writable path?
+   if ENV.has_key? "REPOROOT"
+     unless File.writable? ENV['REPOROOT']
+       error "$REPOROOT points to non existant path #{ENV['REPO_ROOT']} or is not writable".colorize("red")
+     end
+   else
+       error "Env var reporoot is not defined.  source env.sh in root of repo".colorize("red")
+   end
+
+   logpath="."
+   options[:logpath] = logpath
+
+   # Now that we are done cleaning etc, we can setup the proper log
+   #
+   level=:info
+   @log = EtLog.new("#{logpath}/#{options[:output]}.log",:info,false,"cov_sp_test")
+   if options[:verbose]
+    level=:debug
+   end
+   @log.level = level
+   @log.info "cov_sp_test is running"
+   @log.info "logpath is #{logpath}/#{options[:output]}.log"
+   options[:logfile] = "#{logpath}/#{options[:output]}.log"
+
+   @log.info "command line=#{options[:cmd_line]}"
+
+   options[:git_hash],rc = @log.et_backtick "cd ${REPOROOT};git rev-parse HEAD"
+   options[:git_hash].chomp!
+   @log.info "git revision=#{options[:git_hash]}"
+
+   options[:git_short_hash],rc = @log.et_backtick "cd ${REPOROOT};git rev-parse --short HEAD"
+   options[:git_short_hash].chomp!
+   @log.info "git short hash=#{options[:git_short_hash]}"
+end # setup_repo()
+
+def parse_filter_file filename,map
+  unless File.exist? filename
+    @log.error "file=#{filename} is not found"
+  end
+  @log.info "Parsing filter file=#{filename}"
+
+  File.open(filename) do |f|
+    f.each_line do |line|
+      @log.debug  "line=#{line}"
+      if line =~ /^\s*\/\//      # Full line comment
+        @log.debug "Skipping comment line=#{line}"
+        next
+      elsif line =~ /^\s*name:\s*([\d\w_]+)\s*(.*)/   # Function filter
+        func_name=$1
+        waiver_reason=$2
+        @log.debug "Filter new Function! Addr=#{func_name}"
+        map.each do |key,val|
+          if val.name == $1
+            @log.debug "Waiving coverage for function=#{$1}"
+            val.waived=true
+            val.waiver_reason=waiver_reason
+            val.cov.each do |cov_key,cov_val|
+              cov_val.waived=true
+            end
+            break
+          end
+        end
+      elsif line=~ /\s*([\da-fA-F]+)-\s*([\da-fA-F]+)/   # Address Range Filter
+        @log.debug "Found a filter range #{$1} #{$2}"
+        start_addr=$1.to_i(16)
+        end_addr=$2.to_i(16)
+        map.each do |key,val|
+            val.cov.each do |cov_key,cov_val|
+              if cov_key >= start_addr and cov_key <= end_addr
+                cov_val.waived=true
+                @log.debug "Waiving address=#{cov_key}"
+              end
+            end
+        end
+      elsif line=~ /\s*([\da-fA-F]+)/   # Single Address filter
+        @log.debug "Found a filter addr"
+        addr=$1.to_i(16)
+        map.each do |key,val|
+            val.cov.each do |cov_key,cov_val|
+              if cov_key == addr
+                cov_val.waived=true
+                @log.debug "Waiving address=#{addr}"
+                break
+              end
+            end
+        end
+      end
+    end
+  end # end each line in file
+
+  #ap map, :raw=>true
+  @log.info "Done parsing filter file"
+end # parse_filter_file()
+
+
+def parse_lst_file filename
+
+  unless File.exist? filename
+    @log.error "file=#{filename} is not found"
+  end
+  @log.info "Parsing dissasembly file=#{filename}"
+  map=Hash.new
+  last_rec=nil
+  File.open(filename) do |f|
+    f.each_line do |line|
+      #puts line
+      if line =~ /^([\da-fA-F]+) <([\w_]+)>:/
+        @log.debug "Found new Function! Addr=#{$1}  Name=#{$2}"
+        rec=Func.new
+        rec.name=$2
+        rec.start_addr=$1.to_i(16)
+        map[rec.start_addr]=rec
+        last_rec=rec
+      elsif line=~ /\s+([\da-fA-F]+):\s+([\da-fA-F]+)\s+(.*)/   # Compute the end address
+        addr=$1.to_i(16)
+        opcode=$2
+        insn=$3.strip
+        rec=Cov_rec.new
+        rec.count=0
+        rec.cycle=0
+        rec.instruction=insn
+        last_rec.cov[addr]=rec
+        last_rec.end_addr=$1.to_i(16)
+      elsif line=~ /([\w_]+.c):(\d+)/   # Compute the end address
+        last_rec.file=$1
+        last_rec.line_num=$2
+      end
+    end
+  end # end each line in file
+
+  # Delete the data segmnents which have no end_addr
+  map.each do |key,val|
+    if val.end_addr.nil?
+     map.delete(key)
+    end
+  end
+
+  #ap map, :raw=>true
+  @log.info "Done Parsing dissasembly file=#{filename}"
+  return map
+end # parse_lst_file()
+
+def map_list_to_exe_c options,map, shire
+  @log.info "Processing co-sim event trace....."
+  map_filename="#{$shire_dict[shire]}_trace.log"
+  #open(map_filename, 'w') do |of|
+      STDIN.each_line do |line|
+        if line =~ /inst_retire.*cycle=(\d+).*pc=(\d+)/
+         cycle=$1.to_i
+         addr=$2.to_i
+         #puts line
+         #puts "cycle=#{$1}"
+         @log.debug "processing pc=#{addr.to_s(16)}"
+          map.reverse_each do |key,val|
+            #puts "key=#{key.to_s(16)} #{val.name} addr=#{addr.to_s(16)}"
+            if addr >= key
+#              of.write "function: #{val.name} :: #{line}\n"
+              #puts "TRUE"
+              #ap val.cov
+
+              if val.cov.key? addr
+                cov_rec=val.cov[addr]
+                unless cov_rec.tests.include? options[:test_name]
+                  cov_rec.tests << options[:test_name]
+                end
+                cov_rec.count +=1
+                if cov_rec.cycle==0
+                  cov_rec.cycle=cycle
+                end
+                @log.debug "setting addr=#{addr.to_s(16)} count=#{val.cov[addr].count} test_name=#{cov_rec.tests}"
+              else
+                #puts "DOES NOT EXIST"
+                #rec=Cov_rec.new
+                #rec.count=1
+                #rec.cycle=cycle
+                #rec.tests << options[:test_name]
+                #val.cov[addr]=rec
+                @log.error "This path should not be taken.  Something is wrong!"
+              end
+              break
+            end
+          end
+        end
+      end
+  #end # end each line in file
+  #ap map,raw:true
+end
+
+def compute_coverage options,map
+  summary = Func.new
+
+  map.each do |key,rec|
+    @log.info "key=#{key}"
+    if rec.waived
+      @log.debug "Waiving coverage for function=#{rec.name} start_addr=#{rec.start_addr.to_s(16)} end_addr=#{rec.end_addr}"
+    else
+      @log.debug "Computing Coverage for function=#{rec.name} start_addr=#{rec.start_addr.to_s(16)} end_addr=#{rec.end_addr}"
+    end
+
+    computed_size=rec.end_addr-rec.start_addr
+    expect_insn=computed_size/4+1
+    summary.num_insn+=expect_insn
+    @log.debug "computed_size=#{computed_size} num_insn=#{expect_insn}"
+    cov_insn=0
+    start_cycle=nil
+    end_cycle=0
+    start_cycle=rec.cov[rec.start_addr].cycle
+    @log.debug "func_name=#{rec.name} start_addr=#{rec.start_addr} end_addr=#{rec.end_addr} cycle=#{start_cycle}"
+    end_addr=rec.end_addr
+
+    while end_cycle == 0 and  (end_addr > rec.start_addr)
+     #@log.info "End_addr=#{end_addr} rec.start_addr=#{rec.start_addr} rec.end_addr=#{rec.end_addr} start_cycle=#{start_cycle} end_cycle=#{end_cycle}"
+      #ap rec.cov, :raw => true
+      #exit
+      if rec.cov[end_addr].nil?
+        break
+      else
+        end_cycle=rec.cov[end_addr].cycle
+      end
+
+      if end_cycle==0 or end_cycle.nil?
+         rec.latency=0
+         rec.status="NC"
+         end_addr -=4
+      else
+         if start_cycle > end_cycle
+           @log.error "latency is negative.  start_cycle=#{start_cycle} end_cycle=#{end_cycle}", true
+         end
+         if (end_addr == rec.end_addr)
+           rec.latency  = end_cycle - start_cycle
+         else
+           rec.latency  = end_cycle - start_cycle
+         end
+      end
+      #puts "looping end_cycle=#{end_cycle}"
+    end
+
+    # if we have a valid latency record then lets update the best and worst case #'s
+    #
+    if rec.latency > 0
+      if (rec.latency > rec.worst_latency)
+        rec.worst_latency = rec.latency
+      end
+      if rec.best_latency.nil?
+         rec.best_latency = rec.latency
+      elsif rec.latency < rec.best_latency
+         rec.best_latency = rec.latency
+      end
+    end
+
+    unless rec.waived
+      rec.cov.each do |addr,cov_rec|
+        if cov_rec.count > 0 || cov_rec.waived
+          cov_insn +=1
+        end
+      end
+      if cov_insn > expect_insn
+        @log.error "covered instructions=#{cov_insn} > expected_instructions=#{expect_insn}.  Something is wrong"
+      end
+      rec.insn_cov_percent=cov_insn.to_f/expect_insn.to_f
+      rec.cov_insn=cov_insn
+      @log.info "rec.insn_cov_percent=#{rec.insn_cov_percent}"
+      if rec.insn_cov_percent == 1.0
+        rec.status="C"
+      elsif rec.latency < 0
+        rec.status="E"
+      else
+        rec.status="NC"
+      end
+    else
+      rec.insn_cov_percent=1.0
+      rec.cov_insn=rec.cov.size
+      rec.status = "W"
+    end
+    rec.num_insn=(rec.end_addr-rec.start_addr)/4+1
+    @log.info "function=#{rec.name} Total Instructions=#{expect_insn} Measured Instructions=#{cov_insn} cov%=#{cov_insn.to_f/expect_insn.to_f}  latency=#{rec.latency}"
+    summary.cov_insn += rec.cov_insn
+  end
+  summary.insn_cov_percent=(summary.cov_insn.to_f/summary.num_insn.to_f*100).to_i
+  summary.name = "Totals:"
+  return summary
+  #ap map
+end
+
+def gen_holes_report   options,map,summary
+
+
+map = map.sort_by {|k, v| -v.insn_cov_percent}.to_h
+
+table_header_css = <<-HEADER
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+table, th, td {
+  border: 1px solid black;
+}
+table {
+  width: 100%;
+}
+</style>
+</head>
+<body>
+
+<h2>Table of Coverage links for path</h2>
+
+<style type="text/css">
+th, td {
+  padding: 3px !important;
+}
+
+/* Sortable tables */
+table.sortable thead {
+    background-color: #333;
+    color: #cccccc;
+    font-weight: bold;
+    cursor: default;
+}
+th {
+  font-size: 100%;
+}
+
+table.sortable tbody tr:nth-child(2n) td {
+  background: #ffcccc;
+}
+table.sortable tbody tr:nth-child(2n+1) td {
+  background: #ccffff;
+}
+
+</style>
+
+HEADER
+
+xm = Builder::XmlMarkup.new(:indent => 2)
+
+xm.table {
+     xm.tr { ["File Name:Line #","Function Name","Total # Instructions","Instructions Executed","Low # Cycles","High # Cycles","Status","Cov%","Waiver","Start_addr","End_addr"].each { |key| xm.th(key)}}
+     map.each { |key,row|
+         if row.insn_cov_percent != 1.0
+           xm.tr { row.to_array.each { |value| xm.td(value)}}
+         end
+     }
+   }
+
+  map.each { |key,row|
+    @log.info "Cov Detail for function=#{row.name} total_instructions=#{row.num_insn} covered_instructions=#{row.cov_insn} uncoverd_instructions=#{row.num_insn-row.cov_insn}"
+    if row.insn_cov_percent != 1.0
+      row.cov.each do |cov_key,rec|
+        if rec.count == 0
+          @log.info "    addr=#{cov_key.to_s(16)} count=#{rec.count} instruction=#{rec.instruction}"
+        end
+      end
+    end
+  }
+
+
+table_footer = <<-FOOTER
+ <tfoot>
+ <tr>
+    <td>All Files</td>
+    <td>Totals:</td>
+    <td>0</td>
+    <td>0</td>
+    <td>#{summary.num_insn}</td>
+    <td>#{summary.cov_insn}</td>
+    <td>unknown</td>
+    <td>#{summary.insn_cov_percent}</td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  </tfoot>
+  </table>
+FOOTER
+
+  File.open("#{options[:output]}_holes.html", 'w') { |file| file.write table_header_css+xm}
+  file_edit("#{options[:output]}_holes.html",/<table>/,'<table class="searchable sortable">')
+  file_edit("#{options[:output]}_holes.html",/<\/table>/,table_footer)
+end
+
+
+def gen_summary_report options,map,summary
+
+
+map = map.sort_by {|k, v| -v.file}.to_h
+
+table_header_css = <<-HEADER
+<script src="sorttable.js"></script>
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+table, th, td {
+  border: 1px solid black;
+}
+table {
+  width: 100%;
+}
+</style>
+</head>
+<body>
+
+<h2>Table of Coverage links for path</h2>
+
+<style type="text/css">
+th, td {
+  padding: 3px !important;
+}
+
+/* Sortable tables */
+table.sortable thead {
+    background-color: #333;
+    color: #cccccc;
+    font-weight: bold;
+    cursor: default;
+}
+th {
+  font-size: 100%;
+}
+
+table.sortable tbody tr:nth-child(2n) td {
+  background: #ffcccc;
+}
+table.sortable tbody tr:nth-child(2n+1) td {
+  background: #ccffff;
+}
+
+</style>
+
+HEADER
+
+xm = Builder::XmlMarkup.new(:indent => 2)
+
+xm.table {
+     xm.tr { ["File Name:Line #","Function Name","Total # Instructions","Instructions Executed","Low # Cycles","High # Cycles","Status","Cov %","Waiver","Start_addr","End_addr"].each { |key| xm.th(key)}}
+     map.each { |key,row|
+         #ap row.to_array, :raw=>true
+         xm.tr { row.to_array.each { |value| xm.td(value)}}
+
+     }
+     #xm.tr { summary.to_array.each { |value| xm.td(value)}}
+   }
+
+table_footer = <<-FOOTER
+ <tfoot>
+ <tr>
+    <td>All Files</td>
+    <td>Totals:</td>
+    <td>0</td>
+    <td>0</td>
+    <td>#{summary.num_insn}</td>
+    <td>#{summary.cov_insn}</td>
+    <td>unknown</td>
+    <td>#{summary.insn_cov_percent}</td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  </tfoot>
+  </table>
+FOOTER
+
+  File.open("#{options[:output]}_summary.html", 'w') { |file| file.write table_header_css+xm}
+  file_edit "#{options[:output]}_summary.html",/<table>/,'<table class="searchable sortable">'
+  file_edit "#{options[:output]}_summary.html",/<\/table>/,table_footer
+
+  FileUtils.cp "#{ENV['REPOROOT']}/dv/common/scripts/rblib/sorttable.js","."
+
+end
+
+def merge_cov merge_list
+  merge_map=nil
+  merge_list.each do |rec|
+    @log.info "Merging file=#{rec.filename}"
+    if merge_map.nil?  # copy the 1st record as the base for the merge
+      merge_map=Marshal.load(Marshal.dump(rec.map))
+
+      #@log.info "Source Map"
+      #ap rec.map, :raw => true
+
+      #@log.info "Merge Map"
+      #ap merge_map, :raw => true
+      @log.debug "Made an initial copy()"
+    else
+       rec.map.each do |key,temp_map|
+         #@log.info "print key=#{key}"
+         unless merge_map.key? key
+           @log.error "File=#{rec.filename} has a function named=#{temp_map.name} at address=#{key.to_s(16)} and the master merge record does not contain this address. Source files must be from same dissasebly file"
+         end
+         #ap temp_map.start_addr, :raw => true
+         local_merge = merge_map[key]
+         #ap local_merge , :raw=>true
+
+         # Do lots of error checking to make sure we merge like objects and avoid bad inputs from users and potential program bugs
+         unless temp_map.start_addr == local_merge.start_addr
+           @log.error "File=#{rec.filename} has a function named=#{temp_map.name} with start_addr=#{temp_map.start_addr} while merge record has start_addr=#{local_merge.start_addr}"
+         end
+         unless temp_map.end_addr == local_merge.end_addr
+           @log.error "File=#{rec.filename} has a function named=#{temp_map.name} with end_addr=#{temp_map.end_addr} while merge record has end_addr=#{local_merge.end_addr}"
+         end
+         unless temp_map.num_insn == local_merge.num_insn
+           @log.error "File=#{rec.filename} has a function named=#{temp_map.name} with num_insn=#{temp_map.end_addr} while merge record has num_insn=#{local_merge.num_insn}"
+         end
+         unless temp_map.cov.size == local_merge.cov.size
+           @log.error "File=#{rec.filename} has a function named=#{temp_map.name} with cov_hash.size=#{temp_map.cov.size} while merge record has cov_hash.size=#{local_merge.cov.size}"
+         end
+         unless temp_map.cov.keys.all?{ |key| !!local_merge.cov[key] }
+           @log.error "File=#{rec.filename} has a function named=#{temp_map.name} with cov_hash.size=#{temp_map.cov.size} while merge record has cov_hash.size=#{local_merge.cov.size} but the keys are different"
+           ap temp_map.cov
+           ap local_merge.cov
+         end
+
+         # if we have a valid latency record then lets update the best and worst case #'s
+         #
+         if (temp_map.worst_latency > local_merge.worst_latency)
+            local_merge.worst_latency = temp_map.worst_latency
+         end
+
+         if local_merge.best_latency.nil?
+           unless temp_map.best_latency.nil?
+             local_merge.best_latency= temp_map.best_latency
+           end
+         else
+           unless temp_map.best_latency.nil?
+             if temp_map.best_latency < local_merge.best_latency
+               local_merge.best_latency = temp_map.best_latency
+             end
+           end
+         end
+
+         temp_map.cov.each do | key,cov_rec |
+            if cov_rec.count > 0
+              #@log.info "Adding coverage for key=#{key}"
+              local_merge.cov[key].tests += cov_rec.tests
+              if local_merge.cov[key].count == 0
+                @log.info "File=#{rec.filename} has a test=#{cov_rec.tests} and function=#{temp_map.name} with new coverage for addr=#{key}"
+                #@log.debug "tests=#{local_merge.cov[key].tests}"
+                #ap local_merge, :raw=>true
+                #exit
+              end
+              local_merge.cov[key].count += cov_rec.count
+            end
+         end
+       end
+    end
+  end
+  return merge_map
+end
+
+
+begin
+   cmd_line="cov_sp_test"
+   ARGV.each { |arg| cmd_line += " #{arg}" }
+
+   options = {}
+   OptionParser.new do |opts|
+     opts.banner = "Usage: gen_bist_br [options]"
+     opts.on("-n", "--no_branch", "Clean the just the specified build dir") do |arg|
+       options[:no_branch] = arg
+     end
+     opts.on("-t test_name", "--test test_name", "Specify the name of the test") do |arg|
+       options[:test_name] = arg
+     end
+     opts.on("-c cov_file", "--cov cov_file", "Specify the name of the coverage file") do |arg|
+       options[:cov_name] = arg
+     end
+     opts.on("-d dis_name", "--dis dis_name", "Specify the name of the dissasembly file") do |arg|
+       options[:dis_name] = arg
+     end
+     opts.on("-f filter_file", "--filter filter_file", "Specify the name of the filter/waiver file") do |arg|
+       options[:filter_name] = arg
+     end
+     opts.on("-m file1,file2", "--merge file1,file2", "List of files to Merge") do |arg|
+       options[:merge] = arg
+     end
+     opts.on("-o filename", "--output filename", "Output prefix filename") do |arg|
+       options[:output] = arg
+     end
+     opts.on("-q", "--quiet", "Quiesce most output") do |arg|
+       options[:quiet] = arg
+     end
+     opts.on("-v", "--verbose", "Verbose output") do |arg|
+       options[:verbose] = arg
+     end
+   end.parse!
+   options[:cmd_line]=cmd_line
+
+   unless options[:quiet]
+     options[:quiet]=:info
+   end
+
+   unless options[:test_name]  # Attempt to automatically discern testname. ignore ioshire sim directory
+     path= Dir.pwd
+     parts=path.split("/")
+     if parts.last == "sim"
+       options[:test_name]=parts[-2]
+     else
+       options[:test_name]=parts[-1]
+     end
+   end
+
+   unless options[:output]
+     options[:output]="#{options[:test_name]}"
+   end
+
+   #
+   # Setup the workspace, cleanup, and get the log setup
+   #
+   setup_repo options
+   @log.info "cmd_line=#{cmd_line}"
+
+   require 'socket'
+   hostname = Socket.gethostname
+   @log.info "running on hostname=#{hostname}"
+
+
+
+   ap options      if options[:verbose]
+   @log.ap options if options[:verbose]
+
+   if options[:merge]
+     ap options[:merge]
+     options[:merge_list] = options[:merge].split ","
+
+     ap options[:merge_list]
+
+     good_file_list=true
+     missing_files=[]
+     merge_list=Array.new
+     options[:merge_list].each do |merge_file|
+       @log.info "Processing Coverage file=#{merge_file}"
+       unless File.exist? merge_file
+         @log.error "merge file=#{merge_file} does not exist",true
+         good_file_list=false
+         missing_files << merge_file
+       else
+         rec=MergeRec.new
+         rec.filename=merge_file
+         rec.map=ObjectStash.load merge_file
+         rec.size=rec.map.size
+         merge_list << rec
+         @log.info "Created record for file=#{rec.filename} of size=#{rec.size}"
+       end
+     end
+     @log.info "Processed #{merge_list.size} coverage files"
+     unless good_file_list
+       @log.error "One of more of the files specified to merge does not exist.  please correct and try again!",true
+       @log.error "missing_files=#{missing_files}"
+     end
+     @log.info "Loaded all databases to Merge"
+
+     #ap merge_list, :raw => true
+     merge_map=merge_cov merge_list
+     if File.exists? options[:output]
+       @log.error "Output file=#{options[:output]} already exists aborting...."
+     end
+     ObjectStash.store merge_map, "#{options[:output]}.cov.gz"
+     @log.info "Wrote merged coverage database to #{options[:output]}.cov.gz"
+     summary=compute_coverage options,merge_map
+     gen_summary_report options,merge_map,summary
+     gen_holes_report options,merge_map,summary
+   elsif options[:cov_name]
+     unless File.exists? options[:cov_name]
+       @log.error "Coverage file=#{options[:cov_name]} does not exist!"
+     else
+       @log.info "Loading coverage database file=#{options[:cov_name]}"
+     end
+     map=ObjectStash.load options[:cov_name]
+     if options[:filter_name]
+       parse_filter_file options[:filter_name],map
+     end
+     summary=compute_coverage options,map
+     gen_summary_report options,map,summary
+     gen_holes_report options,map,summary
+     ObjectStash.store map, "#{options[:output]}.cov.gz"
+     @log.info "Wrote coverage database to #{options[:output]}.cov.gz"
+     @log.info "DONE!"
+   else
+     unless options[:dis_name]
+       @log.info "spMin parsing ... "
+       dis = Dir.glob "../spMin/*.dis"
+       options[:dis_name] = "../spMin/#{File.basename dis[0]}"
+     end
+       shire = 34
+
+     map=parse_lst_file options[:dis_name]
+     if options[:filter_name]
+       parse_filter_file options[:filter_name],map
+     end
+     map_list_to_exe_c options,map, shire
+     summary=compute_coverage options,map
+     gen_summary_report options,map,summary
+     gen_holes_report options,map,summary
+     ObjectStash.store map, "#{options[:output]}.cov.gz"
+     @log.info "Wrote coverage database to #{options[:output]}.cov.gz"
+     @log.info "DONE!"
+   end # if not Merge
+
+rescue Interrupt => e
+  @log.info "Interrupt detected (Ctrl-c): #{e}\nStack Trace Follows\n#{e.backtrace.join("\n")}"
+  exit 1
+#rescue Exception => e
+#  @log.info "Exception detected : #{e}\nStack Trace Follows\n#{e.backtrace.join("\n")}"
+# exit 1
+rescue SystemExit => e
+  exit e.status
+ensure
+  @log.close unless @log.nil?
+end

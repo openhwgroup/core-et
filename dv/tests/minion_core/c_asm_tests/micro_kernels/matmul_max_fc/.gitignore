@@ -1,0 +1,9 @@
+# All generated files
+build
+matmul_max_fc
+memImage.hex
+net_desc.mem
+weights.mem
+offsets.mem
+scales.mem
+

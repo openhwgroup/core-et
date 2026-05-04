@@ -1,0 +1,47 @@
+### ###test List
+
+##########################################################################################
+# set default options. These will be sent to the sim as plusargs 
+#    option = value  # sim will be run with cmd line param +option=value
+#
+# special options:
+#   preSimCmd = command to run before launching the simulation
+#   postSimCmd = command to run after the simulation has completed
+#       all the parameters will be set as env vars before calling these commands
+#       they will be run from the ###test base directory ($ENV{###testPath})
+#       the ###test run dir can be found in $ENV{###testRunDir}
+#       non-zero exit status adds an error tO the ###test run
+#   timeout = max number of time to run
+#   LOG_LEVEL = global log level
+#   XXXX_LOG_LEVEL = log level for block named XXXX
+#   SEED = random seed
+#   TEST_PATH = relative path of the ###test directory. './' used if not specified.
+#   TAG = tag1 tag2 tag3 ... => space separated values determining tags for ###tests.
+#                               Script can then run only ###tests matching certain patterns)
+##########################################################################################
+LOG_LEVEL=1
+timeout=1000000000
+
+##########################################################################################
+# ###test list, with specific options to be sent as plusargs for the current ###test only
+# format is: ####test=binary [option=X option=Y... tag=tag1 tag=tag2 tag=tag3 ...]
+# the script will run $TEST_PATH/build/SIM/binary where SIM=vcs|verilog
+##########################################################################################
+
+#INPUT_COUNT = 1000000
+INPUT_COUNT = 10000
+
+MIN_IDLE=5
+MAX_IDLE=5
+CONVERSION=1
+
+tag=nightly
+tag=conversion
+UVM_TESTNAME=txfma_test_base 
+
+#test=txfma_tb TEST_TYPE=7 force_operands=1 tag=force_operands
+
+SEED=0
+INPUT_COUNT = 10000
+test=txfma_tb  TEST_TYPE=0 tag=f32_to_int   tag=b4 
+test=txfma_tb  TEST_TYPE=1 tag=int_to_f32   tag=b4

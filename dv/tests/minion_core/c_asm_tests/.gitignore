@@ -1,0 +1,20 @@
+# Generated files in minion core tests
+mask/mask_and/mask_and
+mask/mask_not/mask_not
+mask/mask_or/mask_or
+mask/mask_popc/mask_popc
+mask/mask_popc_rast/mask_popc_rast
+mask/mask_popcz/mask_popcz
+mask/mask_xor/mask_xor
+mask/*/*.S
+mask/*/*.hex
+mask/*/*.mem
+
+# Ignore rocket_tests link
+isa_tests
+rocket_tests
+# Ignore isa_compliance link
+isa_compliance
+
+*.sh
+*data.raw

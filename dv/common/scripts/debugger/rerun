@@ -1,0 +1,6 @@
+#!/bin/bash
+set -o pipefail
+export SLI_LOCAL_MODE=1
+export DW_WAIT_LICENSE=1   # Wait for VIP License
+
+$TESTRUN/ioshire/builds/debug/vbuild/simv  +DEBUG_ENABLE=YES   +delay_sc_init=5000000  +MODE=M +init_mem_data=0 +verbosityTIMER=HIGH +vcs+lic+wait     +CHECKER=0   +SHIRE_MASK=0x200000000  +UVM_TIMEOUT=500000000 +ntb_random_seed=1221834187 +SEED=1221834187 +UVM_TESTNAME=us_dummy_test +HEX_FILE=$TESTRUN/ioshire/ioshire_debugger/spMin/py_tb_wfi.hex +HEX_FILE_IOMAX=$TESTRUN/ioshire/ioshire_debugger/spMin/py_tb_wfi.hex +TC_PATH=$REPOROOT/dv/tests/ioshire/py_tb_wfi   +dump=1 +fsdb+mda=on  +UVM_VERBOSITY=UVM_LOW     +verbosity=MEDIUM  +DEFAULT_LOG_LEVEL=0 +EMU_LOG_LEVEL=2 +l1d_sb_en=0 +py_test=$RTLROOT/ip/ultrasoc/scripts/b4c/ioshire/ioshire_debugger.py "$@"  > $TESTRUN/ioshire/ioshire_debugger/sim/simv.log 2>&1

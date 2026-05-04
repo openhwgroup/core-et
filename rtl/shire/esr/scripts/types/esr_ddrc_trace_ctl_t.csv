@@ -1,0 +1,6 @@
+fields,esr_ddrc_perf_op_sigs_mask,esr_ddrc_debug_ctl_reserved,esr_ddrc_trace_en
+width,24,7,1
+RO,NO,YES,NO
+ROValue,,'0,
+,,,
+sum bits,32,,

@@ -1,0 +1,1 @@
+../gate_basic_static/gate_basic_static.cc

@@ -1,0 +1,32 @@
+{
+    -smfr-file-header-sections: none;
+    -smfr-csv-word-size: 8;
+    -smfr-csv-addressing: -smfr-word;
+    -smfr-csv-alignment-mode-label: "compact";
+    -smfr-csv-attributes: "PP", "Is Implemented?", "Documentation Source", "ESRGroup", "Group";
+    -smfr-header-table-rows: -smfr-type,
+                             -smfr-identifier,
+                             -smfr-array,
+                             -smfr-offset,
+                             -smfr-position,
+                             -smfr-word-count,
+                             -smfr-access,
+                             -smfr-reset,
+                             -smfr-alias-of,
+                             -smfr-aliases,
+                             -smfr-clock-domain,
+                             -smfr-synchronizer,
+                             -smfr-enum-reference,
+                             -smfr-type-name,
+                             -smfr-attributes,
+                             -smfr-description;
+
+    -smfr-file-header-comment:
+" ;
+    -smfr-footer: "Copyright (C) 2021, Esperanto Technologies Inc.";
+}
+/* This is a comment */
+addressmap { -smfr-element-title-prefix: "Addressmap "; }
+group { -smfr-element-title-prefix: "Group "; }
+register { -smfr-element-title-prefix: "Register "; }
+field { -smfr-element-title-prefix: "Field "}

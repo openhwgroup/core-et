@@ -1,0 +1,9 @@
+#!/bin/bash  
+# Crude crap
+echo "Creating tarbal of debug session (this will take a a few minutes)"
+ssh sc-dv01 "cd /home/project/debug_dropbox;tar -zvcf /tmp/$USER_$1.tgz $1"
+echo "Transferring tarball.  This may take a while"
+scp -r $USER@sc-dv01:/tmp/$USER_$1.tgz .
+echo "Untarring debug_session"
+tar -xf $USER_$1.tgz
+rm $USER_$1.tgz

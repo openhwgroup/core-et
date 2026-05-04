@@ -1,0 +1,6 @@
+fields,esr_sc_err_rsp_enable,esr_sc_err_interrupt_enable
+width,1,8
+,,
+,,
+,,
+sum bits,9,

@@ -1,0 +1,233 @@
+Address,Name,Privilege,Access,Description,shared,Type,width,rdata,sign_ext_rdata,wdata,shadow,resetVal,aon,reset,triggerCnt,latch,implemented,ifdef,trap_if,comment
+User-Level CSRs,,,,,,,,,,,,,,,,,,,,
+User Trap Setup,,,,,,,,,,,,,,,,,,,,
+0x000,ustatus,user,RW-HWIRED,User status register,YES,,0,64'h0,,,,,,NON-DEBUG,,,NO,,,"Hardwired to 0, no user-level interrupts/xcpts"
+0x004,uie,user,RW-HWIRED,User interrupt-enable register,YES,,0,64'h0,,,,,,NON-DEBUG,,,NO,,,Hardwired to 0
+0x005,utvec,user,RW-HWIRED,User trap handler base address,YES,,0,64'h0,,,,,,NON-DEBUG,,,NO,,,
+User Trap Handling,,,,,,,,,,,,,,,,,,,,
+0x040,uscratch,user,RW-HWIRED,Scratch register for user trap handlers,YES,,0,64'h0,,,,,,NON-DEBUG,,,NO,,,Hardwired to 0: no user-level traps
+0x041,uepc,user,RW-HWIRED,User exception program counter,YES,,0,64'h0,,,,,,NON-DEBUG,,,NO,,,Hardwired to 0: no user-level traps
+0x042,ucause,user,RW-HWIRED,User trap cause,YES,,0,64'h0,,,,,,NON-DEBUG,,,NO,,,Hardwired to 0: no user-level traps
+0x043,utval,user,RW-HWIRED,User bad address or instruction,YES,,0,64'h0,,,,,,NON-DEBUG,,,NO,,,
+0x044,uip,user,RW-HWIRED,User interrupt pending,YES,,0,64'h0,,,,,YES,NON-DEBUG,,,NO,,,Hardwired to 0
+User Floating-Point CSRs,,,,,,,,,,,,,,,,,,,,
+0x001,fflags,user,RW,Floating-Point Accrued Exceptions,NO,csr_fflags_t,,read_fflags,,,fcsr,,YES,NON-DEBUG,,,YES,,,
+0x002,frm,user,RW,Floating-Point Dynamic Rounding Mode,NO,csr_frm_t,,,,,fcsr,,YES,NON-DEBUG,,,YES,,,
+0x003,fcsr,user,RW,Floating-Point Control and Status Register (frm + fflags),NO,csr_fcsr_t,,read_fcsr,,,,,YES,NON-DEBUG,,NO,YES,,,
+User Counter/Timers,,,,,,,,,,,,,,,,,,,,
+0xC00,cycle,user,RO,Cycle counter for RDCYCLE instruction,YES,,,,,,mcycle,,,NON-DEBUG,,,YES,,,shadow of mcycle
+0xC01,time,user,RO,Timer for RDTIME instruction (shadow of mtime),,,,,,,,,,NON-DEBUG,,,NO,,,shadow of memmaped mtime
+0xC02,instret,user,RO,Instructions-retired counter for RDINSTRET instruction,NO,,,,,,minstret,,,NON-DEBUG,,,YES,,,shadow of minstret
+0xC03,hpmcounter3,user,RO,Performance-monitoring counter,NO,,,,,,mhpmcounter3,,,NON-DEBUG,,,YES,,,shadow of mhpmcounter3
+0xC04,hpmcounter4,user,RO,Performance-monitoring counter,NO,,,,,,mhpmcounter4,,,NON-DEBUG,,,YES,,,shadow of mhpmcounter4
+0xC05,hpmcounter5,user,RO,Performance-monitoring counter,NO,,,,,,mhpmcounter5,,,NON-DEBUG,,,YES,,,shadow of mhpmcounter5
+0xC06,hpmcounter6,user,RO,Performance-monitoring counter,NO,,,,,,mhpmcounter6,,,NON-DEBUG,,,YES,,,shadow of mhpmcounter6
+0xC07,hpmcounter7,user,RO,Performance-monitoring counter,NO,,,,,,mhpmcounter7,,,NON-DEBUG,,,YES,,,
+0xC08,hpmcounter8,user,RO,Performance-monitoring counter,NO,,,,,,mhpmcounter8,,,NON-DEBUG,,,YES,,,
+Esperanto custom CSRs,,,,,,,,,,,,,,,,,,,,
+misc esperanto,,,,,,,,,,,,,,,,,,,,
+0x800,tensor_reduce,user,RW,tensor_reduce control,YES,MANUAL,,64'h0,,,,,,NON-DEBUG,,,YES,,trap_on_ml_or_thread1,
+0x801,tensor_fma,user,RW,tensor_fma control,YES,tensorfma_control,,64'h0,,,,,,NON-DEBUG,,YES,YES,,trap_on_ml_or_thread1,
+0x802,tensor_conv_size,user,RW,convolution size: sets tensor_mask indirectly,NO,tensorconv_size,,64'h0,,,,,,NON-DEBUG,,YES,YES,,esr_features.trap_on_ml,
+0x803,tensor_conv_ctrl,user,RW,convolution control: sets tensor_mask indirectly,NO,tensorconv_control,,64'h0,,,,,,NON-DEBUG,,YES,YES,,esr_features.trap_on_ml,
+0x804,tensor_cooperation,user,RW,Cooperation Info used by TensorLoad,YES,tensorcoop_control,,64'h0,,,,,,NON-DEBUG,,YES,YES,,trap_on_ml_or_thread1,
+0x805,tensor_mask,user,RW,Mask info used by TensorLoad ,NO,,16,,,,,,YES,NON-DEBUG,,NO,YES,,esr_features.trap_on_ml,
+0x806,tensor_quant,user,RW,Quantization instruction,YES,tensorquant_control,,64'h0,,,,,,NON-DEBUG,,YES,YES,,trap_on_ml_or_thread1,
+0x808,tensor_error,user,RW,,NO,MANUAL,,,,,,,,NON-DEBUG,,,YES,,,
+0x810,ucache_control,user,RW,Scratchpad Control for DCache,YES,MANUAL,`CSR_UCACHE_CTRL_SZ,,,,,,,NON-DEBUG,,,YES,,esr_features.trap_on_u_scp,
+0x820,flb,user,RW,Fast Local Barrier,YES,MANUAL,,64'h0,,,,,,NON-DEBUG,,,YES,,esr_features.trap_on_ml,
+0x821,fcc,user,RW,Fast Credit Counter,NO,MANUAL,,64'h0,,,,,,NON-DEBUG,,,YES,,esr_features.trap_on_ml,
+0x822,stall,user,RW,Stall CSR (wait for redirect),YES,MANUAL,,64'h0,,,,,,NON-DEBUG,,,YES,,esr_features.trap_on_ml,
+0x830,tensor_wait,user,RW,,NO,MANUAL,,64'h0,,,,,,NON-DEBUG,,,YES,,,
+0x83F,tensor_load,user,RW,,YES,MANUAL,,64'h0,,,,,,NON-DEBUG,,,YES,,trap_on_ml_or_thread1,
+0x840,gsc_progress,user,RW,,NO,,3,,,,,0,YES,NON-DEBUG,,,YES,,,
+0x85F,tensor_load_l2scp,user,RW,,YES,MANUAL,,64'h0,,,,,,NON-DEBUG,,,NO,,esr_features.trap_on_ml,
+0x87F,tensor_store,user,RW,,YES,MANUAL,,64'h0,,,,,,NON-DEBUG,,,YES,,trap_on_ml_or_thread1,
+0x8D0,validation0,user,RW,CSR used for validation only,NO,,,,,,,,,NON-DEBUG,,YES,YES,ET_SIMULATION,,register used for validation only
+0x8D1,validation1,user,RW,CSR used for validation only,NO,,,,,,,,,NON-DEBUG,,YES,YES,ET_SIMULATION,,register used for validation only
+0x8D2,validation2,user,RW,CSR used for validation only,NO,,,,,,,,,NON-DEBUG,,YES,YES,ET_SIMULATION,,register used for validation only
+0x8D3,validation3,user,RW,CSR used for validation only,NO,,,,,,,,,NON-DEBUG,,YES,YES,ET_SIMULATION,,register used for validation only
+0x8D0,validation0_ps,user,RW,CSR used for validation only,NO,,1,64'h0,,,,,,NON-DEBUG,,NO,YES,NOT_VERIF_SIMULATION,,register used for validation only
+0x8D1,validation1_ps,user,RW,CSR used for validation only,NO,,1,64'h0,,,,,,NON-DEBUG,,NO,YES,NOT_VERIF_SIMULATION,,register used for validation only
+0x8D2,validation2_ps,user,RW,CSR used for validation only,NO,,1,64'h0,,,,,,NON-DEBUG,,NO,YES,NOT_VERIF_SIMULATION,,register used for validation only
+0x8D3,validation3_ps,user,RW,CSR used for validation only,NO,,1,64'h0,,,,,,NON-DEBUG,,NO,YES,NOT_VERIF_SIMULATION,,register used for validation only
+0xCD0,hartid,user,RO,Shadow of mhartid,YES,,,read_hartid,,,,,,NON-DEBUG,,,YES,,,
+0xcc0,nb_fcc,user,RO,non blocking read of FCC registers,NO,,,read_nb_fcc,,,,,,NON-DEBUG,,,YES,,esr_features.trap_on_ml,
+0X8D5,sleep_txfma_27,user,RW,Shadow of msleep_txfma_27,YES,,1,,,,msleep_txfma_27,,,NON-DEBUG,,NO,NO,,,
+Cache Ops,,,,,,,,,,,,,,,,,,,,
+0x89F,co_evict_va,user,RW,user level evict VA cache operation,YES,MANUAL,,64'h0,,,,,,NON-DEBUG,,,YES,,esr_features.trap_on_u_cacheops,
+0x8BF,co_flush_va,user,RW,user level flush VA cache operation,YES,MANUAL,,64'h0,,,,,,NON-DEBUG,,,YES,,esr_features.trap_on_u_cacheops,
+0x8DF,co_lock_va,user,RW,user level lock VA cache operation,YES,MANUAL,,64'h0,,,,,,NON-DEBUG,,,YES,,esr_features.trap_on_u_cacheops,
+0x8FF,co_unlock_va,user,RW,user level unlock VA cache operation,YES,MANUAL,,64'h0,,,,,,NON-DEBUG,,,YES,,esr_features.trap_on_u_cacheops,
+0x81F,co_prefetch_va,user,RW,user level prefetch cache operation,YES,MANUAL,,64'h0,,,,,,NON-DEBUG,,,YES,,esr_features.trap_on_u_cacheops,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+Supervisor-level CSRs,,,,,,,,,,,,,,,,,,,,
+Supervisor Trap Setup,,,,,,,,,,,,,,,,,,,,
+0x100,sstatus,supervisor,RW,Supervisor status register,NO,csr_sstatus_t,,read_sstatus,,,mstatus,`MSTATUS_RESET_VAL,YES,NON-DEBUG,,,YES,,,
+0x102,sedeleg,supervisor,RW-HWIRED,Supervisor exception delegation register,YES,,0,64'h0,,,,'0,,NON-DEBUG,,,NO,,,not implemented: no user-level exceptions... hardwired to zero
+0x103,sideleg,supervisor,RW-HWIRED,Supervisor interrupt delegation register,YES,,0,64'h0,,,,'0,,NON-DEBUG,,,NO,,,not implemented: no user-level exceptions... hardwired to zero
+0x104,sie,supervisor,RW,Supervisor interrupt-enable register,NO,csr_sie_t,,read_sie,,sie_wdata[wb_thread_id],mie,,,NON-DEBUG,,NO,YES,,,
+0x105,stvec,supervisor,RW,Supervisor trap handler base address,NO,csr_tvec_t,,,YES,extend_VA(wb_wdata),,,,NON-DEBUG,,NO,YES,,,
+0x106,scounteren,supervisor,RW,Supervisor counter enable,NO,,`CSR_NR_COUNTERS,,,,,'0,,NON-DEBUG,,YES,YES,,,
+Supervisor Trap Handling,,,,,,,,,,,,,,,,,,,,
+0x140,sscratch,supervisor,RW,Scratch register for supervisor trap handlers,NO,,,,,,,,,NON-DEBUG,,YES,YES,,,
+0x141,sepc,supervisor,RW,Supervisor exception program counter,NO,csr_pc_t,,,YES,extend_VA(wb_wdata),,,YES,NON-DEBUG,,NO,YES,,,
+0x142,scause,supervisor,RW,Supervisor trap cause,NO,csr_cause_t,,,,,,,YES,NON-DEBUG,,,YES,,,
+0x143,stval,supervisor,RW,Supervisor bad address or instruction,NO,,`VA_SIZE_EXT,,YES,extend_VA(wb_wdata),,,YES,NON-DEBUG,,NO,YES,,,
+0x144,sip,supervisor,RW,Supervisor interrupt pending,NO,csr_sip_t,,read_sip,,sip_wdata[wb_thread_id],mip,,YES,NON-DEBUG,,NO,YES,,,
+Supervisor Protection and Translation,,,,,,,,,,,,,,,,,,,,
+0x180,satp,supervisor,RW,Supervisor address translation and protection,YES,csr_satp_t,,,,,,,,NON-DEBUG,,YES,YES,,mem_trap_virtual_memory,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+Machine-level CSRs,,,,,,,,,,,,,,,,,,,,
+Machine Information Registers,,,,,,,,,,,,,,,,,,,,
+0xF11,mvendorid,machine,RO-HWIRED,Vendor ID,YES,,0,`CSR_VENDOR_ID,,,,,,NON-DEBUG,,,YES,,,
+0xF12,marchid,machine,RO-HWIRED,Architecture ID,YES,,0,`CSR_ARCH_ID,,,,,,NON-DEBUG,,,YES,,,
+0xF13,mimpid,machine,RO-HWIRED,Implementation ID,YES,,0,`CSR_IMP_ID,,,,,,NON-DEBUG,,,YES,,,
+0xF14,mhartid,machine,RO-HWIRED,Hardware thread ID,YES,,0,read_hartid,,,,,,NON-DEBUG,,,YES,,,
+Machine Trap Setup,,,,,,,,,,,,,,,,,,,,
+0x300,mstatus,machine,RW,Machine status register,NO,csr_mstatus_t,,read_mstatus,,,,`MSTATUS_RESET_VAL,YES,NON-DEBUG,,NO,YES,,,
+0x301,misa,machine,RW-HWIRED,ISA and extensions,YES,,0,`CSR_ISA_MAX,,,,,,NON-DEBUG,,,YES,,,
+0x302,medeleg,machine,RW,Machine exception delegation register,NO,csr_medeleg_t,,,,,,'0,,NON-DEBUG,,YES,YES,,,
+0x303,mideleg,machine,RW,Machine interrupt delegation register,NO,csr_mideleg_t,,,,,,'0,,NON-DEBUG,,YES,YES,,,
+0x304,mie,machine,RW,Machine interrupt-enable register,NO,csr_mie_t,,,,,,'0,,NON-DEBUG,,NO,YES,,,
+0x305,mtvec,machine,RW,Machine trap-handler base address,NO,csr_tvec_t,,,YES,extend_VA(wb_wdata),,,,NON-DEBUG,,NO,YES,,,
+0x306,mcounteren,machine,RW,Machine counter enable,NO,,`CSR_NR_COUNTERS,,,,,'0,,NON-DEBUG,,YES,YES,,,
+Machine Trap Handling,,,,,,,,,,,,,,,,,,,,
+0x340,mscratch,machine,RW,Scratch register for machine trap handlers,NO,,,,,,,,,NON-DEBUG,,YES,YES,,,
+0x341,mepc,machine,RW,Machine exception program counter,NO,csr_pc_t,,,YES,extend_VA(wb_wdata),,,YES,NON-DEBUG,,NO,YES,,,
+0x342,mcause,machine,RW,Machine trap cause,NO,csr_cause_t,,,,,,'0,YES,NON-DEBUG,,,YES,,,
+0x343,mtval,machine,RW,Machine bad address or instruction,NO,,`VA_SIZE_EXT,,YES,extend_VA(wb_wdata),,,YES,NON-DEBUG,,NO,YES,,,
+0x344,mip,machine,RW,Machine interrupt pending,NO,csr_mip_t,,read_mip,,,,'0,YES,NON-DEBUG,,NO,YES,,,
+Machine Protection and Translation,,,,,,,,,,,,,,,,,,,,
+0x3A0,pmpcfg0,machine,RW,Physical memory protection configuration,,,,,,,,,,NON-DEBUG,,,,,,
+0x3A2,pmpcfg2,machine,RW,Physical memory protection configuration,,,,,,,,,,NON-DEBUG,,,,,,
+0x3B0,pmpaddr0,machine,RW,Physical memory protection address register,,,,,,,,,,NON-DEBUG,,,,,,
+0x3B1,pmpaddr1,machine,RW,Physical memory protection address register,,,,,,,,,,NON-DEBUG,,,,,,
+...,,#NUM!,#NUM!,,,,,,,,,,,,,,,,,
+0x3BF,pmpaddr15,machine,RW,Physical memory protection address register,,,,,,,,,,NON-DEBUG,,,,,,
+Machine Counter/Timers,,,,,,,,,,,,,,,,,,,,
+0xB00,mcycle,machine,RW,Machine cycle counter,YES,MANUAL,,,,,,,,NON-DEBUG,,,YES,,,
+0xB02,minstret,machine,RW,Machine instructions-retired counter,NO,MANUAL,,,,,,,,NON-DEBUG,,,YES,,,
+0xB03,mhpmcounter3,machine,RW,Machine performance-monitoring counter,NO,MANUAL,,,,,,,,NON-DEBUG,,,YES,,,
+0xB04,mhpmcounter4,machine,RW,Machine performance-monitoring counter,NO,MANUAL,,,,,,,,NON-DEBUG,,,YES,,,
+0xB05,mhpmcounter5,machine,RW,Machine performance-monitoring counter,NO,MANUAL,,,,,,,,NON-DEBUG,,,YES,,,
+0xB06,mhpmcounter6,machine,RW,Machine performance-monitoring counter,NO,MANUAL,,,,,,,,NON-DEBUG,,,YES,,,
+0xB07,mhpmcounter7,machine,RW,Machine performance-monitoring counter,NO,MANUAL,,,,,,,,NON-DEBUG,,,YES,,,
+0xB08,mhpmcounter8,machine,RW,Machine performance-monitoring counter,NO,MANUAL,,,,,,,,NON-DEBUG,,,YES,,,
+Machine counter setup,,,,,,,,,,,,,,,,,,,,
+0x323,mhpmevent3,machine,RW,Machine performance-monitoring event selector for Core,NO,,`CSR_NR_EVENTS_L,,,,,0,,NON-DEBUG,,YES,YES,,,
+0x324,mhpmevent4,machine,RW,Machine performance-monitoring event selector for Core,NO,,`CSR_NR_EVENTS_L,,,,,0,,NON-DEBUG,,YES,YES,,,
+0x325,mhpmevent5,machine,RW,Machine performance-monitoring event selector for Core,NO,,`CSR_NR_EVENTS_L,,,,,0,,NON-DEBUG,,YES,YES,,,
+0x326,mhpmevent6,machine,RW,Machine performance-monitoring event selector for Core,NO,,`CSR_NR_EVENTS_L,,,,,0,,NON-DEBUG,,YES,YES,,,
+0x327,mhpmevent7,machine,RW,Machine performance-monitoring event selector for Neigh,NO,,`CSR_NR_EVENTS_L,,,,,0,,NON-DEBUG,,NO,YES,,,
+0x328,mhpmevent8,machine,RW,Machine performance-monitoring event selector for Neigh,NO,,`CSR_NR_EVENTS_L,,,,,0,,NON-DEBUG,,NO,YES,,,
+Debug/Trace Registers (shared with Debug Mode),,,,,,,,,,,,,,,,,,,,
+0x7A0,tselect,machine,RW-HWIRED,Debug/Trace trigger register select,YES,,0,64'h0,,,,,,NON-DEBUG,,,YES,,,hardwired: only 1 breakpoint per thread
+0x7A1,tdata1,machine,RW,First Debug/Trace trigger data register,NO,csr_tdata1_t,,read_tdata1,,,,`TDATA1_RESET_VAL,,NON-DEBUG,,NO,YES,,,
+0x7A2,tdata2,machine,RW,Second Debug/Trace trigger data register,NO,,`VA_SIZE,,,,,,,NON-DEBUG,,YES,YES,,,
+0x7A3,tdata3,machine,RW-HWIRED,Third Debug/Trace trigger data register,YES,,0,64'h0,,,,,,NON-DEBUG,,,YES,,,hardwired to 0
+0x7A4,tinfo,machine,RW-HWIRED,trigger info,YES,,0,`CSR_TRIGGER_INFO,,,,,,NON-DEBUG,,,NO,,,Unimplemented => reading it will result in illegal instruction exception
+Debug Mode Registers,,,,,,,,,,,,,,,,,,,,
+0x7B0,dcsr,machine,RW,Debug control and status register,NO,csr_dcsr_t,,,,,,`DCSR_RESET_VAL,YES,NON-DEBUG,,NO,YES,,,
+0x7B1,dpc,machine,RW,Debug PC,NO,csr_pc_t,,,YES,extend_VA(wb_wdata),,,YES,NON-DEBUG,,NO,YES,,,
+0x7B2,dscratch0,machine,RW-HWIRED,Debug scratch register,YES,,0,64'h0,,,,,,NON-DEBUG,,,NO,,,
+0x7b8,ddata0,machine,RW,,NO,MANUAL,,read_ddata0,,,,,,NON-DEBUG,,,YES,,,
+custom esperanto machine csrs,,,,,,,,,,,,,,,,,,,,
+0x7c0,matp,machine,RW,Machine address translation and protection,YES,csr_matp_t,,,,,,'0,,NON-DEBUG,,YES,YES,,,
+0x7cd,minstmask,machine,RW,Mask to implement instruction in mcode,NO,minst_mask_t,,,,,,0,,NON-DEBUG,,YES,YES,,,
+0x7ce,minstmatch,machine,RW,Value to match to the instruction bits anded with minstmask to trap to mcode,NO,,32,,,,,'0,,NON-DEBUG,,YES,YES,,,
+0x7cf,amofence_ctrl,machine,RW,Chicken bits for acquire and release operations,YES,csr_amofence_t,,,,,,`AMOFENCE_CTRL_RESET_VAL,,NON-DEBUG,,YES,NO,,,Not implemented => acquire and release not avaiable in esperanto atomics extension
+0x7d0,cacheInvalidate,machine,RW,flushes icache,YES,MANUAL,2,64'h0,,,,,,NON-DEBUG,,,YES,,,
+0x7d1,msleep_txfma_27,machine,RW,power gate txfma and trans from 2 to 7,YES,,1,,,,,'0,,NON-DEBUG,,NO,NO,,,
+0x7d2,menable_shadows,machine,RW,"Enable some shadow registers in umode (hartid, sleep_txfma...)",YES,menable_shadows_t,,,,,,'0,,NON-DEBUG,,YES,YES,,,
+0x7d3,excl_mode,machine,RW,csr to allow exclusive access for a thread,YES,,1,,,,,'0,,NON-DEBUG,,YES,YES,,,
+0x7d4,mtxfma_sleep_traps,machine,RW,controls what instruction using the txfma will trap if sleep_txfma is on,YES,txfma_sleep_traps_t,,,,,,'0,,NON-DEBUG,,YES,NO,,,
+0x7d5,mbusaddr,machine,RW,Address that caused a dcache bus error,NO,,`PA_SIZE,,,,,,YES,,,,YES,,,
+0x7d6,mbuspc,machine,RW,PC that got a dcache bus error,NO,,`PC_SIZE_EXT,,,,,,YES,,,,YES,DCACHE_REPORT_PC,,
+Custom Esperanto Cache Ops m-mode csr,,,,,,,,,,,,,,,,,,,,
+0x7E0,mcache_control,machine,RW,Supervisory Scratchpad Control,YES,MANUAL,`CSR_MCACHE_CTRL_SZ,,,,,,,NON-DEBUG,,,YES,,,
+0x7F9,co_evict_sw,machine,RW,supervisory level evict SW cache operation,YES,MANUAL,,64'h0,,,,,,NON-DEBUG,,,YES,,,
+0x7FB,co_flush_sw,machine,RW,supervisory level flush SW cache operation,YES,MANUAL,,64'h0,,,,,,NON-DEBUG,,,YES,,,
+0x7FD,co_lock_sw,machine,RW,supervisory level lock SW cache operation,YES,MANUAL,,64'h0,,,,,,NON-DEBUG,,,YES,,,
+0x7FF,co_unlock_sw,machine,RW,supervisory level unlock SW cache operation,YES,MANUAL,,64'h0,,,,,,NON-DEBUG,,,YES,,,
+Custom Esperanto Debug m-mode csr,,,,,,,,,,,,,,,,,,,,
+0xFC0,dcache_debug,machine,RO,Dcache submodule status,YES,MANUAL,64,dcache_debug_signals,,,,,,,,NO,YES,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,,,
+Not implemented/hardwired,,,,,,,,,,,,,,,,,,,,
+User not implemented/hardwired,,,,,,,,,,,,,,,,,,,,
+0xC09,hpmcounter9,user,RO-HWIRED,Performance-monitoring counter,YES,,0,64'h0,,,,,,,,,NO,,,
+0xC0A,hpmcounter10,user,RO-HWIRED,Performance-monitoring counter,YES,,0,64'h0,,,,,,,,,NO,,,
+0xC0B,hpmcounter11,user,RO-HWIRED,Performance-monitoring counter,YES,,0,64'h0,,,,,,,,,NO,,,
+0xC0C,hpmcounter12,user,RO-HWIRED,Performance-monitoring counter,YES,,0,64'h0,,,,,,,,,NO,,,
+0xC0D,hpmcounter13,user,RO-HWIRED,Performance-monitoring counter,YES,,0,64'h0,,,,,,,,,NO,,,
+0xC0E,hpmcounter14,user,RO-HWIRED,Performance-monitoring counter,YES,,0,64'h0,,,,,,,,,NO,,,
+0xC0F,hpmcounter15,user,RO-HWIRED,Performance-monitoring counter,YES,,0,64'h0,,,,,,,,,NO,,,
+0xC10,hpmcounter16,user,RO-HWIRED,Performance-monitoring counter,YES,,0,64'h0,,,,,,,,,NO,,,
+0xC11,hpmcounter17,user,RO-HWIRED,Performance-monitoring counter,YES,,0,64'h0,,,,,,,,,NO,,,
+0xC12,hpmcounter18,user,RO-HWIRED,Performance-monitoring counter,YES,,0,64'h0,,,,,,,,,NO,,,
+0xC13,hpmcounter19,user,RO-HWIRED,Performance-monitoring counter,YES,,0,64'h0,,,,,,,,,NO,,,
+0xC14,hpmcounter20,user,RO-HWIRED,Performance-monitoring counter,YES,,0,64'h0,,,,,,,,,NO,,,
+0xC15,hpmcounter21,user,RO-HWIRED,Performance-monitoring counter,YES,,0,64'h0,,,,,,,,,NO,,,
+0xC16,hpmcounter22,user,RO-HWIRED,Performance-monitoring counter,YES,,0,64'h0,,,,,,,,,NO,,,
+0xC17,hpmcounter23,user,RO-HWIRED,Performance-monitoring counter,YES,,0,64'h0,,,,,,,,,NO,,,
+0xC18,hpmcounter24,user,RO-HWIRED,Performance-monitoring counter,YES,,0,64'h0,,,,,,,,,NO,,,
+0xC19,hpmcounter25,user,RO-HWIRED,Performance-monitoring counter,YES,,0,64'h0,,,,,,,,,NO,,,
+0xC1A,hpmcounter26,user,RO-HWIRED,Performance-monitoring counter,YES,,0,64'h0,,,,,,,,,NO,,,
+0xC1B,hpmcounter27,user,RO-HWIRED,Performance-monitoring counter,YES,,0,64'h0,,,,,,,,,NO,,,
+0xC1C,hpmcounter28,user,RO-HWIRED,Performance-monitoring counter,YES,,0,64'h0,,,,,,,,,NO,,,
+0xC1D,hpmcounter29,user,RO-HWIRED,Performance-monitoring counter,YES,,0,64'h0,,,,,,,,,NO,,,
+0xC1E,hpmcounter30,user,RO-HWIRED,Performance-monitoring counter,YES,,0,64'h0,,,,,,,,,NO,,,
+0xC1F,hpmcounter31,user,RO-HWIRED,Performance-monitoring counter,YES,,0,64'h0,,,,,,,,,NO,,,
+machine not implemented/hardwired,,,,,,,,,,,,,,,,,,,,
+0xB09,mhpmcounter9,machine,RW-HWIRED,Machine performance-monitoring counter,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0xB0A,mhpmcounter10,machine,RW-HWIRED,Machine performance-monitoring counter,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0xB0B,mhpmcounter11,machine,RW-HWIRED,Machine performance-monitoring counter,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0xB0C,mhpmcounter12,machine,RW-HWIRED,Machine performance-monitoring counter,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0xB0D,mhpmcounter13,machine,RW-HWIRED,Machine performance-monitoring counter,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0xB0E,mhpmcounter14,machine,RW-HWIRED,Machine performance-monitoring counter,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0xB0F,mhpmcounter15,machine,RW-HWIRED,Machine performance-monitoring counter,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0xB10,mhpmcounter16,machine,RW-HWIRED,Machine performance-monitoring counter,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0xB11,mhpmcounter17,machine,RW-HWIRED,Machine performance-monitoring counter,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0xB12,mhpmcounter18,machine,RW-HWIRED,Machine performance-monitoring counter,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0xB13,mhpmcounter19,machine,RW-HWIRED,Machine performance-monitoring counter,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0xB14,mhpmcounter20,machine,RW-HWIRED,Machine performance-monitoring counter,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0xB15,mhpmcounter21,machine,RW-HWIRED,Machine performance-monitoring counter,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0xB16,mhpmcounter22,machine,RW-HWIRED,Machine performance-monitoring counter,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0xB17,mhpmcounter23,machine,RW-HWIRED,Machine performance-monitoring counter,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0xB18,mhpmcounter24,machine,RW-HWIRED,Machine performance-monitoring counter,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0xB19,mhpmcounter25,machine,RW-HWIRED,Machine performance-monitoring counter,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0xB1A,mhpmcounter26,machine,RW-HWIRED,Machine performance-monitoring counter,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0xB1B,mhpmcounter27,machine,RW-HWIRED,Machine performance-monitoring counter,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0xB1C,mhpmcounter28,machine,RW-HWIRED,Machine performance-monitoring counter,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0xB1D,mhpmcounter29,machine,RW-HWIRED,Machine performance-monitoring counter,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0xB1E,mhpmcounter30,machine,RW-HWIRED,Machine performance-monitoring counter,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0xB1F,mhpmcounter31,machine,RW-HWIRED,Machine performance-monitoring counter,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+,,,,,,,,,,,,,,,,,,,,
+0x329,mhpmevent9,machine,RW-HWIRED,Machine performance-monitoring event selector,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0x32A,mhpmevent10,machine,RW-HWIRED,Machine performance-monitoring event selector,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0x32B,mhpmevent11,machine,RW-HWIRED,Machine performance-monitoring event selector,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0x32C,mhpmevent12,machine,RW-HWIRED,Machine performance-monitoring event selector,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0x32D,mhpmevent13,machine,RW-HWIRED,Machine performance-monitoring event selector,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0x32E,mhpmevent14,machine,RW-HWIRED,Machine performance-monitoring event selector,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0x32F,mhpmevent15,machine,RW-HWIRED,Machine performance-monitoring event selector,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0x330,mhpmevent16,machine,RW-HWIRED,Machine performance-monitoring event selector,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0x331,mhpmevent17,machine,RW-HWIRED,Machine performance-monitoring event selector,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0x332,mhpmevent18,machine,RW-HWIRED,Machine performance-monitoring event selector,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0x333,mhpmevent19,machine,RW-HWIRED,Machine performance-monitoring event selector,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0x334,mhpmevent20,machine,RW-HWIRED,Machine performance-monitoring event selector,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0x335,mhpmevent21,machine,RW-HWIRED,Machine performance-monitoring event selector,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0x336,mhpmevent22,machine,RW-HWIRED,Machine performance-monitoring event selector,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0x337,mhpmevent23,machine,RW-HWIRED,Machine performance-monitoring event selector,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0x338,mhpmevent24,machine,RW-HWIRED,Machine performance-monitoring event selector,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0x339,mhpmevent25,machine,RW-HWIRED,Machine performance-monitoring event selector,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0x33A,mhpmevent26,machine,RW-HWIRED,Machine performance-monitoring event selector,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0x33B,mhpmevent27,machine,RW-HWIRED,Machine performance-monitoring event selector,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0x33C,mhpmevent28,machine,RW-HWIRED,Machine performance-monitoring event selector,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0x33D,mhpmevent29,machine,RW-HWIRED,Machine performance-monitoring event selector,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0x33E,mhpmevent30,machine,RW-HWIRED,Machine performance-monitoring event selector,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0
+0x33F,mhpmevent31,machine,RW-HWIRED,Machine performance-monitoring event selector,YES,,0,64'h0,,,,,,,,,YES,,,hardwired to 0

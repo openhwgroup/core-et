@@ -1,0 +1,6 @@
+fields,anyselected,anyunavailable,allhavereset,anyhavereset,allresumeack,anyresumeack,allrunning,anyrunning,allhalted,anyhalted
+width,1,1,1,1,1,1,1,1,1,1
+RO,NO,NO,NO,NO,NO,NO,NO,NO,NO,NO
+ROValue,,,,,,,,,,
+,,,,,,,,,,
+sum bits,10,,,,,,,,,

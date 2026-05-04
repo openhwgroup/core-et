@@ -1,0 +1,10 @@
+Goal:
+The purpose of this micro kernel test is to load the data from memory to the local scratchpad using tensorLoadL2SCP.
+
+Details:
+First we preload the memory with the data. Then we use tensorLoadL2SCP to load it into l2 scp.
+tensorLoadL2SCP(conf, N_BYTES_CL, id);
+tensorWait(id);
+Then we use the tensorLoad to place that data into L1.
+tensorLoad(conf_tl,N_BYTES_CL,id);//l2 scp to l1
+Self-checking part: read the data from memory and check it matches the data initialy stored and then loaded into L2SCP

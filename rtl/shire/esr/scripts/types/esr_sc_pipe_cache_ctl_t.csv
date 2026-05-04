@@ -1,0 +1,6 @@
+fields,set_base_rsvd,set_base,set_size_rsvd,set_size,set_mask_rsvd,set_mask,tag_mask_rsvd,tag_mask
+width,4,12,3,13,4,12,4,12
+RO,YES,NO,YES,NO,YES,NO,YES,NO
+ROValue,'0,,'0,,'0,,'0,
+,,,,,,,,
+sum bits,64,,,,,,,

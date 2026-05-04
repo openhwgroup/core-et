@@ -1,0 +1,8 @@
+fields,WIRI,SEIP,UEIP-ZERO,WIRI,STIP,UTIP-ZERO,WIRI,SSIP,USIP-ZERO
+width,54,1,1,2,1,1,2,1,1
+,,,,,,,,,
+,,,,,,,,,
+sum bits,64,,,,,,,,
+,,,,,,User level interrupts are not implemented,,,
+,,,,,,,,,
+bit idx,63..10,9,8,7..6,5,4,3..2,1,0

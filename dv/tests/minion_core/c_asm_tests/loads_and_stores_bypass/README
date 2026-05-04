@@ -1,0 +1,7 @@
+Goal:
+Stores to different Half-Words within the same D-Word. Expecting bypass to happen. Check that value match expected with and without bypass.
+
+Parameter(s):
+Core - This test will run on any Core (Thread 0 only) of any Neighborhood of any Shire. 
+
+

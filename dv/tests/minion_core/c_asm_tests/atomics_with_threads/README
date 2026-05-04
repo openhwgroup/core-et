@@ -1,0 +1,7 @@
+Goal:
+Test instruction atomic_compare_swap instructions with variations for local/global based on word/dword and using Packed Integer extension;
+self-checking (using a normal load after evict L1$)
+
+Parameter(s):
+Core - This test will run on any 2-Core pair (M0M1, M8M9, etc) of any Neighborhood of any Shire, on both threads of each Core. 
+

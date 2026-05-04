@@ -1,0 +1,8 @@
+Goal:
+Test CacheOp Pref L1 or L2 or L3; added self-checking for the result (using atomics to direct access L2 or L3, etc)
+For test cacheops_prefetch_chicken it is the same test with plusargs +min_frontend_clock_gate_disable=1
+
+Parameter(s):
+Core - This test will run on any Core (Thread 0 only) of any Neighborhood of any Shire. 
+
+

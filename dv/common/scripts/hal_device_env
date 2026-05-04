@@ -1,0 +1,64 @@
+#!/eng/dvtools/release/ruby/2.4.2/bin/ruby
+# Hack the GEM_PATH To Karls Libary
+ENV['GEM_PATH']="/eng/dvtools/release/ruby/mygems"
+Gem.clear_paths
+
+require 'optparse'
+require 'fileutils'
+
+begin
+
+   cmd_line="hal_device_env"
+   ARGV.each { |arg| cmd_line += " #{arg}" }
+
+   options = {}
+   OptionParser.new do |opts|
+     opts.banner = "Usage: hal_device_env [options]"
+     opts.on("-f", "--file", "Input C #define file to convert to sh") do |arg|
+       options[:infile] = arg
+     end
+     opts.on("-o", "--output", "Output shell file") do |arg|
+       options[:outfile] = arg
+     end
+   end.parse!
+   options[:cmd_line]=cmd_line
+
+
+   unless options[:infile]
+     options[:infile]="#{ENV['REPOROOT']}/dv/tests/ioshire/sw/inc/hal_device.h"
+   end
+
+   unless options[:outfile]
+     options[:outfile]="hal_device.sh"
+   end
+
+
+   #
+   # Setup the workspace, cleanup, and get the log setup
+   #
+   puts "cmd_line=#{cmd_line}"
+
+   require 'socket'
+   hostname = Socket.gethostname
+   puts "running on hostname=#{hostname}"
+
+   f = File.open(options[:infile], "r")
+   outf = File.open(options[:outfile],"w")
+   f.each_line { |line|
+     if line =~ /(#define)\s+(\w+)\s+(\w+)/
+       outf.puts "export #{$2}=#{$3}"
+     end 
+   }
+   f.close
+   outf.close
+
+rescue Interrupt => e
+  puts "Interrupt detected (Ctrl-c): #{e}\nStack Trace Follows\n#{e.backtrace.join("\n")}"
+  exit 1
+#rescue Exception => e
+#  @log.info "Exception detected : #{e}\nStack Trace Follows\n#{e.backtrace.join("\n")}"
+# exit 1
+rescue SystemExit => e
+  exit e.status
+ensure
+end

@@ -1,0 +1,7 @@
+rtl/ip/synopsys/pu_usb2_ctrl_otg/custom/models/phy/com/ulpi_snps_femto_16ffpll18_usb7.03a_hsic1.02a
+rtl/ip/synopsys/pu_usb2_ctrl_otg/custom/models/phy/com/utmi_femto_16ffpll18_usb7.03a_hsic1.02a
+rtl/ip/synopsys/pu_usb2_ctrl_devonly/custom/models/phy/com/ulpi_snps_femto_16ffpll18_usb7.03a_hsic1.02a
+rtl/ip/synopsys/pu_usb2_ctrl_devonly/custom/models/phy/com/utmi_femto_16ffpll18_usb7.03a_hsic1.02a
+rtl/ip/hal/csr/deprecated/pshire_esr.csr
+./dv/emu/comp/LOCAL_IP_ROOT
+./dv/emu/LOCAL_IP_ROOT

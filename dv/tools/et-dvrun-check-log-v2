@@ -1,0 +1,186 @@
+#!/usr/bin/env python3.6
+
+import os, sys, subprocess, re
+
+BINDIR = os.path.dirname(
+    subprocess.check_output(['which', 'et-dvrun']).decode("utf-8")  # byte->str
+)
+sys.path.insert(0, os.path.join(BINDIR, '..', 'lib'))
+from ETdv.dvrun.check_log import (log_checker, TEST_CHECK, BUILD_CHECK, CheckLogBase)
+from ETdv.util import eprint
+
+# regexp of allowed 'bad' in log
+MY_BAD_ALLOW = r'(ERROR MESSAGE STARTS)|(INFO = .*, WARNING = .*, ERROR = 0, FATAL = 0)|UVM_(ERROR|FATAL)[^:]*:\s*0\s*$|(Error\.cpp\.o)|(When\s+an\s+error\s+has\s+occurred.*a\s+simulation\s+is\s+suspended)|(FlexNet\s+Licensing.*\s+error)|(srun.*error:\s+Unable\s+to\s+resolve.*Unknown\s+host)|(srun.*error:\s+Unable\s+to\s+establish\s+control\s+machine\s+address)|(An error occurred, but continues simulation. When using lpddr4_proc option, this verilog model doesn.t guarantee movement a lpddr4 device)|(\-Wno\-error.)|(CacheOp LockSW: got Lock error)|(TensorRecv\(error\) illegal operation)|(error at time               1.0 ns)|(time=             10.0 ns)|(SYS_ATTRS: S254:N15:C0 thread 0 has already completed the boot code)|(S254:N15:C0 thread 0 finished the boot code more than once),(DUT error count)|warning: .* is not implemented and will always fail'
+
+MY_TEST_CHECK = {**TEST_CHECK}
+
+if 'bad_allow' in MY_TEST_CHECK:
+    MY_TEST_CHECK['bad_allow'] += '|'
+else:
+    MY_TEST_CHECK['bad_allow'] = ''
+
+MY_TEST_CHECK['bad_allow'] += MY_BAD_ALLOW
+
+MY_TEST_CHECK['bad'] += '|UVM_ERROR [ ]*: [ ]*[1-9]|UVM_ERROR [ ]*[^:]|UVM_FATAL [ ]*: [ ]*[1-9]'
+MY_TEST_CHECK['bad'] += '|(ERROR: Assertion .* failed)'
+MY_TEST_CHECK['bad'] += '|\[WARNING\]'
+
+#
+# Sean added all these signatures from IOSHIRE signature list
+#
+MY_TEST_CHECK['bad'] += '| DUT Error \(ERROR\)'                  # from EVL. We should catch this since we catch UVM_ERROR
+MY_TEST_CHECK['bad'] += 'ERROR!'                                 # fromm TSMC efuse module
+MY_TEST_CHECK['bad'] += ': FATAL'                                # from Ioshire
+MY_TEST_CHECK['bad'] += 'Fatal: '                                # from Ioshire
+MY_TEST_CHECK['bad'] += 'error at time'                          # Inside Secure Vault IP error
+MY_TEST_CHECK['bad'] += 'ERROR CoSIM: '                          # From cosim
+MY_TEST_CHECK['bad'] += 'ERROR MAXION: '                         # From riscvemu
+MY_TEST_CHECK['bad'] += 'Antecedent of the implication never satisfied.' # Internal VCS message -> Bad assertion
+MY_TEST_CHECK['bad'] += 'here is a code failure of some sort'    # ??? added when the assertion check above was
+MY_TEST_CHECK['bad'] += 'VIRL_MEM_ERR'                           # Errors from SNPS Memory Model
+MY_TEST_CHECK['bad'] += 'srun: error:'                           # Errors from slurm's srun command
+MY_TEST_CHECK['bad'] += 'DIAGFLOW ERROR'                         # DiagFLow errors
+
+# Added these to workaround a couple UltraSoc issues running on python3
+MY_TEST_CHECK['bad_allow'] += r'|(WARNING: Error caching)'
+MY_TEST_CHECK['bad_allow'] += r'|(sw_link_frame_receiver:  socket recv error: \[Errno 9\] Bad file descriptor)'
+
+MY_BUILD_CHECK = {**BUILD_CHECK}
+
+# Future:
+# This code assumes BUILD_CHECK['bad'] is already defined but evidently not bad_allow
+# not consistent
+#
+if 'bad_allow' in MY_BUILD_CHECK:
+    MY_BUILD_CHECK['bad_allow'] += '|'
+else:
+    MY_BUILD_CHECK['bad_allow'] = ''
+
+MY_BUILD_CHECK['bad'] += 'Error\-\['                              # Compiler Error
+MY_BUILD_CHECK['bad'] += 'Fatal\-\['                              # Compiler Error
+# in ioshire we have compile and test strings together. I dont remember if these were runtime or compiletime warnings so I added to both places.
+MY_BUILD_CHECK['bad'] += 'Antecedent of the implication never satisfied.' # Internal VCS message -> Bad assertion
+MY_BUILD_CHECK['bad'] += 'here is a code failure of some sort'            # ??? added when the assertion check above was
+
+MY_ULTRASOC_CHECK = {
+    'bad': r'(Traceback\s+\(most\s+recent\s+call\s+last\))|(\WFAIL\W)',
+    'good': None
+}
+MY_ULTRASOC_CHECK['bad_allow'] = r'|(WARNING: Error caching)'
+
+MY_SMS_CHECK = {**MY_TEST_CHECK}
+MY_SMS_CHECK['bad'] += 'TEST FLOW FAILED'
+MY_SMS_CHECK['bad'] += 'ReadFuse'
+MY_SMS_CHECK['bad'] += 'Read fuse'
+MY_SMS_CHECK['bad_allow'] += '|(expected events to take place. Bert errors on)'
+MY_SMS_CHECK['bad_allow'] += '|(Bert errors on channel. expect . error)'
+MY_SMS_CHECK['bad_allow'] += '|(Introducing error)'
+MY_SMS_CHECK['bad_allow'] += '|(Set-up/hold time tSETUP/tHOLD on model input)'
+MY_SMS_CHECK['bad_allow'] += '|(Set-up time tSETUP/tHOLD on model input)'
+MY_SMS_CHECK['bad_allow'] += '|(Min pulse width .* on model input)'
+MY_SMS_CHECK['bad_allow'] += '|(ERROR! CSB should be kept high before PD falling.)'
+MY_SMS_CHECK['good'] = 'TEST FLOW PASSED'
+
+#MY_BIST_CHECK = {**MY_TEST_CHECK}
+MY_BIST_CHECK = {
+    'bad': r'(ERROR)',
+    'good': 'Insertion completed successfully. Exiting'
+}
+
+MY_BOUNDARY_SCAN_CHECK = {
+    'bad': 'TEST COMPLETED WITH \d* MISMATCHES',
+    'good': 'TEST COMPLETED WITH NO ERRORS'
+}
+
+MY_ZEBU_DPI_CHECK = {**MY_TEST_CHECK}
+MY_ZEBU_DPI_CHECK['bad'] += '|(TIMEOUT:.+ minion .+ thread .+ too much time without new instructions)'
+MY_ZEBU_DPI_CHECK['bad_allow'] += '|(svGetScopeFromName\s*:\s*Error)'
+MY_ZEBU_DPI_CHECK['bad_allow'] += '|(ERROR:\s*std::bad_alloc)'
+MY_ZEBU_DPI_CHECK['bad_allow'] += '|(ERROR\s+CoSIM:\s+No\s+instructions\s+were\s+retired)'
+MY_ZEBU_DPI_CHECK['good'] = r'PASS.\s+All\s+Threads\s+finished\s+successfully'
+
+
+MY_ATPG_CHECK = {**MY_TEST_CHECK}
+MY_ATPG_CHECK['bad'] += r'|patterns completed with [1-9].* mismatches'
+MY_ATPG_CHECK['bad_allow'] += r'|# *error'
+MY_ATPG_CHECK['bad_allow'] += r'|fail=0, abort=0'
+MY_ATPG_CHECK['bad_allow'] += r'|#fail=0, #abort=0'
+MY_ATPG_CHECK['bad_allow'] += r'|error \"'
+MY_ATPG_CHECK['bad_allow'] += r'|For error:  module \(\"mvls_tn7_hpdpll_m32\"\) has been previously defined and instantiated.'
+MY_ATPG_CHECK['bad_allow'] += r'|End parsing STIL file .* with 0 errors.'
+MY_ATPG_CHECK['bad_allow'] += r'|Bus rules ATPG effort: #atpg_calls=0 \(pass=0, fail=0, abort=0\)'
+MY_ATPG_CHECK['bad_allow'] += r'|report_rules -fail'
+MY_ATPG_CHECK['bad_allow'] += r'|created during this process may fail in simulation.'
+MY_ATPG_CHECK['bad_allow'] += r'|Patterns were not simulated and may fail in simulation '
+MY_ATPG_CHECK['good'] = r'patterns completed with 0 mismatches'
+
+# Checker for uart is multiline, so need customize
+class ZebuUartLogChecker(CheckLogBase):
+    __TXT = "Kernel launch done"
+    __MSG = re.compile(r'Kernel\s+launch\s+done')
+
+    def __init__(self, log, status):
+        CheckLogBase.__init__(self)
+        self.status_filename = status
+        if re.search(r'_int8_b2b', os.path.abspath(log)):
+            self.__expect = 77
+        else:
+            self.__expect = 124
+
+    def checker(self, log, check, status=None, flags=re.IGNORECASE, type=None):
+        ntimes = 0
+        ifs = open(log, mode='rb')
+        for line in ifs:
+            line = line.decode('utf-8', errors='ignore')
+            if self.__MSG.match(line, flags): ntimes += 1
+        ifs.close()
+        ok = ntimes == self.__expect
+        if ok:
+            msg = 'pass'
+        else:
+            msg = f'fail ({type}) {os.path.basename(log)}: expected {self.__expect} occurences ({self.__TXT}), found {ntimes}'
+        with open(status, 'w') as ofs:
+            ofs.write(msg)
+        self.success = ok
+        return ok
+
+
+# Since we now support different types of logs, we will create a
+# dict/map of CHECK regexp by type
+CHECKER_BY_TYPE = {
+    'build': MY_BUILD_CHECK,
+    'test': MY_TEST_CHECK,
+    'ultrasoc': MY_ULTRASOC_CHECK,
+    'sms': MY_SMS_CHECK,
+    'bist': MY_BIST_CHECK,
+    'atpg': MY_ATPG_CHECK,
+    'boundary_scan': MY_BOUNDARY_SCAN_CHECK,
+    'zebu_dpi': MY_ZEBU_DPI_CHECK,
+    'zebu_uart': None  #map to class
+}
+
+# usage: [type log]+ status dieOnFail
+PROGNM = sys.argv[0]
+USAGE = f"\nUsage: {PROGNM} [type log]+ status dieOnFail\n\n" \
+        "where type is " f"{'|'.join(CHECKER_BY_TYPE.keys())}\n"
+argv = sys.argv[1:]
+nargs = len(argv)
+if (4 > nargs) or (0 != nargs % 2):
+    eprint(USAGE)
+    exit(1)
+status_filename = argv[-2]
+die_on_fail = '0' != argv[-1]
+argv = argv[0:-2]
+checker = log_checker(status=status_filename)
+while argv:
+    type = argv.pop(0)
+    log = argv.pop(0)
+    if type not in CHECKER_BY_TYPE:
+        eprint(f'Error: {PROGNM}: invalid type: {type}')
+        exit(1)
+    if type == 'zebu_uart':
+        uart_log_check = ZebuUartLogChecker(log=log, status=checker.status_filename)
+        checker.process(log=log, check=uart_log_check, type=type)
+    else:
+        checker.process(log=log, check=CHECKER_BY_TYPE[type], type=type)
+if die_on_fail and not checker.success: exit(1)

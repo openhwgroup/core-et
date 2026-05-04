@@ -1,0 +1,7 @@
+Goal:
+Test Cache_Invalidate CSR: invalidate the Instruction Cache; invalidate the data TLB, the instruction TLB, and the PTW (page table walker) cache.
+
+Parameter(s):
+Core - This test will run on any Core (Thread 0 only) of any Neighborhood of any Shire.  
+ 
+

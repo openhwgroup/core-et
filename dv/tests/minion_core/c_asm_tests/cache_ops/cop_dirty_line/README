@@ -1,0 +1,6 @@
+Goal:
+Test Evict_SW, Evict_VA, Flush_SW, Flush_VA on dirty cachelines; add self-checking code for each case.
+
+Parameter(s):
+Core - This test will run on any Core (Thread 0 only) of any Neighborhood of any Shire. 
+ 

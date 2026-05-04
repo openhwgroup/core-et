@@ -1,0 +1,2 @@
+Goal:
+Test for Gather/Scatter scoreboard + interrupts; also see test "gsc_sb" (for RTLMIN-5322).

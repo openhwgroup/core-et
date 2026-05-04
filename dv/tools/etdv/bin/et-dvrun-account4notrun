@@ -1,0 +1,25 @@
+#!/bin/csh -f
+
+cd ${ETDV_RUNROOT}
+if (! -e Makefile) exit 1
+#dont post metrix check
+if (! -e .run_id) exit 0
+
+foreach t (`find . -mindepth 5 -maxdepth 5 -name testme`)
+	set d=${t:h}
+	set stat=${d}/status
+	if (-e ${stat}) continue
+	echo 'fail not_run' > $stat
+	set tlog=${d}/testme.log
+	set didLog=0
+	if (! -e $tlog) then
+		echo "ERROR: not_run" > $tlog
+		set didLog=1
+	endif
+    et-dvrun-metrix create $tlog >>& ${d}/.all_steps.log
+    et-dvrun-metrix upload $tlog >>& ${d}/.all_steps.log
+	#then undo, so status is ok
+	rm -f $stat
+	if ($didLog) rm -f $tlog
+end
+exit 0

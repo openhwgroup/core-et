@@ -1,0 +1,37 @@
+
+LOG_LEVEL=1
+timeout=100000
+SEED=0
+preSimCmd=scripts/preTest
+postSimCmd=scripts/postTest
+CHECKER=1
+EVENTS=1
+MINION_MASK=0x1
+memImage=memImage.hex
+verbosityGLOBAL=UVM_HIGH
+
+tag=nightly riscvtools
+simulator=vcs
+alias=$MINION_BIN
+
+test=neigh_tb MINION_SRC_DIR=$MINION_DIAGS/loads_and_stores MINION_BIN=loads_and_stores tag=b4c
+test=neigh_tb MINION_SRC_DIR=$MINION_DIAGS/loads_and_stores_ps MINION_BIN=loads_and_stores_ps tag=neigh_fail
+test=neigh_tb MINION_SRC_DIR=$MINION_DIAGS/gathers_and_scatters_ps MINION_BIN=gathers_and_scatters_ps ENABLE_SECOND_THREAD=0 tag=gsc tag=noThreads
+test=neigh_tb MINION_SRC_DIR=$MINION_DIAGS/gathers_and_scatters_ps MINION_BIN=gathers_and_scatters_ps ENABLE_SECOND_THREAD=1 tag=gsc
+test=neigh_tb MINION_SRC_DIR=$MINION_DIAGS/gather32_and_scatter32_ps MINION_BIN=gather32_and_scatter32_ps tag=gsc
+test=neigh_tb MINION_SRC_DIR=$MINION_DIAGS/perf/misaligned MINION_BIN=misaligned
+
+# tests made specifically for a JIRA issue
+#include simlists/jiras.sim
+
+# ISA tests
+#include simlists/regression_core.sim
+
+# Cacheop
+#include simlists/cacheops.sim
+
+# fptoint 
+#include simlists/fptoint.sim
+
+# trans
+#include simlists/trans.sim

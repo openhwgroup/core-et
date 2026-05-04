@@ -1,0 +1,13 @@
+rtlmin*
+!rtlmin*/
+!*.cc
+*_dst
+!*_dst/
+*_src
+!*_src/
+*_mix
+!*_mix/
+*_debug
+!*_debug/
+*.hex
+*.mem

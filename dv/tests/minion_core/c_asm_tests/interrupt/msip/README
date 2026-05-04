@@ -1,0 +1,10 @@
+Goal:
+Test software interrupt MSIP.
+
+Details:
+t1: Will loop, waiting for FCC and trigger MSIP for t0;
+t0: Will increment FCC for t1, then loop waiting for interrupts to be triggered
+    while doing ld/sd, csr stall or spinlock. Once the interrupt is received, it 
+    will increment FCC for t1 so that it can trigger the next one.
+
+

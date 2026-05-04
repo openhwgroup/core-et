@@ -1,0 +1,103 @@
+#!/usr/bin/env python3.6
+
+import os, sys, subprocess, re
+
+BINDIR = os.path.dirname(
+    subprocess.check_output(['which', 'et-dvrun']).decode("utf-8")  # byte->str
+)
+sys.path.insert(0, os.path.join(BINDIR, '..', 'lib'))
+from ETdv.dvrun.check_log import (log_checker, TEST_CHECK, BUILD_CHECK, CheckLogBase)
+from ETdv.util import eprint
+
+# regexp of allowed 'bad' in log
+MY_BAD_ALLOW = r'(INFO = .*, WARNING = .*, ERROR = 0, FATAL = 0)|UVM_(ERROR|FATAL)[^:]*:\s*0\s*$|(Error\.cpp\.o)|(When\s+an\s+error\s+has\s+occurred.*a\s+simulation\s+is\s+suspended)|(FlexNet\s+Licensing.*\s+error)|(srun.*error:\s+Unable\s+to\s+resolve.*Unknown\s+host)|(srun.*error:\s+Unable\s+to\s+establish\s+control\s+machine\s+address)|(An error occurred, but continues simulation. When using lpddr4_proc option, this verilog model doesn.t guarantee movement a lpddr4 device)|(\-Wno\-error.)|(Execution raised Bus Error)'
+
+MY_TEST_CHECK = {**TEST_CHECK}
+
+if 'bad_allow' in MY_TEST_CHECK:
+    MY_TEST_CHECK['bad_allow'] += '|'
+else:
+    MY_TEST_CHECK['bad_allow'] = ''
+
+MY_TEST_CHECK['bad_allow'] += MY_BAD_ALLOW
+
+MY_TEST_CHECK['bad'] += '|UVM_ERROR [ ]*: [ ]*[1-9]|UVM_ERROR [ ]*[^:]|UVM_FATAL [ ]*: [ ]*[1-9]'
+MY_TEST_CHECK['bad'] += '|(ERROR: Assertion .* failed)'
+
+MY_ULTRASOC_CHECK = {
+    'bad': r'(Traceback\s+\(most\s+recent\s+call\s+last\))|(\WFAIL\W)',
+    'good': None
+}
+
+MY_ZEBU_DPI_CHECK = {**MY_TEST_CHECK}
+MY_ZEBU_DPI_CHECK['bad_allow'] += '|(svGetScopeFromName\s*:\s*Error)'
+MY_ZEBU_DPI_CHECK['bad_allow'] += '|(ERROR:\s*std::bad_alloc)'
+MY_ZEBU_DPI_CHECK['good'] = r'PASS.\s+All\s+Threads\s+finished\s+successfully'
+
+
+# Checker for uart is multiline, so need customize
+class ZebuUartLogChecker(CheckLogBase):
+    __TXT = "Kernel launch done"
+    __MSG = re.compile(r'Kernel\s+launch\s+done')
+
+    def __init__(self, log, status):
+        CheckLogBase.__init__(self)
+        self.status_filename = status
+        if re.search(r'_int8_b2b', os.path.abspath(log)):
+            self.__expect = 77
+        else:
+            self.__expect = 124
+
+    def checker(self, log, check, status=None, flags=re.IGNORECASE, type=None):
+        ntimes = 0
+        ifs = open(log, mode='rb')
+        for line in ifs:
+            line = line.decode('utf-8', errors='ignore')
+            if self.__MSG.match(line, flags): ntimes += 1
+        ifs.close()
+        ok = ntimes == self.__expect
+        if ok:
+            msg = 'pass'
+        else:
+            msg = f'fail ({type}) {os.path.basename(log)}: expected {self.__expect} occurences ({self.__TXT}), found {ntimes}'
+        with open(status, 'w') as ofs:
+            ofs.write(msg)
+        self.success = ok
+        return ok
+
+
+# Since we now support different types of logs, we will create a
+# dict/map of CHECK regexp by type
+CHECKER_BY_TYPE = {
+    'build': BUILD_CHECK,
+    'test': MY_TEST_CHECK,
+    'ultrasoc': MY_ULTRASOC_CHECK,
+    'zebu_dpi': MY_ZEBU_DPI_CHECK,
+    'zebu_uart': None  #map to class
+}
+
+# usage: [type log]+ status dieOnFail
+PROGNM = sys.argv[0]
+USAGE = f"\nUsage: {PROGNM} [type log]+ status dieOnFail\n\n" \
+        "where type is " f"{'|'.join(CHECKER_BY_TYPE.keys())}\n"
+argv = sys.argv[1:]
+nargs = len(argv)
+if (4 > nargs) or (0 != nargs % 2):
+    eprint(USAGE)
+    exit(1)
+status_filename = argv[-2]
+die_on_fail = '0' != argv[-1]
+argv = argv[0:-2]
+checker = log_checker(status=status_filename)
+while argv:
+    type = argv.pop(0)
+    log = argv.pop(0)
+    if type not in CHECKER_BY_TYPE:
+        eprint(f'Error: {PROGNM}: invalid type: {type}')
+        exit(1)
+    if type == 'zebu_uart':
+        uart_log_check = ZebuUartLogChecker(log=log, status=checker.status_filename)
+        checker.process(log=log, check=uart_log_check, type=type)
+    else:
+        checker.process(log=log, check=CHECKER_BY_TYPE[type], type=type)
+if die_on_fail and not checker.success: exit(1)

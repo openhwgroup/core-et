@@ -1,0 +1,7 @@
+#!/bin/bash
+
+echo "Cleaning swlib"
+echo ""
+make -f $REPOROOT/dv/tests/ioshire/scripts/makefile.master cleanswlib
+echo ""
+echo "Done"

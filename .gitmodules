@@ -1,0 +1,3 @@
+[submodule "extern/et-platform"]
+	path = extern/et-platform
+	url = git@github.com:aifoundry-org/et-platform.git

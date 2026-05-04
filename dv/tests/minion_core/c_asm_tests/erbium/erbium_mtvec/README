@@ -1,0 +1,2 @@
+This test tests all the valid configurations for mtvec which was converted
+from 4K to 4 byte and 128 bytes aligments for direct and vectored modes

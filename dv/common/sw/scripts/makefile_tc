@@ -1,0 +1,229 @@
+SWTC_ROOT_OBJDIR ?= .
+
+ifeq ($(FCIO),1)
+   VPATH += $(MINION_DIAGS)/common/ioshire/
+endif
+
+VPATH += $(SW_CPU_DIR)/src/: \
+         $(SW_UTILS_DIR)/src/:
+
+bin = $(SWTC_ROOT_OBJDIR)/$(sw_tc_name).elf
+
+EVL_MAXSHIRE_CHECKS ?= 0
+
+include $(SW_CPU_DIR)/scripts/makefile.options.mk
+
+ifeq ($(EVL_MAXSHIRE_CHECKS),1)
+   RVCC_FLAGS  += -DEVL_MAXSHIRE_CHECKS
+   RVASM_FLAGS += -DEVL_MAXSHIRE_CHECKS
+endif
+
+ifndef scatter_file
+   #if this is not ServiceProcessor, default it
+   ifneq ($(CPU),1)
+      scatter_file = $(SCATTER_FILE_DIR)/riscV.ld
+   else
+    ifeq ($(BOOT_SP_FROM_SRAM), 1)
+      scatter_file = $(SCATTER_FILE_DIR)/riscV_boot_sp_from_sram.ld
+    else
+      scatter_file = $(SCATTER_FILE_DIR)/riscV.ld
+    endif
+   endif
+endif
+
+
+#Include Path
+INCLUDE_PATH += -I .
+INCLUDE_PATH += -I ../
+INCLUDE_PATH += -I $(REPOROOT)/dv/ioshire_common/inc/c
+INCLUDE_PATH += -I $(RTLROOT)/shire/esr/scripts
+INCLUDE_PATH += -I $(SW_CPU_DIR)/inc
+INCLUDE_PATH += -I $(SW_UTILS_DIR)/inc
+INCLUDE_PATH += -I $(SW_IP_DIR)/inc
+INCLUDE_PATH += -I $(SW_CHIP_DIR)/sw/inc
+INCLUDE_PATH += -I $(MINION_DIAGS)/include
+
+#This is not Maxion, but every other CPU type
+ifneq ($(CPU),2)
+   asmsrc += $(SW_CPU_DIR)/src/boot.S
+endif
+
+#This is Maxion
+ifeq ($(CPU),2)
+   ifndef MAXION_BOOT_SELECTION
+      ifndef CUSTOM_BOOT
+         asmsrc += $(SW_CPU_DIR)/src/boot.S
+      endif
+   else
+      $(info "MAXION_BOOT_SELECTION is defined")
+      ifndef CUSTOM_BOOT
+         $(info "MAXION CUSTOM_BOOT is not defined")
+         ifeq ($(MAXION_BOOT_SELECTION), all)
+            asmsrc += $(SW_CPU_DIR)/src/boot_wfi.S 
+         endif
+         ifeq ($(MAXION_BOOT_SELECTION),0)
+            asmsrc += $(SW_CPU_DIR)/src/boot_wfi.S
+         endif
+         ifeq ($(MAXION_BOOT_SELECTION),1)
+            asmsrc += $(SW_CPU_DIR)/src/boot_wfi_1.S
+         endif
+         ifeq ($(MAXION_BOOT_SELECTION),2)
+            asmsrc += $(SW_CPU_DIR)/src/boot_wfi_2.S
+         endif
+         ifeq ($(MAXION_BOOT_SELECTION),3)
+            asmsrc += $(SW_CPU_DIR)/src/boot_wfi_3.S
+         endif
+      endif
+   endif
+endif # CPU,2
+
+
+ifndef ASM_TC_ONLY
+   asmsrc += $(SW_CPU_DIR)/src/crt.S
+   ifndef MAIN_IN_TC
+      src += $(SW_COMMON_DIR)/utils/src/tcMain.c
+   endif
+endif
+
+
+# Directory mess follows.
+# We want to have all our object files stored in src/../obj/ directories.
+# For this purpose we need to:
+# (1) Calculate new full paths for our object files, and
+# (2) Feed them as targets to the gcc, while using rules to point to
+#     appropriate source files.
+#
+# NOTE: This makefile doesn't create/destroy the 'obj' directories.
+#       It has to be done manually.
+
+# Get the source files' paths...
+origsrcpaths    = $(dir $(src))
+origasmsrcpaths = $(dir $(asmsrc))
+
+# ...and the filenames.
+srcfiles    = $(notdir $(src))
+asmsrcfiles = $(notdir $(asmsrc))
+
+# Convert source to object filenames (.c -> .o).
+asmobjfiles = $(asmsrcfiles:%.S=%.o)
+objfiles    = $(patsubst %.cc,%.o,$(patsubst %.c,%.o,$(srcfiles)))
+
+# Recalculate the move to "obj" directory...
+objpath = $(SWTC_ROOT_OBJDIR)/obj
+
+# ..and use it to get the final *.o filenames.
+cobj   = $(foreach objfiles,$(objfiles),$(objpath)/$(objfiles))
+asmobj = $(foreach asmobjfiles,$(asmobjfiles),$(objpath)/$(asmobjfiles))
+
+obj = $(cobj) $(asmobj)
+
+MAKE_ARGS =
+ifneq ($(SWLIB_ROOT_OBJDIR),)
+   MAKE_ARGS += SWLIB_ROOT_OBJDIR=$(SWLIB_ROOT_OBJDIR)
+endif
+ifneq ($(MAXION_SA),)
+   MAKE_ARGS += MAXION_SA=$(MAXION_SA)
+endif
+
+# The rules:
+
+ifndef ROM_CODE_TEST
+all: $(bin)
+else
+all:
+	rm -rf $(bin)
+	ln -s ../ServiceProcessorROM.elf $(bin)
+	$(CPY) $(bin) -O ihex $(sw_tc_name).hex
+	mkdir -p zebu_hex
+	$(REPOROOT)/dv/common/scripts/elftohex.py ROM    $(SWTC_ROOT_OBJDIR)/$(sw_tc_name).elf $(SWTC_ROOT_OBJDIR)/zebu_hex/$(sw_tc_name).hex
+	$(REPOROOT)/dv/common/scripts/elftohex.py SP_RAM $(SWTC_ROOT_OBJDIR)/$(sw_tc_name).elf $(SWTC_ROOT_OBJDIR)/zebu_hex/$(sw_tc_name).hex
+	$(REPOROOT)/dv/common/scripts/elftohex.py DRAM   $(SWTC_ROOT_OBJDIR)/$(sw_tc_name).elf $(SWTC_ROOT_OBJDIR)/zebu_hex/$(sw_tc_name).hex
+	$(DUMP) -xSd -M numeric,no-aliases $(bin) > $(sw_tc_name).dis
+endif
+
+# We'll have the gcc use our precalculated $(obj) object file list:
+$(bin): $(obj)
+ifeq ($(MAXION_SA),1)
+	$(LN) $(RVLINK_FLAGS) -L $(SW_LIB_DIR) $(obj) -l swLib -l c_nano -l nosys -o $(bin)
+else
+	$(LN) $(RVLINK_FLAGS) -L $(SW_LIB_DIR) $(obj) -l swLib -l c_nano -l nosys -o $(bin)
+endif
+
+ifeq ($(MAXION_SA),1)
+	$(CPY) $(bin) $(SWTC_ROOT_OBJDIR)/memImage.hex
+else
+ifeq "$(or $(MSMIN_CODE),$(MAXION_DDR))" "1"
+	$(CPY) $(bin) ../sim/memImage.hex
+else
+ifneq (,$(findstring DPOSTSI_UST,$(EXTRA_CFLAGS)))
+	$(info "INFO: this is POSTSI compilation, skipping Intel Hex generation")
+else
+	$(info "INFO: this is a non-POSTSI compilation, generating Intel Hex files")
+ifneq ($(DDR_SECTION_TO_LOAD),) 	
+	$(CPY) $(bin) -R $(DDR_SECTION_TO_LOAD) -O ihex $(sw_tc_name).hex
+	elf2hex $(bin) ../sim/memImage.hex
+else
+	$(CPY) $(bin) -O ihex $(sw_tc_name).hex
+endif
+	
+endif
+endif
+
+	mkdir -p zebu_hex
+	$(REPOROOT)/dv/common/scripts/elftohex.py ROM    $(bin) zebu_hex/$(sw_tc_name).hex
+	$(REPOROOT)/dv/common/scripts/elftohex.py SP_RAM $(bin) zebu_hex/$(sw_tc_name).hex
+	$(REPOROOT)/dv/common/scripts/elftohex.py DRAM   $(bin) zebu_hex/$(sw_tc_name).hex
+endif
+	$(DUMP) -xSD -M numeric,no-aliases $(bin) > $(SWTC_ROOT_OBJDIR)/$(sw_tc_name).dis
+
+# One more path move, back to where the source file is, for compilation:
+$(objpath)/%.o : %.c
+	mkdir -p $(objpath)
+	$(info "RVCC_FLAGS="$(RVCC_FLAGS))
+	$(info "EXTRA_CFLAGS="$(EXTRA_CFLAGS))
+	$(info "DEFINES="$(DEFINES))
+	$(info "OBJ="$(obj))
+
+	$(CC) -c $(RVCC_FLAGS) $(EXTRA_CFLAGS) $(INCLUDE_PATH) $(DEFINES) $< -o $@
+$(objpath)/%.o : %.cc
+	mkdir -p $(objpath)
+	$(CC) -c $(RVCC_FLAGS) $(EXTRA_CFLAGS) $(INCLUDE_PATH) $(DEFINES) $< -o $@
+$(objpath)/%.o : %.S
+	mkdir -p $(objpath)
+	$(AS) $(RVASM_FLAGS)   $(EXTRA_CFLAGS) $(INCLUDE_PATH) $(DEFINES) $< -o $@
+
+swlib:
+	make -C $(REPOROOT)/dv/tests/ioshire/scripts SWLIB_ROOT_DIR=$(SWLIB_ROOT_DIR) MAXION_SA=$(MAXION_SA) -f makefile.master swlib
+
+full: swlib all
+
+clean:
+	rm -f $(obj) $(bin) $(sw_tc_name).hex $(sw_tc_name).dis
+	rm -rf zebu_hex
+
+new: clean all
+
+tt:
+	@echo "Rajko Test Print:";
+	@echo "Env variables: ";
+	@echo "SW_COMMON_DIR=$(SW_COMMON_DIR)";
+	@echo "SW_UTILS_DIR=$(SW_UTILS_DIR)";
+	@echo "SW_CPU_DIR=$(SW_CPU_DIR)";
+	@echo "SW_CHIP_DIR=$(SW_CHIP_DIR)";
+	@echo "SWTC_ROOT_OBJDIR=$(SWTC_ROOT_OBJDIR)";
+	@echo "SWLIB_ROOT_OBJDIR=$(SWLIB_ROOT_OBJDIR)";
+	@echo "objpath=$(objpath)";
+	@echo "vpath: ";
+	@echo "$(VPATH)";
+	@echo "tc_name: ";
+	@echo "$(sw_tc_name)";
+	@echo "bin file: ";
+	@echo "$(bin)";
+	@echo "src list: ";
+	@echo "$(src)";
+	@echo "asm src list: ";
+	@echo "$(asmsrc)";
+	@echo "obj list: ";
+	@echo "$(obj)";
+	@echo "$(AS)";
+	@echo "$(RVASM_FLAGS)";

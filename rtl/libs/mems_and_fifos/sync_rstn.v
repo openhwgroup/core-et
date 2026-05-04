@@ -1,0 +1,86 @@
+// Copyright (c) 2026 Ainekko
+// SPDX-License-Identifier: Apache-2.0
+
+// sync_rstn
+// 
+//    reset output: asynchronous assertion (low), synchronous deassertion (high)
+//    
+//    active low reset in, active low sync reset out
+
+`include "libs_defines.vh"
+`include "soctop_defines.vh" // required for SYNC_STAGES
+
+module sync_rstn (
+   output logic reset_out_n,          // active low sync reset out
+   input  logic reset_in_n,           // active low reset in
+   input  logic clock,
+   input  logic dft__reset_byp,
+   input  logic dft__reset
+);
+
+
+`ifdef ET_LIBS_USE_STD_CELLS
+   sync_rstn_grp_cells ET_GROUP_CELLS_sync_rstn_grp_cells (.reset_out_n(reset_out_n), .reset_in_n(reset_in_n), .clock(clock), .dft__reset_byp(dft__reset_byp), .dft__reset(dft__reset));
+`else
+
+   // per Snps data for all PD >= 585mV use SYNC_STAGES=2
+   localparam SYNC_STAGES = 2;
+
+   // simple behavioral model
+   logic [SYNC_STAGES-1:0] sync_rst_meta_flops_n;
+   
+   // mux select int_reset_in_n
+   wire int_reset_in_n = dft__reset_byp ? !dft__reset : reset_in_n;
+
+   // async reset low, sync deassert high   
+   always @(posedge clock or negedge int_reset_in_n) begin
+      if (!int_reset_in_n) begin
+         sync_rst_meta_flops_n <= {SYNC_STAGES{1'b0}};
+      end
+      else begin
+         sync_rst_meta_flops_n <= {sync_rst_meta_flops_n[SYNC_STAGES-2:0], 1'b1};
+      end
+   end
+   
+   // dft mux bypass of final reset_out_n
+   assign reset_out_n = dft__reset_byp ? !dft__reset : sync_rst_meta_flops_n[SYNC_STAGES-1];
+
+`endif
+
+   
+endmodule
+
+
+`ifdef ET_LIBS_USE_STD_CELLS
+// NOTE: GROUP_CELLS requires hard hierarchy to make it through dc elaborate
+//       so going against coding styles and adding a sub-module within the same module
+module sync_rstn_grp_cells (
+   output logic reset_out_n,          // active low sync reset out
+   input  logic reset_in_n,           // active low reset in
+   input  logic clock,
+   input  logic dft__reset_byp,
+   input  logic dft__reset
+);
+
+   generate
+      if (1) begin : ET_DONT_TOUCH_sync_rstn_wrap
+         // mux select int_reset_in_n
+         logic dft__reset_n;
+         HDBULT11_INV_1 dft__reset_inv (.X(dft__reset_n), .A(dft__reset));
+         logic int_reset_in_n;
+         HDBULT11_MUX2_MM_2 int_reset_in_n_mux (.X(int_reset_in_n), .D0(reset_in_n), .D1(dft__reset_n), .S(dft__reset_byp));
+         
+         // async reset low, sync deassert high   
+         logic reset_in_n_d2;
+         HDBULT08_SYNC2RBMSFQ_Y4_2 sync_rst_meta_flops_n (.Q(reset_in_n_d2), .CK(clock), .D(1'b1), .RD(int_reset_in_n), .SI (1'b0), .SE (1'b0));
+         
+         // dft mux bypass of final reset_out_n
+         wire int_reset_out_n = reset_in_n_d2;
+         HDBULT11_MUX2_MM_2 reset_out_n_mux (.X(reset_out_n), .D0(int_reset_out_n), .D1(dft__reset_n), .S(dft__reset_byp));
+      end
+   endgenerate
+endmodule
+`endif  // ET_LIBS_USE_STD_CELLS
+
+
+

@@ -1,0 +1,68 @@
+#!/usr/bin/env python3.6
+
+"""
+Process filelist against list of filters and remove entries (from filelist)
+which match any of filters.
+"""
+import sys, os, re
+from functools import reduce
+
+sys.path.insert(0, sys.path[0] + '/../lib')  # prepend
+from ETdv.util import eprint
+
+PROG = os.path.basename(sys.argv[0])
+
+
+def _usage_error():
+    eprint(f"Usage: {PROG} filelist filters")
+    exit(1)
+
+
+def _error(msg, do_exit=True):
+    eprint(f'Error: {msg}.')
+    if do_exit: exit(1)
+
+
+def _get_filters(fname):
+    lnum = 0
+    filters = []
+    with open(fname, 'rt') as ifs:
+        for line in ifs:
+            lnum += 1
+            line = line.strip()
+            if 0 < len(line):
+                if line[0] != '#':
+                    try:
+                        rex = re.compile(line)
+                        filters.append(rex)
+                    except:
+                        _error(f'{fname}:{lnum}: invalid regexp: {line}')
+    return filters
+
+
+def _apply(filters, filelist):
+    result = []
+    with open(filelist, 'rt') as ifs:
+        for line in ifs:
+            line = line.strip()
+            if 0 < len(line):
+                if not reduce(lambda a, b: a or b, map(lambda f: f.search(line), filters), False):
+                    result.append(line)
+    return result
+
+
+def _process(argv):
+    filelist, filter = argv
+    filters = _get_filters(filter)
+    results = _apply(filters, filelist)
+    [print(f) for f in results]
+
+
+def main(argv):
+    argc = len(argv)
+    if 2 != argc: _usage_error()
+    _process(argv)
+    exit(0)
+
+
+main(sys.argv[1:])

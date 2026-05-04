@@ -1,0 +1,12 @@
+Goal:
+The purpose of the test is to have a sequence able to toggle the can_accept_new_writes signals in intpipe_csr_file_conv, in a certain way, such that a new tensor_mask computation is not performed automatically when writing the tensor_conv_ctrl( which should calculate the new tensor_mask value) while the "pending" signal is set. More details in VERIF-1864.
+
+Details:
+Test is doing the following sequence of instructions:
+ 1. Write to the tensor_conv_size CSR for setting a tensor_mask value
+ 2. Write to the tensor_conv_crtl CSR for setting a tensor_mask value
+ 3. Write to the TensorLoad CSR (issuing an instruction controlled by the tensor_mask)
+ 4. Write to tensor_conv_crtl for calculating a different tensor_mask value
+ 5. Check that the effective tensor_mask for step 3 was the one set with steps 1 and 2, whereas the value calculated at step 4 is not relevant for the TensorLoad.
+ The "pending" signal is set when a tensor_mask controlled instruction is issued during the 16 cycles of tensor_mask computation (i.e. a TensorLoad, TensorFMA or a CacheOp). With this sequence, a new tensor_mask compute will not happen inmediately when the CSR write in step 4 is issued because of the "pending" signal mechanism implemented intpipe_csr_file_conv.
+

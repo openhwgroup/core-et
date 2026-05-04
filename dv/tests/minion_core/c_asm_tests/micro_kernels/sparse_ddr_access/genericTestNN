@@ -1,0 +1,31 @@
+#!/bin/bash 
+
+# RTL TEST SUCCESS
+rtlpass=`grep "TEST HAS PASSED" testme.log | wc -l`
+if [ $rtlpass -gt 0 ]; then
+  echo ${MINION_BIN}_RTL_SIMULATION:1 > summary.txt
+else
+  echo ${MINION_BIN}_RTL_SIMULATION:0 >> summary.txt
+fi
+
+# KERNEL TEST SUCCESS
+prefetches=`grep "prefetch_va" testme.log | wc -l`
+if [ $prefetches -eq 999999999 ]; then
+  echo ${MINION_BIN}_MKERNEL_RUN:1 >> summary.txt
+else
+  echo ${MINION_BIN}_MKERNEL_RUN:0 >> summary.txt
+fi
+
+# LONGEST MEASURED CYCLES
+maxcycles=`grep "DIAG.*Measured time" testme.log | cut -d ":" -f2 | sort | tail -1 | tr -d " " `
+if [ -n $maxcycles ]; then
+  echo ${MINION_BIN}_CYCLES:$maxcycles >> summary.txt
+else 
+  echo ${MINION_BIN}_CYCLES:0 >> summary.txt
+fi  
+
+# EXPECTED CYCLES
+expcycles=999999999
+echo ${MINION_BIN}_EXPECTED_CYCLES:$expcycles >> summary.txt
+
+

@@ -1,0 +1,5 @@
+vpu_1c_2t_rtlmin_*
+!vpu_1c_2t_rtlmin_*/
+vpu_1c_2t_cvg_*
+!vpu_1c_2t_cvg_*/
+!*.cc

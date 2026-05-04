@@ -1,0 +1,100 @@
+#!/usr/bin/env python3.6
+
+import sys, os, re, time, signal
+
+sys.path.insert(0, sys.path[0] + '/../lib')  # prepend
+from ETdv.util import (eprint, write_file, exec)
+from ETdv.dvrun.util import (log_checker, is_valid_pid)
+from ETdv.timer import Timer
+
+PROG = os.path.basename(sys.argv[0])
+
+
+def _usage_error():
+    eprint(f"Usage: {PROG} log pid sleep timeout")
+    exit(1)
+
+
+def _error(msg, do_exit=True):
+    eprint(f'Error: {msg}.')
+    if do_exit: exit(1)
+
+
+FLAGS = re.IGNORECASE
+
+# An unexpected termination has occurred in /home/eng/kpfalzer/repo/esperanto-soc/test/shire/vpu/txfma/build/vcs/txfma_tb due to a signal: Segmentation fault
+# make[1]: *** [clean_fp] Error 2
+CHECK = {
+    'bad': r'(srun:\s+Force\s+Terminated\s+job|unexpected\s+termination\s+has\s+occurred)|(Segmentation\s+fault)',
+    'good': None
+}
+
+
+def _process(argv):
+    log, pid, sleep, timeout = argv
+    #sleep arg is in min, so convert to secs
+    pid, sleep, timeout = int(pid), int(sleep), int(timeout)
+    mins = 0
+    if 0 == sleep: exit(0)
+    timer = Timer()
+
+    def log_dir():
+        return os.path.dirname(log)
+
+    def get_file(fname):
+        return os.path.join(log_dir(), fname)
+
+    def append_message_to_log(message):
+        message = f'ERROR: et-dvrun-log-monitor: {message}\n'
+        xlog = get_file('.killedmsg')
+        write_file(fn=xlog, data=message)
+
+    def kill_process(msg):
+        append_message_to_log(msg)
+        #
+        # the single pid kill not work
+        # os.kill(pid, signal.SIGKILL)
+        # need to do the process group
+        killme = get_file('killme')
+        exec(killme)
+
+    while True:
+        if not is_valid_pid(pid): return
+        # we always run every 60secs, in case pid is gone
+        time.sleep(60)
+        mins += 1
+        if mins < sleep: continue
+        mins = 0
+        #and... continue to check log
+        try:
+            ok = log_checker(log, CHECK)
+            if not ok:
+                # Need to SIGKILL: since TERM does not work: still hangs
+                kill_process(f"kill pid={pid}")
+                return
+        except:
+            # keep looping until pid dies
+            #print("DEBUG9: Unexpected error:", sys.exc_info()[0])
+            pass #raise
+        try:
+            # print(f'DEBUG1: {timeout}')
+            if 0 < timeout:
+                mins_so_far = timer.minutes()
+                # print(f'DEBUG2: {mins_so_far}')
+                if mins_so_far > timeout:
+                    kill_process(f"timeout: {mins_so_far} > {timeout} (mins)")
+                    return
+        except:
+            #print("DEBUG10: Unexpected error:", sys.exc_info()[0])
+            # keep looping until pid dies
+            pass
+
+
+def main(argv):
+    argc = len(argv)
+    if 4 != argc: _usage_error()
+    _process(argv)
+    exit(0)
+
+
+main(sys.argv[1:])

@@ -1,0 +1,5 @@
+Goal:
+The purpose of this test is to test out cooperative tensor stores, in all 3 coop modes: 128-quad, 128-pair and 256-pair.
+
+Details:
+Tensor stores are performed in coop modes. Firstly, 4 consecutive minion are used to performe a tensor store in 128-quad coop mode, where each one stores a 128-bit line. If there is no tensor error set, test continues to perform tensor store with 2 minions in both 128-pair and 256-pair modes. If there is no tensor error set, test reports pass.

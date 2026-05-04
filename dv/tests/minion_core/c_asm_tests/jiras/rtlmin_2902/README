@@ -1,0 +1,6 @@
+Goal:
+Test case for RTLMIN-2902:
+To test how RTL handles IPI when one minion sends a "classic" RISC-V software interrupt (MSIP) to other minions, and require the receiving minion to configure the "mstatus.mie" bit and the "mie.msie" bit.
+
+Parameter(s):
+Core - This test will run on any Core (even thread) of any Neighborhood of any Shire. Only 1 Core (even thread) is expected to be enabled.

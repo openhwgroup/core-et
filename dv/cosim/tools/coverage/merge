@@ -1,0 +1,77 @@
+#!/usr/bin/awk -f
+
+# Usage: merge -vtest=<name> <tsv>.. > merge.tsv
+# Merge multiple TSV into one summary dataset
+# The data is aggregated like this:
+#  - Commits => Sum
+#  - Execution Time => Average
+#  - Queue Size => Average
+#  - Crosses => Maximum
+
+BEGIN { OFS="\t" }
+
+/test\tgroup\t/ { header=$0 ; next } # Skip header
+
+#  1 : test
+#  2 : group
+#  3 : commits
+#  4 : et_avg
+#  5 : et_std
+#  6 : et_min
+#  7 : et_max
+#  8 : qs_avg
+#  9 : qs_std
+# 10 : qs_min
+# 11 : qs_max
+# 12.. : crosses
+
+1 {
+    if (!($2 in commits)) {
+        et_min[$2] = $6
+        et_max[$2] = $7
+        qs_min[$2] = $10
+        qs_max[$2] = $11
+        for (k = 12; k <= NF; k++) cross[$2][k] = 0
+        groups[length(commits)] = $2
+    }
+    commits[$2] += $3
+    et_avg[$2] += $3 * $4
+    et_std[$2] += $3 * $5 * $5
+    if ($6 != "nan" && $6 < et_min[$2]) et_min[$2] = $6
+    if ($7 != "nan" && $7 > et_max[$2]) et_max[$2] = $7
+    qs_avg[$2] += $3 * $8
+    qs_std[$2] += $3 * $9 * $9
+    if ($10 != "nan" && $10 < qs_min[$2]) qs_min[$2] = $10
+    if ($11 != "nan" && $11 > qs_max[$2]) qs_max[$2] = $11
+    if ($3 > 0) {
+        for (i = 12; i <= NF; i++) {
+            if ($i > cross[$2][i]) cross[$2][i] = $i
+        }
+    }
+}
+
+END {
+    print header
+    for (i = 0; i < length(groups); i++) {
+        g = groups[i]
+        n = commits[g]
+        cross_all = ""
+        for (k = 0; k < length(groups); k++) cross_all = cross_all"\t"cross[g][k+12]
+        cross_all = substr(cross_all, 2)
+        if (n == 0) {
+            print test, g, n,
+                   "nan", "nan", "nan", "nan",
+                   "nan", "nan", "nan", "nan",
+                   cross_all
+        } else {
+            print test, g, n,
+                  et_avg[g]/n,
+                  sqrt(et_std[g]/n),
+                  et_min[g], et_max[g],
+                  qs_avg[g]/n,
+                  sqrt(qs_std[g]/n),
+                  qs_min[g], qs_max[g],
+                  cross_all
+        }
+    }
+}

@@ -1,0 +1,297 @@
+module cosim_evt;
+
+const VL = 8;
+
+event inst_retire [RET] {
+    cycle:                 u64,
+    minion_id:             u32,
+    thread_id:             u8,
+    pc:                    u64,
+    inst_bits:             u32,
+    delayed_write:         bool,
+    load_miss:             bool,
+    wbx:                   bool,
+    wbx_rd:                u32,
+    wbx_data:              u64,
+    wbf:                   bool,
+    wbf_rd:                u32,
+    # wbf_data?
+    wbm:                   bool,
+    wbmall:                bool,
+    wbm_rd:                u32,
+    wbm_data:              u64,
+    store:                 bool,
+    store_size:            u32,
+    store_addr:            u64,
+    store_data:            u64[VL/2],
+    store_mask:            u32,
+    delayed_store:         bool,
+    store_age_id:          u32,
+    scatter:               bool,
+    scatter_addr:          u64[VL],
+    scatter_data:          u32[VL],
+    tex_send:              bool,
+    tex_rcv:               bool,
+    tensor_load:           bool,
+    tenb:                  bool,
+    tensor_load_num_lines: u32,
+    tensor_fma:            bool,
+    tensor_quant:          bool,
+    reduce:                bool,
+    tensor_store:          bool,
+    flb_valid:             bool,
+    flb_idx:               u32,
+    flb_range:             u32,
+    wflags:                bool,
+    trans_id:              u32,
+    prv:                   u32,
+}
+
+event inst_exception [XCPT] {
+    cycle:             u64,
+    minion_id:         u32,
+    thread_id:         u8,
+    pc:                u64,
+    inst_bits:         u32,
+    wbf_rd:            u32,
+    is_store:          bool,
+    is_atomic:         bool,
+    is_gsc:            bool,
+    scatter_addr:      u64[VL],
+    scatter_data:      u32[VL],
+    store_mask:        u32,
+    gsc_size:          u32,
+    gsc_progress:      u32,
+    mstatus:           u64,
+    cause:             u64,
+    tval:              u64,
+    epc:               u64,
+    mip:               u64,
+    prv:               u32,
+}
+
+event inst_interrupt [INT] {
+    cycle:          u64,
+    minion_id:      u32,
+    thread_id:      u8,
+    pc:             u64,
+    inst_bits:      u32,
+    is_gsc:         bool,
+    gsc_progress:   u32,
+    mstatus:        u64,
+    cause:          u64,
+    tval:           u64,
+    epc:            u64,
+    mip:            u64,
+    bus_error_addr: u64,
+    bus_error_pc:   u64,
+    prv:            u32,
+}
+
+event delayed_write_int [XREG] {
+    cycle:     u64,
+    minion_id: u32,
+    thread_id: u8,
+    wbx_rd:    u32,
+    wbx_data:  u64,
+}
+
+event flb_update [FLB] {
+    cycle:     u64,
+    minion_id: u32,
+    thread_id: u8,
+    wbx_rd:    u32,
+    wbx_data:  u64,
+}
+
+event load_miss_bus_err [BUS] {
+    cycle:          u64,
+    minion_id:      u32,
+    pc:             u64,
+    thread_id:      u8,
+    bus_error_addr: u64,
+}
+
+event delayed_store [ST] {
+    cycle:        u64,
+    minion_id:    u32,
+    thread_id:    u8,
+    scatter:      bool,
+    scatter_cnt:  u32,
+    store_size:   u32,
+    store_data:   u64[VL/2],
+    store_age_id: u32,
+}
+
+event update_fcsr_flags [FCSR] {
+    cycle:     u64,
+    minion_id: u32,
+    thread_id: u8,
+    flags:     u32,
+    trans_id:  u32,
+}
+
+event delayed_write_fp [FP] {
+    cycle:          u64,
+    minion_id:      u32,
+    thread_id:      u8,
+    wbf_rd:         u32,
+    entry_point_id: u32,
+}
+
+event vpu_rf_update [VPU] {
+    cycle:      u64,
+    minion_id:  u32,
+    wr_mask:    u32,
+    thread_ids: u32,
+    addr:       u8[VL],
+    data:       u32[VL],
+}
+
+event delayed_write_rm [MASK] {
+    cycle:     u64,
+    minion_id: u32,
+    thread_id: u8,
+    wbmall:    bool,
+    wbm_rd:    u32,
+    wbm_data:  u64,
+}
+
+event ipi_received [IPI] {
+    cycle:     u64,
+    minion_id: u32,
+    thread_id: u8,
+    pc:        u64,
+}
+
+event tensorfma_write [TFMA] {
+    cycle:     u64,
+    minion_id: u32,
+    entry:     i32,
+    wmask:     u32,
+}
+
+event tensorfma_write8 [TFMA] {
+    cycle:     u64,
+    minion_id: u32,
+    entry:     i32,
+    data:      u32[VL],
+    wmask:     u32,
+}
+
+event tensorquant_write [TQ] {
+    cycle:     u64,
+    minion_id: u32,
+    entry:     i32,
+    wmask:     u32,
+}
+
+event reduce_write [RED] {
+    cycle:     u64,
+    minion_id: u32,
+    entry:     i32,
+}
+
+event tensorstore_write [TS] {
+    cycle:      u64,
+    minion_id:  u32,
+    is_256_bit: bool,
+    addr:       u64,
+    data:       u32[VL*2],
+    size:       u8,
+    qwen:       u8,
+    subcode:    u8,
+    coop:       u8,
+}
+
+event tensorfma_done [TFMA] {
+    cycle:      u64,
+    minion_id:  u32,
+}
+
+event tensorquant_done [TQ] {
+    cycle:      u64,
+    minion_id:  u32,
+}
+
+event reduce_done [RED] {
+    cycle:             u64,
+    minion_id:         u32,
+    action:            u8,
+    partner_minion_id: u32,
+    operation:         u8,
+    zero_reg_reduce:   bool,
+    auto_pair:         bool,
+    level:             u8
+}
+
+event tensorstore_done [TS] {
+    cycle:     u64,
+    minion_id: u32,
+    coop:      u8,
+}
+
+event tl_mon_op_start [TL] {
+    cycle:     u64,
+    minion_id: u32,
+    tl_module: u32,
+    transform: u32,
+    num_lines: u32,
+}
+
+event tl_mon_process_busy [TL] {
+    cycle:     u64,
+    minion_id: u32,
+    tl_module: i32,
+    state:     i32,
+}
+
+event tl_mon_process_req [TL] {
+    cycle:      u64,
+    minion_id:  u32,
+    tl_module:  i32,
+    req_id_idx: i32,
+}
+
+event tl_mon_process_resp [TL] {
+    cycle:       u64,
+    minion_id:   u32,
+    tl_module:   i32,
+    resp_id_idx: i32,
+    entry:       i32,
+    data:        u64[VL/2],
+}
+
+event tl_mon_process_trans_data_xfer [TL] {
+    cycle:     u64,
+    minion_id: u32,
+    entry:     i32,
+    banks:     i32,
+    data:      u64[VL/2],
+}
+
+event tl_mon_process_tenb_flush [TL] {
+    cycle:     u64,
+    minion_id: u32,
+}
+
+event esr_write [ESR] {
+    addr: u64,
+    data: u64,
+}
+
+event icache_prefetch_done [PREF] {
+    shire_id: u32,
+}
+
+event warm_reset [RST] {
+    cycle:     u64,
+    minion_id: u32,
+}
+
+event clear_interrupt [CLR] {
+    cycle:     u64,
+    minion_id: u32,
+    thread_id: u8,
+    mip:       u32,
+}

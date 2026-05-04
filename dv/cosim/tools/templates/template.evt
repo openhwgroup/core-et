@@ -1,0 +1,17 @@
+module ${module};
+
+% for evt in events:
+% if evt.tag:
+event ${evt.name} [${evt.tag}] {
+% else:
+event ${evt.name} {
+% endif
+% for fld in evt.fields:
+% if fld.width > 1:
+   ${fld.name}: ${fld.type.name}[${fld.width}],
+% else:
+   ${fld.name}: ${fld.type.name},
+% endif
+% endfor
+}
+% endfor

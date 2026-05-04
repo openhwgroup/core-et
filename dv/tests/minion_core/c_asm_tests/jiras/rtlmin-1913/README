@@ -1,0 +1,4 @@
+Goal:
+Specific test case for RTLMIN-1913. While a privileged access to Mcode region is outstanding in the dcache, the privileged is
+lowered to user mode. When the request is replayed, it should not raise an exception. In a second part, the test checks that
+executing an mret in U-mode does cause a trap.

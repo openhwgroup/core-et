@@ -1,0 +1,817 @@
+
+
+
+register ms_mem_ctl {
+   field ESR_MS_ADDR_REMOVE_BIT_SEL0  @'h0 {
+      bits 6;
+      reset 'h6;
+      access rw;
+   }
+   field ESR_MS_ADDR_REMOVE_BIT_SEL1  @'h6 {
+      bits 6;
+      reset 'h7;
+      access rw;
+   }
+   field ESR_MS_ADDR_REMOVE_BIT_SEL2  @'hc {
+      bits 6;
+      reset 'h8;
+      access rw;
+   }
+   field ESR_MS_ADDR_REMOVE_BIT_SEL3  @'h12 {
+      bits 6;
+      reset 'h9;
+      access rw;
+   }
+   field ESR_MS_ADDR_MC_BIT_SEL       @'h18 {
+      bits 6;
+      reset 'h9;
+      access rw;
+   }
+   field ESR_MS_ADDR_DEBUG_MC_BIT_SEL @'h1e {
+      bits 6;
+      reset 'h6;
+      access rw;
+   }
+   field ESR_MS_ADDR_MASK             @'h24 {
+      bits 12;
+      reset 'h07f;
+      access rw;
+   }
+   field ESR_MS_MC_EN                 @'h30 {
+      bits 2;
+      reset 'h3;
+      access rw;
+   }
+}
+
+register ms_atomic_sm_ctl {
+   field ESR_MS_ATOMIC_EVICT_START @ 'h0 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_MS_ATOMIC_STATE       @ 'h4 {
+      bits 4;
+      reset 'h0;
+      access ro;
+   }
+}
+
+register ms_mem_revision_id {
+   field ESR_MEMSHIRE_REVISION_B0 @ 'h0 {
+      bits 8;
+      reset 'h1;
+      access ro;
+   }
+   field ESR_MEMSHIRE_REVISION_B1 @ 'h8 {
+      bits 8;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_MEMSHIRE_REVISION_B2 @ 'h10 {
+      bits 8;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_MEMSHIRE_REVISION_B3 @ 'h18 {
+      bits 8;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_MEMSHIRE_ID @ 'h28 {
+      bits 8;
+      reset 'h0;
+      access ro;
+   }
+}
+
+register ddrc_clock_ctl {
+   field ESR_DDRC_U0_CACTIVE_DDRC @ 'h0 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_DDRC_U0_CSYSACK_DDRC @ 'h1 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_DDRC_U0_CSYSREQ_DDRC @ 'h2 {
+      bits 1;
+      reset 'h1;
+      access rw;
+   }
+   field ESR_DDRC_U1_CACTIVE_DDRC @ 'h3 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_DDRC_U1_CSYSACK_DDRC @ 'h4 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_DDRC_U1_CSYSREQ_DDRC @ 'h5 {
+      bits 1;
+      reset 'h1;
+      access rw;
+   }
+   field ESR_DDRC_U0_CACTIVE_LO @ 'h6 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_DDRC_U0_CSYSACK_LO @ 'h7 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_DDRC_U0_CSYSREQ_LO @ 'h8 {
+      bits 1;
+      reset 'h1;
+      access rw;
+   }
+   field ESR_DDRC_U1_CACTIVE_LO @ 'h9 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_DDRC_U1_CSYSACK_LO @ 'ha {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_DDRC_U1_CSYSREQ_LO @ 'hb {
+      bits 1;
+      reset 'h1;
+      access rw;
+   }
+   field ESR_DDRC_U0_CACTIVE_HI @ 'hc {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_DDRC_U0_CSYSACK_HI @ 'hd {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_DDRC_U0_CSYSREQ_HI @ 'he {
+      bits 1;
+      reset 'h1;
+      access rw;
+   }
+   field ESR_DDRC_U1_CACTIVE_HI @ 'hf {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_DDRC_U1_CSYSACK_HI @ 'h10 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_DDRC_U1_CSYSREQ_HI @ 'h11 {
+      bits 1;
+      reset 'h1;
+      access rw;
+   }
+}
+
+register ddrc_main_ctl {
+   field ESR_DDRC_WRITE_AUTO_PRECHARGE_LO @'h0 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_DDRC_WRITE_AUTO_PRECHARGE_HI @'h1 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_DDRC_READ_AUTO_PRECHARGE_LO  @'h2 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_DDRC_READ_AUTO_PRECHARGE_HI  @'h3 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+}
+
+
+register ddrc_scrub1 {
+   field ESR_DDRC_SCRUB_ADDR_START_MASK @'h0 {
+      bits 36;
+      reset 'h0;
+      access rw;
+   }
+}
+
+register ddrc_scrub2 {
+   field ESR_DDRC_SCRUB_ADDR_RANGE_MASK @'h0 {
+      bits 36;
+      reset 'h0;
+      access rw;
+   }
+}
+
+register ddrc_u0_mrr_data {
+   field ESR_DDRC_U0_MRR_DATA @'h0 {
+      bits 16;
+      reset 'h0;
+      access ro;
+   }
+}
+
+register ddrc_u1_mrr_data {
+   field ESR_DDRC_U1_MRR_DATA @'h0 {
+      bits 16;
+      reset 'h0;
+      access ro;
+   }
+}
+
+register ddrc_mrr_status {
+   field ESR_DDRC_U0_MRR_DATA_VALID @'h0 {
+      bits 1;
+      reset 'h0;
+      access wc;
+   }
+   field ESR_DDRC_U1_MRR_DATA_VALID @'h1 {
+      bits 1;
+      reset 'h0;
+      access wc;
+   }
+}
+
+register ddrc_reset_ctl {
+   field ESR_DDRC_SUBSYSTEM_RESET @ 'h0 {
+      bits 1;
+      reset 'h1;
+      access rw;
+   }
+   field ESR_DDRC_APB_RESET @ 'h1 {
+      bits 1;
+      reset 'h1;
+      access rw;
+   }
+   field ESR_DDRC_PUB_RESET @ 'h2 {
+      bits 1;
+      reset 'h1;
+      access rw;
+   }
+   field ESR_DDRC_POWER_OK @ 'h3 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_DDRC_RESET_CTL_RESERVED @ 'h4 {
+      bits 4;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_DDRC_PLL_CLK_SEL @ 'h8 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+}
+
+register ddrc_int_status {
+   field ESR_CYC_COUNT_OVERFLOW_INTR @ 'hf {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_PERF_COUNT1_OVERFLOW_INTR @ 'he {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_PERF_COUNT0_OVERFLOW_INTR @ 'hd {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_MC1_DERATE_TEMP_LIMIT_INTR @ 'hc {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_MC0_DERATE_TEMP_LIMIT_INTR @ 'hb {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_MC1_SBR_DONE_INTR @ 'ha {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_MC0_SBR_DONE_INTR @ 'h9 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_MC1_ECC_CORRECTED_ERR_INTR @ 'h8 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_MC0_ECC_CORRECTED_ERR_INTR @ 'h7 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_DDRPHY_INTR @ 'h6 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_DFI1_ERR_INTR @ 'h5 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_DFI0_ERR_INTR @ 'h4 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_MC1_DFI_ALERT_ERR_INTR @ 'h3 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_MC0_DFI_ALERT_ERR_INTR @ 'h2 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_MC1_ECC_UNCORRECTED_ERR_INTR @ 'h1 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_MC0_ECC_UNCORRECTED_ERR_INTR @ 'h0 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+}
+
+
+register ddrc_int_critical_en {
+   field ESR_CYC_COUNT_OVERFLOW_CRIT_EN @ 'hf {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_PERF_COUNT1_OVERFLOW_CRIT_EN @ 'he {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_PERF_COUNT0_OVERFLOW_CRIT_EN @ 'hd {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_MC1_DERATE_TEMP_LIMIT_CRIT_EN @ 'hc {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_MC0_DERATE_TEMP_LIMIT_CRIT_EN @ 'hb {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_MC1_SBR_DONE_CRIT_EN @ 'ha {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_MC0_SBR_DONE_CRIT_EN @ 'h9 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_MC1_ECC_CORRECTED_ERR_CRIT_EN @ 'h8 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_MC0_ECC_CORRECTED_ERR_CRIT_EN @ 'h7 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_DDRPHY_CRIT_EN @ 'h6 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_DFI1_ERR_CRIT_EN @ 'h5 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_DFI0_ERR_CRIT_EN @ 'h4 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_MC1_DFI_ALERT_ERR_CRIT_EN @ 'h3 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_MC0_DFI_ALERT_ERR_CRIT_EN @ 'h2 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_MC1_ECC_UNCORRECTED_ERR_CRIT_EN @ 'h1 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_MC0_ECC_UNCORRECTED_ERR_CRIT_EN @ 'h0 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+}
+
+
+register ddrc_int_normal_en {
+   field ESR_CYC_COUNT_OVERFLOW_NORM_EN @ 'hf {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_PERF_COUNT1_OVERFLOW_NORM_EN @ 'he {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_PERF_COUNT0_OVERFLOW_NORM_EN @ 'hd {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_MC1_DERATE_TEMP_LIMIT_NORM_EN @ 'hc {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_MC0_DERATE_TEMP_LIMIT_NORM_EN @ 'hb {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_MC1_SBR_DONE_NORM_EN @ 'ha {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_MC0_SBR_DONE_NORM_EN @ 'h9 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_MC1_ECC_CORRECTED_ERR_NORM_EN @ 'h8 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_MC0_ECC_CORRECTED_ERR_NORM_EN @ 'h7 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_DDRPHY_NORM_EN @ 'h6 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_DFI1_ERR_NORM_EN @ 'h5 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_DFI0_ERR_NORM_EN @ 'h4 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_MC1_DFI_ALERT_ERR_NORM_EN @ 'h3 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_MC0_DFI_ALERT_ERR_NORM_EN @ 'h2 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_MC1_ECC_UNCORRECTED_ERR_NORM_EN @ 'h1 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_MC0_ECC_UNCORRECTED_ERR_NORM_EN @ 'h0 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+}
+
+register ddrc_err_int_log {
+   field ESR_DFT1_ERR_INFO @ 'hc {
+      bits 4;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_DFT1_ERR_SET @ 'ha {
+      bits 1;
+      reset 'h0;
+      access w1;
+   }
+   field ESR_DFT1_ERR_CLR @ 'h9 {
+      bits 1;
+      reset 'h0;
+      access w1;
+   }
+   field ESR_DFT1_ERR @ 'h8 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_DFT0_ERR_INFO @ 'h4 {
+      bits 4;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_DFT0_ERR_SET @ 'h2 {
+      bits 1;
+      reset 'h0;
+      access w1;
+   }
+   field ESR_DFT0_ERR_CLR @ 'h1 {
+      bits 1;
+      reset 'h0;
+      access w1;
+   }
+   field ESR_DFT0_ERR @ 'h0 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+}
+
+register ddrc_debug_sigs_mask0 {
+   field ESR_DEBUG_SIGS_MASK0 @ 'h0 {
+      bits 64;
+      reset 'h0;
+      access rw;
+   }
+}
+
+register ddrc_debug_sigs_mask1 {
+   field ESR_DEBUG_SIGS_MASK1 @ 'h0 {
+      bits 64;
+      reset 'h0;
+      access rw;
+   }
+}
+
+register ddrc_scratch {
+   field ESR_SCRATCH @ 'h0 {
+      bits 64;
+      reset 'h0;
+      access rw;
+   }
+}
+
+register ddrc_trace_ctl {
+   field ESR_PERF_OP_SIGS_MASK @ 'h8 {
+      bits 24;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_TRACE_EN @ 'h0 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+}
+
+register ddrc_perfmon_ctl_status {
+   field ESR_P1_SO @ 'h25 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_P1_SA @ 'h24 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_P0_SO @ 'h23 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_P0_SA @ 'h22 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_CYC_SO @ 'h21 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_CYC_SA @ 'h20 {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_AO @ 'h1e {
+      bits 1;
+      reset 'h0;
+      access ro;
+   }
+   field ESR_P1_MODE @ 'h16 {
+      bits 8;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_P1_E @ 'h15 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_P1_L @ 'h14 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_P1_O @ 'h13 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_P1_R @ 'h12 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_P1_S @ 'h11 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_P0_MODE @ 'h9 {
+      bits 8;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_P0_E @ 'h8 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_P0_L @ 'h7 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_P0_O @ 'h6 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_P0_R @ 'h5 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_P0_S @ 'h4 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_CYC_L @ 'h3 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_CYC_O @ 'h2 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_CYC_R @ 'h1 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+   field ESR_CYC_S @ 'h0 {
+      bits 1;
+      reset 'h0;
+      access rw;
+   }
+}
+
+register ddrc_perfmon_cyc_cntr {
+   field ESR_CYC_CNTR @ 'h0 {
+      bits 40;
+      reset 'h0;
+      access rw;
+   }
+}
+
+register ddrc_perfmon_p0_cntr {
+   field ESR_P0_CNTR @ 'h0 {
+      bits 40;
+      reset 'h0;
+      access rw;
+   }
+}
+
+register ddrc_perfmon_p1_cntr {
+   field ESR_P1_CNTR @ 'h0 {
+      bits 40;
+      reset 'h0;
+      access rw;
+   }
+}
+
+register ddrc_perfmon_p0_qual {
+   field ESR_P0_QUAL @ 'h0 {
+      bits 64;
+      reset 'h0;
+      access rw;
+   }
+}
+
+register ddrc_perfmon_p1_qual {
+   field ESR_P1_QUAL @ 'h0 {
+      bits 64;
+      reset 'h0;
+      access rw;
+   }
+}
+
+register ddrc_perfmon_p0_qual2 {
+   field ESR_P0_QUAL2 @ 'h0 {
+      bits 64;
+      reset 'h0;
+      access rw;
+   }
+}
+
+register ddrc_perfmon_p1_qual2 {
+   field ESR_P1_QUAL2 @ 'h0 {
+      bits 64;
+      reset 'h0;
+      access rw;
+   }
+}
+
+block ms_regs {
+   bytes 8;
+   register ms_mem_ctl               @ 'h400_0c00;
+   register ms_atomic_sm_ctl         @ 'h400_0c08;
+   register ms_mem_revision_id       @ 'h400_0c10;
+   register ddrc_reset_ctl           @ 'h400_0E00;
+   register ddrc_clock_ctl           @ 'h400_0E08;
+   register ddrc_main_ctl            @ 'h400_0E10;
+   register ddrc_scrub1              @ 'h400_0E18;
+   register ddrc_scrub2              @ 'h400_0E20;
+   register ddrc_u0_mrr_data         @ 'h400_0E28;
+   register ddrc_u1_mrr_data         @ 'h400_0E30;
+   register ddrc_mrr_status          @ 'h400_0E38;
+   register ddrc_int_status          @ 'h400_0E40;
+   register ddrc_int_critical_en     @ 'h400_0E48;
+   register ddrc_int_normal_en       @ 'h400_0E50;
+   register ddrc_err_int_log        @ 'h400_0E58;
+   register ddrc_debug_sigs_mask0    @ 'h400_0A60;
+   register ddrc_debug_sigs_mask1    @ 'h400_0A68;
+   register ddrc_scratch             @ 'h400_0e70;
+   register ddrc_trace_ctl           @ 'h400_0A78;
+   register ddrc_perfmon_ctl_status @ 'h400_0E80;
+   register ddrc_perfmon_cyc_cntr   @ 'h400_0E88;
+   register ddrc_perfmon_p0_cntr    @ 'h400_0E90;
+   register ddrc_perfmon_p1_cntr    @ 'h400_0E98;
+   register ddrc_perfmon_p0_qual    @ 'h400_0Ea0;
+   register ddrc_perfmon_p1_qual    @ 'h400_0Ea8;
+   register ddrc_perfmon_p0_qual2   @ 'h400_0Eb0;
+   register ddrc_perfmon_p1_qual2   @ 'h400_0Eb8;
+}

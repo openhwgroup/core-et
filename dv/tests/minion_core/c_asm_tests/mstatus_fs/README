@@ -1,0 +1,2 @@
+Goal:
+Test case for VERIF-2108: CSR mcause and mstatus (FS field) change at the same time when there is an xcpt or an interrupt.

@@ -1,0 +1,6 @@
+fields,tb_en,tb_idle,tb_texsend_fifo_full,tb_ibuff_oc,tb_inf_tbpull_req,tb_obuff_full,reserved
+width,1,1,1,5,3,1,4
+,,,,,,,
+,,,,,,,
+,,,,,,,
+sum bits,16,,,,,,

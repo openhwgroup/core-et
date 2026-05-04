@@ -1,0 +1,6 @@
+fields,reserved,tb_only_lod0,tb_single_tbpull,tb_disable_mipmap,tb_disable_aniso,tb_single_texel,tb_single_l2req,tb_ignore_cg,tb_force_cg,tb_en
+width,7,1,1,1,1,1,1,1,1,1
+,,,,,,,,,,
+,,,,,,,,,,
+,,,,,,,,,,
+sum bits,16,,,,,,,,,

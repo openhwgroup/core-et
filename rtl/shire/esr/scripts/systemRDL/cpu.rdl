@@ -1,0 +1,433 @@
+// Copyright (c) 2026 Ainekko
+// SPDX-License-Identifier: Apache-2.0
+
+addrmap M_cpu {
+	name = "M_cpu";
+	alignment = 8;
+	default regwidth = 64;
+	default sw = rw;
+	
+	reg {
+		name = "minion_feature";
+		field {sw=rw; desc = "Set this bit to trap on GFX. When this bit is enabled, GFX instructions generate an illegal instruction exception.";} trap_on_gfx[0:0] = 0x1;
+		field {sw=rw; desc = "Set this bit to trap on ML. When this bit is set, tensor pseudo-instructions generate an illegal instruction exception.";} trap_on_ml[1:1]=0x0 ;
+		field {sw=rw; desc = "Setting this bit disables user cacheops. If set, user mode will not have access to the cache op pseudo-instructions.";} trap_on_u_cacheops[2:2] = 0x0 ;
+		field {sw=rw; desc = "Setting this bit disables the user scratchpad. When set, user mode cannot enable or disable the scratchpad.";} trap_on_u_scp[3:3] = 0x0 ;
+		field {sw=rw; desc = "Set this bit to disable multithreading, making only thread 0 available. The hart IDs for all thread 0s in a Shire must be contiguous.";} disable_multithreading[4:4] = 0x0 ;
+		field {sw=rw; desc = "Set this bit to disable lock/unlock. When set, user mode cannot use the LockVA and UnlockVA operations.";} disable_lock_unlock[5:5] = 0x0 ;
+	} minion_feature @ 0x0;
+
+	reg {
+		name = "thread1_disable";
+		field {sw=rw; desc = "Each bit of this register corresponds to thread 1 of each Minion core in the Neighborhood. When a bit is set, thread 1 of the corresponding Minion is disabled. The field is encoded as follows:
+			Bit 0: Minion 0, thread 1
+            Bit 1: Minion 1, thread 1
+            Bit 2: Minion 2, thread 1
+            …
+            Bit 7: Minion 7, thread 1";} thread1_disable_f0[7:0] = 0xff;
+	} thread1_disable @ 0x10;
+
+	reg {
+		name = "ipi_trigger";
+		field {sw=rw; desc = "Machine-level software writes a a bit-mask into this register to set the MSIP bit of one or more harts in the Neighborhood. The encoding of this register is as follows:
+			Bit 0: Minion 0, hart 0
+			Bit 1: Minion 0, hart 1
+			Bit 2: Minion 1, hart 0
+			Bit 3: Minion 1, hart 1
+			…
+			Bit 12: Minion 6, hart 0
+			Bit 13: Minion 6, hart 1
+			Bit 14: Minion 7, hart 0
+			Bit 15: Minion 7, hart 1
+			Reading this register reads the value of the MSIP bits of the harts in the Neighborhood. Writing a value with the i-th bit set to 0,
+			will have no effect on the value of the MSIP bit of the corresponding hart.";} ipi_trigger[15:0] = 0x0;
+	} ipi_trigger @ 0x90;
+
+	reg {
+		name = "ipi_redirect_filter";
+		field {sw=rw; desc = "ipi_redirect_filter Writing a 16-bit value to this register sets the hart ID filter mask for subsequent writes to the IPI_REDIRECT_TRIGGER register. This register is used by privileged software (M-Mode) to prevent accidental user-level redirections. Its value is ANDed with the IPI_REDIRECT_TRIGGER ESR before sending any user-level redirections; setting this register to 0x0 disables all user-level redirections. The encoding of this register is as follows: 
+			Bit 0: Minion 0, hart 0
+            Bit 1: Minion 0, hart 1
+            Bit 2: Minion 1, hart 0
+            Bit 3: Minion 1, hart 1
+            …
+            Bit 12: Minion 6, hart 0
+            Bit 13: Minion 6, hart 1
+            Bit 14: Minion 7, hart 0
+            Bit 15: Minion 7, hart 1 ";} ipi_redirect_filter[15:0] = 0xffff;
+	} ipi_redirect_filter @ 0x88;
+
+	reg {
+		name = "ipi_trigger_clear";
+		field {sw=r; desc = "Machine-level software writes a bit-mask into this register to clear the MSIP bit of one or more harts in the Neighborhood. The encoding of this register is as follows:
+			Bit 0: Minion 0, hart 0
+            Bit 1: Minion 0, hart 1
+            Bit 2: Minion 1, hart 0
+            Bit 3: Minion 1, hart 1
+            …
+            Bit 12: Minion 6, hart 0
+            Bit 13: Minion 6, hart 1
+            Bit 14: Minion 7, hart 0
+            Bit 15: Minion 7, hart 1
+            Reading this register returns a 0x0 value.";} ipi_trigger_clear[15:0] = 0x0;
+	} ipi_trigger_clear @ 0x98;
+
+	reg {
+		name = "mtime_local_target";
+		field {sw=rw; desc = "This register controls which harts receive a timer interrupt. If bit N in mtime_local_target register is 1, hart N would be able to observe a timer interrupt in mip CSR if the mtimecmp is greater than mtime. If bit N is 0, the interrupt will be masked and not observable on hart N mip CSR.";} mtime_local_target[15:0] = 0xffff;
+	} mtime_local_target @ 0x218;
+
+	reg {
+		name = "thread0_disable";
+		field {sw=rw; desc = "Each bit of this register corresponds to thread 0 of each Minion core in the Neighborhood. When a bit is set, thread 0 of the corresponding Minion is disabled. The field is encoded as follows:  Bit 0: Minion 0, thread 0 Bit 1: Minion 1, thread 0 Bit 2: Minion 2, thread 0 Bit 7: Minion 7, thread 0";} thread0_disable[7:0] = 0xFE;
+// This value can be overriden by OTP;
+	} thread0_disable @ 0x240;
+
+	reg {
+		name = "icache_mprefetch";
+		desc = "A write in this ESR prefetches Count+1 consecutive lines starting at address Address to the instruction cache.
+               The privilege mode associated with this operation is Machine-mode, and all memory accesses are performed with Machine-mode privileges.
+               If any of the memory requests generated by the prefetch engine generates an exception, the line is not prefetched and the operation continues with the next line.
+			   Reading this register returns the idle status of the prefetch engine.";
+		field {sw=rw; desc = "Number of lines to be prefetched (minus 1) starting at the given Address.";} count[5:0] = 0x0;
+		field {sw=rw; desc = "Bits [47:6] of the address where prefetching should start from (aligned to a cacheline).";} address[47:6]=0x0 ;
+	} icache_mprefetch @ 0x308;
+
+	reg {
+		name = "clk_gate_ctrl";
+		field {sw=rw; desc = ".Setting this bit disables integer pipeline clock gating";} min_intpipe_clock_gate_disable[0:0] = 0x0;
+		field {sw=rw; desc = "Setting this bit disables VPU lane clock gating.";} min_vpulane_clock_gate_disable[1:1]=0x0 ;
+		field {sw=rw; desc = "Setting this bit disables VPUtima clock gating";} min_vputima_clock_gate_disable[2:2]=0x0 ;
+		field {sw=rw; desc = "Setting this bit disables VPUtrans clock gating";} min_vputrans_clock_gate_disable[3:3]=0x0 ;
+		field {sw=rw; desc = "Setting this bit disables data cache clock gating";} min_dcache_clock_gate_disable[4:4] ;
+		field {sw=r; desc = "Write as zero. Returns 0 on read.";} reserved0[5:5] ;
+		field {sw=rw; desc = "Setting this bit disables front end clock gating.";} min_frontend_clock_gate_disable[6:6]=0x0 ;
+		field {sw=r; desc = "Write as zero. Returns 0 on read.";} reserved1[10:7]  ;
+	} clk_gate_ctrl @ 0x310;
+
+	reg {
+		name = "mtime";
+		field {sw=rw; desc = "This register matches the definition on the RISCV Privilege v1.1 specification. 64-bit timer counter. This timer increments in 100ns intervals. The mtimecmp register is compared to the value in this register. When the two are equal, a timer interrupt is generated.";} mtime[63:0] = 0x0;
+	} mtime @ 0x200;
+
+	reg {
+		name = "mtime_cmp";
+		field {sw=rw; desc = "This register matches the definition on the RISCV Privilege v1.1 specification. 64-bit timer counter compare. Software sets the desired timer interval using this register. The value is then compared to the value in the mtime register. When the two are equal, an timer interrupt is generated.";} mtime_cmp[63:0] = 0x0;
+	} mtime_cmp @ 0x208;
+
+	reg {
+		name = "time_config";
+		field {sw=rw; desc = "The value in this field will be used as the timer prescalar threshold.";} prescalar_threshold[0:6] = 0x28;
+		field {sw=rw; desc = "When this field holds 0 the timer is driven by the external reference clock. When this field holds 1 the timer is driven by the same clock that drives the cpu subsystem (external clock or ring oscillator)";} ref_clock_mux[7:7]=0x0 ;
+	} time_config @ 0x210;
+
+};
+
+addrmap U_cpu {
+	name = "U_cpu";
+	alignment = 8;
+	default regwidth = 64;
+	default sw = rw	;
+
+
+	reg {
+		name = "ipi_redirect_trigger";
+		field {sw=rw; desc = "User-level software writes a bitmask to this register to request an IPI redirect to all harts indicated by the mask. Before delivery, the bitmask is unconditionally ANDed with the value in IPI_REDIRECT_FILTER. The register is encoded as follows:
+			Bit 0: Minion 0, hart 0
+			Bit 1: Minion 0, hart 1
+			Bit 2: Minion 1, hart 0
+			Bit 3: Minion 1, hart 1
+			…
+			Bit 12: Minion 6, hart 0
+			Bit 13: Minion 6, hart 1
+			Bit 14: Minion 7, hart 0
+			Bit 15: Minion 7, hart 1
+			When a redirect IPI is delivered to a hart, that hart must satisfy two conditions, It must be executing in user mode. It must be capable of blocking on a stall CSR read instruction.If either condition is violated, 
+			the hart must take a trap into M-mode with, mcause set to Bad IPI redirect interrupt (5'h10), mtval set to the redirection PC.
+			Reading this register returns a 0x0 value";} ipi_redirect_trigger[15:0];
+	} ipi_redirect_trigger @ 0x80;
+
+	reg {
+		name = "CREDINC0";
+		field {sw=r; desc = "Writing this register increments the COUNTER0 credit counter for the first hart of all the cores selected in MASK0. Reading this register returns a value of 0.";} mask0[7:0] ;
+	} CREDINC0 @ 0xC0;
+
+	reg {
+		name = "CREDINC1";
+		field {sw=r; desc = "Writing this register increments the COUNTER1 credit counter for the first hart of all the cores selected in MASK1.";} mask1[7:0] ;
+	} CREDINC1 @ 0xC8;
+
+	reg {
+		name = "CREDINC2";
+		field {sw=r; desc = "Writing this register increments the COUNTER2 credit counter for the first hart of all the cores selected in MASK2. Reading this register returns a value of 0.";} mask2[7:0] ;
+	} CREDINC2 @ 0xD0;
+
+	reg {
+		name = "CREDINC3";
+		field {sw=r; desc = "Writing this register increments the COUNTER3 credit counter for the first hart of all the cores selected in MASK3. Reading this register returns a value of 0.";} mask3[7:0] ;
+	} CREDINC3 @ 0xD8;
+
+	reg {
+		name = "fast_local_barrier0";
+		field {sw=rw; desc = "The Esperanto Fast Local Barrier (FLB) extension registers provide fast barrier capabilities across the Minions within a Shire. Multiple barrier counters allow a subset of threads in a Shire to atomically modify a barrier counter and determine whether all participating threads have reached the barrier.  
+			The FLB extension provides 32 barrier counters, each 8 bits wide, supporting an all-thread (64 threads) barrier in the Shire. Barrier counter i should be initialized by software before starting the barrier operation using a regular RISC-V store instruction to address (address + i * 8). Software typically initializes barrier counters to zero, 
+			but any value from 0 to 255 is legal.  For maximum performance, FLB counters are directly accessible by threads in the Shire using CSRRW instructions. Threads participating in a barrier use CSRRW to atomically increment the barrier counter. If a thread is the last to join the barrier,
+			the CSRRW returns 0x1; otherwise, it returns 0x0.";} fast_local_barrier0[7:0] = 0x0;
+	} fast_local_barrier0 @ 0x100;
+
+	reg {
+		name = "fast_local_barrier1";
+		field {sw=rw; desc = "see description for fast_local_barrier_0";} fast_local_barrier1[7:0] = 0x0;
+	} fast_local_barrier1 @ 0x108;
+
+	reg {
+		name = "fast_local_barrier2";
+		field {sw=rw; desc = "see description for fast_local_barrier_0";} fast_local_barrier2[7:0] = 0x0;
+	} fast_local_barrier2 @ 0x110;
+
+	reg {
+		name = "fast_local_barrier3";
+		field {sw=rw; desc = "see description for fast_local_barrier_0";} fast_local_barrier3[7:0] = 0x0;
+	} fast_local_barrier3 @ 0x118;
+
+	reg {
+		name = "fast_local_barrier4";
+		field {sw=rw; desc = "see description for fast_local_barrier_0";} fast_local_barrier4[7:0] = 0x0;
+	} fast_local_barrier4 @ 0x120;
+
+	reg {
+		name = "fast_local_barrier5";
+		field {sw=rw; desc = "see description for fast_local_barrier_0";} fast_local_barrier5[7:0] = 0x0;
+	} fast_local_barrier5 @ 0x128;
+
+	reg {
+		name = "fast_local_barrier6";
+		field {sw=rw; desc = "see description for fast_local_barrier_0";} fast_local_barrier6[7:0] = 0x0;
+	} fast_local_barrier6 @ 0x130;
+
+	reg {
+		name = "fast_local_barrier7";
+		field {sw=rw; desc = "see description for fast_local_barrier_0";} fast_local_barrier7[7:0] = 0x0;
+	} fast_local_barrier7 @ 0x138;
+
+	reg {
+		name = "fast_local_barrier8";
+		field {sw=rw; desc = "see description for fast_local_barrier_0";} fast_local_barrier8[7:0] = 0x0;
+	} fast_local_barrier8 @ 0x140;
+
+	reg {
+		name = "fast_local_barrier9";
+		field {sw=rw; desc = "see description for fast_local_barrier_0";} fast_local_barrier9[7:0] = 0x0;
+	} fast_local_barrier9 @ 0x148;
+
+	reg {
+		name = "fast_local_barrier10";
+		field {sw=rw; desc = "see description for fast_local_barrier_0";} fast_local_barrier10[7:0] = 0x0;
+	} fast_local_barrier10 @ 0x150;
+
+	reg {
+		name = "fast_local_barrier11";
+		field {sw=rw; desc = "see description for fast_local_barrier_0";} fast_local_barrier11[7:0] = 0x0;
+	} fast_local_barrier11 @ 0x158;
+
+	reg {
+		name = "fast_local_barrier12";
+		field {sw=rw; desc = "see description for fast_local_barrier_0";} fast_local_barrier12[7:0] = 0x0;
+	} fast_local_barrier12 @ 0x160;
+
+	reg {
+		name = "fast_local_barrier13";
+		field {sw=rw; desc = "see description for fast_local_barrier_0";} fast_local_barrier13[7:0] = 0x0;
+	} fast_local_barrier13 @ 0x168;
+
+	reg {
+		name = "fast_local_barrier14";
+		field {sw=rw; desc = "see description for fast_local_barrier_0";} fast_local_barrier14[7:0] = 0x0;
+	} fast_local_barrier14 @ 0x170;
+
+	reg {
+		name = "fast_local_barrier15";
+		field {sw=rw; desc = "see description for fast_local_barrier_0";} fast_local_barrier15[7:0] = 0x0;
+	} fast_local_barrier15 @ 0x178;
+
+	reg {
+		name = "fast_local_barrier16";
+		field {sw=rw; desc = "see description for fast_local_barrier_0";} fast_local_barrier16[7:0] = 0x0;
+	} fast_local_barrier16 @ 0x180;
+
+	reg {
+		name = "fast_local_barrier17";
+		field {sw=rw; desc = "see description for fast_local_barrier_0";} fast_local_barrier17[7:0] = 0x0;
+	} fast_local_barrier17 @ 0x188;
+
+	reg {
+		name = "fast_local_barrier18";
+		field {sw=rw; desc = "see description for fast_local_barrier_0";} fast_local_barrier18[7:0] = 0x0;
+	} fast_local_barrier18 @ 0x190;
+
+	reg {
+		name = "fast_local_barrier19";
+		field {sw=rw; desc = "see description for fast_local_barrier_0";} fast_local_barrier19[7:0] = 0x0;
+	} fast_local_barrier19 @ 0x198;
+
+	reg {
+		name = "fast_local_barrier20";
+		field {sw=rw; desc = "see description for fast_local_barrier_0";} fast_local_barrier20[7:0] = 0x0;
+	} fast_local_barrier20 @ 0x1A0;
+
+	reg {
+		name = "fast_local_barrier21";
+		field {sw=rw; desc = "see description for fast_local_barrier_0";} fast_local_barrier21[7:0] = 0x0;
+	} fast_local_barrier21 @ 0x1A8;
+
+	reg {
+		name = "fast_local_barrier22";
+		field {sw=rw; desc = "see description for fast_local_barrier_0";} fast_local_barrier22[7:0] = 0x0;
+	} fast_local_barrier22 @ 0x1B0;
+
+	reg {
+		name = "fast_local_barrier23";
+		field {sw=rw; desc = "see description for fast_local_barrier_0";} fast_local_barrier23[7:0] = 0x0;
+	} fast_local_barrier23 @ 0x1B8;
+
+	reg {
+		name = "fast_local_barrier24";
+		field {sw=rw; desc = "see description for fast_local_barrier_0";} fast_local_barrier24[7:0] = 0x0;
+	} fast_local_barrier24 @ 0x1C0;
+
+	reg {
+		name = "fast_local_barrier25";
+		field {sw=rw; desc = "see description for fast_local_barrier_0";} fast_local_barrier25[7:0] = 0x0;
+	} fast_local_barrier25 @ 0x1C8;
+
+	reg {
+		name = "fast_local_barrier26";
+		field {sw=rw; desc = "see description for fast_local_barrier_0";} fast_local_barrier26[7:0] = 0x0;
+	} fast_local_barrier26 @ 0x1D0;
+
+	reg {
+		name = "fast_local_barrier27";
+		field {sw=rw; desc = "see description for fast_local_barrier_0";} fast_local_barrier27[7:0] = 0x0;
+	} fast_local_barrier27 @ 0x1D8;
+
+	reg {
+		name = "fast_local_barrier28";
+		field {sw=rw; desc = "see description for fast_local_barrier_0";} fast_local_barrier28[7:0] = 0x0;
+	} fast_local_barrier28 @ 0x1E0;
+
+	reg {
+		name = "fast_local_barrier29";
+		field {sw=rw; desc = "see description for fast_local_barrier_0";} fast_local_barrier29[7:0] = 0x0;
+	} fast_local_barrier29 @ 0x1E8;
+
+	reg {
+		name = "fast_local_barrier30";
+		field {sw=rw; desc = "see description for fast_local_barrier_0";} fast_local_barrier30[7:0] = 0x0;
+	} fast_local_barrier30 @ 0x1F0;
+
+	reg {
+		name = "fast_local_barrier31";
+		field {sw=rw; desc = "see description for fast_local_barrier_0";} fast_local_barrier31[7:0] = 0x0;
+	} fast_local_barrier31 @ 0x1F8;
+
+	reg {
+		name = "icache_uprefetch";
+		desc = "If no prefetch with a higher privilege mode associated with it is in progress, a write in this ESR prefetches Count+1 consecutive lines starting at address Address to the instruction cache.
+                The privilege mode associated with this operation is User-mode, and all memory accesses are performed with User-mode privileges.
+                If any of the memory requests generated by the prefetch engine generates an exception, the line is not prefetched and the operation continues with the next line.
+				Reading this register returns the idle status of the prefetch engine.";
+		field {sw=rw; desc = "Number of lines to be prefetched (minus 1) starting at the given Address.";} count[5:0] = 0x0;
+		field {sw=rw; desc = "Bits [47:6] of the address where prefetching should start from (aligned to a cacheline).";} address[47:6] ;
+	} icache_uprefetch @ 0x2F8;
+
+};
+
+addrmap S_cpu {
+	name = "S_cpu";
+	alignment = 8;
+	default regwidth = 64;
+	default sw = rw;
+
+	reg {
+		name = "shire_coop_mode";
+		field {sw=rw; desc = "Software can set this bit to enable cooperative prefetches, loads, and stores.";} coop_mode[0:0] = 0x0;
+	} shire_coop_mode @ 0x290;
+
+	reg {
+		name = "icache_sprefetch";
+		desc = "If no prefetch with a higher privilege mode associated with it is in progress, a write in this ESR prefetches Count+1 consecutive lines starting at address Address to the instruction caches.
+                The privilege mode associated with this operation is Supervisor-mode, and all memory accesses are performed with Supervisor-mode privileges.
+                If any of the memory requests generated by the prefetch engine generates an exception, the line is not prefetched and the operation continues with the next line.
+				Reading this register returns the idle status of the prefetch engine.";
+		field {sw=rw; desc = "Number of lines to be prefetched (minus 1) starting at the given Address.";} count[5:0] = 0x0;
+		field {sw=rw; desc = "Bits [47:6] of the address where prefetching should start from (aligned to a cacheline).";} address[47:6] ;
+	} icache_sprefetch @ 0x300;
+
+};
+
+addrmap D_cpu {
+	name = "D_cpu";
+	alignment = 8;
+	default regwidth = 64;
+	default sw = rw;
+
+	reg {
+		name = "sm_config";
+		field {sw=rw; desc = "Data selector within each target";} sm_data_sel[6:0] = 0x0;
+		field {sw=rw; desc = "Target selector:";} sm_target_sel[10:7] ;
+		field {sw=rw; desc = "Status Monitor logic enable.";} sm_enable[11:11] ;
+	} sm_config @ 0xF90;
+
+	reg {
+		name = "sm_trigger";
+		field {sw=r; desc = "Writing this bit triggers a simultaneous snapshot captured in all the SM ESRs";} sm_trigger[0:0] ;
+	} sm_trigger @ 0xF98;
+
+	reg {
+		name = "sm_match";
+		field {sw=r; desc = "Match bus";} sm_match[63:0] ;
+	} sm_match @ 0xFA8;
+
+	reg {
+		name = "sm_filter0";
+		field {sw=r; desc = "Filter bus [63:0]";} sm_filter0[63:0] ;
+	} sm_filter0 @ 0xFB0;
+
+	reg {
+		name = "sm_filter1";
+		field {sw=r; desc = "Filter bus [127:64]";} sm_filter1[63:0] ;
+	} sm_filter1 @ 0xFB8;
+
+	reg {
+		name = "sm_filter2";
+		field {sw=r; desc = "Filter bus [191:128]";} sm_filter2[63:0] ;
+	} sm_filter2 @ 0xFC0;
+
+	reg {
+		name = "sm_data0";
+		field {sw=r; desc = "Data bus [63:0]";} sm_data0[63:0] ;
+	} sm_data0 @ 0xFC8;
+
+	reg {
+		name = "sm_data1";
+		field {sw=r; desc = "Data bus [127:64]";} sm_data1[63:0] ;
+	} sm_data1 @ 0xFD0;
+
+	reg {
+		name = "dmctrl";
+		field {sw=rw; desc = "This bit controls the dmactive signal from the DM; it is broadcast to all Minion shires. When the signal is low it should hold at reset the debug logic of the receiving harts, and of the DM. After writing 1, the debugger should poll DMCTRL until dmactive is high. Hardware may take an arbitrarily long time to initialize and will indicate completion by setting dmactive to 1";} dmactive[0:0] = 0x0;
+		field {sw=rw; desc = "This bit controls the ndmreset signal from the DM; it is broadcast to all Minion shires. The signal should reset every part of the receiving shire, except for any logic required for debug.";} ndmreset[1:1] ;
+		field {sw=rw; desc = "This bit controls the clrresethaltreq signal from the DM; it is broadcast to all Minion shires. Writing 1 to this bit clears the HACTRL.resethalt bits of all currently selected harts. This bit always reads as 0.";} clrresethaltreq[2:2] ;
+		field {sw=rw; desc = "This bit controls the setresethaltreq signal from the DM; it is broadcast to all Minion shires. Writing 1 to this bit sets the HACTRL.resethalt bits of all currently selected harts, unless clrresethaltreq is simultaneously set to 1. This bit always reads as 0.";} setresethaltreq[3:3] ;
+		field {sw=r; desc = "WARL(0)";} reserved25_4[25:4] ;
+		field {sw=rw; desc = "This bit controls the hasel signal from the DM; it is broadcast to all Minion shires. If set to 0, then DM requests, such as halt and resume apply only to the harts that are selected by HACTRL.hartmask. If set to 1, then DM requests apply to all harts selected by the union of HACTRL.hartmask and HACTRL.hawindow.";} hasel[26:26] ;
+		field {sw=r; desc = "WARL(0)";} reserved27[27:27] ;
+		field {sw=rw; desc = "This bit controls the ackhavereset signal from the DM; it is broadcast to all Minion shires. Writing 1 to this bit clears HASTATUS0.havereset for all currently selected harts. This bit always reads as 0.";} ackhavereset[28:28] ;
+		field {sw=rw; desc = "This bit controls the hartreset signal from the DM; it is broadcast to all Minion shires.";} hartreset[29:29] ;
+		field {sw=rw; desc = "This bit controls the resumereq signal from the DM; it is broadcast to all Minion shires. Writing 1 to this bit causes the currently selected harts to resume and clears the HASTATUS0.resumeack bit for those harts. This bit always reads as 0.";} resumereq[30:30] ;
+		field {sw=rw; desc = "Bits [31:31]: This bit controls the haltreq signal from the DM; it is broadcast to all Minion shires. Writing 1 to this bit sets the halt request bit for all currently selected harts. Writing 0 to this bit clears the halt request bit for all currently selected harts. This may cancel outstanding halt requests for those harts. This bit always reads as 0.";} haltreq[31:31] ;
+	} dmctrl @ 0xF88;
+
+};
+
+

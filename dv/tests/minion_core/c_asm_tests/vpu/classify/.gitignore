@@ -1,0 +1,10 @@
+fclass
+!fclass/
+fclass_ps
+!fclass_ps/
+fclass_ps_src
+!fclass_ps_src/
+fclass_ps_mix
+!fclass_ps_mix/
+*.hex
+*.mem

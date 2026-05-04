@@ -1,0 +1,6 @@
+This folder contains monitors hooked into the tb to extract
+performance events or cosimulate. They are not related to EVL.
+  - vsrc : Verilog files
+  - csrc : DPI callbacks
+  - libs : DPI macros and some support classes for the testbench but not just related to DPIs
+  - common : makefiles and filelist

@@ -1,0 +1,4 @@
+fields,havereset,resumeack,running,halted
+width,16,16,16,16
+,,,,
+sum bits,64,,,

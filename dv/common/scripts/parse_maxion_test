@@ -1,0 +1,177 @@
+#!/eng/dvtools/release/ruby/2.4.2/bin/ruby
+# Hack the GEM_PATH To Karls Libary
+ENV['GEM_PATH']="/eng/dvtools/release/ruby/mygems"
+Gem.clear_paths
+
+require 'optparse'
+require 'fileutils'
+require 'logger'
+require 'awesome_print'
+require_relative 'rblib/et_log'
+
+#@@usage="usage: $0 {-h} {-v <verbose level>} {-s <grid number>}"
+
+include ET_LOG
+
+
+def setup_repo options
+
+   # Is $REPOROOT defined and is it a valid writable path?
+   if ENV.has_key? "REPOROOT"
+     unless File.writable? ENV['REPOROOT']
+       error "$REPOROOT points to non existant path #{ENV['REPO_ROOT']} or is not writable".colorize("red")
+     end
+   else
+       error "Env var reporoot is not defined.  source env.sh in root of repo".colorize("red")
+   end
+
+   logpath="."
+   options[:logpath] = logpath
+
+   # Now that we are done cleaning etc, we can setup the proper log
+   #
+   level=:info
+   @log = EtLog.new("#{logpath}/parse_maxion_test.log",:info,false,"parse_maxion_test")
+   if options[:verbose]
+    level=:debug
+   end
+   @log.level = level
+   @log.info "parse_maxion_test is running"
+   @log.info "logpath is #{logpath}/parse_maxion_test.log"
+   options[:logfile] = "#{logpath}/parse_maxion_test.log"
+
+   @log.info "command line=#{options[:cmd_line]}"
+
+   options[:git_hash],rc = @log.et_backtick "cd ${REPOROOT};git rev-parse HEAD"
+   options[:git_hash].chomp!
+   @log.info "git revision=#{options[:git_hash]}"
+
+   options[:git_short_hash],rc = @log.et_backtick "cd ${REPOROOT};git rev-parse --short HEAD"
+   options[:git_short_hash].chomp!
+   @log.info "git short hash=#{options[:git_short_hash]}"
+
+   #@log.info "Querying git repo for local modifications..."
+   #diff,rc =@log.et_backtick "cd ${REPOROOT};git diff"
+   #if diff != ""
+   #  diff_path="#{logpath}/local_modifications.patch"
+   #  f = File.new(diff_path, File::CREAT|File::TRUNC|File::RDWR, 0644)
+   #  f.write diff
+   #  f.close
+   #  @log.warn "There were local modifications so creating patch file #{diff_path}"
+   #else
+   #  @log.info "Repo is clean there are no modifications"
+   #end
+end
+
+def parse_lst_file filename
+  unless File.exist? filename
+    @log.error "file=#{filename} is not found"
+  end
+
+  map=Hash.new
+  File.open(filename) do |f|
+    f.each_line do |line|
+      #puts line
+      if line =~ /([\da-f]+) <([a-zA-Z0-9_]+)>:/
+        #@log.info "Addr=#{$1}  Name=#{$2}"
+        map[$1.to_i(16)]=$2
+      end
+    end
+  end # end each line in file 
+  return map
+
+
+end # end method 
+
+NUM_MAXIONS=4
+def map_list_to_exe_c map, sim_log
+
+  for i in 0..NUM_MAXIONS-1
+    logfile="maxion_#{i}_commit.log"
+     @log.et_sys "egrep \"MAX\\[#{i}\\]\" #{sim_log} | /eng/dvtools/release/maxion_dependencies/riscv/2019_01_15/bin/spike-dasm >  #{logfile}",true
+
+    map_filename="maxion_#{i}_trace.log"
+    open(map_filename, 'w') do |of|
+      File.open(logfile) do |f|
+        f.each_line do |line|
+          #puts line
+          if line =~ /pc:0x([\da-f]+)/
+           #@log.info "Addr=#{$1} "
+            addr=$1.to_i(16)
+            map.reverse_each do |key,val|
+              #puts "key=#{key},val=#{val} addr=#{addr}"
+              if addr >= key 
+                of.write "function: #{val} :: #{line}"
+                break
+              end
+            end
+          end  
+        end
+      end
+    end # end each line in file 
+    File.delete logfile
+  end # end for each maxion 
+end
+
+begin
+   cmd_line="parse_maxion_test"
+   ARGV.each { |arg| cmd_line += " #{arg}" }
+
+   options = {}
+   OptionParser.new do |opts|
+     opts.banner = "Usage: gen_bist_br [options]"
+     opts.on("-a build_arguments","--build_args build_arguments","Specify additional build arguments") do |arg|
+       options[:build_args] = arg
+     end
+     opts.on("-n", "--no_branch", "Clean the just the specified build dir") do |arg|
+       options[:no_branch] = arg
+     end
+     opts.on("--c", "--clean", "Clean the just the specified build dir") do |arg|
+       options[:clean] = arg
+     end
+     opts.on("-q", "--quiet", "Quiesce most output") do |arg|
+       options[:quiet] = arg
+     end
+     opts.on("-v", "--verbose", "Verbose output") do |arg|
+       options[:verbose] = arg
+     end
+   end.parse!
+   options[:cmd_line]=cmd_line
+
+   unless options[:quiet]
+     options[:quiet]=:info
+   end
+
+   #
+   # Setup the workspace, cleanup, and get the log setup
+   #
+   setup_repo options
+   @log.info "cmd_line=#{cmd_line}"
+
+   require 'socket'
+   hostname = Socket.gethostname
+   @log.info "running on hostname=#{hostname}"
+
+   ap options      if options[:verbose]
+   @log.ap options if options[:verbose]
+
+   @log.info "spMin parsing ... "
+   
+   dis = Dir.glob "../ioMax/*.dis"
+   dis_file = "../ioMax/#{File.basename dis[0]}"
+   map=parse_lst_file dis_file 
+   map_list_to_exe_c map,"simv.log"
+
+   @log.info "DONE!"
+
+rescue Interrupt => e
+  @log.info "Interrupt detected (Ctrl-c): #{e}\nStack Trace Follows\n#{e.backtrace.join("\n")}"
+  exit 1
+#rescue Exception => e
+#  @log.info "Exception detected : #{e}\nStack Trace Follows\n#{e.backtrace.join("\n")}"
+# exit 1
+rescue SystemExit => e
+  exit e.status
+ensure
+  @log.close unless @log.nil?
+end

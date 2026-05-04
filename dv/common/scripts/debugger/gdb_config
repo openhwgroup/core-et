@@ -1,0 +1,15 @@
+## ===================================
+# =============== GDB ===============
+# ===================================
+
+# remotelogfile is the output filename for RSP commands between GDB and OpenOCD, this is optional.
+set remotelogfile remote-gdb.txt
+
+# remotetimeout is the number of seconds to wait for command between GDB and OpenOCD, 3600 is very big but it means GDB will not retry commands and GDB will wait for a reply no matter how long it takes.
+set remotetimeout 3600
+
+# output-radix tells GDB to write numbers in hex instead of decimal. This can be changed if the user prefers another representation.
+set output-radix 16
+
+# pagination tells GDB to just write to the console and not to try and paginate its output.  This allows the scroll funcitonality in the console.  This is optional.
+set pagination 0

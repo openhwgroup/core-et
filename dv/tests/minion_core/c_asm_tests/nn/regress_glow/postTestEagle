@@ -1,0 +1,17 @@
+#!/bin/bash
+
+testRunDir=$1
+echo "Working PostTestNN folder is $testRunDir\n"
+# Gets commit log and IPC
+
+echo "Parsing simulation outputs... "
+cd $testRunDir
+cp testme.log logs/shire.out
+$REPOROOT/test/shire/shiretop/scripts/get_commits_from_log.pl < logs/shire.out > logs/shire.commit
+$REPOROOT/test/shire/shiretop/scripts/get_ipc.pl logs/shire.commit 5000
+$REPOROOT/test/shire/shiretop/scripts/get_power_array_stats.pl logs/shire.out 300 > power_stats.txt
+$REPOROOT/test/shire/shiretop/scripts/plot_commits_vs_time_to_file.pl logs/shire.out
+$REPOROOT/test/shire/shiretop/scripts/get_operations_stats.pl logs/shire.out
+$REPOROOT/test/common/stats/get_stats.pl --logfile logs/shire.out
+#rm -rf test.log
+

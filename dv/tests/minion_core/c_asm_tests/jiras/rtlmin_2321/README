@@ -1,0 +1,11 @@
+Goal:
+Specific test case for RTLMIN-2321. Test to check that MTVAL/STVAL is set properly when there is a fetch access or
+page fault in the second half of the instruction.
+
+Details:
+Test sets up the following pages with 1 to 1 PA to VA mapping:
+1) 0x8000000000ULL
+2) 0x8040000000ULL (with no exec permission)
+3) 0x8080000000ULL
+it will jump at start of page 2 - 2B => page fault
+it will jump at end of page 3 - 2B => page fault

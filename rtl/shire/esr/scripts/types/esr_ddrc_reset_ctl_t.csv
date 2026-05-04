@@ -1,0 +1,6 @@
+fields,esr_ddrc_pll_clk_sel,esr_ddrc_reset_ctl_reserved,esr_ddrc_power_ok,esr_ddrc_pub_reset,esr_ddrc_apb_reset,esr_ddrc_subsystem_reset
+width,1,4,1,1,1,1
+RO,NO,YES,NO,NO,NO,NO
+ROValue,,'0,,,,
+,,,,,,
+sum bits,9,,,,,

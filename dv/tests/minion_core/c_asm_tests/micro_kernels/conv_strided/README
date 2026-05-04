@@ -1,0 +1,11 @@
+Goal:
+The purpose of the test is to excersise strided convolutions by setting the fields in the CONVOLUTION_SIZE and the CONVOLUTION_CTRL CSRs described in the Tensor Extension.
+Setting different convolution sizes and different strides in order to toggle the bits in the aforementioned CSRs. 
+Also trying negative values for CONVOLUTION_CTRL.col_pos and CONVOLUTION_CTRL.row_pos, so the out-of-bounds behaviour is tested. More details in VERIF-1888.
+
+Parameter(s):
+Core - This test will run on any Core (even thread) of any Neighborhood of any Shire. Only 1 Core (even thread) is expected to be enabled.
+
+Details:
+Programming of the CONVOLUTION_SIZE and the CONVOLUTION_CTRL CSRs is done in 20 iterations via convolution_size() and convolution_ctrl() function calls, using the previously set parameters.
+Based on these predefined parameters (srow[i], nrow[i], scol[i], ncol[i], row_start[i], col_start[i]), an expected value of the tensor_mask is calculated and compared to the read value.

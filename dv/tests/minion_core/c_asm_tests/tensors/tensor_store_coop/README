@@ -1,0 +1,19 @@
+Goal:
+Exercise all the Tensor Store Cooperative combinations explained in PRM-10. The TensorStore operations will target both memory and local SCP addresses.
+
+Details:
+The test only runs in thread 0 of each minion and the NUM_MINIONS define controls how many minions will actually do a tensor store operation.
+The idea behind the test is to try to do cooperative tensor store of the same Neigh, but testing different combinations:
+   - 1 Way (non-coop)
+      · Each minion writes 16 Bytes portion of the same cache line
+      · One minion writes 32 Bytes and the next two consecutive minions write 16 Bytes of the same cache line
+      · Each minion writes 32 Bytes portion of the same cache line
+
+   - 2 way (two minions cooperating)
+      · Pairs of consecutive minions cooperate to write a 32 Bytes portion of the same cache line (each minion writes 16 Bytes)
+      · Pairs of consecutive minions cooperate to write a 64 Bytes of the same cache line (each minion writes 32 Bytes)
+      · Pairs of consecutive minions cooperate to write a 32 Bytes portion of the same cache line (each minion writes 16 Bytes), while two other non-cooperating minions (1 way) write 16 Bytes of the same cache line
+      · Pairs of consecutive minions cooperate to write a 32 Bytes portion of the same cache line (each minion writes 16 Bytes), while another non-cooperating minion (1 way) writes 32 Bytes of the same cache line
+
+   - 4 way (four minions cooperating)
+      · Quartets of concecutive minions cooperate to write 64 Bytes of the same cache line  (each minion writes 16 Bytes)

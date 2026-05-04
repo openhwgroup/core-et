@@ -1,0 +1,35 @@
+#!/bin/csh -f
+
+set cmd=${0:t}
+
+if (3 != ${#argv}) then
+	echo "Usage: ${cmd} log pid timeout"
+	exit 1
+endif
+
+set otimeout=$3
+@ timeout = ${otimeout} * 60
+
+if ("0" == "${timeout}") exit 0
+
+set pid=$2
+set odir=${1:h}
+set killme=${odir}/killme
+set incr=60
+
+@ elapsed = 0
+while (${elapsed} < ${timeout})
+	sleep $incr
+	@ elapsed += ${incr}
+	ps -ef | awk '{printf":%s:",$2}' | fgrep ":${pid}:" > /dev/null
+	if (${status}) exit 0  #process gone
+end
+
+# timeout handling
+cat <<L1 >! ${odir}/.killedmsg
+ERROR: ${cmd}: timeout ${otimeout} (mins) exceeded
+L1
+
+${killme}
+
+exit 0

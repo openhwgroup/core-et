@@ -1,0 +1,6 @@
+fields,disable_lock_unlock,disable_multithreading,trap_on_u_scp,trap_on_u_cacheops,trap_on_ml,trap_on_gfx
+width,1,1,1,1,1,1
+,,,,,,
+,,,,,,
+,,,,,,
+sum bits,6,,,,,

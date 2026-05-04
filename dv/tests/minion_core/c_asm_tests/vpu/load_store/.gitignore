@@ -1,0 +1,8 @@
+*_dst
+!*_dst/
+*_src
+!*_src/
+*_mix
+!*_mix/
+*.hex
+*.mem

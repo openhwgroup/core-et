@@ -1,0 +1,4 @@
+Goal:
+Specific test case for RTLMIN-4370. The specific check here is for TensorError[7] is set or not set using a prefetch_va/CacheOp instruction.
+Bits [7:7] : TensorLoad, TensorStore, or CacheOp instruction generated a memory-related fault (e.g., page fault, access fault, bus error, etc.)
+

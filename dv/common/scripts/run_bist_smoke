@@ -1,0 +1,15 @@
+#!/bin/bash  -e
+cd $REPOROOT
+. env.sh
+export MAX_PARALLEL_JOBS=12
+export B4C_TIMEOUT=86000
+export B4C_SLOTS=10
+export IOS_BIST_DIR=bist
+export MIN_BIST_DIR=bist
+# When build id is set it will copy artifacts which takes a long time
+unset BUILD_ID
+rm -rf $REPOROOT/test_run_dir/ioshire/builds
+mkdir -p  $REPOROOT/test_run_dir/ioshire/builds
+cd $TESTRUN
+b4c -nc -na  -i -ps -m -sc -o -fc -g -c -ms $*
+

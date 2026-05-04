@@ -1,0 +1,2 @@
+#!/bin/bash
+csrCompile -v -t CSRSpec -c $REPOROOT/dv/common/scripts/semifore_css/et_soc.css $1

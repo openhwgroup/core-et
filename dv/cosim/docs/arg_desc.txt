@@ -1,0 +1,25 @@
+# This is the full config file with the default values
+# Note: arg_desc.txt does not support comments
+# Remove them to use this file:
+#    sed -i 's/\s*#.*//' arg_desc.txt
+
+Compute Shire Start PC: 40'h8000001000     # equivalent to +START_PC
+Master Shire Start PC: 40'h8000001000      # equivalent to +CONTROL_START_PC
+Service Processor Start PC: 40'0040000000  # equivalent to +SPIO_START_PC
+MEM_DESC: mem_desc.txt    # Defines memory regions + contents
+COSIM_MAX_NUM_ERR: 1      # Downgrade to warnings after N errors (0 == No limit)
+COSIM_LOG_LEVEL: 2        # Log level for Cosim only (0 = debug, 1 = info, 2 = warning)
+COSIM_LOG_PATH:           # Path to log file (empty string == stdout)
+                          # Note: appending `.lz4` will compress the file
+COSIM_LOG_LIMIT: 0        # Set maximum size of log file (0 == No limit)
+COSIM_LOG_FILES: 1        # Set number of rotating log files (0 == Overwrite file in place)
+MAX_NUM_PEND_INSTR: 45    # Sample head of queue every N pending instructions
+COSIM_TENSOR_LOAD_DBG: 0  # Enable extra debug logs for tensor_load instructions
+CHECKER: 1                # Downgrades errors to warnings (if not enabled)
+                          # Note: This defaults to only(!) for arg_desc.txt (backwards compatibility)
+CHECKER_BYPASSED: 0       # Completely bypasses the checker module
+EMU_LOG_LEVEL: 2          # Overwrites log level for Checker/BEMU only(!)
+EMU_LOG_LEVEL_START_CYCLE: 0     # Only set log level in this cycle window
+EMU_LOG_LEVEL_END_CYCLE: 0
+MONITOR: 0                # Monitor DPI events
+MONITOR_TRACE: cosim_evt.trace   # Path to where the events are stored

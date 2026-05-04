@@ -1,0 +1,12 @@
+#!/bin/csh -f
+
+clear 
+(domainname -A && domainname -A | fgrep -iq esperanto) >& /dev/null
+if ("0" != "${status}") then
+	setenv ETDV_HOST http://localhost:3004 
+endif
+rm -rf tmp 
+et-dvrun \
+	--build_name_enable b1 \
+	--config rof_test.etdv.py \
+	--runroot tmp/rof_test --noslurm --make --rof --project test --group roftest --detail some_detail --status -s

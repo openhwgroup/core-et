@@ -1,0 +1,354 @@
+#!/eng/dvtools/release/ruby/2.4.2/bin/ruby
+# Hack the GEM_PATH To Karls Libary
+ENV['GEM_PATH']="/eng/dvtools/release/ruby/mygems"
+Gem.clear_paths
+
+# Import packages
+require 'optparse'
+require 'fileutils'
+require 'logger'
+require 'awesome_print'
+require_relative 'rblib/et_log'
+require 'tempfile'
+
+#@@usage="usage: $0 {-h} {-v <verbose level>} {-s <grid number>}"
+
+include ET_LOG
+
+FUNC_COV_MERGE_ROOT="/project/jenkins/func_cov/pad_cov"
+NUM_REGR_TO_CHECK=10
+
+class Regression_record
+  attr_accessor :name,:regr_root,:start_path,:repo_name,:repo_path,:cov_root,:repo_root,:regr_done_file_path,:test_vdb_name,:cov_files
+
+  def initialize
+    @name=""
+    @regr_root="/data/jenkins/workspace/Esperanto_DV"
+    @start_path="LATEST"
+    @repo_name="esperanto-soc"
+    @regr_done_file_path="regress.summary"
+    @test_vdb_name="test.vdb"
+    @cov_root="test_run_dir/makefile"
+  end # end constructor
+end # end class
+
+def file_edit(filename, regexp, replacement)
+  Tempfile.open(".#{File.basename(filename)}", File.dirname(filename)) do |tempfile|
+    File.open(filename).each do |line|
+      tempfile.puts line.gsub(regexp, replacement)
+    end
+    tempfile.fdatasync
+    tempfile.close
+    stat = File.stat(filename)
+    FileUtils.chown stat.uid, stat.gid, tempfile.path
+    FileUtils.chmod stat.mode, tempfile.path
+    FileUtils.mv tempfile.path, filename
+  end
+end
+
+def setup_repo options
+
+# Is $REPOROOT defined and is it a valid writable path?
+#   if ENV.has_key? "REPOROOT"
+#     unless File.writable? ENV['REPOROOT']
+#       error "$REPOROOT points to non existant path #{ENV['REPOROOT']} or is not writable".colorize("red")
+#     end
+#  else
+#       error "Env var reporoot is not defined.  source env.sh in root of repo".colorize("red")
+#   end
+
+   logpath="."
+   options[:logpath] = logpath
+
+   # Now that we are done cleaning etc, we can setup the proper log
+   #
+   level=:info
+   @log = EtLog.new("#{logpath}/merge_func_cov.log",:info,false,"merge_func_cov")
+   if options[:verbose]
+    level=:debug
+   end
+   @log.level = level
+   @log.info "merge_func_cov is running"
+   @log.info "logpath is #{logpath}/merge_func_cov.log"
+   options[:logfile] = "#{logpath}/mege_func_cov.log"
+
+   @log.info "command line=#{options[:cmd_line]}"
+
+   options[:git_hash],rc = @log.et_backtick "cd ${REPOROOT};git rev-parse HEAD"
+   options[:git_hash].chomp!
+   @log.info "git revision=#{options[:git_hash]}"
+
+   options[:git_short_hash],rc = @log.et_backtick "cd ${REPOROOT};git rev-parse --short HEAD"
+   options[:git_short_hash].chomp!
+   @log.info "git short hash=#{options[:git_short_hash]}"
+
+end
+
+def find_coverage regressions
+   regressions.each do |regr|
+     @log.info "Finding coverage for regression name=#{regr.name}"
+
+     # Construct the path to the repo_root so we can start searching for finished and valid coverage regressions
+     regr.repo_root = "#{regr.regr_root}/#{regr.name}/#{regr.start_path}/#{regr.repo_name}"
+     @log.debug "Starting search for regression=#{regr.name} repo_root=#{regr.repo_root}"
+     unless Dir.exists? regr.repo_root
+       @log.error "regr=#{regr.name} path not found.  path=#{regr.repo_root}"
+     end
+     real_path=File.realpath regr.repo_root
+     real_path =~ /.*\/(\d+)\//
+     version=$1.to_i
+     @log.debug "Version is #{version}"
+     min_version = version - NUM_REGR_TO_CHECK   # Max number of regressions to check before erroring
+     regr_done_file_path = "#{regr.repo_root}/#{regr.regr_done_file_path}"
+
+     # Now find the latest regression thats done
+     while (version > min_version)
+       @log.debug "Testing path=#{regr_done_file_path}"
+       if File.exists? regr_done_file_path
+         @log.debug "Regression name=#{regr.name} version=#{version} has completed!"
+         vdb_find_path="#{regr.repo_root}/#{regr.cov_root}/**/#{regr.test_vdb_name}"
+         regr.cov_files = Dir[vdb_find_path]
+         regr.cov_files.reject! { |f| /partitionLib/.match(f) }   # Memshire has simv.vdb's everywhere this gets rid of the results internal to the compilation
+         if regr.cov_files.size == 0
+           @log.warn "regr=#{regr.name} is done but contains not coverage dirs named #{regr.test_vdb_name} in path #{vdb_find_path} "
+           version -=1
+           regr.repo_root = "#{regr.regr_root}/#{regr.name}/#{version}/#{regr.repo_name}"
+           regr_done_file_path = "#{regr.repo_root}/#{regr.regr_done_file_path}"
+           next
+         else
+           @log.info "regr=#{regr.name} at #{regr.repo_root} contains #{regr.cov_files.size} coverage records".colorize("yellow")
+         end
+         break;
+       else
+         @log.debug "Regression name=#{regr.name} version=#{version} is incomplete"
+         version-=1
+         regr.repo_root = "#{regr.regr_root}/#{regr.name}/#{version}/#{regr.repo_name}"
+         regr_done_file_path = "#{regr.repo_root}/#{regr.regr_done_file_path}"
+       end
+     end
+
+     if (regr.cov_files.nil?) or (regr.cov_files.size == 0)
+       @log.error "regr=#{regr.name} has no valid completed regressions with coverage files",true
+       @log.error "Please check the configuration and try again"
+     end
+   end
+   @log.info "Finished find all required coverage data!".colorize("yellow")
+end
+
+def merge_coverage options,regressions
+   total_size=0
+   @log.info "Started merging all required coverage data!".colorize("yellow")
+   File.open("#{options[:merge_target]}/master.flist", "w") do |master_file|
+     regressions.each do |regr|
+       @log.info "Merging coverage for regression name=#{regr.name}"
+
+       @log.debug "Creating flist #{regr.name}.flist"
+       File.open("#{options[:merge_target]}/#{regr.name}.flist", "w") do |f|
+         f.puts(regr.cov_files)
+         master_file.puts(regr.cov_files)
+         total_size += regr.cov_files.size
+       end
+
+       # Instead of doing one big merge we can merge blocks.
+       # useful for debug
+       if options[:gen_unit_cov]
+         @log.et_sys "cd #{options[:merge_target]}; urg -full64 -f #{regr.name}.flist -format both -metric group -dbname merged_#{regr.name} -report merged_#{regr.name} -log #{regr.name}_merge.log -group   merge_across_scopes -group instcov_for_score"
+       end
+     end
+   end
+
+   @log.et_sys "cd #{options[:merge_target]}; urg -full64 -f master.flist -format both -metric group -dbname master_merged -report master_merged_html -log master_merge.log -group merge_across_scopes -group instcov_for_score"
+   @log.et_sys "cd #{options[:merge_target]}; mkdir master_merged_text; mv master_merged_html/*.txt master_merged_text/"
+   grpinfo_path="#{options[:merge_target]}/master_merged_text/grpinfo.txt"
+   pad_grpinfo_path="#{options[:merge_target]}/master_merged_text/pad_grpinfo.txt"
+
+   prune_file "Group : pin_toggle_cov::cg_toggle_cov","Group : ",grpinfo_path,pad_grpinfo_path
+   @log.info "Finished merging all required #{total_size} tests from #{regressions.size} regressions".colorize("yellow")
+end
+
+def merge_cum_coverage options, regressions
+
+end
+
+def prune_file start_string,end_string, filename, prune_filename
+  line_num=0
+  started=false
+  @log.info "Pruning file=#{filename}"
+  File.open(filename, "r") do |source_file|
+    File.open(prune_filename, "w") do |prune_file|
+      source_file.each_line do |line|
+        line_num+=1
+        if line =~ /#{start_string}/
+          @log.debug "Match Start line=#{start_string} at line #{line_num}"
+          started=true
+          prune_file.puts line
+          next
+        end
+        if started
+          prune_file.puts line
+        end
+        if started and line =~ /#{end_string}/
+          @log.debug "Match End line=#{end_string} at line #{line_num}"
+          started=false
+        end
+        if (line_num % 1000000) == 0
+          @log.debug "looping: line_num=#{line_num}"
+        end
+      end # each line
+    end # prune_filename
+  end # source_filename
+end # method prune_file
+
+begin
+   #
+   # Define all the regressions.
+   # FUTURE: move this to external config file later
+   #
+   regressions = Array.new()
+
+   regr =Regression_record.new()
+   regr.name="dft_nightly"
+   regressions << regr
+
+   #regr =Regression_record.new()
+   #regr.name="dft_weekly"
+   #regressions << regr
+
+   regr =Regression_record.new()
+   regr.name="io_bisted_rtl"
+   regressions << regr
+
+   # FUTURE: Sean fixed on 5/26 check again
+   #regr =Regression_record.new()
+   #regr.name="pshire_nightly"
+   #regressions << regr
+
+   # FUTURE: try again sean added coverage on 5/26
+   regr =Regression_record.new()
+   regr.name="pshire_debug"
+   regr.cov_root="dvrun/makefile"
+   regressions << regr
+
+# mem and shire cache
+
+   regr =Regression_record.new()
+   regr.name="memory_shire"
+   regressions << regr
+   regr.cov_root="dvrun/memory_shire/makefile/memshire_nightly"
+   regr.regr_done_file_path="dvrun/memory_shire/regress.summary"
+   regr.test_vdb_name = "simv.vdb"
+
+   regr =Regression_record.new()
+   regr.name="fcmem"
+   regressions << regr
+
+   regr =Regression_record.new()
+   regr.name="shire_cache_weekly"
+   regr.cov_root="dvrun"
+   regr.regr_done_file_path="dvrun/shire_cache_weekly/regress.summary"
+   regressions << regr
+
+
+   #regr =Regression_record.new()
+   #regr.name="io_nightly"
+   #regressions << regr
+
+   regr =Regression_record.new()
+   regr.name="io_rom_unit"
+   regressions << regr
+
+   regr =Regression_record.new()
+   regr.name="ioshire_sp_aapg"
+   regressions << regr
+
+   regr =Regression_record.new()
+   regr.name="io_fc_bringup"
+   regressions << regr
+
+   #regr =Regression_record.new()
+   #regr.name="io_debug"
+   #regressions << regr
+
+   # FUTURE: need data
+   #regr =Regression_record.new()
+   #regr.name="ioshire_coverage"
+   #regressions << regr
+
+   cmd_line="merge_func_cov"
+   ARGV.each { |arg| cmd_line += " #{arg}" }
+
+   options = {}
+   OptionParser.new do |opts|
+     opts.banner = "Usage: merge_func_cov [options]"
+     opts.on("-q", "--quiet", "Quiesce most output") do |arg|
+       options[:quiet] = arg
+     end
+     opts.on("-v", "--verbose", "Verbose output") do |arg|
+       options[:verbose] = arg
+     end
+     opts.on("-u", "--gen_unit_cov", "Generate coverage for each regression in addition to all regressions") do |arg|
+       options[:gen_unit_cov] = arg
+     end
+     opts.on("-f", "--find_cov", "Finds coverage and reports on what is found. does not merge coverage") do |arg|
+       options[:find_cov] = arg
+     end
+     opts.on("-r", "--recurse", "recurse and match and merge all valid regressions instead of the first found") do |arg|
+       options[:recurse_cov] = arg
+     end
+     opts.on("-o DIR", "--target DIR", "Specify path to merge dir") do |arg|
+       options[:merge_target] = arg
+     end
+   end.parse!
+   options[:cmd_line]=cmd_line
+
+   unless options[:quiet]
+     options[:quiet]=:info
+   end
+
+   #
+   # Setup the workspace, cleanup, and get the log setup
+   #
+   setup_repo options
+   @log.info "cmd_line=#{cmd_line}"
+
+   require 'socket'
+   hostname = Socket.gethostname
+   @log.info "running on hostname=#{hostname}"
+
+   if options[:insert_only]
+     @log.info "running bist insertion only. skipping validation"
+   end
+
+   ap options      if options[:verbose]
+   @log.ap options if options[:verbose]
+
+   unless options[:merge_target]
+     t = Time.now
+     options[:merge_target]="#{FUNC_COV_MERGE_ROOT}_#{t.hour}_#{t.month}_#{t.day}_#{t.year}"
+   end
+   merge_dir=options[:merge_target]
+
+   if Dir.exists? merge_dir
+     @log.error "target merge directory=#{merge_dir} already exists. please try again"
+   else
+     FileUtils.mkdir_p merge_dir
+     @log.info "Created target merge directory=#{merge_dir}"
+   end
+
+   find_coverage  regressions
+
+   unless options[:find_cov]   # Just find coverage and not merge if :find_cov is specified
+     merge_coverage options,regressions
+   end
+
+rescue Interrupt => e
+  @log.info "Interrupt detected (Ctrl-c): #{e}\nStack Trace Follows\n#{e.backtrace.join("\n")}" unless @log.nil?
+  exit 1
+#rescue Exception => e
+#  @log.info "Exception detected : #{e}\nStack Trace Follows\n#{e.backtrace.join("\n")}" unless @log.nil?
+# exit 1
+rescue SystemExit => e
+  exit e.status
+ensure
+  @log.close unless @log.nil?
+end

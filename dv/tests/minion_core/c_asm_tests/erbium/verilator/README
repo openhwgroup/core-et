@@ -1,0 +1,5 @@
+Goal:
+Tests to isolate instruction sequences that fail in Verilator
+
+Details:
+Used in the Erbium Verilator effort to debug Verilator only issues

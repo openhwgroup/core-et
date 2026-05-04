@@ -1,0 +1,6 @@
+fields,esr_sc_clk_gate_disable,esr_sc_axi_qos,esr_sc_cbuf_enable,esr_sc_remote_l3_enable,esr_sc_remote_scp_enable,esr_sc_l2_bypass,esr_sc_l3_bypass,esr_sc_num_l3_reqq_entries,esr_sc_reqq_no_link_list,esr_sc_ecc_scrub_enable,esr_sc_l3_yield_priority
+width,8,4,1,1,1,1,1,6,1,1,5
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+sum bits,30,,,,,,,,,,

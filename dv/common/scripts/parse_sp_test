@@ -1,0 +1,219 @@
+#!/eng/dvtools/release/ruby/2.4.2/bin/ruby
+# Hack the GEM_PATH To Karls Libary
+ENV['GEM_PATH']="/eng/dvtools/release/ruby/mygems"
+Gem.clear_paths
+
+require 'optparse'
+require 'fileutils'
+require 'logger'
+require 'awesome_print'
+require_relative 'rblib/et_log'
+
+#@@usage="usage: $0 {-h} {-v <verbose level>} {-s <grid number>}"
+
+include ET_LOG
+
+
+$shire_dict = {34 => "sp", 32 => "msMin"}
+
+def setup_repo options
+
+   # Is $REPOROOT defined and is it a valid writable path?
+   if ENV.has_key? "REPOROOT"
+     unless File.writable? ENV['REPOROOT']
+       error "$REPOROOT points to non existant path #{ENV['REPO_ROOT']} or is not writable".colorize("red")
+     end
+   else
+       error "Env var reporoot is not defined.  source env.sh in root of repo".colorize("red")
+   end
+
+   logpath="."
+   options[:logpath] = logpath
+
+   # Now that we are done cleaning etc, we can setup the proper log
+   #
+   level=:info
+   @log = EtLog.new("#{logpath}/parse_sp_test.log",:info,false,"parse_sp_test")
+   if options[:verbose]
+    level=:debug
+   end
+   @log.level = level
+   @log.info "parse_sp_test is running"
+   @log.info "logpath is #{logpath}/parse_sp_test.log"
+   options[:logfile] = "#{logpath}/parse_sp_test.log"
+
+   @log.info "command line=#{options[:cmd_line]}"
+
+   options[:git_hash],rc = @log.et_backtick "cd ${REPOROOT};git rev-parse HEAD"
+   options[:git_hash].chomp!
+   @log.info "git revision=#{options[:git_hash]}"
+
+   options[:git_short_hash],rc = @log.et_backtick "cd ${REPOROOT};git rev-parse --short HEAD"
+   options[:git_short_hash].chomp!
+   @log.info "git short hash=#{options[:git_short_hash]}"
+
+   #@log.info "Querying git repo for local modifications..."
+   #diff,rc =@log.et_backtick "cd ${REPOROOT};git diff"
+   #if diff != ""
+   #  diff_path="#{logpath}/local_modifications.patch"
+   #  f = File.new(diff_path, File::CREAT|File::TRUNC|File::RDWR, 0644)
+   #  f.write diff
+   #  f.close
+   #  @log.warn "There were local modifications so creating patch file #{diff_path}"
+   #else
+   #  @log.info "Repo is clean there are no modifications"
+   #end
+end
+
+def parse_lst_file filename
+  unless File.exist? filename
+    @log.error "file=#{filename} is not found"
+  end
+
+  map=Hash.new
+  File.open(filename) do |f|
+    f.each_line do |line|
+      #puts line
+      if line =~ /([\da-f]+) <([a-zA-Z0-9_]+)>:/
+        #@log.info "Addr=#{$1}  Name=#{$2}"
+        map[$1.to_i(16)]=$2
+      end
+    end
+  end # end each line in file
+  return map
+
+
+end # end method
+
+def map_list_to_exe_r map, filename, shire
+  unless File.exist? filename
+    @log.error "file=#{filename} is not found"
+  end
+
+  @log.et_sys "grep -y S#{shire}.*Retire simv.log > retire.log"
+  map_filename="#{$shire_dict[shire]}_map_retire.log"
+  open(map_filename, 'w') do |of|
+    File.open("retire.log") do |f|
+      f.each_line do |line|
+        #puts line
+        if line =~ /(\s\d[\da-f]+)/
+         #@log.info "Addr=#{$1} "
+          addr=$1.to_i(16)
+          map.reverse_each do |key,val|
+            if addr >= key
+              of.write "function: #{val} :: #{line}"
+              break
+            end
+          end
+        end
+      end
+    end
+  end # end each line in file
+  @log.et_sys "rm -f retire.log"
+end
+
+def map_list_to_exe_c map, filename, shire
+  unless File.exist? filename
+    @log.error "file=#{filename} is not found"
+  end
+
+  @log.et_sys "grep -y S#{shire}.*Commit simv.log > commit.log"
+  map_filename="#{$shire_dict[shire]}_trace.log"
+  open(map_filename, 'w') do |of|
+    File.open("commit.log") do |f|
+      f.each_line do |line|
+        #puts line
+        if line =~ /(\s\d[\da-f]+)/
+         #@log.info "Addr=#{$1} "
+          addr=$1.to_i(16)
+          map.reverse_each do |key,val|
+            if addr >= key
+              of.write "function: #{val} :: #{line}"
+              break
+            end
+          end
+        end
+      end
+    end
+  end # end each line in file
+  @log.et_sys "rm -f commit.log"
+end
+
+
+
+begin
+
+   cmd_line="parse_sp_test"
+   ARGV.each { |arg| cmd_line += " #{arg}" }
+
+   options = {}
+   OptionParser.new do |opts|
+     opts.banner = "Usage: gen_bist_br [options]"
+     opts.on("-a build_arguments","--build_args build_arguments","Specify additional build arguments") do |arg|
+       options[:build_args] = arg
+     end
+     opts.on("-n", "--no_branch", "Clean the just the specified build dir") do |arg|
+       options[:no_branch] = arg
+     end
+     opts.on("--c", "--clean", "Clean the just the specified build dir") do |arg|
+       options[:clean] = arg
+     end
+     opts.on("-q", "--quiet", "Quiesce most output") do |arg|
+       options[:quiet] = arg
+     end
+     opts.on("-v", "--verbose", "Verbose output") do |arg|
+       options[:verbose] = arg
+     end
+   end.parse!
+   options[:cmd_line]=cmd_line
+
+   unless options[:quiet]
+     options[:quiet]=:info
+   end
+
+   #
+   # Setup the workspace, cleanup, and get the log setup
+   #
+   setup_repo options
+   @log.info "cmd_line=#{cmd_line}"
+
+   require 'socket'
+   hostname = Socket.gethostname
+   @log.info "running on hostname=#{hostname}"
+
+   ap options      if options[:verbose]
+   @log.ap options if options[:verbose]
+
+   @log.info "spMin parsing ... "
+
+   dis = Dir.glob "../spMin/*.dis"
+   dis_file = "../spMin/#{File.basename dis[0]}"
+   shire = 34
+   map=parse_lst_file dis_file
+   #map_list_to_exe_r map,"simv.log", shire
+   map_list_to_exe_c map,"simv.log", shire
+
+   #check whether msMin should be parsed as well
+   if Dir.exists?("../msMin")
+      @log.info "msMin exists ... parsing further"
+      dis = Dir.glob "../msMin/*.dis"
+      dis_file = "../msMin/#{File.basename dis[0]}"
+      shire = 32
+      map=parse_lst_file dis_file
+      #map_list_to_exe_r map,"simv.log", shire
+      map_list_to_exe_c map,"simv.log", shire  #  we only realy need commit
+   end
+
+   @log.info "DONE!"
+
+rescue Interrupt => e
+  @log.info "Interrupt detected (Ctrl-c): #{e}\nStack Trace Follows\n#{e.backtrace.join("\n")}"
+  exit 1
+#rescue Exception => e
+#  @log.info "Exception detected : #{e}\nStack Trace Follows\n#{e.backtrace.join("\n")}"
+# exit 1
+rescue SystemExit => e
+  exit e.status
+ensure
+  @log.close unless @log.nil?
+end

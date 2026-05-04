@@ -1,0 +1,6 @@
+fields,ZERO,min_frontend_clock_gate_disable,ZERO,min_dcache_clock_gate_disable,min_vputrans_clock_gate_disable,min_vputima_clock_gate_disable,min_vpulane_clock_gate_disable,min_intpipe_clock_gate_disable
+width,4,1,1,1,1,1,1,1
+,,,,,,,,
+,,,,,,,,
+,,,,,,,,
+sum bits,8,,,,,,,

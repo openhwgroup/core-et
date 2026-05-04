@@ -1,0 +1,5 @@
+Goal:
+Test following local vector 32-bit Coherent Mem Ops: flwl.ps, fswl.ps, fscwl.ps, fgwl.ps; added some self-checking code.
+
+Parameter(s):
+Core - This test will run on any Core (Thread 0 only) of any Neighborhood of any Shire. 

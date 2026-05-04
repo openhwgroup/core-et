@@ -1,0 +1,6 @@
+fields,rbox_single_step,tbox_single_step,rbox_halted,rbox_resume_ack,rbox_reset_ack,tbox_halted,tbox_resume_ack
+width,1,4,1,1,1,4,4
+,,,,,,,
+,,,,,,,
+,,,,,,,
+sum bits,16,,,,,,

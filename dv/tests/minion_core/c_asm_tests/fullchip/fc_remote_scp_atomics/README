@@ -1,0 +1,4 @@
+Goal:
+Basic atomics checking using remote SCP region. S0M0 seems to do famoaddg.pi operations which are written to the remote SCP region and
+S32M0 generates the predicted data and checks with computations from S0M0. There are some basic credit synchronization mechanisms in
+place to signal when the computation is completed and when the checking should begin.

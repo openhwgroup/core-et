@@ -1,0 +1,15 @@
+// Copyright (c) 2026 Ainekko
+// SPDX-License-Identifier: Apache-2.0
+
+//////////////////////////////////////////////////////////////////
+// Submodule filelists (-f of submodule _vcs_defines.f only)
+//////////////////////////////////////////////////////////////////
+
+-f $RTLROOT/libs/libs_vcs_defines.f
+-f $RTLROOT/shire/neigh/neigh_top_vcs_defines.f
+-f $RTLROOT/cpu_subsystem/cpu_etl2axi/cpu_etl2axi_vcs_defines.f
+-f $RTLROOT/cpu_subsystem/cpu_plic/cpu_plic_vcs_defines.f
+
+//////////////////////////////////////////////////////////////////
+// Module+Simulation specific defines (+define+ only)
+//////////////////////////////////////////////////////////////////

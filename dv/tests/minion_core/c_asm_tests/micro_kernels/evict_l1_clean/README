@@ -1,0 +1,9 @@
+Goal:
+The purpose of this test is to test the evict operation from L1 cache to a higher cache level.
+
+Details:
+First we store some known value: 16-byte data = 0xa1a1_a1a1_a1a1_a1a1; 
+and then perform Evict cache 1, to ensure that l1 is clean. 
+In order to check that evict was performed correctly, we do an amoswapl, which should return from L2 returned the (dirty) data evicted from L1. After that we do a load from the same address and we should get the new data that was swapped from L2 after amoswapl.w.
+
+

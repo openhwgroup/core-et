@@ -1,0 +1,6 @@
+fields,esr_ddrc_u1_csysreq_hi,esr_ddrc_u1_csysack_hi,esr_ddrc_u1_cactive_hi,esr_ddrc_u0_csysreq_hi,esr_ddrc_u0_csysack_hi,esr_ddrc_u0_cactive_hi,esr_ddrc_u1_csysreq_lo,esr_ddrc_u1_csysack_lo,esr_ddrc_u1_cactive_lo,esr_ddrc_u0_csysreq_lo,esr_ddrc_u0_csysack_lo,esr_ddrc_u0_cactive_lo,esr_ddrc_u1_csysreq_ddrc,esr_ddrc_u1_csysack_ddrc,esr_ddrc_u1_cactive_ddrc,esr_ddrc_u0_csysreq_ddrc,esr_ddrc_u0_csysack_ddrc,esr_ddrc_u0_cactive_ddrc
+width,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+RO,NO,YES,YES,NO,YES,YES,NO,YES,YES,NO,YES,YES,NO,YES,YES,NO,YES,YES
+ROValue,,'0,'0,,'0,'0,,'0,'0,,'0,'0,,'0,'0,,'0,'0
+,,,,,,,,,,,,,,,,,,
+sum bits,18,,,,,,,,,,,,,,,,,

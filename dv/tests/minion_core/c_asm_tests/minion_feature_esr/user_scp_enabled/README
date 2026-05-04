@@ -1,0 +1,5 @@
+Goal:
+Test ucache_control to set & clear SCP_EN when Minion_Feature_ESR DISABLE_USCP_BIT is set to 0.
+
+Parameter(s):
+Core - This test will run on any Core (even thread) of any Neighborhood of any Shire. Only 1 Core (even thread) is expected to be enabled.

@@ -1,0 +1,6 @@
+#!/bin/bash
+
+rm -rf $testRunDir/code
+cp -RL $MINION_DIAGS/mul_div/ $testRunDir/code
+(cd $testRunDir/code/ ; ./gen_code.pl > mul_div.S) || exit 1
+MINION_SRC_DIR=$testRunDir/code MINION_BIN=mul_div scripts/preTest

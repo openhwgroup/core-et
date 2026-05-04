@@ -1,0 +1,59 @@
+#!/usr/bin/awk -f
+
+# Usage: tabular -vtest=<name> cosim_cov.txt > cosim_cov.tsv
+# Convert txt file to tsv data file
+
+BEGIN { OFS="\t" }
+
+$1 == "group" {
+    if (group) {
+        cross_h = cross_h"\t"
+    }
+    group = $2
+    cross_h = cross_h"cross_"$2
+    if (!(group in seen)) {
+        groups[length(seen)] = group
+        seen[group] = 0
+    }
+    seen[group] += 1
+}
+
+$1 == "commits" {
+    commits[group] = $2
+}
+
+$1 == "exec_time" {
+    exec_time_avg[group] = $2
+    exec_time_std[group] = $3
+    exec_time_min[group] = $4
+    exec_time_max[group] = $5
+}
+
+$1 == "queue_size" {
+    queue_size_avg[group] = $2
+    queue_size_std[group] = $3
+    queue_size_min[group] = $4
+    queue_size_max[group] = $5
+}
+
+$1 == "cross" {
+    if (commits[group] > 0) {
+        cross[group][$2] = $3 / commits[group]
+    } else {
+        cross[group][$2] = 0
+    }
+}
+
+END {
+    if (test) { printf "test\t" }
+    print "group", "commits", "exec_time_avg", "exec_time_std", "exec_time_min", "exec_time_max", "queue_size_avg", "queue_size_std", "queue_size_min", "queue_size_max", cross_h
+    for (i = 0; i < length(groups); i++) {
+        grp = groups[i]
+        if (test) { printf test"\t" }
+        printf grp"\t"commits[grp]"\t"exec_time_avg[grp]"\t"exec_time_std[grp]"\t"exec_time_min[grp]"\t"exec_time_max[grp]"\t"queue_size_avg[grp]"\t"queue_size_std[grp]"\t"queue_size_min[grp]"\t"queue_size_max[grp]
+        for (j = 0; j < length(groups); j++) {
+            printf "\t"cross[grp][groups[j]]
+        }
+        printf "\n"
+    }
+}

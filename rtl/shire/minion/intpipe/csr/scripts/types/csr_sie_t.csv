@@ -1,0 +1,6 @@
+fields,WIRI,SEIE,UEIE-ZERO,WIRI,STIE,UTIE-ZERO,WIRI,SSIE,USIE-ZERO
+width,54,1,1,2,1,1,2,1,1
+,,,,,,,,,
+bit idx,63..10,9,8,7..6,5,4,3..2,1,0
+,,,,User level interrupts are not implemented,,,,,
+sum bits,64,,,,,,,,

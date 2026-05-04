@@ -1,0 +1,15 @@
+MANUAL_DEP=data.raw gen_minion_maps
+EXTRA_CLEAN=diagclean
+
+include $(MINION_DIAGS)/common/include.mk
+
+data.raw:
+	$(TESTROOT)/scripts/genRandomFile.pl data.raw 5M
+
+gen_minion_maps:
+	python3 $(REPOROOT)/dv/tests/minion_core/c_asm_tests/micro_kernels/gen_random_params.py --shires 4 --scenario "producer_consumer" --target_dir . --output_type "array" --repeat 4
+#	python3 gen_minion_maps.py --shires 32
+# in order to build  and run with a specific seed, see file tensor_stlf_random_seed in the run directory and paste the see in the python command line above
+
+diagclean:
+	rm -f data.raw

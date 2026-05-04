@@ -1,0 +1,7 @@
+Goal:
+Test following local atomic instructions (by D-word): amoswapl.d, amoandl.d, amoorl.d, amoxorl.d, amoaddl.d, amominl.d,
+amomaxl.d, amominul.d, amomaxul.d; added self-checking (using the subsequent  local atomic returning data directly
+from L2 etc)
+
+Parameter(s):
+Core - This test will run on any Core (even thread) of any Neighborhood of any Shire. Only 1 Core (even thread) is expected to be enabled.

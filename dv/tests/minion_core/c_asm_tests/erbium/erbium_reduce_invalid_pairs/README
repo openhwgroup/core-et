@@ -1,0 +1,14 @@
+This test checks for Tensor Reduce legal and ilegal partner configurations in erbium.
+The following combinations are ilegal:
+ - TensorSend/Recv        -> partner_id > 7
+ - TensorReduce/Broadcast -> tree_depth > 2
+
+After testing this combinations, the test tries every valid combination for each operation and minion
+ - TensorSend/Recv        -> partner_id [0..7]
+ - TensorReduce/Broadcast -> tree_depth [0..2]
+
+The test randomize the other arguments using EVL. The argument for
+that is that this code would likely run into a regression. Trying to
+test every possible combination is too costly, but with randomization,
+eventually if should hit every combination.
+

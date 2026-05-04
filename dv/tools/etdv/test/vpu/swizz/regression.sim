@@ -1,0 +1,14 @@
+#packed integer tests
+include  pacint.sim
+
+#conversion and move tests
+include  conversion.sim
+
+#broadcast tests
+include broadcast.sim
+
+#graphics tests
+include graphics.sim
+
+#ranom test
+#include rand_test.sim

@@ -1,0 +1,7 @@
+Goal:
+Test case in Jira RTLMIN-2612: 
+When AMO accesses an invalid address, L1 DCache should assert Access Fault only for AMO Store, but NOT for AMO Load.
+The same should apply for Page Fault.
+
+Parameter(s):
+Core - This test will run on any Core (even thread) of any Neighborhood of any Shire. Only 1 Core (even thread) is expected to be enabled.

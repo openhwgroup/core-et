@@ -1,0 +1,653 @@
+#!/eng/dvtools/release/ruby/2.4.2/bin/ruby
+
+# Hack the GEM_PATH To Karls Libary
+ENV['GEM_PATH']="/eng/dvtools/release/ruby/mygems"
+Gem.clear_paths
+
+require 'optparse'
+require 'fileutils'
+require 'logger'
+require 'awesome_print'
+require_relative 'rblib/et_log'
+
+#@@usage="usage: $0 {-h} {-v <verbose level>} {-s <grid number>}"
+
+include ET_LOG
+
+#
+# Just define some constants for now and refactor into class if needed
+#
+CLUSTER="ioshire"
+SHIRE_PATH="dv/standalone/#{CLUSTER}"
+SHIRE_TEST_DIR="dv/tests/#{CLUSTER}"
+START_PC_HEX="40000000"
+VERBOSITY_LEVELS=["NONE","LOW","MED","MEDIUM","HIGH","FULL","DEBUG"]
+
+TBV={}
+TBV["NONE"]   = " +UVM_VERBOSITY=UVM_NONE    +verbosity=NONE    +DEFAULT_LOG_LEVEL=1 +EMU_LOG_LEVEL=2 +l1d_sb_en=0"
+TBV["LOW"]    = " +UVM_VERBOSITY=UVM_LOW     +verbosity=LOW     +DEFAULT_LOG_LEVEL=0 +EMU_LOG_LEVEL=2 +l1d_sb_en=0"
+TBV["MEDIUM"] = " +UVM_VERBOSITY=UVM_LOW     +verbosity=MEDIUM  +DEFAULT_LOG_LEVEL=0 +EMU_LOG_LEVEL=2 +l1d_sb_en=0"
+TBV["HIGH"]   = " +UVM_VERBOSITY=UVM_MEDIUM  +verbosity=HIGH    +DEFAULT_LOG_LEVEL=0 +EMU_LOG_LEVEL=1 +l1d_sb_en=0"
+TBV["FULL"]   = " +UVM_VERBOSITY=UVM_HIGH    +verbosity=FULL    +DEFAULT_LOG_LEVEL=0 +EMU_LOG_LEVEL=0 +l1d_sb_en=1"
+TBV["DEBUG"]  = " +UVM_VERBOSITY=UVM_DEBUG   +verbosity=FULL    +DEFAULT_LOG_LEVEL=0 +EMU_LOG_LEVEL=0 +l1d_sb_en=1"
+
+DEFAULT_UVM_TEST="dummy_test"
+
+def setup_repo options
+
+   # Is $REPOROOT defined and is it a valid writable path?
+   if ENV.has_key? "REPOROOT"
+     unless File.writable? ENV['REPOROOT']
+       error "$REPOROOT points to non existant path #{ENV['REPO_ROOT']} or is not writable".colorize("red")
+     end
+   else
+       error "Env var reporoot is not defined.  source env.sh in root of repo".colorize("red")
+   end
+
+   # Use the ENV var if set otherwise set to default
+   unless ENV.has_key? "TESTRUN"
+     ENV['TESTRUN'] = "#{ENV['REPOROOT']}/test_run_dir"
+   end
+
+   #
+   # Now figure out where the log file goes based on test and build paramters
+   #
+   unless (options[:test] || options[:build] || options[:check_log])
+     error  "-t testname or --test testname are mandatory flags unless using -b or --build or --check_log logfile to post process a log".colorize("red")
+   end
+
+   unless options[:build_name]
+     options[:build_name]="default"
+   end
+
+   logpath="./"
+   if options[:test]
+     logpath="#{ENV['TESTRUN']}/#{CLUSTER}/#{options[:test]}"
+   else
+     logpath="#{ENV['TESTRUN']}/#{CLUSTER}/builds/#{options[:build_name]}"
+   end
+   options[:logpath] = logpath
+   options[:build_path]="#{ENV['TESTRUN']}/#{CLUSTER}/builds/#{options[:build_name]}"
+
+   # Cleanup before we open the log
+   if options[:clean] || options[:CLEAN]
+     unless ENV.has_key? 'B4C_NOCLEAN'
+       if options[:clean]
+         puts "Cleaning build dir=#{options[:build_path]}"
+         FileUtils.rm_rf options[:build_path]
+       elsif options[:CLEAN]
+         puts "Cleaning $TESTRUN=#{ENV['TESTRUN']}"
+         FileUtils.rm_rf ENV['TESTRUN']
+       end
+     else
+       puts "Not forcing cleanup due to env $B4C_NOCLEAN set"
+     end
+   end
+
+   FileUtils.mkdir_p logpath unless Dir.exists? logpath
+
+   unless Dir.exists?  options[:build_path]
+     FileUtils.mkdir_p options[:build_path]
+   end
+
+   #
+   # Now that we are done cleaning etc, we can setup the proper log
+   #
+   level=:info
+   @log = EtLog.new("#{logpath}/run_io.log",:info,false,"run_io")
+   @log.level = level
+   @log.info "run_io is running"
+   @log.info "command line=#{options[:cmd_line]}"
+
+   unless ENV.has_key? 'B4C_NOCLEAN'
+     @log.et_sys "make -f #{ENV['REPOROOT']}/#{SHIRE_PATH}/Makefile clean" if (options[:clean] || options[:CLEAN])
+   end
+
+   options[:git_hash],rc = @log.et_backtick "cd ${REPOROOT};git rev-parse HEAD"
+   options[:git_hash].chomp!
+   @log.info "git revision=#{options[:git_hash]}"
+
+   @log.info "Querying git repo for local modifications..."
+   diff,rc =@log.et_backtick "cd ${REPOROOT};git diff"
+   if diff != ""
+     diff_path="#{logpath}/local_modifications.patch"
+     f = File.new(diff_path, File::CREAT|File::TRUNC|File::RDWR, 0644)
+     f.write diff
+     f.close
+     @log.warn "There were local modifications so creating patch file #{diff_path}"
+   else
+     @log.info "Repo is clean there are no modifications"
+   end
+
+   Dir.chdir  "#{ENV['TESTRUN']}/#{CLUSTER}"
+end
+
+def build_model options
+
+   #
+   # Expirement refactor
+   #
+   @log.info "Building SW LIB's"
+   @log.et_sys "cd #{ENV['REPOROOT']}/dv/tests/ioshire/scripts; make -f makefile.master swlib"
+
+   @log.info "Build Starting!!!"
+   simv_path="#{options[:build_path]}/vbuild/simv"
+
+
+   options[:simv_path]=simv_path
+
+   debug_options=""
+   if options[:debug_build]
+     debug_options="VCS_DEBUG=2"
+   else
+     debug_options="VCS_DEBUG=1"
+   end
+
+   if options[:incr] and File.exists? simv_path
+     @log.warn "simv exists but incremental compile was specified. Deleteing simv and building....."
+     @log.warn "Deleting simv=#{simv_path}"
+     FileUtils.rm_rf simv_path
+   end
+
+   profile_args=""
+   if options[:profile]
+     profile_args=" ENABLE_PROFILE=1 "
+   end
+
+   unless File.exists? simv_path
+     @log.et_sys "make -C #{options[:build_path]} -f #{ENV['REPOROOT']}/dv/standalone/#{CLUSTER}/Makefile all VCS_CMPL_OPTS=\"#{VCS_BUILD_ARGS} #{options[:build_args]}\" #{profile_args} #{debug_options} "
+   else
+     @log.info "Build target #{simv_path} exists so skipping TE build"
+   end
+end
+
+def build_test options
+  user_args=""
+  test_path="#{ENV['REPOROOT']}/#{SHIRE_TEST_DIR}"
+  test_case_path="#{test_path}/#{options[:test]}"
+  unless Dir.exists? test_case_path
+    @log.error "Can't find test=#{options[:test]} in path=#{test_path}"
+  end
+
+  test_target_path="#{ENV['TESTRUN']}/#{CLUSTER}/#{options[:test]}/sim"
+  options[:test_target_path]=test_target_path;
+  @log.et_sys "cp -rL #{test_case_path} #{ENV['TESTRUN']}/#{CLUSTER}"
+
+  unless Dir.exists? test_target_path  # Look for sim subdir inside the test case and if it doesn't exist then create it.
+    Dir.mkdir test_target_path
+  end
+
+  obj_path="#{ENV['TESTRUN']}/#{CLUSTER}/#{options[:test]}/spMin/obj"
+  @log.info obj_path
+  unless Dir.exists? obj_path
+    @log.debug "Creating path=#{obj_path}"
+    Dir.mkdir obj_path
+  end
+
+  # We need to create the top level makefile before we build the test
+  #
+make_file_template = <<-EOS_MAKE
+tc_name = #{options[:test]}
+uvm_test = #{options[:uvm_test]}
+
+include ${REPOROOT}/dv/tests/#{CLUSTER}/scripts/makefile.master
+EOS_MAKE
+
+  make_path="#{test_target_path}/makefile"
+  f = File.new(make_path, File::CREAT|File::TRUNC|File::RDWR, 0755)
+  f.write make_file_template
+  f.close
+
+  # Create the mem_desc_text which BEMU uses to load the test into BEMU
+mem_desc_txt = <<-EOS
+ELF Load: ../spMin/#{options[:test]}.elf
+Ignore Data: 40'h0020009000, 40'h0020009FFF
+Ignore Data: 40'h0020030000, 40'h002003FFFF
+Ignore Data: 40'h0010000000, 40'h0011FFFFFF
+Ignore Data: 40'h0012000000, 40'h0012007FFF
+Ignore Data: 40'h0018000000, 40'h001807FFFF
+Ignore Data: 40'h001A000000, 40'h001A007FFF
+Ignore Data: 40'h001B000000, 40'h001BFFFFFF
+Ignore Data: 40'h0050000000, 40'h0051FFFFFF
+Ignore Data: 40'h0052020000, 40'h0052029FFF
+Ignore Data: 40'h0054000000, 40'h005404FFFF
+Ignore Data: 40'h0054050000, 40'h0054057FFF
+Ignore Data: 40'h0054088000, 40'h0054089FFF
+Ignore Data: 40'h0056000000, 40'h0056001FFF
+Ignore Data: 40'h0058101000, 40'h0058102FFF
+EOS
+
+  mem_desc_file="#{test_target_path}/mem_desc.txt"
+  f = File.new(mem_desc_file, File::CREAT|File::TRUNC|File::RDWR, 0644)
+  f.write mem_desc_txt
+  f.close
+
+  # OK Now actually build the test
+  rc=@log.et_sys "cd #{test_target_path};make sw",true
+
+  # Create the Status file for et-dvrun
+  #
+  if rc!=0
+    if ENV.has_key? "ETDV_RUNDIR"
+      filename="#{ENV['ETDV_RUNDIR']}/status"
+    else
+      filename="#{test_target_path}/status"
+    end
+
+    open(filename, 'w') do |f|
+        f.puts "fail ET_TESTCASE_BUILD_FAILED"
+        f.flush
+    end
+    sleep 5
+    @log.info   "Created status file with Pathname=#{filename}"
+    #
+    @log.et_sys "sync;ls -l #{filename}"
+    @log.et_sys "cat #{filename}"
+    log.error "Testcase build failed.  Created status=#{filename}"
+  end
+
+end # end of build_test method
+
+# Run Sys Emu to detect possible test problems before actually running the
+#
+def emu_test options
+  sys_emu="#{ENV['BEMU']}/sys_emu/build/sys_emu"
+  if File.executable? sys_emu
+
+sys_emu_txt = <<-EOT
+#!/bin/bash
+set -o pipefail
+cd #{options[:test_target_path]}
+#{sys_emu} -reset_pc 0x#{START_PC_HEX} -shires 0x1 -minions 0x1 -mem_desc mem_desc.txt -l -m > sys_emu_run.log 2>&1
+EOT
+
+# #{sys_emu} -reset_pc 0x#{START_PC_HEX} -shires 0x1 -minions 0x1 -mem_desc mem_desc.txt -l -m | tee sys_emu_run.log 2>&1
+
+  sys_emu_script="#{options[:test_target_path]}/run_sys_emu"
+  f = File.new(sys_emu_script, File::CREAT|File::TRUNC|File::RDWR, 0755)
+  f.write sys_emu_txt
+  f.close
+
+  @log.info "Running sys_emu on testcase to ensure its compatible"
+  rc=@log.et_sys sys_emu_script,true
+  if rc !=0
+    @log.warn "sys_emu failed running testcase please review #{options[:test_target_path]}/sys_emu_run.log"
+  else
+    @log.info "sys_emu completed successfully!".colorize("yellow")
+  end
+  else
+   @log.error "#{sys_emu} not exist or is not an executable file"
+  end
+end
+
+
+def run_test options
+  test_args="+UVM_TESTNAME=#{options[:uvm_test]} +HEX_FILE=../spMin/#{options[:test]}.hex +HEX_FILE_IOMAX=../ioMax/#{options[:test]}.hex +TC_PATH=$REPOROOT/dv/tests/#{CLUSTER}/#{options[:test]}"
+  user_args=""
+
+  run_cmd_path="#{options[:test_target_path]}/rerun"
+
+  if options[:fsdb]
+    user_args+=" +dump=1 +fsdb+mda=on "
+    options[:fsdb_run_cmd]="#{options[:test_target_path]}/debug_me"
+
+verdi_template = <<-EOS_VERDI
+#!/bin/bash
+# NOTE: THIS needs to match version from IOSHIRE makefile
+#
+export VERDI_HOME=/eng/cad/tools/snps/verdi/Verdi_R-2020.12-1
+export PATH=$VERDI_HOME/bin:$PATH
+cmd=`readlink -f $0`
+debug_dir=`dirname $cmd`
+verdi -ssf ${debug_dir}/trace.fsdb $*
+EOS_VERDI
+
+  verdi_path="#{options[:test_target_path]}/debug_me"
+  f = File.new(verdi_path, File::CREAT|File::TRUNC|File::RDWR, 0755)
+  f.write verdi_template
+  f.close
+
+  end
+  if options[:gui]
+    user_args+=" -verdi "
+  end
+  user_args += TBV[options[:tbv]]
+
+  @log.debug "user_args=#{user_args}"
+
+  options[:simv_log_path]="#{options[:test_target_path]}/simv.log"
+
+  run_cmd = <<-EOS
+  #!/bin/bash
+  set -o pipefail
+  export SLI_LOCAL_MODE=1
+  export DW_WAIT_LICENSE=1   # Wait for VIP License
+  #{options[:simv_path]} #{options[:sim_args]} #{SIMV_ARGS} #{test_args} #{user_args}  |& tee simv.log
+  EOS
+
+  f = File.new(run_cmd_path, File::CREAT|File::TRUNC|File::RDWR, 0755)
+  f.write run_cmd
+  f.close
+
+  # Write the build name so we know which build corresponds to this test for put_dropbox
+  #
+  f = File.new("#{options[:test_target_path]}/.build", File::CREAT|File::TRUNC|File::RDWR, 0755)
+  f.write options[:build_name]
+  f.close
+
+  unless options[:dry]
+    @log.info   "cd #{options[:test_target_path]};#{run_cmd_path}"
+    @log.et_sys "cd #{options[:test_target_path]};#{run_cmd_path}"
+  else
+    @log.info "Skipping execution"
+    @log.info "final run script: #{run_cmd_path}"
+  end
+
+end
+
+PASS_STRINGS=["\*\*\* TEST HAS PASSED \*\*\*",
+              "N0:C0:T0]\t[0-9a-f]{10}-[0-9a-f]{10}-RET\tRetire"]
+
+FAIL_STRINGS=["Checker Error!!",
+              " DUT Error \\(ERROR\\)",  # DUT/BEMU
+               "UVM_ERROR",              # UVM
+               "UVM_FATAL",              # UVM
+               ": FATAL ",               # ??
+               "Fatal: ",                # ??
+               "Assertion failed: ",     # RTL Assertion
+               "Error\\\-\\\[",          # Compiler error
+               "Fatal\\\-\\\[",          # Compiler error
+               "error at time",          # Inside Secure vault IP
+               "ERROR CoSIM:"            # COSIM
+               ]
+
+
+IGNORE_STRINGS=["DUT error count",
+                "UVM_ERROR count",
+                "UVM_ERROR :",
+                "UVM_FATAL :",
+                "error at time               1.0 ns"  # Ignore the 1 Vault error at 1ns
+               ]
+#
+# Simple method to process pass/fail
+# missing proper error checks since we dont have a test that works!
+#
+def check_test options,logfile
+
+  # This is a total hack. Its just collects errors brute force but does not provide
+  # signatures
+  # its uses too many external calls
+  # hack to eliminate the UVM_ERROR cout
+  #
+
+  @log.info "Parsing test log=#{logfile} to determine final status"
+
+  pass_count=0;
+  pass_string_criteria_met=false
+  missing_pass_strings=""
+
+  PASS_STRINGS.each do |pass_string|
+    #@log.info "egrep  \"#{pass_string}\" #{logfile}"
+    out,rc=@log.et_backtick "egrep -m 1 \"#{pass_string}\" #{logfile}",true
+    if (out =="")
+      missing_pass_strings << "#{pass_string}\n"
+    else
+      pass_count +=1
+    end
+  end
+
+  if (pass_count != PASS_STRINGS.size)
+    pass_string_criteria_met=false
+    @log.error "The following require PASS_STRINGS were not found=#{missing_pass_strings}",true
+  else
+    @log.info "All #{pass_count} PASS_STRINGS were found"
+    pass_string_criteria_met=true
+  end
+
+  error_strings=""
+  FAIL_STRINGS.each do |fail_string|
+    #@log.info "egrep  \"#{fail_string}\" #{logfile}"
+    out,rc=@log.et_backtick "egrep  \"#{fail_string}\" #{logfile}",true
+    if (out !="")
+      error_strings << out
+    end
+  end
+
+  @log.debug "Error Strings=#{error_strings}"
+
+  errors = error_strings.split "\n"
+  final_errors=[];
+  errors.each do |error|
+    match_any=false
+    IGNORE_STRINGS.each do |ignore|
+      if error =~ /#{ignore}/
+        match_any=true
+      end
+    end
+    final_errors << error unless match_any==true
+  end
+
+ if final_errors.size > 0
+  @log.error "Final error count=#{final_errors.size}",true
+  final_errors.each do |error|
+      @log.error error,true
+  end
+ else
+  @log.info "No errors detected in logfile"
+ end
+
+ # Create the Status file for et-dvrun
+ #
+ if ENV.has_key? "ETDV_RUNDIR"
+   filename="#{ENV['ETDV_RUNDIR']}/status"
+ else
+   filename="#{File.dirname logfile}/status"
+ end
+
+ open(filename, 'w') do |f|
+   if (pass_string_criteria_met) && (final_errors.size==0)
+     f.puts "pass"
+   elsif (final_errors.size > 0)
+     f.puts "fail #{final_errors[0]}"
+   else
+     f.puts "fail ET_NO_PASS_STRING"
+   end
+   f.flush
+ end
+ sleep 5
+ @log.info   "Created status file with Pathname=#{filename}"
+ @log.et_sys "sync;ls -l #{filename}"
+ @log.et_sys "cat #{filename}"
+
+ return (pass_string_criteria_met) && (final_errors.size==0)
+end
+
+#
+# MAIN Program starts here
+#
+
+begin
+   cmd_line="run_io"
+   ARGV.each { |arg| cmd_line += " #{arg}" }
+   puts "cmd_line=#{cmd_line}"
+
+   options = {}
+   OptionParser.new do |opts|
+     opts.banner = "Usage: run_io [options]"
+     opts.on("-v", "--[no-]verbose", "Run verbosely") do |arg|
+       options[:verbose] = arg
+     end
+     opts.on("-c", "--clean", "Clean the just the specified build dir") do |arg|
+       options[:clean] = arg
+     end
+     opts.on("-C", "--clean_all", "Clean all $TESTRUN (all builds and simulations)") do |arg|
+       options[:CLEAN] = arg
+     end
+     opts.on("-i", "--incremental", "Enable incremental build in VCS (use at your own risk)") do |arg|
+       options[:incr] = arg
+     end
+     opts.on("-b", "--build_model", "build model only") do |arg|
+       options[:build] = arg
+     end
+     opts.on("-B buildName", "--build_name buildName", "name of build to use") do |arg|
+       options[:build_name] = arg
+     end
+     opts.on("-t testname", "--test testname", "name of testcase to execute") do |arg|
+       options[:test] = arg
+     end
+     opts.on("-T testname", "--TEST testname", "Just build the testcase. Nothing else") do |arg|
+       options[:test] = arg
+       options[:build_test] = arg
+     end
+     opts.on("-f", "--fsdb", "dump fsdb") do |arg|
+       options[:fsdb] = arg
+     end
+     opts.on("-g", "--gui", "Run Verdi in interactive mode") do |arg|
+       options[:gui] = arg
+     end
+     opts.on("-d","--dry_run","Just build everything but dont run the simulation") do |arg|
+       options[:dry] = arg
+     end
+     opts.on("-s args","--sim_args args","Arguements to pass directly to the simulator") do |arg|
+       options[:sim_args] = arg
+     end
+     opts.on("-u uvm_testname","--uvm_test uvm_testname","Specify a UVM testname") do |arg|
+       options[:uvm_test] = arg
+     end
+     opts.on("-a build_arguments","--build_args build_arguments","Specify additional build arguments") do |arg|
+       options[:build_args] = arg
+     end
+     opts.on("--seed <num>","Specify seed or else random") do |arg|
+       options[:seed] = arg
+     end
+     opts.on("--skip_emu","Skip the emu step") do |arg|
+       options[:skip_emu] = arg
+     end
+    opts.on("--no_cosim","Don't enable cosim checking step") do |arg|
+       options[:no_cosim] = arg
+     end
+     opts.on("-V verbosity_level","--tbv verbosity_level"," TB verbosity=[NONE,LOW,MED,HIGH,FULL,DEBUG") do |arg|
+       options[:tbv] = arg.upcase
+     end
+     opts.on("-F","--force","Compile with full debug_build for forcing and extra debug (runs slow)") do |arg|
+       options[:debug_build] = arg
+     end
+     opts.on("-p","--profile","Profile simulation runtime") do |arg|
+       options[:profile] = arg
+     end
+     opts.on("--check_log logfile","Post process build/simulation log for errors") do |arg|
+       options[:check_log] = arg
+     end
+   end.parse!
+   options[:cmd_line]=cmd_line
+
+   #
+   # Setup the workspace, cleanup, and get the log setup
+   #
+   setup_repo options
+
+
+   #
+   # No check the rest of the command line flags
+   #
+   @log.debug "sim_args=#{options[:sim_args]}"
+
+   unless options[:seed]
+       options[:seed] = rand(0..0xFFFFFFFF)
+   end
+
+   unless options[:tbv]
+       options[:tbv]="MEDIUM"
+   end
+
+   if options[:tbv]=="MED"
+     options[:tbv]="MEDIUM"
+   end
+
+   unless VERBOSITY_LEVELS.include? options[:tbv]
+     @log.error "Invalid verbosity level! Valid Levels=#{VERBOSITY_LEVELS}"
+   end
+
+   #Check for Valid Testcase
+   #
+   test_path="#{ENV['REPOROOT']}/#{SHIRE_TEST_DIR}"
+   test_case_path="#{test_path}/#{options[:test]}"
+   @log.info "Testcase path=#{test_case_path}";
+   unless Dir.exists? test_case_path
+     @log.error "Can't find test=#{options[:test]} in path=#{test_path}"
+   end
+
+   @log.info "SEED=#{options[:seed]}"
+
+   if options[:no_cosim]
+     checker_flag=" +CHECKER=0 "
+   else
+     checker_flag=" +CHECKER=1 "
+   end
+
+   SIMV_ARGS="+verbosityTIMER=HIGH +vcs+lic+wait \
+   #{checker_flag} +SHIRE_MASK=0x200000000 +UVM_TIMEOUT=50000000 +ntb_random_seed=#{options[:seed]} +SEED=#{options[:seed]}"
+
+   VCS_BUILD_ARGS="+define+SVT_FSDB_ENABLE "
+
+   unless (options[:uvm_test])
+     @log.warn "no uvm test specified on command line.  Using default uvm_test=#{DEFAULT_UVM_TEST}"
+     options[:uvm_test]=DEFAULT_UVM_TEST
+   end
+
+   if options[:check_log]
+     unless File.exist? options[:check_log]
+       @log.error "Logfile does not exist path=#{options[:check_log]}"
+     end
+     @log.info "Post processing logfile=#{options[:check_log]}";
+     final_pass_status=check_test options,options[:check_log]  # Check the logs and determing final pass/fail status
+     exit final_pass_status;
+   end
+
+   # Skip the model build if just building a testcase
+   #
+   unless options[:build_test]
+     build_model options  # Build the SIMV file to run
+   end
+
+   # Run the sim and process the results
+   #
+   unless options[:build]
+
+     build_test  options   # Compile the testcase
+
+     unless options[:skip_emu]
+       emu_test  options   # Check that the test runs on the SYS EMU emulator
+     end
+     if options[:build_test]
+       @log.info "-T option specified.  Testcase has been built exiting!"
+       exit 0
+     end
+
+     run_test options      # Actually run the RTL Simulation
+     final_pass_status=check_test options,options[:simv_log_path]  # Check the logs and determing final pass/fail status
+
+     if options[:fsdb]
+       @log.info "invoke waves:  #{options[:fsdb_run_cmd]}".colorize("yellow")
+     end
+     @log.info "Path to log:  #{options[:simv_log_path]}".colorize("yellow")
+
+     if (final_pass_status==true)
+       @log.smiley
+     else
+       @log.cross
+       exit 1;
+     end
+   end
+
+rescue Interrupt => e
+  @log.info "Interrupt detected (Ctrl-c): #{e}\nStack Trace Follows\n#{e.backtrace.join("\n")}"
+  exit 1
+#rescue Exception => e
+#  @log.info "Exception detected : #{e}\nStack Trace Follows\n#{e.backtrace.join("\n")}"
+# exit 1
+rescue SystemExit => e
+  exit e.status
+ensure
+  @log.close unless @log.nil?
+end

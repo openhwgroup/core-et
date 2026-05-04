@@ -1,0 +1,7 @@
+This test checks the CSRs that have fields changed in Erbium.
+The affected CSRs are:
+ - matp : WARL(0)
+ - satp : WARL(0)
+ - mstatus.sum : WARL (0)
+ - sstatus.sum : WARL (0)
+ - tdata3 : WARL (0)

@@ -1,0 +1,27 @@
+Goal:
+Exercise one Tensor Reduce (fget operation).
+
+Details:
+The test only runs in thread 0 of each minion. The test does one single tensor reduce with the FGET operation with the tree depth fixed to 0. In a Neigh build, the pairing will be the following:
+   - H0  <- H2
+   - H4  <- H6
+   - H8  <- H10
+   - H12 <- H14
+
+If the 'SELF_CHECK' variable is set, each tensor reduce operation is self-checked following these steps:
+   0) Declare a shared Global Array Variable with size equal or bigger than the number Minions in the SoC
+   1) Tensor Wait to make sure the previous operation is done
+   2) Dump the whole VPU RF content into the global shared memory region (pre-vpurf)
+   3) Do an FCC synchronization to make sure everyone has finished any operation of the previous loop iteration 
+   4) Execute the Tensor Reduce Auto operation
+   5) Tensor Wait to make sure the current operation is done and self-check the tensor error value (should be 0).
+   6) Model the Tensor Reduce Auto behaviour using RISC-V basic instructions.
+        - This model will compute the Sender and the Receiver Minion ID.
+        - If the self-check code is executed by the Sender Minion, dump the VPUR RF content in a memory position in the stack (post-vpurf). Make sure pre-vpurf contains the same as post-vpurf.
+        - If the self-check code is executed by the Receiver Minion: 
+           · Dump out the VPU RF content into a local memory region in the stack (post-vpurf).
+           · It will read the global shared memory of the sender minion VPU RF content (dumped by the sender minion in step 2)
+           · It will read the global shared memory of the receiver minion VPU RF content (dumped by the receiver minion in step 2)
+           · Using RISC-V basic instructions it will model the configured reduce operation.
+           · The reduce result is stored in a local variable in the stack (scratch).
+           · The content from post-vpurf and scratch is compared and must be identical.

@@ -1,0 +1,3 @@
+For this test we do not bring up Minion Shires since the entire test executes on the SP.
+However, given the way the environment is currently set, we need to have at least a place
+holder without the actual source code.

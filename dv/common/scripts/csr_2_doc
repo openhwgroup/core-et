@@ -1,0 +1,3 @@
+#!/bin/bash -e
+mkdir -p gen_doc
+csrCompile -v                                                       -t rtf -t html -t docx -t sgml $1.csr -o gen_doc/$1

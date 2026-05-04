@@ -1,0 +1,39 @@
+EXTRA_SRC+=$(REPOROOT)/dv/common/sw/ip/src/plic_api.c
+EXTRA_SRC+=$(REPOROOT)/dv/common/sw/cpu/msMin/src/inth.c
+EXTRA_SRC+=$(MINION_DIAGS)/common/fullchip/utils.c
+EXTRA_SRC+=$(MINION_DIAGS)/common/fullchip/tb.c
+
+EXTRA_FULLCHIP_CFLAGS += -Wno-error=maybe-uninitialized 
+EXTRA_FULLCHIP_CFLAGS += -Wno-error=uninitialized 
+EXTRA_FULLCHIP_CFLAGS += -Wno-error=unused-but-set-variable
+EXTRA_FULLCHIP_CFLAGS += -Wno-error=pointer-to-int-cast
+EXTRA_FULLCHIP_CFLAGS += -Wno-error=int-conversion
+EXTRA_FULLCHIP_CFLAGS += -Wno-error=pedantic
+EXTRA_FULLCHIP_CFLAGS += -Wno-error=int-to-pointer-cast
+EXTRA_FULLCHIP_CFLAGS += -Wno-error=unused-variable
+EXTRA_FULLCHIP_CFLAGS += -Wno-error=incompatible-pointer-types
+EXTRA_FULLCHIP_CFLAGS += -Wno-error=implicit-function-declaration
+EXTRA_FULLCHIP_CFLAGS += -Wno-error=shift-negative-value
+EXTRA_FULLCHIP_CFLAGS += -Wno-error=sign-compare
+EXTRA_FULLCHIP_CFLAGS += -Wno-error=overflow
+EXTRA_FULLCHIP_CFLAGS += -Wno-error=unused-but-set-parameter
+EXTRA_FULLCHIP_CFLAGS += -Wno-error=unused-parameter
+EXTRA_FULLCHIP_CFLAGS += -Wno-error=write-strings
+EXTRA_FULLCHIP_CFLAGS += -Wno-error=return-type
+
+EXTRA_FULLCHIP_CFLAGS  += -g
+EXTRA_FULLCHIP_CFLAGS  += -nostdlib
+EXTRA_FULLCHIP_CFLAGS  += -mcmodel=medany
+EXTRA_FULLCHIP_CFLAGS  += -mabi=lp64f
+EXTRA_FULLCHIP_CFLAGS  += -Wa,-march=rv64imaf,-mabi=lp64f
+
+
+IOSHIRE_INCLUDE = -I${IOSHIRE_DIAGS}/sw/inc \
+	-I${REPOROOT}/dv/common/sw/ip/inc \
+	-I${REPOROOT}/dv/common/sw/cpu/msMin/inc \
+	-I${REPOROOT}/dv/common/sw/utils/inc \
+	-I${REPOROOT}/dv/ioshire_common/inc/c \
+	-I${MINION_DIAGS}/micro_kernels
+
+FULL_CHIP_TB = 1
+

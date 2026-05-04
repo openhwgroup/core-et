@@ -1,0 +1,11 @@
+#!/bin/bash
+
+echo "Copying test...";
+#cp $REPOROOT/test/shire/minion_top_netlist/compare_log_0_0.txt $testRunDir
+cp $REPOROOT/test/shire/minion_top_netlist/compare_log_0_0_repl_minion_top.txt $testRunDir
+cp $REPOROOT/test/shire/minion_top_netlist/vsrc/minion_top_tb.json $testRunDir
+
+touch $testRunDir/mem_desc.txt
+
+# and create logs dir
+mkdir -p $testRunDir/logs || exit

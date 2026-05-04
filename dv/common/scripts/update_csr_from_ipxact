@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Pick up some util functions for printing colorized messages and testing shell commands
+#
+source $REPOROOT/dv/common/scripts/bash_utils.sh
+
+cd $RTLROOT/ip/hal/
+
+for filename in *.xml; do
+  base=$(basename "$filename" .csr)
+  info "Processing Block=$base"
+  info "==============================================="
+  try ipxact_2_csr $filename
+  try mv *.csr csr/
+done
+
+

@@ -1,0 +1,17 @@
+Goal:
+Exercise all the Tensor Load (non-cooperative) flavours explained in PRM-10, including the TensorLoad TenB and the ilegal transformations.
+
+Details:
+The test only runs in thread 0 of each minion. The test does a 'for' loop (size of the loop can be controlled with the 'LOOP_SIZE' define).
+For each loop iteration, a different tensor load flavour is executed and there is no tensor waits within the loop to stress the implicit dependency between consecutive tensor loads.
+If the 'SELF_CHECK' variable is set, each tensor load operation is self-checked* following these steps:
+   1) Tensor Wait to make sure the previous operation is done
+   2) Dump the whole L1SCP content in a memory region (stack)
+   3) Execute the Tensor Load operation
+   4) Tensor Wait to make sure the current operation is done
+   5) Dump the whole L1SCP content in a memory region (stack)
+   6) Model the Tensor Load behaviour using RISC-V basic instructions.
+        - This model will perform the same loads as the Tensor Load operation into the memory region from 2)
+        - Will compare the modified memory content from 2) against the memory content from 5). These two regions must contain the exact same data.
+
+* The Tensor Load TenB operation cannot be self-checked without self-checking the TFMA operation that pairs it. For this tests, only non-tenb operations will be self-checked. There is another test that self-checks both the TL TenB and the TFMA ('tensor_load_setup_b_postsi').

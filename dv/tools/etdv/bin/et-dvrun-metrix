@@ -1,0 +1,10 @@
+#!/usr/bin/env python3.6
+
+import sys
+
+sys.path.insert(0, sys.path[0] + '/../lib')  # prepend
+from ETdv.dvrun.metrix import main
+
+# main([__name__, 'get_run_id', 'my_project', 'group=foobar', 'detail=a lot of detail here'])
+# print('get_test_stats=' + str(_get_test_stats_from_urg('/Users/kpfalzer/projects/etdv/test/urg_tests.txt')))
+main(sys.argv)

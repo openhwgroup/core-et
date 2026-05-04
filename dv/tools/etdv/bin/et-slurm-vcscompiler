@@ -1,0 +1,24 @@
+#!/bin/csh -fx
+
+which srun >& /dev/null
+if (${status}) then
+	exec ${*:q}
+endif
+set lic=`echo $0:t | /usr/bin/awk -F- '{print$NF}'`
+set script="${4}"
+set short="${script:t}"
+if ("testme" == "${short}") then
+	set jobname="${short}/${script:h:h:h:h:t}/${script:h:h:h:t}/${script:h:h:t}/${script:h:t}"
+else
+	set jobname="${short}/${script:h:h:h:t}/${script:h:h:t}/${script:h:t}"
+endif
+if (! $?ET_SLURM_OPTS) then
+	setenv ET_SLURM_OPTS
+endif
+set mem_req=`et-dvrun-get-mem ${script}`
+setenv ET_SLURM_OPTS "${mem_req} ${ET_SLURM_OPTS}"
+set NUM_USER_JOBS=`squeue -u $USER | wc -l`
+if ("$USER" != "jenkins" && $NUM_USER_JOBS < 6 ) then
+    setenv ET_SLURM_OPTS "${ET_SLURM_OPTS}"
+endif
+exec srun --no-kill -J $jobname --cpus-per-task=1 --ntasks=1 ${ET_SLURM_OPTS}  ${*:q}

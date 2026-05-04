@@ -1,0 +1,4 @@
+CSR_PRV_M = 0b11
+CSR_PRV_H = 0b10
+CSR_PRV_S = 0b01
+CSR_PRV_U = 0b00

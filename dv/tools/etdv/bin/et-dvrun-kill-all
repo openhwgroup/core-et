@@ -1,0 +1,79 @@
+#!/bin/csh -f
+
+set cmd=${0:t}
+set doUsage=0
+set optN=$?ET_KILL_ALL_OPTN
+
+if (1 == $#argv) then
+	#do nothing
+else
+	if (2 == $#argv) then
+		if ("-n" != "$1") then
+			echo "error: expecting -n, found ${1}"
+			exit 1
+		endif
+		set optN=1
+		shift argv
+	else
+		set doUsage=1
+	endif
+endif
+
+if (0 != $doUsage) then
+	cat <<L1
+
+Usage: $cmd [-n] ppid|runRoot
+
+Kill all/recursively child processes of ppid (parent PID) and ppid too.
+Or, if runroot, then find all killme scripts (from runroot) and execute those.
+
+Optionally specify -n to show process details of what would be killed: 
+but do not actually kill (i.e., similar to 'make -n').
+
+L1
+	exit 1
+endif
+
+if (-d $1) then
+	set find=/usr/bin/find
+	foreach killme (`$find $1 -type f -name killme`)
+		echo "${killme} ..."
+		if ($optN) then
+			setenv ET_KILL_ALL_OPTN 1
+		endif
+		$killme
+	end
+	exit 0
+endif
+
+set ppids=($1)
+set children=($1)
+set uname=/usr/bin/uname
+set kill=/bin/kill
+set ps=/bin/ps
+set awk=/usr/bin/awk
+set sed=/usr/bin/sed
+while (0 < ${#ppids})
+	set ppid=${ppids[1]}
+	shift ppids
+	if ("Darwin" == "`${uname} -s`") then
+		set childs=(`$ps -j | $awk '{if($3=='${ppid}'){print$2}}'`)
+	else
+		set childs=(`$ps --ppid $ppid -h | $awk '{print$1}'`)
+	endif
+	set ppids=(${childs} ${ppids})
+	set children=(${childs} ${children})
+end
+
+#echo "DBG: children=${children}  ppid=${ppid}"
+#exit 1
+
+if (0 < $#children) then
+	if (0 == $optN) then
+		$kill -KILL $children >& /dev/null
+	else
+		$ps -p `echo $children | $sed 's/ /,/g'`
+	endif
+endif
+
+exit 0  #force clean status

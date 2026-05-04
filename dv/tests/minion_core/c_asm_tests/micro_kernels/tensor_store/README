@@ -1,0 +1,19 @@
+Goal:
+The purpose of this test is to excercise tensor_store with different flavors of it.
+
+Details:
+First part - performing tensor_store operations while changing its parameters each time in order to stress as many possible situations:
+- Basic test 
+- Smaller row sizes (0,1,3)
+- Row sweep (0-15)
+- Changing start register
+- Changing register stride
+- Worst latency (stride = 0)
+- Smaller stride (0x20)
+---------
+Second part - Tensor store from scratchpad. After loading  something to scp, we go through different flavors of tensor store from scp:
+- Basic tensor store from SCP
+- Number of rows sweep 
+- Changing the start line
+- Changing scp stride
+

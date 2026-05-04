@@ -1,0 +1,19 @@
+LOG_LEVEL=1
+timeout=100000
+SEED=0
+preSimCmd=scripts/preTest
+postSimCmd=$MINION_DIAGS/exceptions/postTest
+EVENTS=1
+CHECKER=0 #TODO: enable checker when exceptions are fully supported
+ECALL_ENDS_TEST=0
+TEST_PATH=../
+
+tag=nightly riscvtools b4c exceptions
+simulator=verilator
+
+MINION_SRC_DIR=$MINION_DIAGS/exceptions
+MINION_BIN=exceptions
+alias=${MINION_BIN}_2T=$ENABLE_SECOND_THREAD
+
+test=minion_tb  ENABLE_SECOND_THREAD=0
+test=minion_tb  ENABLE_SECOND_THREAD=1

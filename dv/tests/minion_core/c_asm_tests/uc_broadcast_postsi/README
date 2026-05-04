@@ -1,0 +1,8 @@
+Goal:
+The goal of this test is to check that the UC Broadcast mechanism as specified in PRM-19 Section 2.4.1 works.
+The test sets up writing of the Neighborhood ESR IPI_REDIRECT_PC to all neighborhoods using the broadcast mechanism.
+The test then reads the IPI_REDIRECT_PC ESR from each of the 4 neighborhood(s) to check that the individual ESR read
+value from each neighborhood matches the value that was broadcast.
+
+Parameter(s):
+Core - This test will run on any Core (even thread) of any Neighborhood of any Shire. Only 1 Core (even thread) is expected to be enabled.

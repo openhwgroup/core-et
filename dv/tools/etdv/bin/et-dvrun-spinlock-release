@@ -1,0 +1,6 @@
+#!/bin/csh -fx
+
+set spinlock=`cat $1`
+set client=`which et-dvrun`
+set client=${client:h:h}/slac/bin/client_cmd
+$client release $spinlock

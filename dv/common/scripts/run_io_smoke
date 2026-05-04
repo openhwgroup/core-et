@@ -1,0 +1,7 @@
+#!/bin/sh  -e
+export MAX_PARALLEL_JOBS=2
+export B4C_MAX_TIMEOUT=10800
+export B4C_SLOTS=2
+rm -rf $REPOROOT/test_run_dir/ioshire/builds
+mkdir -p  $REPOROOT/test_run_dir/ioshire/builds
+srun -p dv-gpd "cd $TESTRUN;b4c -na -i $*"

@@ -1,0 +1,7 @@
+Goal:
+The purpose of this test is to exercise neigh chicken bits
+
+Details:
+First we read the MPROT esr (it should have the reset value at the beginning), give the fcc credit to all minions inside the shire and wait for all threads to finish ESR read.
+Then we write ti the MPROT random number of times, increasing the value each time, but always setting prot[3] == 0. After having all the threads finish the ESR write, as a self check part, we check that the credit counter is cleared.
+

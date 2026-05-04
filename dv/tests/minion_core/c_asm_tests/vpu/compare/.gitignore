@@ -1,0 +1,10 @@
+*_dst
+!*_dst/
+*_src
+!*_src/
+*_mix
+!*_mix/
+feq_ps_src_mix_lanes
+!feq_ps_src_mix_lanes/
+*.hex
+*.mem

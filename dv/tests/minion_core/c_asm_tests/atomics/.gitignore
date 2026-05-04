@@ -1,0 +1,4 @@
+# Minion atomics raw data, executable and assembler source file
+data.raw
+atomics
+atomics.bin

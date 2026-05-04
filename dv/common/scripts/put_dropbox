@@ -1,0 +1,138 @@
+#!/eng/dvtools/release/ruby/2.4.2/bin/ruby
+
+require 'optparse'
+require 'fileutils'
+require 'logger'
+require_relative 'rblib/et_log'
+
+#@@usage="usage: $0 {-h} {-v <verbose level>} {-s <grid number>}"
+
+include ET_LOG
+
+DROPBOX_DIR="/home/project/debug_dropbox"
+
+begin
+   level=:info
+   @pwd = Dir.pwd
+   logfile="#{@pwd}/put_dropbox.log"
+   @log = EtLog.new(logfile,:info,false,"put_dropbox")
+   level=:debug
+   @log.level = level
+   @log.debug "put_dropbox is running"
+
+   options = {}
+   OptionParser.new do |opts|
+     opts.banner = "Usage: put_dropbox [options]"
+     opts.on("-v", "--[no-]verbose", "Run verbosely") do |arg|
+       options[:verbose] = arg
+     end
+     opts.on("-n jira#", "--name jira#", "Run verbosely") do |arg|
+       options[:name] = arg
+     end
+   end.parse!
+
+
+   unless options[:name]
+     @log.error "-n or --name is required argument. please specify a name and try again"
+   end
+
+   options[:git_hash],rc = @log.et_backtick "cd ${REPOROOT};git rev-parse HEAD"
+   options[:git_hash].chomp!
+   @log.info "git revision=#{options[:git_hash]}"
+
+   @log.et_sys "echo #{options[:git_hash]} > git_rev_hash.txt"
+   @log.info "Querying git repo for local modifications..."
+   diff,rc =@log.et_backtick "cd ${REPOROOT};git diff"
+   if diff != ""
+     diff_path="./local_modifications.patch"
+     f = File.new(diff_path, File::CREAT|File::TRUNC|File::RDWR, 0644)
+     f.write diff
+     f.close
+     @log.warn "There were local modifications so creating patch file #{diff_path}"
+   else
+     @log.info "Repo is clean there are no modifications"
+   end
+
+   jira_dir="#{DROPBOX_DIR}/#{options[:name]}"
+   dropbox_host="sc-server01"
+
+   if Dir.exists? jira_dir
+     @log.error "directory=#{jira_dir}"
+   else
+     if (File.exists? "trace.fsdb")
+
+       #
+       # See if there any waveform templates other than novas.rc and use them if they are there
+       #
+       waves=false
+       ses=Dir["./*.ses"]
+       ses_file=ses.drop_while{|f| /novas/.match(f)}
+       if ses_file.length > 0
+         @log.info "Found #{ses_file[0]}.  Will add that to invocation script ./debug_me"
+         wave_arg=" -ssr #{ses_file[0]}"
+         waves=true
+       else
+         wave_arg=""
+       end
+
+       if (waves == false)
+         rc=Dir["./*.rc"]
+         rc_file=rc.drop_while{|f| /novas/.match(f)}
+         if rc_file.length > 0
+           @log.info "Found #{rc_file[0]}.  Will add that to invocation script ./debug_me"
+           wave_arg=" -sswr #{rc_file[0]}"
+         else
+           wave_arg=""
+         end
+       end
+
+       build_name,rc = @log.et_backtick "cat .build"
+       build_name.chomp!
+       @log.info "uses build name=#{build_name}"
+
+run_cmd = <<-EOS
+#!/bin/bash
+export VERDI_HOME=/eng/cad/tools/snps/verdi/Verdi_R-2020.12-1
+export PATH=$VERDI_HOME/bin:$PATH
+export DISABLE_TDC_DELETED_MSG=1
+cmd=`readlink -f $0`
+debug_dir=`dirname $cmd`
+cd ${debug_dir}/sim
+verdi -simflow -dbdir ../#{build_name}/vbuild/simv.daidir -ssf trace.fsdb #{wave_arg}
+EOS
+       debug_file="../debug_me"
+       f = File.new(debug_file, File::CREAT|File::TRUNC|File::RDWR, 0755)
+       f.write run_cmd
+       f.close
+
+       @log.info   "Copying debug info into #{jira_dir}"
+       if Dir.exists? DROPBOX_DIR
+         # we are in mountain view no need for SCP
+         @log.et_sys "mkdir #{jira_dir}"
+         @log.et_sys "cp -r ../* #{jira_dir}/"
+         @log.et_sys "cp -r ../../builds/#{build_name} #{jira_dir}/"
+         @log.et_sys "chmod -R 777 #{jira_dir}"
+         @log.et_sys "rm -f #{jira_dir}/sim/debug_me"
+       else
+         # not in Mtn View
+         @log.et_sys "ssh #{dropbox_host} mkdir #{jira_dir}"
+         @log.et_sys "scp -r ../* sc-server01:#{jira_dir}/"
+         @log.et_sys "scp -r ../../builds/#{build_name} sc-server01:#{jira_dir}/"
+         @log.et_sys "ssh #{dropbox_host} chmod -R 777 #{jira_dir}"
+         @log.et_sys "ssh #{dropbox_host} rm -f #{jira_dir}/sim/debug_me"
+       end
+       @log.info "Created dropbox entry #{jira_dir}"
+     else
+       @log.error "ERROR: Don't see an trace.fsdb in #{ENV['PWD']}"
+     end
+   end
+
+rescue Interrupt => e
+  @log.info "Interrupt deteted (Ctrl-c): #{e}\nStack Trace Follows\n#{e.backtrace.join("\n")}"
+  exit 1
+rescue SystemExit => e
+  exit e.status
+ensure
+  @log.close unless @log.nil?
+
+end

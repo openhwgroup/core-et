@@ -1,0 +1,25 @@
+#!/bin/csh -f
+
+set name=$1
+if ("testme" == "${name:t}") then
+	set url="test_memory"
+	set name="${name:h:h:h:h:t}.${name:h:h:h:t}.${name:h:t}"
+else
+	set url="build_memory"
+	set name="${name:h:h:h:t}.${name:h:h:t}"
+endif
+if ($?ETGMHOST) then
+	#set host="127.0.0.1:3002"
+	set host="${ETGMHOST}"
+else
+	set host="sc-dv01:3004"
+endif
+set url="http://${host}/resources/${url}"'?name='"${name}"
+set memMb="`curl -f -s '${url}'`"
+if (${status} || ("0" == "${memMb}")) then
+	set memMb=""
+else
+	set memMb="--mem=${memMb}M"
+endif
+echo "${memMb}"
+exit 0

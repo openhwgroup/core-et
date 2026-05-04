@@ -1,0 +1,12 @@
+Goal:
+Test synchronization of monitor with FCC.
+(Note: Derivative test rtlmin_2566_chicken runs with "+min_frontend_clock_gate_disable=1".) 
+
+Details:
+TEST IDEA:
+There are 8 minions:
+  - thread 1 is doing long operations (accesses to L3, div, uncacheds);
+  - thread 0 wait for FCC, do a load/store in L2 in some shared data, and increment FCC for the next minion t0;
+
+ All minions have thread1 running, and only minion 0 has thread0 awake (other minions will be waken up by minion-1).
+

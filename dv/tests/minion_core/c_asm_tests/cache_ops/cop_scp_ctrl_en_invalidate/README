@@ -1,0 +1,2 @@
+Goal:
+Test L1 D$ modes changing, after setting Excl_Mode, from Shared mode, to Split mode, and back to Share mode; check whether or not Cache is zero'ed out.    

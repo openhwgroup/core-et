@@ -1,0 +1,13 @@
+mask_movaxm
+mask_movmx
+mask_and
+mask_not
+mask_or
+mask_xor
+mask_popc
+mask_popc_rast
+mask_popcz
+fsetm_pi
+fsetm_pi_debug
+*.hex
+*.mem

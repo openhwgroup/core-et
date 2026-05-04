@@ -1,0 +1,34 @@
+### test List
+
+# set default options. These will be sent to the sim as plusargs 
+#    option = value  # sim will be run with cmd line param +option=value
+#
+# special options:
+#   preSimCmd = command to run before launching the simulation
+#   postSimCmd = command to run after the simulation has completed
+#       all the parameters will be set as env vars before calling these commands
+#       they will be run from the test base directory ($ENV{testPath})
+#       the test run dir can be found in $ENV{testRunDir}
+#   timeout = max number of time to run
+#   LOG_LEVEL = global log level
+#   XXXX_LOG_LEVEL = log level for block named XXXX
+#   SEED = random seed
+
+LOG_LEVEL=1
+testMain_LOG_LEVEL=1
+floatingPoint_LOG_LEVEL=1
+NUM_TESTS=100000
+#DISABLE_SOFTFLOAT=1
+timeout=16000000
+SEED=1
+simulator=verilator
+tag=nightly
+
+#test list, with specific options if need be
+# format is: test=vlog_top_level [option=X option=Y...]
+
+
+#kwp test=fp_add_tb_e8_m23 preSimCmd=scripts/preTest\ f32
+#kwp test=fp_add_tb_e8_m39
+test=fp_add_tb_e5_m10 preSimCmd=scripts/preTest f16
+

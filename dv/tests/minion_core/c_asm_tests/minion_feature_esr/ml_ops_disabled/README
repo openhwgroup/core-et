@@ -1,0 +1,6 @@
+Goal:
+Test basic Tensor Operations when Minion_Feature_ESR TRAP_ON_ML_BIT is set to 1 (will cause trap).
+
+Parameter(s):
+Core - This test will run on any 2-Core pair (M0M1, M8M9, etc) of any Neighborhood of any Shire, on only Thread 0 (of each Core).
+

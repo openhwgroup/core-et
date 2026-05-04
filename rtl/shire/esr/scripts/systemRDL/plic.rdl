@@ -1,0 +1,525 @@
+// Copyright (c) 2026 Ainekko
+// SPDX-License-Identifier: Apache-2.0
+
+// =============================================================
+// plic.rdl — RISC-V PLIC SystemRDL Definition
+//
+//   Base address      : 0xA0000000
+//   Interrupt sources : 6  (IDs 1..6; ID 0 is reserved/no-interrupt)
+//   Contexts          : 32  (M-mode + S-mode per hart, 16 harts)
+//   Priorities        : NONE (priority regs RO=1, threshold RO=0)
+//
+// =============================================================
+
+
+// ─────────────────────────────────────────────────────────────────────────
+// plic_priority_t
+// Read-only, hardwired to 1.
+// No priority levels are implemented; every active source has equal
+// priority and will be forwarded to any context whose threshold == 0.
+// ─────────────────────────────────────────────────────────────────────────
+reg plic_priority_t {
+    desc = "Interrupt source priority. Hardwired to 1 — no priority levels are implemented.";
+    default hw = r;
+    default sw = r;
+    field {
+        desc = "Priority level (always 1)";
+        reset = 1'h1;
+    } PRIORITY[0:0] = 1'h1;
+};
+
+// ─────────────────────────────────────────────────────────────────────────
+// plic_pending_t
+// One bit per interrupt source, read-only.  Bit 0 is reserved (no source 0).
+// Bits 6:1 correspond to sources 1..6.
+// Set by the gateway on the leading edge of the source signal.
+// Cleared atomically when a hart successfully claims the interrupt.
+// ─────────────────────────────────────────────────────────────────────────
+reg plic_pending_t {
+    desc = "Interrupt pending bits. Hardware-managed; read-only for software.";
+    field {
+        desc = "Reserved — source 0 does not exist";
+        hw = r; sw = r;
+        reset = 1'h0;
+    } RESERVED[0:0] = 1'h0;
+    field {
+        desc = "Pending flags for interrupt sources 1..6";
+        hw = rw; sw = r;
+        reset = 6'h0;
+    } PENDING[6:1] = 6'h0;
+};
+
+// ─────────────────────────────────────────────────────────────────────────
+// plic_enable_t  (one instance per context)
+// Read/write by software.  Bit 0 is reserved (no source 0).
+// Bits 6:1 individually gate each source for the associated context.
+// ─────────────────────────────────────────────────────────────────────────
+reg plic_enable_t {
+    desc = "Interrupt enable bits for a context. Software read/write.";
+    field {
+        desc = "Reserved — source 0 does not exist";
+        hw = r; sw = r;
+        reset = 1'h0;
+    } RESERVED[0:0] = 1'h0;
+    field {
+        desc = "Enable bits for interrupt sources 1..6";
+        hw = r; sw = rw;
+        reset = 6'h0;
+    } ENABLE[6:1] = 6'h0;
+};
+
+// ─────────────────────────────────────────────────────────────────────────
+// plic_threshold_t  (one instance per context)
+// Read-only, hardwired to 0.
+// Threshold = 0 means every pending+enabled interrupt (priority >= 1)
+// is forwarded to the context — i.e. all interrupts pass.
+// ─────────────────────────────────────────────────────────────────────────
+reg plic_threshold_t {
+    desc = "Priority threshold. Hardwired to 0 — all enabled pending interrupts are forwarded to the hart.";
+    default hw = r;
+    default sw = r;
+    field {
+        desc = "Threshold (always 0)";
+        reset = 1'h0;
+    } THRESHOLD[0:0] = 1'h0;
+};
+
+// ─────────────────────────────────────────────────────────────────────────
+// plic_claim_complete_t  (one instance per context)
+//
+//   READ  (claim)    Returns the ID of the highest-priority pending interrupt
+//                    that is enabled for this context, and atomically clears
+//                    its pending bit.  Returns 0 if no interrupt is pending.
+//
+//   WRITE (complete) Signals that the hart has serviced the interrupt with
+//                    the written ID.  The gateway may re-assert the pending
+//                    bit if the source is still active.
+//
+//   Field width : 3 bits  (covers IDs 0..7; valid range 0..6)
+// ─────────────────────────────────────────────────────────────────────────
+reg plic_claim_complete_t {
+    desc = "Claim (read) / Complete (write) register. A read atomically claims the highest-priority pending interrupt for this context (returns 0 if none). Writing the claimed ID signals completion.";
+    field {
+        desc = "Interrupt ID: 0 = no interrupt pending, 1..6 = valid interrupt source";
+        hw = rw; sw = rw;
+        reset = 3'h0;
+    } ID[2:0] = 3'h0;
+};
+
+
+// =============================================================
+// plic_addrmap — main PLIC register map (base-relative offsets)
+// =============================================================
+addrmap PLIC_cpu {
+    desc = "RISC-V Platform-Level Interrupt Controller register map.";
+
+    // ── Priority Registers (0x000004 .. 0x000018) ──────────────────────
+    //   plic_priority_src01 @ 0x000004  ..  plic_priority_src06 @ 0x000018
+    //   6 × 32-bit registers, RO = 1, stride = 4 bytes
+
+    plic_priority_t priority_src01 @ 0x00000004;
+    plic_priority_t priority_src02 @ 0x00000008;
+    plic_priority_t priority_src03 @ 0x0000000C;
+    plic_priority_t priority_src04 @ 0x00000010;
+    plic_priority_t priority_src05 @ 0x00000014;
+    plic_priority_t priority_src06 @ 0x00000018;
+
+    // ── Interrupt Pending Register (0x001000) ──────────────────────────
+    //   1 × 32-bit register; bits[6:1] valid, bit[0] reserved
+
+    plic_pending_t pending @ 0x00001000;
+
+    // ── Interrupt Enable Registers (0x002000 .. 0x002F80  stride=0x80) ─
+    //   32 contexts × 1 × 32-bit register; bits[6:1] valid, bit[0] reserved
+
+    plic_enable_t enable_ctx00 @ 0x00002000;
+    enable_ctx00->name = "Interrupt Enable – Hart 0, M-mode";
+    enable_ctx00->desc = "Interrupt enable bits for context 0 (hart 0, Machine mode). Bit N enables source N for this context.";
+
+    plic_enable_t enable_ctx01 @ 0x00002080;
+    enable_ctx01->name = "Interrupt Enable – Hart 0, S-mode";
+    enable_ctx01->desc = "Interrupt enable bits for context 1 (hart 0, Supervisor mode). Bit N enables source N for this context.";
+
+    plic_enable_t enable_ctx02 @ 0x00002100;
+    enable_ctx02->name = "Interrupt Enable – Hart 1, M-mode";
+    enable_ctx02->desc = "Interrupt enable bits for context 2 (hart 1, Machine mode). Bit N enables source N for this context.";
+
+    plic_enable_t enable_ctx03 @ 0x00002180;
+    enable_ctx03->name = "Interrupt Enable – Hart 1, S-mode";
+    enable_ctx03->desc = "Interrupt enable bits for context 3 (hart 1, Supervisor mode). Bit N enables source N for this context.";
+
+    plic_enable_t enable_ctx04 @ 0x00002200;
+    enable_ctx04->name = "Interrupt Enable – Hart 2, M-mode";
+    enable_ctx04->desc = "Interrupt enable bits for context 4 (hart 2, Machine mode). Bit N enables source N for this context.";
+
+    plic_enable_t enable_ctx05 @ 0x00002280;
+    enable_ctx05->name = "Interrupt Enable – Hart 2, S-mode";
+    enable_ctx05->desc = "Interrupt enable bits for context 5 (hart 2, Supervisor mode). Bit N enables source N for this context.";
+
+    plic_enable_t enable_ctx06 @ 0x00002300;
+    enable_ctx06->name = "Interrupt Enable – Hart 3, M-mode";
+    enable_ctx06->desc = "Interrupt enable bits for context 6 (hart 3, Machine mode). Bit N enables source N for this context.";
+
+    plic_enable_t enable_ctx07 @ 0x00002380;
+    enable_ctx07->name = "Interrupt Enable – Hart 3, S-mode";
+    enable_ctx07->desc = "Interrupt enable bits for context 7 (hart 3, Supervisor mode). Bit N enables source N for this context.";
+
+    plic_enable_t enable_ctx08 @ 0x00002400;
+    enable_ctx08->name = "Interrupt Enable – Hart 4, M-mode";
+    enable_ctx08->desc = "Interrupt enable bits for context 8 (hart 4, Machine mode). Bit N enables source N for this context.";
+
+    plic_enable_t enable_ctx09 @ 0x00002480;
+    enable_ctx09->name = "Interrupt Enable – Hart 4, S-mode";
+    enable_ctx09->desc = "Interrupt enable bits for context 9 (hart 4, Supervisor mode). Bit N enables source N for this context.";
+
+    plic_enable_t enable_ctx10 @ 0x00002500;
+    enable_ctx10->name = "Interrupt Enable – Hart 5, M-mode";
+    enable_ctx10->desc = "Interrupt enable bits for context 10 (hart 5, Machine mode). Bit N enables source N for this context.";
+
+    plic_enable_t enable_ctx11 @ 0x00002580;
+    enable_ctx11->name = "Interrupt Enable – Hart 5, S-mode";
+    enable_ctx11->desc = "Interrupt enable bits for context 11 (hart 5, Supervisor mode). Bit N enables source N for this context.";
+
+    plic_enable_t enable_ctx12 @ 0x00002600;
+    enable_ctx12->name = "Interrupt Enable – Hart 6, M-mode";
+    enable_ctx12->desc = "Interrupt enable bits for context 12 (hart 6, Machine mode). Bit N enables source N for this context.";
+
+    plic_enable_t enable_ctx13 @ 0x00002680;
+    enable_ctx13->name = "Interrupt Enable – Hart 6, S-mode";
+    enable_ctx13->desc = "Interrupt enable bits for context 13 (hart 6, Supervisor mode). Bit N enables source N for this context.";
+
+    plic_enable_t enable_ctx14 @ 0x00002700;
+    enable_ctx14->name = "Interrupt Enable – Hart 7, M-mode";
+    enable_ctx14->desc = "Interrupt enable bits for context 14 (hart 7, Machine mode). Bit N enables source N for this context.";
+
+    plic_enable_t enable_ctx15 @ 0x00002780;
+    enable_ctx15->name = "Interrupt Enable – Hart 7, S-mode";
+    enable_ctx15->desc = "Interrupt enable bits for context 15 (hart 7, Supervisor mode). Bit N enables source N for this context.";
+
+    plic_enable_t enable_ctx16 @ 0x00002800;
+    enable_ctx16->name = "Interrupt Enable – Hart 8, M-mode";
+    enable_ctx16->desc = "Interrupt enable bits for context 16 (hart 8, Machine mode). Bit N enables source N for this context.";
+
+    plic_enable_t enable_ctx17 @ 0x00002880;
+    enable_ctx17->name = "Interrupt Enable – Hart 8, S-mode";
+    enable_ctx17->desc = "Interrupt enable bits for context 17 (hart 8, Supervisor mode). Bit N enables source N for this context.";
+
+    plic_enable_t enable_ctx18 @ 0x00002900;
+    enable_ctx18->name = "Interrupt Enable – Hart 9, M-mode";
+    enable_ctx18->desc = "Interrupt enable bits for context 18 (hart 9, Machine mode). Bit N enables source N for this context.";
+
+    plic_enable_t enable_ctx19 @ 0x00002980;
+    enable_ctx19->name = "Interrupt Enable – Hart 9, S-mode";
+    enable_ctx19->desc = "Interrupt enable bits for context 19 (hart 9, Supervisor mode). Bit N enables source N for this context.";
+
+    plic_enable_t enable_ctx20 @ 0x00002A00;
+    enable_ctx20->name = "Interrupt Enable – Hart 10, M-mode";
+    enable_ctx20->desc = "Interrupt enable bits for context 20 (hart 10, Machine mode). Bit N enables source N for this context.";
+
+    plic_enable_t enable_ctx21 @ 0x00002A80;
+    enable_ctx21->name = "Interrupt Enable – Hart 10, S-mode";
+    enable_ctx21->desc = "Interrupt enable bits for context 21 (hart 10, Supervisor mode). Bit N enables source N for this context.";
+
+    plic_enable_t enable_ctx22 @ 0x00002B00;
+    enable_ctx22->name = "Interrupt Enable – Hart 11, M-mode";
+    enable_ctx22->desc = "Interrupt enable bits for context 22 (hart 11, Machine mode). Bit N enables source N for this context.";
+
+    plic_enable_t enable_ctx23 @ 0x00002B80;
+    enable_ctx23->name = "Interrupt Enable – Hart 11, S-mode";
+    enable_ctx23->desc = "Interrupt enable bits for context 23 (hart 11, Supervisor mode). Bit N enables source N for this context.";
+
+    plic_enable_t enable_ctx24 @ 0x00002C00;
+    enable_ctx24->name = "Interrupt Enable – Hart 12, M-mode";
+    enable_ctx24->desc = "Interrupt enable bits for context 24 (hart 12, Machine mode). Bit N enables source N for this context.";
+
+    plic_enable_t enable_ctx25 @ 0x00002C80;
+    enable_ctx25->name = "Interrupt Enable – Hart 12, S-mode";
+    enable_ctx25->desc = "Interrupt enable bits for context 25 (hart 12, Supervisor mode). Bit N enables source N for this context.";
+
+    plic_enable_t enable_ctx26 @ 0x00002D00;
+    enable_ctx26->name = "Interrupt Enable – Hart 13, M-mode";
+    enable_ctx26->desc = "Interrupt enable bits for context 26 (hart 13, Machine mode). Bit N enables source N for this context.";
+
+    plic_enable_t enable_ctx27 @ 0x00002D80;
+    enable_ctx27->name = "Interrupt Enable – Hart 13, S-mode";
+    enable_ctx27->desc = "Interrupt enable bits for context 27 (hart 13, Supervisor mode). Bit N enables source N for this context.";
+
+    plic_enable_t enable_ctx28 @ 0x00002E00;
+    enable_ctx28->name = "Interrupt Enable – Hart 14, M-mode";
+    enable_ctx28->desc = "Interrupt enable bits for context 28 (hart 14, Machine mode). Bit N enables source N for this context.";
+
+    plic_enable_t enable_ctx29 @ 0x00002E80;
+    enable_ctx29->name = "Interrupt Enable – Hart 14, S-mode";
+    enable_ctx29->desc = "Interrupt enable bits for context 29 (hart 14, Supervisor mode). Bit N enables source N for this context.";
+
+    plic_enable_t enable_ctx30 @ 0x00002F00;
+    enable_ctx30->name = "Interrupt Enable – Hart 15, M-mode";
+    enable_ctx30->desc = "Interrupt enable bits for context 30 (hart 15, Machine mode). Bit N enables source N for this context.";
+
+    plic_enable_t enable_ctx31 @ 0x00002F80;
+    enable_ctx31->name = "Interrupt Enable – Hart 15, S-mode";
+    enable_ctx31->desc = "Interrupt enable bits for context 31 (hart 15, Supervisor mode). Bit N enables source N for this context.";
+
+
+    // ── Context Registers  [threshold + claim/complete] (0x200000 .. 0x21F004  stride=0x1000) 
+    //   Layout per context: +0x000 threshold (RO=0)  +0x004 claim/complete (RW)
+
+    // Context  0  (hart  0, M-mode)
+    plic_threshold_t      threshold_ctx00     @ 0x00200000;
+    threshold_ctx00->name = "Priority Threshold – Hart 0, M-mode";
+    threshold_ctx00->desc = "Priority threshold for context 0 (hart 0, Machine mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx00 @ 0x00200004;
+    claim_complete_ctx00->name = "Claim/Complete – Hart 0, M-mode";
+    claim_complete_ctx00->desc = "Claim/Complete for context 0 (hart 0, Machine mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+    // Context  1  (hart  0, S-mode)
+    plic_threshold_t      threshold_ctx01     @ 0x00201000;
+    threshold_ctx01->name = "Priority Threshold – Hart 0, S-mode";
+    threshold_ctx01->desc = "Priority threshold for context 1 (hart 0, Supervisor mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx01 @ 0x00201004;
+    claim_complete_ctx01->name = "Claim/Complete – Hart 0, S-mode";
+    claim_complete_ctx01->desc = "Claim/Complete for context 1 (hart 0, Supervisor mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+    // Context  2  (hart  1, M-mode)
+    plic_threshold_t      threshold_ctx02     @ 0x00202000;
+    threshold_ctx02->name = "Priority Threshold – Hart 1, M-mode";
+    threshold_ctx02->desc = "Priority threshold for context 2 (hart 1, Machine mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx02 @ 0x00202004;
+    claim_complete_ctx02->name = "Claim/Complete – Hart 1, M-mode";
+    claim_complete_ctx02->desc = "Claim/Complete for context 2 (hart 1, Machine mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+    // Context  3  (hart  1, S-mode)
+    plic_threshold_t      threshold_ctx03     @ 0x00203000;
+    threshold_ctx03->name = "Priority Threshold – Hart 1, S-mode";
+    threshold_ctx03->desc = "Priority threshold for context 3 (hart 1, Supervisor mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx03 @ 0x00203004;
+    claim_complete_ctx03->name = "Claim/Complete – Hart 1, S-mode";
+    claim_complete_ctx03->desc = "Claim/Complete for context 3 (hart 1, Supervisor mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+    // Context  4  (hart  2, M-mode)
+    plic_threshold_t      threshold_ctx04     @ 0x00204000;
+    threshold_ctx04->name = "Priority Threshold – Hart 2, M-mode";
+    threshold_ctx04->desc = "Priority threshold for context 4 (hart 2, Machine mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx04 @ 0x00204004;
+    claim_complete_ctx04->name = "Claim/Complete – Hart 2, M-mode";
+    claim_complete_ctx04->desc = "Claim/Complete for context 4 (hart 2, Machine mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+    // Context  5  (hart  2, S-mode)
+    plic_threshold_t      threshold_ctx05     @ 0x00205000;
+    threshold_ctx05->name = "Priority Threshold – Hart 2, S-mode";
+    threshold_ctx05->desc = "Priority threshold for context 5 (hart 2, Supervisor mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx05 @ 0x00205004;
+    claim_complete_ctx05->name = "Claim/Complete – Hart 2, S-mode";
+    claim_complete_ctx05->desc = "Claim/Complete for context 5 (hart 2, Supervisor mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+    // Context  6  (hart  3, M-mode)
+    plic_threshold_t      threshold_ctx06     @ 0x00206000;
+    threshold_ctx06->name = "Priority Threshold – Hart 3, M-mode";
+    threshold_ctx06->desc = "Priority threshold for context 6 (hart 3, Machine mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx06 @ 0x00206004;
+    claim_complete_ctx06->name = "Claim/Complete – Hart 3, M-mode";
+    claim_complete_ctx06->desc = "Claim/Complete for context 6 (hart 3, Machine mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+    // Context  7  (hart  3, S-mode)
+    plic_threshold_t      threshold_ctx07     @ 0x00207000;
+    threshold_ctx07->name = "Priority Threshold – Hart 3, S-mode";
+    threshold_ctx07->desc = "Priority threshold for context 7 (hart 3, Supervisor mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx07 @ 0x00207004;
+    claim_complete_ctx07->name = "Claim/Complete – Hart 3, S-mode";
+    claim_complete_ctx07->desc = "Claim/Complete for context 7 (hart 3, Supervisor mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+    // Context  8  (hart  4, M-mode)
+    plic_threshold_t      threshold_ctx08     @ 0x00208000;
+    threshold_ctx08->name = "Priority Threshold – Hart 4, M-mode";
+    threshold_ctx08->desc = "Priority threshold for context 8 (hart 4, Machine mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx08 @ 0x00208004;
+    claim_complete_ctx08->name = "Claim/Complete – Hart 4, M-mode";
+    claim_complete_ctx08->desc = "Claim/Complete for context 8 (hart 4, Machine mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+    // Context  9  (hart  4, S-mode)
+    plic_threshold_t      threshold_ctx09     @ 0x00209000;
+    threshold_ctx09->name = "Priority Threshold – Hart 4, S-mode";
+    threshold_ctx09->desc = "Priority threshold for context 9 (hart 4, Supervisor mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx09 @ 0x00209004;
+    claim_complete_ctx09->name = "Claim/Complete – Hart 4, S-mode";
+    claim_complete_ctx09->desc = "Claim/Complete for context 9 (hart 4, Supervisor mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+    // Context 10  (hart  5, M-mode)
+    plic_threshold_t      threshold_ctx10     @ 0x0020A000;
+    threshold_ctx10->name = "Priority Threshold – Hart 5, M-mode";
+    threshold_ctx10->desc = "Priority threshold for context 10 (hart 5, Machine mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx10 @ 0x0020A004;
+    claim_complete_ctx10->name = "Claim/Complete – Hart 5, M-mode";
+    claim_complete_ctx10->desc = "Claim/Complete for context 10 (hart 5, Machine mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+    // Context 11  (hart  5, S-mode)
+    plic_threshold_t      threshold_ctx11     @ 0x0020B000;
+    threshold_ctx11->name = "Priority Threshold – Hart 5, S-mode";
+    threshold_ctx11->desc = "Priority threshold for context 11 (hart 5, Supervisor mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx11 @ 0x0020B004;
+    claim_complete_ctx11->name = "Claim/Complete – Hart 5, S-mode";
+    claim_complete_ctx11->desc = "Claim/Complete for context 11 (hart 5, Supervisor mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+    // Context 12  (hart  6, M-mode)
+    plic_threshold_t      threshold_ctx12     @ 0x0020C000;
+    threshold_ctx12->name = "Priority Threshold – Hart 6, M-mode";
+    threshold_ctx12->desc = "Priority threshold for context 12 (hart 6, Machine mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx12 @ 0x0020C004;
+    claim_complete_ctx12->name = "Claim/Complete – Hart 6, M-mode";
+    claim_complete_ctx12->desc = "Claim/Complete for context 12 (hart 6, Machine mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+    // Context 13  (hart  6, S-mode)
+    plic_threshold_t      threshold_ctx13     @ 0x0020D000;
+    threshold_ctx13->name = "Priority Threshold – Hart 6, S-mode";
+    threshold_ctx13->desc = "Priority threshold for context 13 (hart 6, Supervisor mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx13 @ 0x0020D004;
+    claim_complete_ctx13->name = "Claim/Complete – Hart 6, S-mode";
+    claim_complete_ctx13->desc = "Claim/Complete for context 13 (hart 6, Supervisor mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+    // Context 14  (hart  7, M-mode)
+    plic_threshold_t      threshold_ctx14     @ 0x0020E000;
+    threshold_ctx14->name = "Priority Threshold – Hart 7, M-mode";
+    threshold_ctx14->desc = "Priority threshold for context 14 (hart 7, Machine mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx14 @ 0x0020E004;
+    claim_complete_ctx14->name = "Claim/Complete – Hart 7, M-mode";
+    claim_complete_ctx14->desc = "Claim/Complete for context 14 (hart 7, Machine mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+    // Context 15  (hart  7, S-mode)
+    plic_threshold_t      threshold_ctx15     @ 0x0020F000;
+    threshold_ctx15->name = "Priority Threshold – Hart 7, S-mode";
+    threshold_ctx15->desc = "Priority threshold for context 15 (hart 7, Supervisor mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx15 @ 0x0020F004;
+    claim_complete_ctx15->name = "Claim/Complete – Hart 7, S-mode";
+    claim_complete_ctx15->desc = "Claim/Complete for context 15 (hart 7, Supervisor mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+    // Context 16  (hart  8, M-mode)
+    plic_threshold_t      threshold_ctx16     @ 0x00210000;
+    threshold_ctx16->name = "Priority Threshold – Hart 8, M-mode";
+    threshold_ctx16->desc = "Priority threshold for context 16 (hart 8, Machine mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx16 @ 0x00210004;
+    claim_complete_ctx16->name = "Claim/Complete – Hart 8, M-mode";
+    claim_complete_ctx16->desc = "Claim/Complete for context 16 (hart 8, Machine mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+    // Context 17  (hart  8, S-mode)
+    plic_threshold_t      threshold_ctx17     @ 0x00211000;
+    threshold_ctx17->name = "Priority Threshold – Hart 8, S-mode";
+    threshold_ctx17->desc = "Priority threshold for context 17 (hart 8, Supervisor mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx17 @ 0x00211004;
+    claim_complete_ctx17->name = "Claim/Complete – Hart 8, S-mode";
+    claim_complete_ctx17->desc = "Claim/Complete for context 17 (hart 8, Supervisor mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+    // Context 18  (hart  9, M-mode)
+    plic_threshold_t      threshold_ctx18     @ 0x00212000;
+    threshold_ctx18->name = "Priority Threshold – Hart 9, M-mode";
+    threshold_ctx18->desc = "Priority threshold for context 18 (hart 9, Machine mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx18 @ 0x00212004;
+    claim_complete_ctx18->name = "Claim/Complete – Hart 9, M-mode";
+    claim_complete_ctx18->desc = "Claim/Complete for context 18 (hart 9, Machine mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+    // Context 19  (hart  9, S-mode)
+    plic_threshold_t      threshold_ctx19     @ 0x00213000;
+    threshold_ctx19->name = "Priority Threshold – Hart 9, S-mode";
+    threshold_ctx19->desc = "Priority threshold for context 19 (hart 9, Supervisor mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx19 @ 0x00213004;
+    claim_complete_ctx19->name = "Claim/Complete – Hart 9, S-mode";
+    claim_complete_ctx19->desc = "Claim/Complete for context 19 (hart 9, Supervisor mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+    // Context 20  (hart 10, M-mode)
+    plic_threshold_t      threshold_ctx20     @ 0x00214000;
+    threshold_ctx20->name = "Priority Threshold – Hart 10, M-mode";
+    threshold_ctx20->desc = "Priority threshold for context 20 (hart 10, Machine mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx20 @ 0x00214004;
+    claim_complete_ctx20->name = "Claim/Complete – Hart 10, M-mode";
+    claim_complete_ctx20->desc = "Claim/Complete for context 20 (hart 10, Machine mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+    // Context 21  (hart 10, S-mode)
+    plic_threshold_t      threshold_ctx21     @ 0x00215000;
+    threshold_ctx21->name = "Priority Threshold – Hart 10, S-mode";
+    threshold_ctx21->desc = "Priority threshold for context 21 (hart 10, Supervisor mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx21 @ 0x00215004;
+    claim_complete_ctx21->name = "Claim/Complete – Hart 10, S-mode";
+    claim_complete_ctx21->desc = "Claim/Complete for context 21 (hart 10, Supervisor mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+    // Context 22  (hart 11, M-mode)
+    plic_threshold_t      threshold_ctx22     @ 0x00216000;
+    threshold_ctx22->name = "Priority Threshold – Hart 11, M-mode";
+    threshold_ctx22->desc = "Priority threshold for context 22 (hart 11, Machine mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx22 @ 0x00216004;
+    claim_complete_ctx22->name = "Claim/Complete – Hart 11, M-mode";
+    claim_complete_ctx22->desc = "Claim/Complete for context 22 (hart 11, Machine mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+    // Context 23  (hart 11, S-mode)
+    plic_threshold_t      threshold_ctx23     @ 0x00217000;
+    threshold_ctx23->name = "Priority Threshold – Hart 11, S-mode";
+    threshold_ctx23->desc = "Priority threshold for context 23 (hart 11, Supervisor mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx23 @ 0x00217004;
+    claim_complete_ctx23->name = "Claim/Complete – Hart 11, S-mode";
+    claim_complete_ctx23->desc = "Claim/Complete for context 23 (hart 11, Supervisor mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+    // Context 24  (hart 12, M-mode)
+    plic_threshold_t      threshold_ctx24     @ 0x00218000;
+    threshold_ctx24->name = "Priority Threshold – Hart 12, M-mode";
+    threshold_ctx24->desc = "Priority threshold for context 24 (hart 12, Machine mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx24 @ 0x00218004;
+    claim_complete_ctx24->name = "Claim/Complete – Hart 12, M-mode";
+    claim_complete_ctx24->desc = "Claim/Complete for context 24 (hart 12, Machine mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+    // Context 25  (hart 12, S-mode)
+    plic_threshold_t      threshold_ctx25     @ 0x00219000;
+    threshold_ctx25->name = "Priority Threshold – Hart 12, S-mode";
+    threshold_ctx25->desc = "Priority threshold for context 25 (hart 12, Supervisor mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx25 @ 0x00219004;
+    claim_complete_ctx25->name = "Claim/Complete – Hart 12, S-mode";
+    claim_complete_ctx25->desc = "Claim/Complete for context 25 (hart 12, Supervisor mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+    // Context 26  (hart 13, M-mode)
+    plic_threshold_t      threshold_ctx26     @ 0x0021A000;
+    threshold_ctx26->name = "Priority Threshold – Hart 13, M-mode";
+    threshold_ctx26->desc = "Priority threshold for context 26 (hart 13, Machine mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx26 @ 0x0021A004;
+    claim_complete_ctx26->name = "Claim/Complete – Hart 13, M-mode";
+    claim_complete_ctx26->desc = "Claim/Complete for context 26 (hart 13, Machine mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+    // Context 27  (hart 13, S-mode)
+    plic_threshold_t      threshold_ctx27     @ 0x0021B000;
+    threshold_ctx27->name = "Priority Threshold – Hart 13, S-mode";
+    threshold_ctx27->desc = "Priority threshold for context 27 (hart 13, Supervisor mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx27 @ 0x0021B004;
+    claim_complete_ctx27->name = "Claim/Complete – Hart 13, S-mode";
+    claim_complete_ctx27->desc = "Claim/Complete for context 27 (hart 13, Supervisor mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+    // Context 28  (hart 14, M-mode)
+    plic_threshold_t      threshold_ctx28     @ 0x0021C000;
+    threshold_ctx28->name = "Priority Threshold – Hart 14, M-mode";
+    threshold_ctx28->desc = "Priority threshold for context 28 (hart 14, Machine mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx28 @ 0x0021C004;
+    claim_complete_ctx28->name = "Claim/Complete – Hart 14, M-mode";
+    claim_complete_ctx28->desc = "Claim/Complete for context 28 (hart 14, Machine mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+    // Context 29  (hart 14, S-mode)
+    plic_threshold_t      threshold_ctx29     @ 0x0021D000;
+    threshold_ctx29->name = "Priority Threshold – Hart 14, S-mode";
+    threshold_ctx29->desc = "Priority threshold for context 29 (hart 14, Supervisor mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx29 @ 0x0021D004;
+    claim_complete_ctx29->name = "Claim/Complete – Hart 14, S-mode";
+    claim_complete_ctx29->desc = "Claim/Complete for context 29 (hart 14, Supervisor mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+    // Context 30  (hart 15, M-mode)
+    plic_threshold_t      threshold_ctx30     @ 0x0021E000;
+    threshold_ctx30->name = "Priority Threshold – Hart 15, M-mode";
+    threshold_ctx30->desc = "Priority threshold for context 30 (hart 15, Machine mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx30 @ 0x0021E004;
+    claim_complete_ctx30->name = "Claim/Complete – Hart 15, M-mode";
+    claim_complete_ctx30->desc = "Claim/Complete for context 30 (hart 15, Machine mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+    // Context 31  (hart 15, S-mode)
+    plic_threshold_t      threshold_ctx31     @ 0x0021F000;
+    threshold_ctx31->name = "Priority Threshold – Hart 15, S-mode";
+    threshold_ctx31->desc = "Priority threshold for context 31 (hart 15, Supervisor mode). Hardwired to 0 — all enabled pending interrupts are forwarded to this hart.";
+    plic_claim_complete_t claim_complete_ctx31 @ 0x0021F004;
+    claim_complete_ctx31->name = "Claim/Complete – Hart 15, S-mode";
+    claim_complete_ctx31->desc = "Claim/Complete for context 31 (hart 15, Supervisor mode). Read to claim the highest-priority pending interrupt (returns 0 if none); write the claimed ID to signal completion.";
+
+};
+
+

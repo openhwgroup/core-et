@@ -1,0 +1,10 @@
+#!/bin/bash
+
+echo "Copying test...";
+cp $REPOROOT/test/shire/shire_top_logic_netlist/compare_log*.txt $testRunDir
+cp $REPOROOT/test/shire/shire_top_logic_netlist/vsrc/shire_top_logic_wrapper_tb.json $testRunDir
+
+touch $testRunDir/mem_desc.txt
+
+# and create logs dir
+mkdir -p $testRunDir/logs || exit
