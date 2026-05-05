@@ -1,5 +1,7 @@
 # CORE-ET Agentic Silicon Platform (ETASP)
 
+[![](https://dcbadge.limes.pink/api/server/WNKvkefkUs?logoColor=f9a03f)](https://discord.gg/WNKvkefkUs)
+
 The **CORE-ET Agentic Silicon Platform (ETASP)** is an Ainekko project for
 collecting hardware IP in a form that can be translated, verified, documented,
 and integrated by agentic hardware-development workflows.
