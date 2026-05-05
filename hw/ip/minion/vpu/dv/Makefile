@@ -76,9 +76,12 @@ TESTS := bypass \
          txfmaexp_top \
          txfma_top \
          txfma_top_fake \
+         txfma_trans_top_default \
+         txfma_trans_top_fake \
          tima_adder \
          tima_top \
          lane_tima \
+         tensorreduce \
          sh_sw \
          trans_top_default \
          trans_top_extra_trans \
@@ -256,6 +259,29 @@ txfma_top_fake_SRCS := $(COMMON_RTL) \
 # exposing the pre-existing etlink_pkg/minion_pkg PaSize shadow. Both uses are qualified.
 txfma_top_fake_FLAGS := -Wno-VARHIDDEN
 
+txfma_trans_top_fake_TOP := vpu_txfma_trans_top_tb
+txfma_trans_top_fake_SRCS := $(COMMON_RTL) \
+                             $(wildcard $(REPO_ROOT)/hw/ip/minion/vpu/rtl/trans_*_rom_case_*.sv) \
+                             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/trans_top.sv \
+                             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_top_fake.sv \
+                             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_txfma_trans_top.sv \
+                             $(CURDIR)/vpu_txfma_trans_top_tb.sv \
+                             $(CURDIR)/vpu_txfma_trans_top_test.cc
+txfma_trans_top_fake_FLAGS := -GUseFakeTxfma=1 -Wno-VARHIDDEN
+
+txfma_trans_top_default_TOP := vpu_txfma_trans_top_tb
+txfma_trans_top_default_SRCS := $(COMMON_RTL) \
+                                $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_pkg.sv \
+                                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_defs_pkg.sv \
+                                $(PRIM_CLK_GATE) \
+                                $(wildcard $(REPO_ROOT)/hw/ip/minion/vpu/rtl/trans_*_rom_case_*.sv) \
+                                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/trans_top.sv \
+                                $(TXFMA_REAL_RTL) \
+                                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_txfma_trans_top.sv \
+                                $(CURDIR)/vpu_txfma_trans_top_tb.sv \
+                                $(CURDIR)/vpu_txfma_trans_top_default_test.cc
+txfma_trans_top_default_FLAGS := -GUseFakeTxfma=0
+
 tima_adder_TOP := tima_adder_tb
 tima_adder_SRCS := $(COMMON_RTL) \
                    $(REPO_ROOT)/hw/ip/minion/vpu/rtl/tima_adder.sv \
@@ -279,6 +305,14 @@ lane_tima_SRCS := $(COMMON_RTL) \
                   $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_lane_tima.sv \
                   $(CURDIR)/vpu_lane_tima_tb.sv \
                   $(CURDIR)/vpu_lane_tima_test.cc
+
+tensorreduce_TOP := vpu_tensorreduce_tb
+tensorreduce_SRCS := $(COMMON_RTL) \
+                     $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_pkg.sv \
+                     $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_defs_pkg.sv \
+                     $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorreduce.sv \
+                     $(CURDIR)/vpu_tensorreduce_tb.sv \
+                     $(CURDIR)/vpu_tensorreduce_test.cc
 
 sh_sw_TOP := vpu_sh_sw_tb
 sh_sw_SRCS := $(COMMON_RTL) \
@@ -379,6 +413,14 @@ LINT_SRCS := $(COMMON_RTL) \
              $(REPO_ROOT)/hw/ip/minion/vpu/rtl/trans_top.sv \
              $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_trans.sv \
              $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_uinst_decoder.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorreduce.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_txfma_trans_top.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorfma.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorquant.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_ml.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_ctrl.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_lane.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_top.sv \
              $(CURDIR)/vpu_lint_top.sv
 LINT_FLAGS := --top-module vpu_lint_top
 

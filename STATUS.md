@@ -290,6 +290,14 @@ Build order: 12→13→14→15→16→17→18
 | `vpu_tensortmp_rf` | `vpu_tensortmp_rf` | 5 checks | 50,010 comparisons | Done |
 | `vpu_lane_tima` | `vpu_lane_tima` | 200,066 checks | 200,040 comparisons | Done |
 | `vpu_uinst_decoder` | `vpu_uinst_decoder` | 19 checks (`EnableExtraTrans=0`) + 19 checks (`EnableExtraTrans=1`) | 50,294 comparisons (`EnableExtraTrans=0`) + 50,294 comparisons (`EnableExtraTrans=1`) | Done |
+| `vpu_tensorreduce` | `vpu_tensorreduce` | 27 checks | 15,030 comparisons | Done |
+| `vpu_txfma_trans_top` | `vpu_txfma_trans_top` | 16 checks (`UseFakeTxfma=0`) + 13 checks (`UseFakeTxfma=1`) | 524,588 comparisons (`UseFakeTxfma=0`) + 262,444 comparisons (`UseFakeTxfma=1`) | Done |
+| `vpu_tensorfma` | `vpu_tensorfma` | — | — | RTL present, standalone DV/cosim pending |
+| `vpu_tensorquant` | `vpu_tensorquant` | — | — | RTL present, standalone DV/cosim pending |
+| `vpu_ml` | `vpu_ml` | — | — | RTL present, standalone DV/cosim pending |
+| `vpu_ctrl` | `vpu_ctrl` | — | — | RTL present, standalone DV/cosim pending |
+| `vpu_lane` | `vpu_lane` | — | — | RTL present, standalone DV/cosim pending |
+| `vpu_top` | `vpu_top` | — | — | RTL present for VPU-local lint only; real `minion_top` integration pending |
 
 ## Standalone Minion Shell
 
@@ -404,9 +412,9 @@ backfilled.
 | Metric | Count |
 |--------|-------|
 | Unit-test Makefiles | 64 |
-| Test suites discovered by `make test` | 174 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 202 |
+| Test suites discovered by `make test` | 177 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 205 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 24 unit suites + 25 cosim Makefile runs |
+| Targeted update runs | 27 unit suites + 28 cosim Makefile runs |
 | Targeted update failures | 0 |

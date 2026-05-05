@@ -7,9 +7,8 @@ Affected original modules:
 - `rtl/shire/minion/vpu/txfma_top_fake.v`
 
 Affected reimplemented modules:
+- `hw/ip/minion/vpu/rtl/vpu_txfma_trans_top.sv`
 - `hw/ip/minion/vpu/rtl/txfma_top_fake.sv`
-- A future translated `vpu_txfma_trans_top.sv` parent will also need the same
-  fake-TXFMA boundary decision when it is imported.
 
 Symptom:
 - In the original fake-TXFMA build branch, `vpu_txfma_trans_top.v` instantiates
@@ -35,15 +34,19 @@ Reachability:
 System impact:
 - The original fake-TXFMA top-level integration path cannot be used as a
   buildable reference configuration without adapting the boundary.
-- Direct cosim of a future translated fake `vpu_txfma_trans_top` against the
-  original parent branch will require an adapted original composition instead of
+- Direct cosim of the translated fake `vpu_txfma_trans_top` against the
+  original parent branch requires an adapted original composition instead of
   instantiating the broken original parent as-is.
 
 Reimplementation decision:
-- The current reimplementation intentionally diverges for the imported fake leaf
-  boundary: `txfma_top_fake.sv` uses the real-TXFMA-style
-  `out_data_res` / `out_comp_res` port contract, with `out_comp_res` hardwired
-  low.
+- The current reimplementation intentionally diverges for this configuration:
+  `vpu_txfma_trans_top.sv` and `txfma_top_fake.sv` use a consistent
+  real-TXFMA-style `out_data_res` / `out_comp_res` port contract, with the fake
+  compare result hardwired low.
 - The standalone `txfma_top_fake` cosim compares all current translated outputs
   against the original fake leaf by adapting the original single `out_data`
   output and treating the missing original compare output as constant zero.
+- The standalone fake `vpu_txfma_trans_top` cosim compares the translated parent
+  against an adapted composition of the original `trans_top` and original
+  `txfma_top_fake` leaves instead of instantiating the broken original parent
+  branch directly.

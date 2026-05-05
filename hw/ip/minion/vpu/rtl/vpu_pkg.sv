@@ -64,6 +64,7 @@ package vpu_pkg;
 
   typedef minion_pkg::minion_reg_dest_t  minion_reg_dest;
   typedef minion_pkg::minion_mreg_dest_t minion_mreg_dest;
+  typedef minion_pkg::vpu_scoreboard_t   vpu_minion_scoreboard;
 
   typedef struct packed {
     logic [minion_pkg::VpuDataSSz-1:0] data;
