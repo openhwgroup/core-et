@@ -16,20 +16,20 @@ module vpu_ml
     input  logic                                         clock,
     input  logic                                         reset,
     // Control port from core to start new Tensor FMA
-    input  core_vpu_ctrl                                 f0_core_ctrl,
+    input  minion_pkg::core_vpu_ctrl                     f0_core_ctrl,
     output logic                                         tfma_enabled,
     output logic                                         tfma_wrrf_enabled,
     output logic                                         tquant_enabled,
     output logic                                         tstore_reduce_enabled,
     // Requests to read data to dcache
-    input  dcache_vpu_scp_resp                           dcache_scp_resp,
+    input  minion_pkg::dcache_vpu_scp_resp               dcache_scp_resp,
     input  logic [DCACHE_DATA_SIZE-1:0]                    dcache_scp_data,
-    output vpu_dcache_ctrl                               dcache_ctrl,
+    output minion_pkg::vpu_dcache_ctrl                   dcache_ctrl,
     // Dcache reduce control
-    input  dcache_vpu_reduce_ctrl                        dcache_reduce_ctrl,
+    input  minion_pkg::dcache_vpu_reduce_ctrl_t          dcache_reduce_ctrl,
     // Signals going to VPU/SCP control
-    output vpu_ml_load_ctrl                              reduce_load_ctrl,
-    output vpu_ml_load_ctrl                              tensorfma_load_ctrl,
+    output vpu_pkg::vpu_ml_load_ctrl_t                   reduce_load_ctrl,
+    output vpu_pkg::vpu_ml_load_ctrl_t                   tensorfma_load_ctrl,
     output logic                                         load_ctrl_pre_tena_wen,
     output logic                                         load_ctrl_pre_tenb_wen,
     output logic                                         id_inst_en_next,
@@ -76,7 +76,7 @@ module vpu_ml
 // Module that takes control over FPU and executes the TensorFMA instruction
 ////////////////////////////////////////////////////////////////////////////////
 
-vpu_dcache_ctrl           tensorfma_dcache_ctrl;       // Control signals going to dcache from tensor FMA
+minion_pkg::vpu_dcache_ctrl tensorfma_dcache_ctrl;     // Control signals going to dcache from tensor FMA
 logic [INST_SIZE-1:0]       tensorfma_inst_next;         // TensorFMAs generated instruction for next cycle
 logic [VPU_LANE_NUM-1:0] tensorfma_mask_next;         // Mask for the fma instruction
 logic                     tensorfma_inst_en_next;      // TensorFMA wants to generate an instruction next cycle
@@ -178,7 +178,7 @@ tensorreduce
 // Module that executes the tensorquant operation
 ////////////////////////////////////////////////////////////////////////////////
 
-vpu_dcache_scp_req        tensorquant_scp_req;      // Scratchpad request to dcache
+minion_pkg::vpu_dcache_scp_req tensorquant_scp_req; // Scratchpad request to dcache
 logic [INST_SIZE-1:0]       tensorquant_inst_next;    // Instruction to be injected in ID next cycle
 logic [VPU_LANE_NUM-1:0] tensorquant_mask_next;    // Mask for the quant instruction
 logic                     tensorquant_inst_en_next; // Injecting to ID an instruction in next cycle

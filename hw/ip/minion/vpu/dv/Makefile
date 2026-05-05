@@ -84,6 +84,9 @@ TESTS := bypass \
          tima_top \
          lane_tima \
          tensorreduce \
+         vpu_tensorfma \
+         vpu_tensorquant \
+         vpu_ml \
          sh_sw \
          trans_top_default \
          trans_top_extra_trans \
@@ -333,6 +336,33 @@ tensorreduce_SRCS := $(COMMON_RTL) \
                      $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorreduce.sv \
                      $(CURDIR)/vpu_tensorreduce_tb.sv \
                      $(CURDIR)/vpu_tensorreduce_test.cc
+
+vpu_tensorfma_TOP := vpu_tensorfma_tb
+vpu_tensorfma_SRCS := $(COMMON_RTL) \
+                      $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_pkg.sv \
+                      $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_defs_pkg.sv \
+                      $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorfma.sv \
+                      $(CURDIR)/vpu_tensorfma_tb.sv \
+                      $(CURDIR)/vpu_tensorfma_test.cc
+
+vpu_tensorquant_TOP := vpu_tensorquant_tb
+vpu_tensorquant_SRCS := $(COMMON_RTL) \
+                        $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_pkg.sv \
+                        $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_defs_pkg.sv \
+                        $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorquant.sv \
+                        $(CURDIR)/vpu_tensorquant_tb.sv \
+                        $(CURDIR)/vpu_tensorquant_test.cc
+
+vpu_ml_TOP := vpu_ml_tb
+vpu_ml_SRCS := $(COMMON_RTL) \
+               $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_pkg.sv \
+               $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_defs_pkg.sv \
+               $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorfma.sv \
+               $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorreduce.sv \
+               $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorquant.sv \
+               $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_ml.sv \
+               $(CURDIR)/vpu_ml_tb.sv \
+               $(CURDIR)/vpu_ml_test.cc
 
 sh_sw_TOP := vpu_sh_sw_tb
 sh_sw_SRCS := $(COMMON_RTL) \

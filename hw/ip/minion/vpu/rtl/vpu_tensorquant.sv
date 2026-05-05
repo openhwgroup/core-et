@@ -19,14 +19,14 @@ module vpu_tensorquant
     input  logic                                         clock,
     input  logic                                         reset,
     // Control port from core to start new TensorQuant
-    input  core_vpu_ctrl                                 f0_core_ctrl,
+    input  minion_pkg::core_vpu_ctrl                     f0_core_ctrl,
     output logic                                         enabled,
     // Dependencies with other units
     input  logic                                         tensorfma_pend,
     input  logic                                         tensorstore_pend,
     // Scratchpad port
     input  logic                                         dcache_scp_available,
-    output vpu_dcache_scp_req                            dcache_scp_req,
+    output minion_pkg::vpu_dcache_scp_req                dcache_scp_req,
     input  logic [DCACHE_DATA_SIZE-1:0]                    dcache_scp_data,
     // Signals going to VPU pipeline
     output logic                                         quant_en_next,
@@ -56,8 +56,8 @@ module vpu_tensorquant
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-tensorquant_control tensorquant_ctrl;            // TensorQuant control bits
-tensorquant_control tensorquant_ctrl_next;
+minion_pkg::tensorquant_control tensorquant_ctrl;            // TensorQuant control bits
+minion_pkg::tensorquant_control tensorquant_ctrl_next;
 logic [2:0]         exec_hazard_wait_next;       // Wait execution due a hazard
 logic               tensorquant_ctrl_en;         // Update tensorquant control bits
 logic               enabled_next;                // FSM is enabled next cycle

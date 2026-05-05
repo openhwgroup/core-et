@@ -81,20 +81,20 @@ VPU-only types and datapath blocks that sit behind that boundary.
 | `vpu_uinst_decoder` | `rtl/vpu_uinst_decoder.sv` | `vpu_uinst_decoder.v` | Done |
 | `vpu_tensorreduce` | `rtl/vpu_tensorreduce.sv` | `vpu_tensorreduce.v` | Done |
 | `vpu_txfma_trans_top` | `rtl/vpu_txfma_trans_top.sv` | `vpu_txfma_trans_top.v` | Done (`UseFakeTxfma=0/1`) |
-| `vpu_tensorfma` | `rtl/vpu_tensorfma.sv` | `vpu_tensorfma.v` | RTL present, standalone DV/cosim pending |
-| `vpu_tensorquant` | `rtl/vpu_tensorquant.sv` | `vpu_tensorquant.v` | RTL present, standalone DV/cosim pending |
-| `vpu_ml` | `rtl/vpu_ml.sv` | `vpu_ml.v` | RTL present, standalone DV/cosim pending |
+| `vpu_tensorfma` | `rtl/vpu_tensorfma.sv` | `vpu_tensorfma.v` | Done |
+| `vpu_tensorquant` | `rtl/vpu_tensorquant.sv` | `vpu_tensorquant.v` | Done |
+| `vpu_ml` | `rtl/vpu_ml.sv` | `vpu_ml.v` | Done |
 | `vpu_ctrl` | `rtl/vpu_ctrl.sv` | `vpu_ctrl.v` | RTL present, standalone DV/cosim pending |
 | `vpu_lane` | `rtl/vpu_lane.sv` | `vpu_lane.v` | RTL present, standalone DV/cosim pending |
 | `vpu_top` | `rtl/vpu_top.sv` | `vpu_top.v` | RTL present for VPU-local lint only; not connected to `minion_top` yet |
 
 The remaining VPU top-half integration RTL is now present locally. The current
-standalone closure covers `vpu_tensorreduce`, both real and fake
-`vpu_txfma_trans_top` configurations, and the standalone TXFMA control/fraction
-subtops `txfmactl_top` and `txfmafrac_top`. `vpu_tensorfma`,
-`vpu_tensorquant`, `vpu_ml`, `vpu_ctrl`, `vpu_lane`, and `vpu_top` are parsed
-by VPU-local lint, but still need standalone DV/cosim closure before the real
-`vpu_top` can replace `null_vpu` in `minion_top`.
+standalone closure covers `vpu_tensorreduce`, `vpu_tensorfma`,
+`vpu_tensorquant`, `vpu_ml`, both real and fake `vpu_txfma_trans_top`
+configurations, and the standalone TXFMA control/fraction subtops
+`txfmactl_top` and `txfmafrac_top`. `vpu_ctrl`, `vpu_lane`, and `vpu_top` are
+parsed by VPU-local lint, but still need standalone DV/cosim closure before the
+real `vpu_top` can replace `null_vpu` in `minion_top`.
 
 ## What lives here
 
@@ -689,13 +689,33 @@ Ports:
 | EX inputs | `ex_rom_valid`, `ex_txfma_valid`, and packed `ex_in_bits` feed the ROM and TXFMA paths |
 | F8 outputs | `f8_txfma_res`, `f8_txfma_comp_res`, and two debug bits from the packed ROM response |
 
+### Tensor datapath integration blocks
+
+`vpu_tensorfma` sequences tensor FMA requests, scratchpad reads, tensor A/B load
+control, TIMA/TENC/TMP addressing, and TensorFMA instruction injection. Its
+standalone unit test covers hazard waiting, FP32/FP16/INT8 setup, convolution
+mask waiting, scratchpad fill sequencing, and tensor-temp/TIMA side effects; the
+standalone cosim compares every output against `vpu_tensorfma.v`.
+
+`vpu_tensorquant` translates TensorQuant transform lists into injected VPU
+instructions and scratchpad/TENA read controls. Its standalone unit test covers
+empty transform suppression, scoreboard/TensorFMA/TensorStore hazards,
+FCVT/ReLU/add/mul/saturation transforms, scratchpad availability waiting, and
+TENA/ex read pipelining; the standalone cosim compares every output against
+`vpu_tensorquant.v`.
+
+`vpu_ml` arbitrates the tensor FMA, TensorQuant, and tensor reduce/store child
+blocks. Its standalone unit test covers isolated TensorFMA, TensorQuant, reduce,
+tensorstore, and simultaneous-start paths plus dcache/control muxing; the
+standalone cosim compares every top-level output against `vpu_ml.v` while also
+building the original child modules.
+
 ### Top-half integration RTL pending standalone closure
 
-`vpu_tensorfma`, `vpu_tensorquant`, `vpu_ml`, `vpu_ctrl`, `vpu_lane`, and
-`vpu_top` are present to keep the translated VPU top-half parseable and ready
-for the next closure jobs. They are not yet marked done because each still
-needs standalone unit tests and standalone all-output cosim against the
-original.
+`vpu_ctrl`, `vpu_lane`, and `vpu_top` are present to keep the translated VPU
+top-half parseable and ready for the next closure jobs. They are not yet marked
+done because each still needs standalone unit tests and standalone all-output
+cosim against the original.
 
 ## Differences from original
 
@@ -751,3 +771,6 @@ No functional changes are intended except for the documented fake-TXFMA port-con
 | `vpu_uinst_decoder` | 19 checks (`EnableExtraTrans=0`) + 19 checks (`EnableExtraTrans=1`) | 50,294 comparisons (`EnableExtraTrans=0`) + 50,294 comparisons (`EnableExtraTrans=1`) |
 | `vpu_tensorreduce` | 27 checks | 15,030 comparisons |
 | `vpu_txfma_trans_top` | 16 checks (`UseFakeTxfma=0`) + 13 checks (`UseFakeTxfma=1`) | 524,588 comparisons (`UseFakeTxfma=0`) + 262,444 comparisons (`UseFakeTxfma=1`) |
+| `vpu_tensorfma` | 24 checks | 551,854 comparisons |
+| `vpu_tensorquant` | 41 checks | 259,600 comparisons |
+| `vpu_ml` | 26 checks | 602,896 comparisons |

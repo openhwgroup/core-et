@@ -20,16 +20,16 @@ module vpu_tensorfma
     input  logic                                        clock,
     input  logic                                        reset,
     // Control port from core to start new TensorFMA
-    input  core_vpu_ctrl                                f0_core_ctrl,
+    input  minion_pkg::core_vpu_ctrl                    f0_core_ctrl,
     output logic                                        enabled,
     // Dependencies with other units
     input  logic                                        tensorquant_pend,
     input  logic                                        tensorstore_pend,
     // Requests to read data to dcache
-    input  dcache_vpu_scp_resp                          dcache_scp_resp,
-    output vpu_dcache_ctrl                              dcache_ctrl,
+    input  minion_pkg::dcache_vpu_scp_resp              dcache_scp_resp,
+    output minion_pkg::vpu_dcache_ctrl                  dcache_ctrl,
     // Signals going to VPU/Load control
-    output vpu_ml_load_ctrl                             load_ctrl,
+    output vpu_pkg::vpu_ml_load_ctrl_t                  load_ctrl,
     output logic                                        load_ctrl_pre_tena_wen,
     output logic                                        load_ctrl_pre_tenb_wen,
     output logic                                        fma_en_next,
@@ -676,8 +676,8 @@ end
 // control with the data.
 ////////////////////////////////////////////////////////////////////////////////
 
-vpu_ml_load_ctrl load_ctrl_pre0;
-vpu_ml_load_ctrl load_ctrl_pre1;
+vpu_pkg::vpu_ml_load_ctrl_t load_ctrl_pre0;
+vpu_pkg::vpu_ml_load_ctrl_t load_ctrl_pre1;
 
 always_ff @(posedge clock) begin
     if (working) begin
