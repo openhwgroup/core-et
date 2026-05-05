@@ -12,6 +12,13 @@ platform: the broader goal is to build a reusable IP catalog that supports both
 FPGA prototyping and ASIC-oriented implementation through explicit technology
 abstraction, verification collateral, and integration documentation.
 
+The original CORE-ET RTL modules can be seen in a separate [Erbium branch](https://github.com/openhwgroup/core-et/tree/erbium)
+which comes with a full set of [microarchitecture documentation](https://github.com/openhwgroup/core-et/tree/erbium/docs)
+for the original RTL design. You will also find an extensive DV infrastructure there
+(albeit a more traditional one without an explicit focus on open sourcing tooling).
+The agentic refactoring effort is still ongoing and we invite everyone who is interested
+in this kind of an approach to the RTL design to join us on that journey.
+
 ## Platform Model
 
 ETASP is organized around two agentic workflows:
