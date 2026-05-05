@@ -259,9 +259,9 @@ Build order: 12→13→14→15→16→17→18
 | `txfma_f6` | `txfma_f6` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
 | `txfma_frac_zero_detect` | `txfma_frac_zero_detect` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
 | `txfma_rnd_adder` | `txfma_rnd_adder` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfmactl_top` | `txfmactl_top` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfmactl_top` | `txfmactl_top` | 79 checks | 996,194 comparisons | Done |
 | `txfmaexp_top` | `txfmaexp_top` | 31 checks | 508,152 comparisons | Done |
-| `txfmafrac_top` | `txfmafrac_top` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfmafrac_top` | `txfmafrac_top` | 43 checks | 390,468 comparisons | Done |
 | `txfma_top` | `txfma_top` | 9 checks | 15,024 comparisons | Done |
 | `txfma_top_fake` | `txfma_top_fake` | 18 checks | 15,024 comparisons | Done |
 | `txfma_lxd` | `txfma_lxd` | 4,102 checks | 25,162 comparisons | Done |
@@ -405,16 +405,16 @@ row below.
 ## Totals
 
 Structural discovery counts were refreshed from tracked Makefiles on
-2026-05-04. Repo-wide check/comparison totals are not carried as exact sums
+2026-05-05. Repo-wide check/comparison totals are not carried as exact sums
 until every unit test and cosim is rerun and all legacy approximate rows are
 backfilled.
 
 | Metric | Count |
 |--------|-------|
 | Unit-test Makefiles | 64 |
-| Test suites discovered by `make test` | 177 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 205 |
+| Test suites discovered by `make test` | 179 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 207 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 27 unit suites + 28 cosim Makefile runs |
+| Targeted update runs | 29 unit suites + 30 cosim Makefile runs |
 | Targeted update failures | 0 |

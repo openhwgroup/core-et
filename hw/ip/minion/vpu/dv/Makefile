@@ -73,6 +73,8 @@ TESTS := bypass \
          txfma_booth_ppg_32r4 \
          txfma_wallace1 \
          txfma_wallace2 \
+         txfmactl_top \
+         txfmafrac_top \
          txfmaexp_top \
          txfma_top \
          txfma_top_fake \
@@ -231,6 +233,24 @@ txfma_wallace2_SRCS := $(COMMON_RTL) \
                        $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_wallace2.sv \
                        $(CURDIR)/txfma_wallace2_tb.sv \
                        $(CURDIR)/txfma_wallace2_test.cc
+
+txfmactl_top_TOP := txfmactl_top_tb
+txfmactl_top_SRCS := $(COMMON_RTL) \
+                      $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_pkg.sv \
+                      $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_defs_pkg.sv \
+                      $(PRIM_CLK_GATE) \
+                      $(TXFMA_REAL_RTL) \
+                      $(CURDIR)/txfmactl_top_tb.sv \
+                      $(CURDIR)/txfmactl_top_test.cc
+
+txfmafrac_top_TOP := txfmafrac_top_tb
+txfmafrac_top_SRCS := $(COMMON_RTL) \
+                      $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_pkg.sv \
+                      $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_defs_pkg.sv \
+                      $(PRIM_CLK_GATE) \
+                      $(TXFMA_REAL_RTL) \
+                      $(CURDIR)/txfmafrac_top_tb.sv \
+                      $(CURDIR)/txfmafrac_top_test.cc
 
 txfmaexp_top_TOP := txfmaexp_top_tb
 txfmaexp_top_SRCS := $(COMMON_RTL) \

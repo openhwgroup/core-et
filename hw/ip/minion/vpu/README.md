@@ -48,9 +48,9 @@ VPU-only types and datapath blocks that sit behind that boundary.
 | `txfma_f6` | `rtl/txfma_f6.sv` | `txfma_f6.v` | RTL present, covered through `txfma_top` cosim |
 | `txfma_frac_zero_detect` | `rtl/txfma_frac_zero_detect.sv` | `txfma_frac_zero_detect.v` | RTL present, covered through `txfma_top` cosim |
 | `txfma_rnd_adder` | `rtl/txfma_rnd_adder.sv` | `txfma_rnd_adder.v` | RTL present, covered through `txfma_top` cosim |
-| `txfmactl_top` | `rtl/txfmactl_top.sv` | `txfmactl_top.v` | RTL present, standalone DV/cosim pending |
+| `txfmactl_top` | `rtl/txfmactl_top.sv` | `txfmactl_top.v` | Done |
 | `txfmaexp_top` | `rtl/txfmaexp_top.sv` | `txfmaexp_top.v` | Done |
-| `txfmafrac_top` | `rtl/txfmafrac_top.sv` | `txfmafrac_top.v` | RTL present, standalone DV/cosim pending |
+| `txfmafrac_top` | `rtl/txfmafrac_top.sv` | `txfmafrac_top.v` | Done |
 | `txfma_top` | `rtl/txfma_top.sv` | `txfma_top.v` | Done |
 | `txfma_top_fake` | `rtl/txfma_top_fake.sv` | `txfma_top_fake.v` | Done |
 | `txfma_lxd` | `rtl/txfma_lxd.sv` | `txfma_lxd.v` | Done |
@@ -88,9 +88,10 @@ VPU-only types and datapath blocks that sit behind that boundary.
 | `vpu_lane` | `rtl/vpu_lane.sv` | `vpu_lane.v` | RTL present, standalone DV/cosim pending |
 | `vpu_top` | `rtl/vpu_top.sv` | `vpu_top.v` | RTL present for VPU-local lint only; not connected to `minion_top` yet |
 
-The remaining VPU top-half integration RTL is now present locally. This import
-adds standalone unit tests and cosims for `vpu_tensorreduce` and both real and
-fake `vpu_txfma_trans_top` configurations. `vpu_tensorfma`,
+The remaining VPU top-half integration RTL is now present locally. The current
+standalone closure covers `vpu_tensorreduce`, both real and fake
+`vpu_txfma_trans_top` configurations, and the standalone TXFMA control/fraction
+subtops `txfmactl_top` and `txfmafrac_top`. `vpu_tensorfma`,
 `vpu_tensorquant`, `vpu_ml`, `vpu_ctrl`, `vpu_lane`, and `vpu_top` are parsed
 by VPU-local lint, but still need standalone DV/cosim closure before the real
 `vpu_top` can replace `null_vpu` in `minion_top`.
@@ -509,10 +510,9 @@ completeness but still needs standalone DV/cosim coverage.
 `txfmactl_top` owns the staged TXFMA control decode and valid/exception control
 pipe. `txfmaexp_top` owns the exponent-side difference, sticky, overflow, and
 underflow decisions. `txfmafrac_top` owns the fraction datapath, local clock-gating seams, and later
-rounding/normalization stages. In this stage only
-`txfmaexp_top` has standalone DV/cosim; `txfmactl_top` and `txfmafrac_top` are
-present and exercised through `txfma_top`, with standalone verification still
-pending.
+rounding/normalization stages. All three top-level TXFMA subblocks now have
+standalone unit tests and all-output cosims in addition to parent `txfma_top`
+coverage.
 
 ### `txfma_top`
 
@@ -727,9 +727,9 @@ No functional changes are intended except for the documented fake-TXFMA port-con
 | `txfma_booth_ppg_32r4` | 9,842 checks | 155,762 comparisons |
 | `txfma_wallace1` | 8,216 checks | 25,288 comparisons |
 | `txfma_wallace2` | 8,200 checks | 25,074 comparisons |
-| `txfmactl_top` | — | — (standalone DV/cosim pending; covered through `txfma_top`) |
+| `txfmactl_top` | 79 checks | 996,194 comparisons |
 | `txfmaexp_top` | 31 checks | 508,152 comparisons |
-| `txfmafrac_top` | — | — (standalone DV/cosim pending; covered through `txfma_top`) |
+| `txfmafrac_top` | 43 checks | 390,468 comparisons |
 | `txfma_top` | 9 checks | 15,024 comparisons |
 | `txfma_top_fake` | 18 checks | 15,024 comparisons |
 | `txfma_lxd` | 4,102 checks | 25,162 comparisons |
