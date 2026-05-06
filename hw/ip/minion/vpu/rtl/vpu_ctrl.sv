@@ -27,9 +27,9 @@ module vpu_ctrl
   input  logic                                                  id_core_valid,
   input  logic                                                  id_core_thread_id,
   input  logic [CORE_FCSR_RM_SZ-1:0]                           id_fcsr_rm,
-  input  core_vpu_ctrl                                          f0_core_ctrl,
+  input  minion_pkg::core_vpu_ctrl                                          f0_core_ctrl,
   input  logic [INST_SIZE-1:0]                                    id_core_inst_bits,
-  input  vpu_ctrl_sigs_t                                        id_decoder_sigs,
+  input  minion_pkg::vpu_ctrl_sigs_t                                        id_decoder_sigs,
   // Chicken bit clock gate enable
   input logic                                                   chicken_bit_vputrans,
   // EX/F1 inputs
@@ -54,19 +54,19 @@ module vpu_ctrl
   input  logic [VPU_DATA_SZ-1:0]                                f8_sh_sw_wdata,
   // WB DMEM inputs
   input  logic                                                  wb_dmem_resp_val,
-  input  dcache_vpu_resp                                        wb_dmem_resp,
+  input  minion_pkg::dcache_vpu_resp                                        wb_dmem_resp,
   // ML override inputs
-  input  dcache_vpu_scp_resp                                    dcache_scp_resp,
+  input  minion_pkg::dcache_vpu_scp_resp                                    dcache_scp_resp,
   input  logic [DCACHE_DATA_SIZE-1:0]                             dcache_scp_data,
   input  logic [DCACHE_DATA_SIZE-1:0]                             dcache_tenb_data,
   // Dcache reduce control
-  input  dcache_vpu_reduce_ctrl                                 dcache_reduce_ctrl,
+  input  minion_pkg::dcache_vpu_reduce_ctrl                                 dcache_reduce_ctrl,
   //
   input  logic [VPU_LANE_NUM-1:0][1:0]                         txfma_trans_dbg,
   // ML override outputs
-  output vpu_dcache_ctrl                                        dcache_ctrl,
+  output minion_pkg::vpu_dcache_ctrl                                        dcache_ctrl,
   // ID outputs
-  output vpu_minion_id_ctrl                                     id_core_ctrl,
+  output vpu_defs_pkg::vpu_minion_id_ctrl                                     id_core_ctrl,
   output logic [$clog2(VPU_REGFILE_NUM)-1:0]                   id_regfile_raddr1,
   output logic [$clog2(VPU_REGFILE_NUM)-1:0]                   id_regfile_raddr2,
   output logic [$clog2(VPU_REGFILE_NUM)-1:0]                   id_regfile_raddr3,
@@ -74,16 +74,16 @@ module vpu_ctrl
   output logic [2:0]                                            id_regfile_thread_id,
   // EX/F1 outputs
 
-  output vpu_input_t                                            ex_req,
+  output vpu_pkg::vpu_input_t                                            ex_req,
   output logic [$clog2(VPU_REGFILE_NUM)-1:0]                   ex_regfile_raddr1,
   output logic [$clog2(VPU_REGFILE_NUM)-1:0]                   ex_regfile_raddr2,
   output logic [$clog2(VPU_REGFILE_NUM)-1:0]                   ex_regfile_raddr3,
   output logic [2:0]                                            ex_regfile_thread_id,
-  output vpu_minion_ex_ctrl                                     ex_core_ctrl,
+  output minion_pkg::vpu_minion_ex_ctrl                                     ex_core_ctrl,
   output logic [VPU_LANE_NUM-1:0]                              ex_mask_in1,
   output logic                                                  ex_tena_regfile_bypass_en,
   output logic                                                  ex_tenb_regfile_bypass_en,
-  output vpu_bypass_force_ctrl                                  ex_bypass_force_ctrl,
+  output vpu_pkg::vpu_bypass_force_ctrl_t                                  ex_bypass_force_ctrl,
   output logic [VPU_LANE_NUM-1:0][VPU_NUM_TIMA-1:0]           ex_tima_valid,
   output logic                                                  ex_tima_valid_unqual,
   output logic                                                  ex_tima_sa,
@@ -102,7 +102,7 @@ module vpu_ctrl
   output logic [VPU_TENC_ADDR_MSB:1]                                 f2_tima_tenc_raddr,
   output logic [VPU_LANE_NUM-1:0][VPU_NUM_TIMA-1:0]           f2_tima_tenc_wen,
   output logic [VPU_LANE_NUM-1:0][VPU_NUM_TIMA-1:0]           f2_tima_rf_wen,
-  output vpu_minion_tag_ctrl                                    f2_core_ctrl,
+  output minion_pkg::vpu_minion_tag_ctrl                                    f2_core_ctrl,
   output logic                                                  f2_tenb_regfile_wen_l,
   output logic [VPU_LANE_NUM-1:0][VPU_DATA_S_SZ-1:0]          f2_fswizz_rdata1,
   output logic [VPU_LANE_NUM-1:0][VPU_DATA_S_SZ-1:0]          f2_fswizz_rdata2,
@@ -112,7 +112,7 @@ module vpu_ctrl
   output logic [VPU_DATA_SZ-1:0]                               f3_tenb_regfile_wdata_l,
   output logic                                                  f3_tenb_regfile_wen_l,
   output logic [VPU_TENB_ADDR_W-1:0]                                 f3_tenb_regfile_waddr_l,
-  output vpu_minion_mem_ctrl                                    f3_core_ctrl,
+  output minion_pkg::vpu_minion_mem_ctrl                                    f3_core_ctrl,
   output logic [VPU_LANE_NUM-1:0][VPU_NUM_TIMA-1:0]           f3_tima_tenc_wen,
   output logic [VPU_TENC_ADDR_MSB:1]                                 f3_tima_tenc_waddr,
   output logic [VPU_LANE_NUM-1:0][VPU_NUM_TIMA-1:0]           f3_tima_rf_wen,
@@ -155,7 +155,7 @@ module vpu_ctrl
   output logic                                                  f8_data_vector,
   output logic                                                  f8_txfma_op,
   // wb outputs
-  output vpu_minion_wb_ctrl                                     wb_core_ctrl,
+  output minion_pkg::vpu_minion_wb_ctrl                                     wb_core_ctrl,
   // Performance counters
   output logic [CSR_NR_EVENTS_VPU-1:0]                         io_events,
   // Signals going to debug monitor
@@ -178,26 +178,26 @@ logic [FREG_ADDR_SIZE-1:0]                                          id_ra2;
 logic [FREG_ADDR_SIZE-1:0]                                          id_ra3;
 logic                                                             id_tena_regfile_bypass_en;
 logic                                                             id_tenb_regfile_bypass_en;
-vpu_input_t                                                       id_vpu_ctrl;
-vpu_input_t                                                       ex_vpu_ctrl;
+vpu_pkg::vpu_input_t                                                       id_vpu_ctrl;
+vpu_pkg::vpu_input_t                                                       ex_vpu_ctrl;
 logic                                                             id_core_thread_id_int;
 logic                                                             id_trans_insert;
-vpu_minion_scoreboard                                             id_scoreboard;
+vpu_pkg::vpu_minion_scoreboard                                             id_scoreboard;
 logic                                                             id_trans_insert_en;
 logic                                                             id_trans_insert_en_next;
 logic [INST_SIZE-1:0]                                               id_trans_insert_inst_next;
 logic                                                             id_trans_thread_id;
 logic                                                             id_trans_busy;
-trans_state                                                       trans_st;
+vpu_pkg::trans_state_t                                                       trans_st;
 logic [INST_SIZE-1:0]                                               id_core_inst_int;
-vpu_ctrl_sigs_t                                                   id_decoder_sigs_int;
-vpu_ctrl_sigs_t                                                   id_decoder_sigs_sel;
+minion_pkg::vpu_ctrl_sigs_t                                                   id_decoder_sigs_int;
+minion_pkg::vpu_ctrl_sigs_t                                                   id_decoder_sigs_sel;
 logic                                                             id_tfma_enabled;
 logic                                                             id_tfma_wrrf_enabled;
 logic                                                             id_tquant_enabled;
 logic                                                             id_reduce_enabled;
-vpu_ml_load_ctrl                                                  id_tensorfma_load_ctrl;
-vpu_ml_load_ctrl                                                  id_reduce_load_ctrl;
+vpu_pkg::vpu_ml_load_ctrl_t                                                  id_tensorfma_load_ctrl;
+vpu_pkg::vpu_ml_load_ctrl_t                                                  id_reduce_load_ctrl;
 logic                                                             id_ml_load_ctrl_pre_tena_wen;
 logic                                                             id_ml_load_ctrl_pre_tenb_wen;
 logic                                                             id_ml_inst_en;
@@ -208,8 +208,8 @@ logic [INST_SIZE-1:0]                                               id_ml_inst_n
 logic [VPU_LANE_NUM-1:0]                                         id_ml_mask_next;
 logic                                                             id_use_prev_sigs;
 logic                                                             id_core_inst_en; // Enable next instruction update
-trans_scoreboard_slot                                             id_trans_scoreboard_slots [TRANS_SCOREBOARD_SLOTS-1:0];
-vpu_bypass_force_ctrl                                             id_bypass_force_ctrl;
+vpu_pkg::trans_scoreboard_slot_t                                             id_trans_scoreboard_slots [TRANS_SCOREBOARD_SLOTS-1:0];
+vpu_pkg::vpu_bypass_force_ctrl_t                                             id_bypass_force_ctrl;
 logic [VPU_LANE_NUM-1:0]                                         id_ml_mask;
 logic                                                             id_inst_from_core;
 logic [VPU_LANE_NUM-1:0]                                         ex_mask_rf0;
@@ -288,7 +288,7 @@ logic                                                             f2_mova_mx;
 logic                                                             f2_ml_use_prev_sigs;
 logic [VPU_LANE_NUM-1:0]                                         f2_ml_mask;
 logic                                                             f2_tena_regfile_wen_l;
-vpu_input_t                                                       f2_req;
+vpu_pkg::vpu_input_t                                                       f2_req;
 logic [VPU_DATA_S_SZ-1:0]                                        f2_packreph0;
 logic [VPU_DATA_S_SZ-1:0]                                        f2_packreph1;
 logic [VPU_DATA_S_SZ-1:0]                                        f2_packreph2;
@@ -306,8 +306,8 @@ logic [VPU_LANE_NUM-1:0][1:0]                                    f3_regfile_wmas
 logic [$clog2(VPU_REGFILE_NUM)-1:0]                              f3_regfile_waddr_l;
 logic [VPU_DATA_SZ-1:0]                                          f3_regfile_wdata_l;
 logic                                                             f3_regfile_thrid_l;
-vpu_ctrl_sigs_t                                                   f3_ctrl_sigs_to_f4;
-vpu_ctrl_sigs_t                                                   f3_ctrl_sigs;
+minion_pkg::vpu_ctrl_sigs_t                                                   f3_ctrl_sigs_to_f4;
+minion_pkg::vpu_ctrl_sigs_t                                                   f3_ctrl_sigs;
 logic                                                             f3_ctrl_valid;
 logic                                                             f3_ml_inst_val;
 logic                                                             f3_mova_mx;
@@ -332,14 +332,14 @@ logic                                                             f4_ctrl_valid_
 logic                                                             f4_ctrl_killed;
 logic                                                             f4_ctrl_killed_prev;
 logic                                                             f4_ctrl_valid;
-vpu_ctrl_sigs_t                                                   f4_ctrl_sigs;
+minion_pkg::vpu_ctrl_sigs_t                                                   f4_ctrl_sigs;
 logic                                                             f4_ml_inst_val;
 logic                                                             f4_mova_mx;
 logic                                                             f4_ml_use_prev_sigs;
 logic                                                             f5_ml_inst_val;
 logic                                                             f5_ctrl_killed;
 logic                                                             f5_core_kill;
-vpu_ctrl_sigs_t                                                   f5_ctrl_sigs;
+minion_pkg::vpu_ctrl_sigs_t                                                   f5_ctrl_sigs;
 logic                                                             f5_ctrl_valid_qual;
 logic                                                             f5_wen;
 logic [$clog2(VPU_LANE_NUM)-1:0]                                 f5_lane_idx;
@@ -353,7 +353,7 @@ logic                                                             f6_ml_use_prev
 logic                                                             f6_wen;
 logic [$clog2(VPU_LANE_NUM)-1:0]                                 f6_lane_idx;
 logic                                                             f6_ctrl_valid_qual;
-vpu_ctrl_sigs_t                                                   f6_ctrl_sigs;
+minion_pkg::vpu_ctrl_sigs_t                                                   f6_ctrl_sigs;
 logic                                                             f6_core_kill;
 logic                                                             f6_trans_thread_id;
 logic [VPU_LANE_NUM-1:0]                                         f6_trans_wmask;
@@ -364,15 +364,15 @@ logic                                                             f7_wen;
 logic [$clog2(VPU_LANE_NUM)-1:0]                                 f7_lane_idx;
 logic                                                             f7_ctrl_valid_qual;
 logic                                                             f7_ctrl_killed;
-vpu_ctrl_sigs_t                                                   f7_ctrl_sigs;
-vpu_ctrl_sigs_t                                                   f8_ctrl_sigs;
+minion_pkg::vpu_ctrl_sigs_t                                                   f7_ctrl_sigs;
+minion_pkg::vpu_ctrl_sigs_t                                                   f8_ctrl_sigs;
 logic                                                             f8_ctrl_valid_qual;
 logic                                                             f8_ctrl_killed;
 logic                                                             f8_wen;
 logic [$clog2(VPU_LANE_NUM)-1:0]                                 f8_lane_idx;
 logic [CORE_FCSR_FLAG_BITS_SZ-1:0]                               f8_fcsr_flags;
 logic [VPU_MASK_SCOREBOARD_SIZE-1:0]                             id_scoreboard_mask_valid;
-minion_mreg_dest [VPU_MASK_SCOREBOARD_SIZE-1:0]                  id_scoreboard_mask_dest;
+vpu_pkg::minion_mreg_dest [VPU_MASK_SCOREBOARD_SIZE-1:0]                  id_scoreboard_mask_dest;
 logic [VPU_DATA_S_SZ-1:0]                                        f8_toint_data;
 logic [XREG_SIZE-1:0]                                               f8_toint_mask_rf;
 logic [VPU_LANE_NUM-1:0]                                         f8_regmask_store;

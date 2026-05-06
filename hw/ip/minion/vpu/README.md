@@ -84,17 +84,17 @@ VPU-only types and datapath blocks that sit behind that boundary.
 | `vpu_tensorfma` | `rtl/vpu_tensorfma.sv` | `vpu_tensorfma.v` | Done |
 | `vpu_tensorquant` | `rtl/vpu_tensorquant.sv` | `vpu_tensorquant.v` | Done |
 | `vpu_ml` | `rtl/vpu_ml.sv` | `vpu_ml.v` | Done |
-| `vpu_ctrl` | `rtl/vpu_ctrl.sv` | `vpu_ctrl.v` | RTL present, standalone DV/cosim pending |
-| `vpu_lane` | `rtl/vpu_lane.sv` | `vpu_lane.v` | RTL present, standalone DV/cosim pending |
+| `vpu_ctrl` | `rtl/vpu_ctrl.sv` | `vpu_ctrl.v` | Done |
+| `vpu_lane` | `rtl/vpu_lane.sv` | `vpu_lane.v` | Done |
 | `vpu_top` | `rtl/vpu_top.sv` | `vpu_top.v` | RTL present for VPU-local lint only; not connected to `minion_top` yet |
 
 The remaining VPU top-half integration RTL is now present locally. The current
 standalone closure covers `vpu_tensorreduce`, `vpu_tensorfma`,
 `vpu_tensorquant`, `vpu_ml`, both real and fake `vpu_txfma_trans_top`
-configurations, and the standalone TXFMA control/fraction subtops
-`txfmactl_top` and `txfmafrac_top`. `vpu_ctrl`, `vpu_lane`, and `vpu_top` are
-parsed by VPU-local lint, but still need standalone DV/cosim closure before the
-real `vpu_top` can replace `null_vpu` in `minion_top`.
+configurations, the standalone TXFMA control/fraction subtops `txfmactl_top`
+and `txfmafrac_top`, plus the `vpu_ctrl` and `vpu_lane` integration modules.
+`vpu_top` is parsed by VPU-local lint, but still needs standalone DV/cosim
+closure before the real `vpu_top` can replace `null_vpu` in `minion_top`.
 
 ## What lives here
 
@@ -710,12 +710,37 @@ tensorstore, and simultaneous-start paths plus dcache/control muxing; the
 standalone cosim compares every top-level output against `vpu_ml.v` while also
 building the original child modules.
 
-### Top-half integration RTL pending standalone closure
+### Lane/control integration
 
-`vpu_ctrl`, `vpu_lane`, and `vpu_top` are present to keep the translated VPU
-top-half parseable and ready for the next closure jobs. They are not yet marked
-done because each still needs standalone unit tests and standalone all-output
-cosim against the original.
+`vpu_lane` integrates the lane RF/bypass, short-path, TXFMA/trans, and TIMA
+children. Its standalone unit test covers reset/default behavior, RF
+read/write/bypass flow, short-path valid/clock-valid behavior, TXFMA/trans and
+ROM clock-valid paths, TIMA/tensor RF controls, and lane-local chicken-bit
+clock-enable inputs. The standalone cosim drives every aggregate input bit both
+low and high and compares all eight declared outputs against `vpu_lane.v`.
+
+`vpu_ctrl` integrates decode, scoreboard/stage control, mask, transpose/ML, and
+tensor child controls. Its standalone unit test covers reset/default behavior,
+normal decoded VPU instruction flow, register read/thread ID generation, swap
+variants, from-int propagation, short/TXFMA/ROM clock-valid paths, and dcache
+writeback response handling. The standalone cosim drives every aggregate input
+bit both low and high, including the TIMA/ML/kill/debug boundary fields, and
+compares all 85 declared outputs against `vpu_ctrl.v`.
+
+The lane/control cosims target the default translated configurations
+(`EnableRcg2=1`, `UseFakeTxfma=0`, `EnableExtraTrans=0`) to match the original
+standalone modules used here. `UseFakeTxfma=1` remains covered at the
+`vpu_txfma_trans_top` boundary because the original fake-TXFMA child has the
+documented port-contract bug noted below. `EnableExtraTrans=1` remains covered by
+the standalone `vpu_uinst_decoder`, `trans_top`, and `vpu_trans` extra-trans
+variants; the `vpu_ctrl` all-output cosim keeps the original default
+`ENABLE_EXTRA_TRANS`-off configuration.
+
+### Top integration pending standalone closure
+
+`vpu_top` is present to keep the translated VPU top-half parseable and ready for
+the next closure job. It is not yet marked done because it still needs standalone
+unit tests and standalone all-output cosim against the original.
 
 ## Differences from original
 
@@ -774,3 +799,5 @@ No functional changes are intended except for the documented fake-TXFMA port-con
 | `vpu_tensorfma` | 24 checks | 551,854 comparisons |
 | `vpu_tensorquant` | 41 checks | 259,600 comparisons |
 | `vpu_ml` | 26 checks | 602,896 comparisons |
+| `vpu_ctrl` | 25 checks | 2,019,808 comparisons |
+| `vpu_lane` | 16 checks | 780,108 comparisons |

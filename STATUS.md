@@ -295,8 +295,8 @@ Build order: 12→13→14→15→16→17→18
 | `vpu_tensorfma` | `vpu_tensorfma` | 24 checks | 551,854 comparisons | Done |
 | `vpu_tensorquant` | `vpu_tensorquant` | 41 checks | 259,600 comparisons | Done |
 | `vpu_ml` | `vpu_ml` | 26 checks | 602,896 comparisons | Done |
-| `vpu_ctrl` | `vpu_ctrl` | — | — | RTL present, standalone DV/cosim pending |
-| `vpu_lane` | `vpu_lane` | — | — | RTL present, standalone DV/cosim pending |
+| `vpu_ctrl` | `vpu_ctrl` | 25 checks | 2,019,808 comparisons | Done |
+| `vpu_lane` | `vpu_lane` | 16 checks | 780,108 comparisons | Done |
 | `vpu_top` | `vpu_top` | — | — | RTL present for VPU-local lint only; real `minion_top` integration pending |
 
 ## Standalone Minion Shell
@@ -412,9 +412,9 @@ backfilled.
 | Metric | Count |
 |--------|-------|
 | Unit-test Makefiles | 64 |
-| Test suites discovered by `make test` | 182 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 210 |
+| Test suites discovered by `make test` | 184 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 212 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 32 unit suites + 33 cosim Makefile runs |
+| Targeted update runs | 34 unit suites + 35 cosim Makefile runs |
 | Targeted update failures | 0 |

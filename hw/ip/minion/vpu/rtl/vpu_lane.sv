@@ -41,9 +41,9 @@ module vpu_lane
     input  logic                                ex_mask_in1,
     input  logic                                ex_tena_regfile_bypass_en,
     input  logic                                ex_tenb_regfile_bypass_en,
-    input  vpu_input_t                          ex_req_lane,
+    input  vpu_pkg::vpu_input_t                          ex_req_lane,
     input  logic [VPU_DATA_S_SZ-1:0]           ex_fromint_data,
-    input  vpu_bypass_force_ctrl                ex_bypass_force_ctrl,
+    input  vpu_pkg::vpu_bypass_force_ctrl_t                ex_bypass_force_ctrl,
     input  logic [VPU_NUM_TIMA-1:0]            ex_tima_valid,
     input  logic                                ex_tima_valid_unqual,
     input  logic                                ex_tima_sa,
@@ -66,7 +66,7 @@ module vpu_lane
     input  logic [VPU_DATA_S_SZ-1:0]           f2_fswizz_rdata2,
     input  logic [VPU_DATA_S_SZ-1:0]           f2_fswizz_rdata3,
     input  logic                                f2_tenb_regfile_wen_l,
-    input  dcache_vpu_scp_resp                  dcache_scp_resp,
+    input  minion_pkg::dcache_vpu_scp_resp                  dcache_scp_resp,
     // F3 inputs
     input  logic                                f3_regfile_wen_l,
     input  logic                                f3_tenb_regfile_wen_l,
@@ -133,14 +133,14 @@ module vpu_lane
 logic [2:0][FREG_ADDR_SIZE-1:0]                 id_rf_raddr;                  // Read addr for the RF
 logic [2:0]                                   id_rf_thread_id;              // Read thread id for the RF
 logic [2:0][VPU_DATA_S_SZ-1:0]               ex_rf_rdata;                  // Read data from the RF
-vpu_input_t                                   ex_req;
+vpu_pkg::vpu_input_t                                   ex_req;
 logic [VPU_DATA_S_SZ-1:0]                    ex_bypass_tena_rf_rdata;      // Read data from the tena RF
 logic [VPU_DATA_S_SZ-1:0]                    ex_bypass_tenb_rf_rdata;      // Read data from the tenb RF
 logic [VPU_NUM_TIMA-1:0][VPU_DATA_S_SZ-1:0] ex_tenb_rf_rdata;             // Read data from the tenb RF
 logic [2:0][FREG_ADDR_SIZE-1:0]                 ex_rf_bypass_raddr;           // Read addr for the RF
 logic [VPU_NUM_TIMA-1:0][VPU_TENB_ADDR_W-1:0]     ex_tenb_rf_raddr;             // Read addr for the tenb RF
 logic                                         f2_tenb_rf_wen;
-vpu_output_t                                  f3_sh_sw_bits;
+vpu_pkg::vpu_output_t                                  f3_sh_sw_bits;
 logic [VPU_NUM_TIMA-1:0][VPU_DATA_S_SZ-1:0] f3_tima_data;
 logic [VPU_TENB_ADDR_W-1:0]                        f3_tenb_rf_waddr;             // Write addr for the tenb RF
 logic                                         f3_tenb_pass;
@@ -149,7 +149,7 @@ logic [VPU_DATA_S_SZ-1:0]                    f3_tenb_rf_wdata;             // Wr
 logic [VPU_NUM_TIMA-1:0]                     f2_tima_valid;
 logic [VPU_NUM_TIMA-1:0]                     f3_tima_valid;
 logic [1:0]                                   f7_rf_wen_early;
-vpu_output_t                                  f8_txfma_res;
+vpu_pkg::vpu_output_t                                  f8_txfma_res;
 logic [1:0][VPU_DATA_S_SZ-1:0]               f8_rf_wdata;                  // Write data for the RF
 logic [1:0]                                   f8_rf_wmask;                  // Write mask for the RF
 logic [1:0][FREG_ADDR_SIZE-1:0]                 f8_rf_waddr;                  // Write addr for the RF
