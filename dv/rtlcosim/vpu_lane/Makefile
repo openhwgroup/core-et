@@ -1,5 +1,6 @@
 REPO_ROOT  := $(shell git rev-parse --show-toplevel)
 include $(REPO_ROOT)/mk/prim.mk
+include $(REPO_ROOT)/mk/minion_vpu_sources.mk
 
 COSIM_NAME := vpu_lane
 
@@ -10,13 +11,13 @@ COMMON_NEW := $(REPO_ROOT)/hw/ip/dft/rtl/dft_pkg.sv \
               $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_pkg.sv \
               $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_defs_pkg.sv
 
-TXFMA_REAL_NEW := $(wildcard $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma*.sv)
+TXFMA_REAL_NEW := $(MINION_VPU_TXFMA_REAL_RTL)
 
 NEW_RTL := $(COMMON_NEW) \
            $(PRIM_CLK_GATE) \
            $(PRIM_RF_1R1W_PREVIEW) \
            $(PRIM_RF_3R2W_PREVIEW) \
-           $(wildcard $(REPO_ROOT)/hw/ip/minion/vpu/rtl/trans_*_rom_case_*.sv) \
+           $(MINION_VPU_TRANS_ROM_RTL) \
            $(REPO_ROOT)/hw/ip/minion/vpu/rtl/trans_top.sv \
            $(TXFMA_REAL_NEW) \
            $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_txfma_trans_top.sv \
@@ -41,8 +42,8 @@ ORIG_RTL := $(ORIG_ROOT)/rtl/shire/minion/vpu/vpu_lane.v \
             $(ORIG_ROOT)/rtl/shire/minion/vpu/tima/tima_top.v \
             $(ORIG_ROOT)/rtl/shire/minion/vpu/vpu_txfma_trans_top.v \
             $(ORIG_ROOT)/rtl/shire/minion/vpu/trans_unit/trans_top.v \
-            $(wildcard $(ORIG_ROOT)/rtl/shire/minion/vpu/trans_unit/trans_*_rom_case_*.v) \
-            $(wildcard $(ORIG_ROOT)/rtl/shire/minion/vpu/txfma_7s/*.v)
+            $(ORIG_MINION_VPU_TRANS_ROM_RTL) \
+            $(ORIG_MINION_VPU_TXFMA_REAL_RTL)
 
 ORIG_LIBDIRS := $(ORIG_ROOT)/rtl/libs/rf_latches \
                 $(ORIG_ROOT)/rtl/libs/clock_gates \

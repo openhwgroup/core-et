@@ -2,6 +2,7 @@ REPO_ROOT  := $(shell git rev-parse --show-toplevel)
 COSIM_NAME := standalone_minion
 
 include $(REPO_ROOT)/mk/prim.mk
+include $(REPO_ROOT)/mk/minion_vpu_sources.mk
 
 PKGS := $(REPO_ROOT)/hw/ip/dft/rtl/dft_pkg.sv \
         $(REPO_ROOT)/hw/ip/ram_cfg/rtl/ram_cfg_pkg.sv \
@@ -66,8 +67,8 @@ DCACHE_RTL := $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_atomic_alu_unit
               $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_tensor_load.sv \
               $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_top.sv
 
-TXFMA_RTL := $(wildcard $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma*.sv)
-VPU_RTL := $(wildcard $(REPO_ROOT)/hw/ip/minion/vpu/rtl/trans_*_rom_case_*.sv) \
+TXFMA_RTL := $(MINION_VPU_TXFMA_REAL_RTL)
+VPU_RTL := $(MINION_VPU_TRANS_ROM_RTL) \
            $(REPO_ROOT)/hw/ip/minion/vpu/rtl/trans_top.sv \
            $(TXFMA_RTL) \
            $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_txfma_trans_top.sv \
@@ -228,9 +229,13 @@ ORIG_RTL := $(ORIG_ROOT)/rtl/shire/standalone_minion/standalone_minion.v \
             $(ORIG_ROOT)/rtl/shire/minion/vpu/tima/tima_top.v \
             $(ORIG_ROOT)/rtl/shire/minion/vpu/vpu_txfma_trans_top.v \
             $(ORIG_ROOT)/rtl/shire/minion/vpu/trans_unit/trans_top.v \
-            $(wildcard $(ORIG_ROOT)/rtl/shire/minion/vpu/trans_unit/trans_*_rom_case_*.v) \
-            $(wildcard $(ORIG_ROOT)/rtl/shire/minion/vpu/txfma_7s/*.v)
+            $(ORIG_MINION_VPU_TRANS_ROM_RTL) \
+            $(ORIG_MINION_VPU_TXFMA_REAL_RTL)
 
+# Keep the original VPU root out of -y search: all needed root VPU
+# modules are listed in ORIG_RTL, and the root also contains txfma_top_fake.v
+# with the original fake-only port shape that must not satisfy translated
+# parameter-elaboration branches in real-TXFMA cosims.
 ORIG_LIBDIRS := $(ORIG_ROOT)/rtl/shire/standalone_minion \
                 $(ORIG_ROOT)/rtl/shire/esr \
                 $(ORIG_ROOT)/rtl/shire/neigh \
@@ -241,7 +246,6 @@ ORIG_LIBDIRS := $(ORIG_ROOT)/rtl/shire/standalone_minion \
                 $(ORIG_ROOT)/rtl/shire/minion/intpipe \
                 $(ORIG_ROOT)/rtl/shire/minion/intpipe/csr \
                 $(ORIG_ROOT)/rtl/shire/minion/dcache \
-                $(ORIG_ROOT)/rtl/shire/minion/vpu \
                 $(ORIG_ROOT)/rtl/shire/minion/vpu/tima \
                 $(ORIG_ROOT)/rtl/shire/minion/vpu/trans_unit \
                 $(ORIG_ROOT)/rtl/shire/minion/vpu/txfma_7s \
@@ -378,7 +382,6 @@ EXTRA_FLAGS := --converge-limit 10000 --x-initial-edge -DET_ASSERT_OFF -DVPU_EN_
                -Wno-VARHIDDEN -Wno-UNOPTFLAT -Wno-PINCONNECTEMPTY \
                +incdir+$(REPO_ROOT)/hw/ip/minion/intpipe/csr/rtl \
                +incdir+$(ORIG_ROOT)/rtl/shire/minion/intpipe/csr \
-               +incdir+$(ORIG_ROOT)/rtl/shire/minion/vpu \
                +incdir+$(ORIG_ROOT)/rtl/shire/esr
 
 include $(REPO_ROOT)/mk/rtlcosim.mk

@@ -61,10 +61,8 @@ module cosim_vpu_txfma_trans_top_tb
     new_ex_in_bits.in3 = in3_i;
   end
 
-  // mk/rtlcosim.mk renames each listed original module name independently.
-  // Because this module name contains the leaf name `txfma_top`, the generated
-  // original ends up as `vpu_txfma_trans_top_orig_orig`.
-  vpu_txfma_trans_top_orig_orig u_orig (
+  // mk/rtlcosim.mk renames complete original module identifiers with `_orig`.
+  vpu_txfma_trans_top_orig u_orig (
     .clock_txfma       (clk_i),
     .clock_trans_rom   (clk_i),
     .reset             (~rst_ni),

@@ -1,6 +1,8 @@
 REPO_ROOT  := $(shell git rev-parse --show-toplevel)
 COSIM_NAME := vpu_txfma_trans_top
 
+include $(REPO_ROOT)/mk/minion_vpu_sources.mk
+
 NEW_RTL := $(REPO_ROOT)/hw/ip/dft/rtl/dft_pkg.sv \
            $(REPO_ROOT)/hw/ip/etlink/rtl/etlink_pkg.sv \
            $(REPO_ROOT)/hw/ip/minion/rtl/minion_pkg.sv \
@@ -8,15 +10,15 @@ NEW_RTL := $(REPO_ROOT)/hw/ip/dft/rtl/dft_pkg.sv \
            $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_pkg.sv \
            $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_defs_pkg.sv \
            $(REPO_ROOT)/hw/ip/tech_generic/prim_clk_gate/rtl/prim_clk_gate.sv \
-           $(wildcard $(REPO_ROOT)/hw/ip/minion/vpu/rtl/trans_*_rom_case_*.sv) \
+           $(MINION_VPU_TRANS_ROM_RTL) \
            $(REPO_ROOT)/hw/ip/minion/vpu/rtl/trans_top.sv \
-           $(wildcard $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma*.sv) \
+           $(MINION_VPU_TXFMA_REAL_RTL) \
            $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_txfma_trans_top.sv
 
 ORIG_RTL := $(ORIG_ROOT)/rtl/shire/minion/vpu/vpu_txfma_trans_top.v \
             $(ORIG_ROOT)/rtl/shire/minion/vpu/trans_unit/trans_top.v \
-            $(wildcard $(ORIG_ROOT)/rtl/shire/minion/vpu/trans_unit/trans_*_rom_case_*.v) \
-            $(wildcard $(ORIG_ROOT)/rtl/shire/minion/vpu/txfma_7s/*.v) \
+            $(ORIG_MINION_VPU_TRANS_ROM_RTL) \
+            $(ORIG_MINION_VPU_TXFMA_REAL_RTL) \
             $(ORIG_ROOT)/rtl/libs/rf_latches/et_clk_gate.v \
             $(ORIG_ROOT)/rtl/libs/registers/en_ff.v \
             $(ORIG_ROOT)/rtl/libs/registers/rst_ff.v \

@@ -6,6 +6,8 @@ REPO_ROOT  := $(shell git rev-parse --show-toplevel)
 
 COSIM_NAME := txfmactl_top
 
+include $(REPO_ROOT)/mk/minion_vpu_sources.mk
+
 NEW_RTL := $(REPO_ROOT)/hw/ip/dft/rtl/dft_pkg.sv \
            $(REPO_ROOT)/hw/ip/etlink/rtl/etlink_pkg.sv \
            $(REPO_ROOT)/hw/ip/minion/rtl/minion_pkg.sv \
@@ -13,9 +15,9 @@ NEW_RTL := $(REPO_ROOT)/hw/ip/dft/rtl/dft_pkg.sv \
            $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_pkg.sv \
            $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_defs_pkg.sv \
            $(REPO_ROOT)/hw/ip/tech_generic/prim_clk_gate/rtl/prim_clk_gate.sv \
-           $(wildcard $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma*.sv)
+           $(MINION_VPU_TXFMA_REAL_RTL)
 
-ORIG_RTL := $(wildcard $(ORIG_ROOT)/rtl/shire/minion/vpu/txfma_7s/*.v) \
+ORIG_RTL := $(ORIG_MINION_VPU_TXFMA_REAL_RTL) \
             $(ORIG_ROOT)/rtl/libs/rf_latches/et_clk_gate.v \
             $(ORIG_ROOT)/rtl/libs/registers/en_ff.v \
             $(ORIG_ROOT)/rtl/libs/registers/rst_ff.v \

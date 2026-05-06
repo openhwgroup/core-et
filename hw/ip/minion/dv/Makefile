@@ -1,5 +1,6 @@
 REPO_ROOT := $(shell git rev-parse --show-toplevel)
 include $(REPO_ROOT)/mk/prim.mk
+include $(REPO_ROOT)/mk/minion_vpu_sources.mk
 
 PKGS := $(REPO_ROOT)/hw/ip/dft/rtl/dft_pkg.sv \
         $(REPO_ROOT)/hw/ip/ram_cfg/rtl/ram_cfg_pkg.sv \
@@ -61,9 +62,9 @@ DCACHE_RTL := $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_atomic_alu_unit
               $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_tensor_load.sv \
               $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_top.sv
 
-TXFMA_RTL := $(wildcard $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma*.sv)
+TXFMA_RTL := $(MINION_VPU_TXFMA_REAL_RTL)
 
-VPU_RTL := $(wildcard $(REPO_ROOT)/hw/ip/minion/vpu/rtl/trans_*_rom_case_*.sv) \
+VPU_RTL := $(MINION_VPU_TRANS_ROM_RTL) \
            $(REPO_ROOT)/hw/ip/minion/vpu/rtl/trans_top.sv \
            $(TXFMA_RTL) \
            $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_txfma_trans_top.sv \
