@@ -388,7 +388,9 @@ module minion_top
     end
 
     always_comb begin
-      if (minion_dbg_signals_mux_ff[NeighDebugSmMuxWidth-1:NeighDebugSmMuxDataWidth] > 5) begin
+      // Preserve the original CORE-ET mux select quirk: the case decode uses
+      // bits [6:2], but the final bank select compares only bits [5:2].
+      if (minion_dbg_signals_mux_ff[NeighDebugSmMuxWidth-2:NeighDebugSmMuxDataWidth] > 4'h5) begin
         minion_dbg_signals_next = minion_dbg_signals_1_q;
       end else begin
         minion_dbg_signals_next = minion_dbg_signals_0_q;

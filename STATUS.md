@@ -324,6 +324,7 @@ Build order: 12→13→14→15→16→17→18
 | `neigh_shared_ptw` | `neigh_shared_ptw` | 18 checks | 45,090 comparisons | Done |
 | `pseudo_lru` | `pseudo_lru` | 266 checks | 5,000 comparisons | Done |
 | `esr_spio` | `esr_spio` | 13 checks | 29,955 comparisons | Done |
+| `standalone_minion` | `standalone_minion` | 19 checks | 1,765,940 comparisons | Done |
 
 ## RBOX (`hw/ip/rbox/`)
 
@@ -411,10 +412,10 @@ backfilled.
 
 | Metric | Count |
 |--------|-------|
-| Unit-test Makefiles | 64 |
-| Test suites discovered by `make test` | 186 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 213 |
+| Unit-test Makefiles | 65 |
+| Test suites discovered by `make test` | 187 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 214 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 36 unit suites + 37 cosim Makefile runs |
+| Targeted update runs | 37 unit suites + 38 cosim Makefile runs |
 | Targeted update failures | 0 |
