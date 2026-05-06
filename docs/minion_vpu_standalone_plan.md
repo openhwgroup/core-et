@@ -1,17 +1,17 @@
 # Minion VPU to `standalone_minion` dependency map
 
-This document records the dependency chain from the current translated Minion
-state to a full original-equivalent `standalone_minion` wrapper. It is a
-planning map for translation and verification work; `STATUS.md` remains the
+This document records the dependency chain that closed the translated real-VPU
+Minion path and the original-equivalent `standalone_minion` wrapper milestone.
+It is now a milestone record and historical map; `STATUS.md` remains the
 authoritative source for module-by-module completion counts.
 
-## Current state
+## Current milestone state
 
-The translated `minion_top` default path now instantiates the real translated
+The default translated `minion_top` path instantiates the real translated
 `hw/ip/minion/vpu/rtl/vpu_top.sv` when `VpuEn=1` (the default), preserving the
-original top-level core/VPU split. The top-level smoke and cosim collateral now
-exercise VPU debug/fetch stimulus and compare against the original real-VPU
-`minion_top`.
+original top-level core/VPU split. The Minion top-level unit tests and cosim now
+exercise the real-VPU integration path and compare against the original
+real-VPU `minion_top`.
 
 `null_vpu` remains available only behind `VpuEn=0`. It is a bring-up helper, not
 a CORE-ET translation target. It keeps the minion-side VPU boundary connected
@@ -19,105 +19,107 @@ while failing closed for non-integer work: VPU-facing outputs are idle where
 possible, FP/VPU/ML operations that reach the boundary are reported as illegal,
 and debug data is tied to benign values. This is useful for scalar Minion
 integration and for proving that the shell does not hang when the VPU subtree is
-intentionally absent, but it is not original-equivalent VPU behavior.
+intentionally absent, but it is not original-equivalent VPU behavior and is not
+the standalone-shell target.
 
-The bottom-up VPU subtree under `hw/ip/minion/vpu/` has standalone closures for
-the translated real `vpu_top` path and is now integrated into `minion_top`. The
-remaining dependency for a full original-equivalent standalone shell is the
-final `standalone_minion` wrapper and its own unit/cosim collateral.
+The bottom-up VPU subtree under `hw/ip/minion/vpu/` has standalone closure for
+the translated real `vpu_top` path and is integrated into default `minion_top`.
+The translated `standalone_minion` wrapper is integrated under
+`hw/ip/standalone_minion/` and instantiates the default real-VPU `minion_top`.
+
+Current verification evidence from `STATUS.md`:
+
+| Integration point | Unit DV | RTL cosim | Status |
+|-------------------|---------|-----------|--------|
+| `minion_top` | 17 smoke checks + 5 `VpuEn=0` checks + 17 debug-APB-off checks + 15 debug-off checks + 9 execution checks | 118,468 comparisons | Done; default `VpuEn=1` uses translated real `vpu_top` |
+| `vpu_top` | 19 checks | 4,823,376 comparisons | Done; standalone VPU-local DV/cosim plus real default `minion_top` integration |
+| `standalone_minion` | 19 checks | 1,765,940 comparisons | Done; all standalone outputs compared cycle-by-cycle |
 
 ## Dependency graph
 
 ```text
-translated VPU seed audit/adaptation
+translated VPU seed audit/adaptation              [done]
         |
         v
-VPU top-half RTL import into hw/ip/minion/vpu/
+VPU top-half RTL import into hw/ip/minion/vpu/    [done]
         |
         v
-standalone VPU unit tests and RTL cosims
+standalone VPU unit tests and RTL cosims          [done]
         |
         v
-real vpu_top integrated into minion_top          [done]
+real vpu_top integrated into minion_top           [done]
         |
         v
-full-VPU minion_top unit tests and RTL cosim     [done for top-level outputs]
+full-VPU minion_top unit tests and RTL cosim      [done]
         |
         v
-standalone_minion wrapper RTL                    [next]
+standalone_minion wrapper RTL                     [done]
         |
         v
-standalone_minion unit tests and RTL cosim
+standalone_minion unit tests and RTL cosim        [done]
 ```
 
-The standalone shell modules that are independent of the VPU can continue to be
-translated and verified in parallel. The final `standalone_minion` wrapper should
-now instantiate the real-VPU default `minion_top`; it must not use the
-intentional `VpuEn=0`/`null_vpu` configuration as evidence of original-equivalent
-VPU behavior.
+The standalone shell modules that are independent of the VPU were translated and
+verified around the same sequence. The final shell closure is meaningful because
+it uses the real-VPU default `minion_top`; a `VpuEn=0`/`null_vpu` configuration
+would only prove the scalar/null-VPU shell and would not be original-equivalent
+for VPU behavior.
 
-## Safe work order
+## Historical work order and preserved decisions
+
+The milestone closed through the following staged order:
 
 1. **Audit the translated VPU seed before importing.**
-   Use the existing translated VPU seed repository as an adaptation source for
-   top-half RTL and collateral instead of restarting from the original RTL.
-   The seed already carries useful work for modules such as `vpu_ml`,
-   `vpu_tensorfma`, `vpu_tensorquant`, `vpu_tensorreduce`, `vpu_lane`,
-   `vpu_ctrl`, `vpu_txfma_trans_top`, the `txfma*_top` blocks, and `vpu_top`.
+   The existing translated VPU seed was used as an adaptation source for top-half
+   RTL and collateral instead of restarting from the original RTL.
 
 2. **Preserve target package/RF policy.**
-   Do not blindly overwrite the target repository's
-   `hw/ip/minion/vpu/rtl/vpu_pkg.sv` or `hw/ip/minion/vpu/rtl/vpu_rf.sv` when
-   reusing seed RTL. The target tree currently keeps explicit MMI compatibility
-   knobs for the VPU RF path and verifies both `UseMmi=0` and `UseMmi=1`
-   behavior. If imported top-half RTL needs additional constants or types, merge
-   them into the target policy deliberately and document any intentional
-   divergence in the VPU README and, if applicable, `BUGS.md`.
+   Imported RTL was merged into the target repository's
+   `hw/ip/minion/vpu/rtl/vpu_pkg.sv` and `hw/ip/minion/vpu/rtl/vpu_rf.sv`
+   policy instead of blindly overwriting it. The target tree keeps explicit MMI
+   compatibility knobs for the VPU RF path and verifies both `UseMmi=0` and
+   `UseMmi=1` behavior.
 
 3. **Import and normalize the VPU top-half RTL.**
-   Bring over the top-half modules behind the existing package, primitive, reset,
-   and naming conventions. Keep feature selection as explicit parameters or
-   package defaults; do not reintroduce functional preprocessor switches.
+   The top-half modules were brought behind target package, primitive, reset,
+   and naming conventions. Functional feature selection remains represented as
+   explicit parameters or package defaults rather than translated preprocessor
+   switches.
 
-4. **Port existing standalone VPU DV/cosims.**
-   Where the seed already has standalone tests and cosims, adapt them to the
-   target tree rather than writing shallow replacements. Each translated module
-   still needs its own unit test and its own RTL cosim with every output compared.
+4. **Port standalone VPU DV/cosims.**
+   Existing seed tests and cosims were adapted where available. Each completed
+   translated VPU module has proportional unit-test and RTL-cosim evidence in
+   `STATUS.md`.
 
-5. **Add the missing standalone VPU DV/cosims.**
-   Any imported module that only has RTL present remains incomplete until it has
-   proportional standalone unit tests, standalone cosim, Makefile coverage, and
-   `STATUS.md` entries. This includes the final `vpu_top` integration module.
+5. **Add missing standalone VPU DV/cosims.**
+   Imported top-half modules were not counted as done until standalone unit DV,
+   standalone cosim, Makefile coverage, and `STATUS.md` entries existed.
 
 6. **Update coverage and status after VPU collateral changes.**
-   VPU cosim changes require refreshed checked-in cosim LCOV data under
-   `dv/rtlcosim/coverage/`, and `STATUS.md` must reflect the exact test and
-   cosim counts.
+   VPU and Minion cosim changes refreshed the checked-in cosim LCOV data under
+   `dv/rtlcosim/coverage/`, and `STATUS.md` records current test and cosim
+   counts.
 
-7. **Replace `null_vpu` in `minion_top` with the real `vpu_top`. — Done.**
-   The default `VpuEn=1` path instantiates the translated real `vpu_top`; the
+7. **Replace the default `minion_top` VPU path with real `vpu_top`.**
+   The default `VpuEn=1` path now instantiates translated real `vpu_top`. The
    `VpuEn=0` path intentionally preserves `null_vpu` for scalar-only bring-up.
-   The `minion_top` unit tests and cosim now expand beyond integer-only stimulus
-   to exercise VPU fetch/debug behavior while comparing all top-level outputs.
 
-8. **Add the final `standalone_minion` wrapper.**
-   The final wrapper should be translated and cosimmed after the real-VPU
-   `minion_top` path. It should use the default real-VPU configuration; using
-   `VpuEn=0` would only prove the scalar/null-VPU shell, not full
-   original-equivalent standalone Minion behavior.
+8. **Add and verify the standalone shell wrapper.**
+   The `standalone_minion` wrapper was translated after the real-VPU `minion_top` path and
+   uses the default real-VPU configuration. Its unit DV and RTL cosim are now
+   present and passing.
 
 ## Completion gates
 
-A task is not complete merely because `standalone_minion` elaborates. The staged
-completion gates are:
+The staged completion gates are now closed:
 
-| Gate | Required evidence |
-|------|-------------------|
-| VPU top-half imported | RTL follows target package/primitive policy and does not regress existing VPU leaf tests/cosims |
-| VPU top-half verified | Every imported VPU module has standalone unit tests, standalone RTL cosim, Makefile coverage, and `STATUS.md` counts |
-| Real-VPU `minion_top` | Done for top-level integration: default `minion_top` instantiates translated `vpu_top`, keeps `null_vpu` only behind `VpuEn=0`, and has real-VPU unit/cosim coverage |
-| `standalone_minion` complete | The shell instantiates the real-VPU `minion_top`, all shell outputs are compared in cosim, and status/coverage are updated |
+| Gate | Required evidence | Current state |
+|------|-------------------|---------------|
+| VPU top-half imported | RTL follows target package/primitive policy and does not regress existing VPU leaf tests/cosims | Done |
+| VPU top-half verified | Imported VPU modules have standalone unit tests, standalone RTL cosim, Makefile coverage, and `STATUS.md` counts | Done for the integrated real-VPU path |
+| Real-VPU `minion_top` | Default `minion_top` instantiates translated `vpu_top`, keeps `null_vpu` only behind `VpuEn=0`, and has real-VPU unit/cosim coverage | Done; 118,468 cosim comparisons |
+| `standalone_minion` complete | The shell instantiates the real-VPU `minion_top`, all shell outputs are compared in cosim, and status/coverage are updated | Done; 19 checks and 1,765,940 cosim comparisons |
 
-After the real-VPU `minion_top` gate, documentation and status entries should
-describe the top-level default path as real-VPU-backed and reserve
-`null_vpu`/integer-only wording for the intentional `VpuEn=0` configuration.
+Documentation and status entries should describe the top-level default path as
+real-VPU-backed and reserve `null_vpu`/integer-only wording for the intentional
+`VpuEn=0` configuration.
