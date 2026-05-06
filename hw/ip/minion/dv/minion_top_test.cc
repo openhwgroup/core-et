@@ -11,6 +11,7 @@ using DUT = Vminion_top_tb;
 
 static constexpr uint16_t kDebugAxProgBuf0Addr = 0x0804;
 static constexpr uint8_t kMuxVpu0 = 0x00;
+static constexpr uint32_t kFrcpPs = 0x5870007Bu;
 
 static void idle_inputs(DUT* dut) {
     dut->enabled_i = 0x1;
@@ -93,6 +94,10 @@ static bool is_zero_128(const VlWide<4>& bus) {
     return bus[0] == 0 && bus[1] == 0 && bus[2] == 0 && bus[3] == 0;
 }
 
+static void drive_fetch_line(DUT* dut, uint32_t inst_word) {
+    for (int i = 0; i < 8; ++i) dut->icache_resp_data_i[i] = inst_word;
+}
+
 int main(int argc, char** argv) {
     SimCtrl<DUT> sim(argc, argv);
     sim.max_time = 250000;
@@ -151,7 +156,24 @@ int main(int argc, char** argv) {
     sim.check(sim.dut->dbg_filter_valid_o == 1, "VPU debug mux reports filter_valid");
     sim.check(sim.dut->dbg_match_valid_o == 1, "VPU debug mux reports match_valid");
     sim.check(sim.dut->dbg_data_valid_o == 1, "VPU debug mux reports data_valid");
-    sim.check(is_zero_128(sim.dut->dbg_data_o), "null_vpu drives zero debug data");
+    sim.check(!is_zero_128(sim.dut->dbg_data_o), "real vpu_top drives nonzero VPU debug data");
+
+    drive_fetch_line(sim.dut.get(), kFrcpPs);
+    sim.dut->te_enable_i = 1;
+    sim.dut->icache_resp_valid_i = 1;
+    sim.dut->minion_dbg_signals_mux_i = kMuxVpu0;
+    bool saw_vpu_debug_nonzero = false;
+    for (int i = 0; i < 96; ++i) {
+        sim.dut->minion_dbg_sig_enable_i = (i % 8) == 0;
+        sim.tick();
+        saw_vpu_debug_nonzero |= !is_zero_128(sim.dut->dbg_data_o);
+        if (saw_vpu_debug_nonzero) break;
+    }
+    sim.dut->icache_resp_valid_i = 0;
+    sim.dut->te_enable_i = 0;
+    sim.dut->minion_dbg_sig_enable_i = 0;
+    sim.tick();
+    sim.check(saw_vpu_debug_nonzero, "real-VPU run keeps VPU debug data observable while FRCP_PS is supplied");
 
     sim.dut->nsleepin_i = 0;
     sim.tick();

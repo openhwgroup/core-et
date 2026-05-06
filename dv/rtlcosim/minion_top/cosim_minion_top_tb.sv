@@ -3,9 +3,9 @@
 //
 // Co-simulation wrapper: original minion_top vs new minion_top.
 //
-// The translated top currently uses null_vpu for integer-only bring-up, so the
-// paired C++ test constrains fetch/debug stimulus to integer-only operation and
-// avoids selecting the original VPU debug monitor outputs.
+// The default translated top instantiates the real translated vpu_top. The
+// paired C++ test includes VPU fetch/debug stimulus while still comparing every
+// minion_top output cycle-by-cycle against the original real-VPU top.
 
 `include "soc.vh"
 

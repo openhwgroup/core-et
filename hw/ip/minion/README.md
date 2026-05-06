@@ -39,7 +39,8 @@ minion_top
 │       └── vpu_decoder       ← same shared module as in frontend
 │
 ├── minion_debug_apb_slv
-├── null_vpu                  ← integer-only bring-up helper (non-faithful)
+├── vpu_top                   ← default real translated VPU (`VpuEn=1`)
+├── null_vpu                  ← optional integer-only bring-up helper (`VpuEn=0`, non-faithful)
 └── pseudo_lru
 ```
 
@@ -62,12 +63,12 @@ they are frontend internals.
 | `xcpt_cause_e` | intpipe, dcache, frontend | Exception cause codes |
 | `alu_func_e` | intpipe_decode, intpipe | ALU function codes |
 
-VPU boundary types already live in `minion_pkg` because `core_top` and the
-optional integer-only `null_vpu` helper both need the shared request/control
-bundles before a full translated VPU subtree exists.
+VPU boundary types live in `minion_pkg` because `core_top`, translated
+`vpu_top`, and the optional integer-only `null_vpu` helper all share the same
+request/control bundles.
 
-VPU-internal types now live in `vpu/vpu_pkg.sv`; only the minion-facing
-boundary bundles stay in `minion_pkg`.
+VPU-internal types live in `vpu/vpu_pkg.sv`; only the minion-facing boundary
+bundles stay in `minion_pkg`.
 
 ## Directory structure
 
@@ -77,7 +78,7 @@ hw/ip/minion/
   rtl/
     minion_pkg.sv             Shared minion-level types
     core_top.sv               Core integration wrapper (frontend + intpipe + dcache)
-    minion_top.sv             Top-level minion wrapper (currently integer-only via null_vpu)
+    minion_top.sv             Top-level minion wrapper (default real VPU; optional null_vpu with VpuEn=0)
     minion_debug_apb_slv.sv   Minion-local debug APB slave
     null_vpu.sv               Integer-only bring-up helper, not a VPU translation
   frontend/
@@ -152,11 +153,14 @@ Current scope:
 - `DebugMonEn=0` removes the top-level debug monitor mux in `minion_top` and
   ties the sideband monitor output idle
 - `TraceEn=0` forces the exported trace stream idle
+- `VpuEn=1` (default) instantiates the translated real `vpu_top` and keeps the
+  original minion/VPU/DCache/CSR integration path live
 - `VpuEn=0` disables the frontend `vpu_decoder` and forces the exported VPU
-  decode/control signals idle while the top still uses `null_vpu`; the same
-  parameter now also drives the dcache and CSR-file tensor/offload cuts, which
-  remove the dcache tensor/offload engines and silence the matching
-  `intpipe` CSR/replay traffic while preserving the scalar cache/MMU contract
+  decode/control signals idle while the top uses the intentional integer-only
+  `null_vpu`; the same parameter also drives the dcache and CSR-file
+  tensor/offload cuts, which remove the dcache tensor/offload engines and
+  silence the matching `intpipe` CSR/replay traffic while preserving the scalar
+  cache/MMU contract
 
 This is intentionally only the first-stage cut. Architectural debug inside
 `intpipe_top` / `intpipe_csr_file` is still present when `DebugApbEn=0` or
@@ -205,11 +209,11 @@ High-level status:
 | Sub-block | Status | Notes |
 |-----------|--------|-------|
 | core_top | Done | `core_top.sv` has a passing minion-level smoke test (9 checks), a debug-APB-off test (12 checks), and a passing `dv/rtlcosim/core_top` run (1,539,072 comparisons); `minion_debug_apb_slv.sv` is exercised through that integration path |
-| minion_top | Done | `minion_top.sv` is translated and currently instantiated as an integer-only bring-up top with `null_vpu`; it has passing top-level smoke, debug-APB-off, debug-off, retire-path execution tests, and a passing `dv/rtlcosim/minion_top` run against the original wrapper constrained to integer-only stimulus |
+| minion_top | Done | `minion_top.sv` defaults to the translated real `vpu_top` and preserves the intentional integer-only `VpuEn=0` `null_vpu` path; it has passing top-level smoke, VPU-off, debug-APB-off, debug-off, retire-path execution tests, and a passing `dv/rtlcosim/minion_top` run against the original wrapper with real-VPU stimulus |
 | null_vpu | Done | `null_vpu.sv` is a new integer-only bring-up helper with a standalone smoke test; it is intentionally non-faithful and is meant for `minion_top` configurations that trap all FP/VPU/ML usage rather than execute it |
 | frontend | Done | `minion_frontend`, thread buffer/scheduler, both decoders, and the frontend top cosim all pass; see `frontend/README.md` for current comparison counts |
 | minion_pkg | Done | Shared minion types extracted from the original global include chain |
 | intpipe | Done | RTL and cosims are in place; standalone unit tests still need their own `hw/ip/minion/intpipe/dv/` subtree |
 | dcache | Done | Complete for the original non-graphics minion configuration; the `GFX_ENABLED` texsend path remains intentionally deferred |
 | tlb | Done | `minion_tlb` has 123 unit checks and 517,146 cosim comparisons |
-| vpu | In progress | `hw/ip/minion/vpu/` now exists with the translated VPU packages, leaf datapaths/RFs, TXFMA control/exponent/fraction/top wrappers, transcendental ROM/pipe blocks, tensor reduce, tensor FMA/quant/ML datapath integration, and standalone closures for `vpu_ctrl`, `vpu_lane`, and `vpu_top`; the landed standalone VPU suites currently pass `306,754` unit-test checks and `15,048,898` cosim comparisons, while real `vpu_top` integration into `minion_top` remains pending |
+| vpu | Done for current Minion integration | `hw/ip/minion/vpu/` has translated packages, leaf datapaths/RFs, TXFMA control/exponent/fraction/top wrappers, transcendental ROM/pipe blocks, tensor reduce, tensor FMA/quant/ML datapath integration, standalone closures for `vpu_ctrl`, `vpu_lane`, and `vpu_top`, and real `vpu_top` integrated into default `minion_top`; remaining work is the separate final `standalone_minion` wrapper |

@@ -215,7 +215,7 @@ Build order: 12→13→14→15→16→17→18
 |--------|----------|------|-------|--------|
 | `minion_debug_apb_slv` | `minion_debug_apb_slv` | Covered by `core_top` smoke test (9 checks) | Covered by `core_top` cosim (1,539,072 comparisons) | RTL translated and exercised through minion-level integration; standalone block-level DV/cosim still pending |
 | `core_top` | `core_top` | 9 smoke checks + 12 debug-APB-off checks | 1,539,072 comparisons | Done |
-| `minion_top` | `minion_top` | 16 smoke checks + 16 debug-APB-off checks + 15 debug-off checks + 9 execution checks | 118,160 comparisons | Done (translated top wrapper with intentional integer-only `null_vpu` substitution in place of the original `vpu_top`) |
+| `minion_top` | `minion_top` | 17 smoke checks + 5 VpuEn=0 checks + 17 debug-APB-off checks + 15 debug-off checks + 9 execution checks | 118,468 comparisons | Done (default `VpuEn=1` instantiates translated real `vpu_top`; intentional integer-only `VpuEn=0` path keeps `null_vpu`) |
 | `null_vpu` | — | 55 checks | — | Done (new integer-only bring-up helper; intentionally non-faithful and not part of the CORE-ET translation set) |
 
 ## Minion VPU (`hw/ip/minion/vpu/`)
@@ -297,7 +297,7 @@ Build order: 12→13→14→15→16→17→18
 | `vpu_ml` | `vpu_ml` | 26 checks | 602,896 comparisons | Done |
 | `vpu_ctrl` | `vpu_ctrl` | 25 checks | 2,019,808 comparisons | Done |
 | `vpu_lane` | `vpu_lane` | 16 checks | 780,108 comparisons | Done |
-| `vpu_top` | `vpu_top` | 19 checks | 4,823,376 comparisons | Done (standalone VPU-local DV/cosim; real `minion_top` integration pending) |
+| `vpu_top` | `vpu_top` | 19 checks | 4,823,376 comparisons | Done (standalone VPU-local DV/cosim plus real default `minion_top` integration) |
 
 ## Standalone Minion Shell
 
@@ -412,9 +412,9 @@ backfilled.
 | Metric | Count |
 |--------|-------|
 | Unit-test Makefiles | 64 |
-| Test suites discovered by `make test` | 185 |
+| Test suites discovered by `make test` | 186 |
 | RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 213 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 35 unit suites + 36 cosim Makefile runs |
+| Targeted update runs | 36 unit suites + 37 cosim Makefile runs |
 | Targeted update failures | 0 |

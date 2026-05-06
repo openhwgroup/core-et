@@ -5,8 +5,8 @@
 //
 // Mechanical translation of rtl/shire/minion/minion_top.v. This wrapper keeps
 // the original reset-repeaters, debug-status muxing, memory-override glue, and
-// core/VPU split. The only intentional functional divergence is that the VPU
-// instance is currently satisfied by null_vpu for integer-only bring-up.
+// core/VPU split. The default VpuEn=1 configuration instantiates the translated
+// VPU; VpuEn=0 preserves the intentional integer-only null_vpu bring-up path.
 
 /* verilator lint_off UNUSEDPARAM */  // `UseMmi` is a preserved original top-level parameter kept for interface compatibility.
 module minion_top
@@ -541,37 +541,71 @@ module minion_top
     .intpipe_debug_monitor_o    (intpipe_debug_monitor_out)
   );
 
-  null_vpu u_vpu (
-    .clk_i                    (clk_i),
-    .rst_ni                   (rst_c_sync_ni),
-    .id_core_req_i            (id_core_vpu_req),
-    .id_vpu_decoder_sigs_i    (id_vpu_decoder_sigs),
-    .ex_core_req_i            (ex_core_vpu_req),
-    .f2_core_kill_i           (tag_core_vpu_kill),
-    .f3_core_kill_i           (mem_core_vpu_kill),
-    .f4_core_kill_i           (wb_core_vpu_kill),
-    .f0_core_ctrl_i           (f0_core_vpu_ctrl),
-    .chicken_bit_vpulane_i    (vpulane_clock_gate_disable),
-    .chicken_bit_vputima_i    (vputima_clock_gate_disable),
-    .chicken_bit_vputrans_i   (vputrans_clock_gate_disable),
-    .mem_ctrl_override_i      (mem_ctrl_override),
-    .wb_dcache_resp_valid_i   (wb_dcache_vpu_resp_valid),
-    .wb_dcache_resp_i         (wb_dcache_vpu_resp),
-    .dcache_scp_resp_i        (dcache_vpu_scp_res),
-    .dcache_scp_data_i        (dcache_vpu_scp_data),
-    .dcache_tenb_data_i       (dcache_vpu_tenb_data),
-    .dcache_reduce_ctrl_i     (vpu_reduce_ctrl),
-    .id_core_ctrl_o           (id_vpu_core_ctrl),
-    .ex_core_ctrl_o           (ex_vpu_core_ctrl),
-    .f2_core_ctrl_o           (f2_vpu_core_ctrl),
-    .f3_core_ctrl_o           (f3_vpu_core_ctrl),
-    .wb_core_ctrl_o           (wb_vpu_core_ctrl),
-    .io_events_o              (io_events_vpu),
-    .vpu_dbg_match_o          (vpu_dbg_match),
-    .vpu_dbg_filter_o         (vpu_dbg_filter),
-    .vpu_dbg_data_o           (vpu_dbg_data),
-    .dcache_ctrl_o            (vpu_dcache_ctl)
-  );
+  if (VpuEn) begin : gen_real_vpu
+    vpu_top u_vpu (
+      .clock                 (clk_i),
+      .reset                 (!rst_c_sync_ni),
+      .id_core_req           (id_core_vpu_req),
+      .id_vpu_decoder_sigs   (id_vpu_decoder_sigs),
+      .ex_core_req           (ex_core_vpu_req),
+      .f2_core_kill          (tag_core_vpu_kill),
+      .f3_core_kill          (mem_core_vpu_kill),
+      .f4_core_kill          (wb_core_vpu_kill),
+      .f0_core_ctrl          (f0_core_vpu_ctrl),
+      .chicken_bit_vpulane   (vpulane_clock_gate_disable),
+      .chicken_bit_vputima   (vputima_clock_gate_disable),
+      .chicken_bit_vputrans  (vputrans_clock_gate_disable),
+      .mem_ctrl_override     (mem_ctrl_override),
+      .wb_dcache_resp_valid  (wb_dcache_vpu_resp_valid),
+      .wb_dcache_resp        (wb_dcache_vpu_resp),
+      .dcache_ctrl           (vpu_dcache_ctl),
+      .dcache_scp_resp       (dcache_vpu_scp_res),
+      .dcache_scp_data       (dcache_vpu_scp_data),
+      .dcache_tenb_data      (dcache_vpu_tenb_data),
+      .dcache_reduce_ctrl    (vpu_reduce_ctrl),
+      .id_core_ctrl          (id_vpu_core_ctrl),
+      .ex_core_ctrl          (ex_vpu_core_ctrl),
+      .f2_core_ctrl          (f2_vpu_core_ctrl),
+      .f3_core_ctrl          (f3_vpu_core_ctrl),
+      .wb_core_ctrl          (wb_vpu_core_ctrl),
+      .io_events             (io_events_vpu),
+      .vpu_dbg_match         (vpu_dbg_match),
+      .vpu_dbg_filter        (vpu_dbg_filter),
+      .vpu_dbg_data          (vpu_dbg_data)
+    );
+  end else begin : gen_null_vpu
+    null_vpu u_vpu (
+      .clk_i                    (clk_i),
+      .rst_ni                   (rst_c_sync_ni),
+      .id_core_req_i            (id_core_vpu_req),
+      .id_vpu_decoder_sigs_i    (id_vpu_decoder_sigs),
+      .ex_core_req_i            (ex_core_vpu_req),
+      .f2_core_kill_i           (tag_core_vpu_kill),
+      .f3_core_kill_i           (mem_core_vpu_kill),
+      .f4_core_kill_i           (wb_core_vpu_kill),
+      .f0_core_ctrl_i           (f0_core_vpu_ctrl),
+      .chicken_bit_vpulane_i    (vpulane_clock_gate_disable),
+      .chicken_bit_vputima_i    (vputima_clock_gate_disable),
+      .chicken_bit_vputrans_i   (vputrans_clock_gate_disable),
+      .mem_ctrl_override_i      (mem_ctrl_override),
+      .wb_dcache_resp_valid_i   (wb_dcache_vpu_resp_valid),
+      .wb_dcache_resp_i         (wb_dcache_vpu_resp),
+      .dcache_scp_resp_i        (dcache_vpu_scp_res),
+      .dcache_scp_data_i        (dcache_vpu_scp_data),
+      .dcache_tenb_data_i       (dcache_vpu_tenb_data),
+      .dcache_reduce_ctrl_i     (vpu_reduce_ctrl),
+      .id_core_ctrl_o           (id_vpu_core_ctrl),
+      .ex_core_ctrl_o           (ex_vpu_core_ctrl),
+      .f2_core_ctrl_o           (f2_vpu_core_ctrl),
+      .f3_core_ctrl_o           (f3_vpu_core_ctrl),
+      .wb_core_ctrl_o           (wb_vpu_core_ctrl),
+      .io_events_o              (io_events_vpu),
+      .vpu_dbg_match_o          (vpu_dbg_match),
+      .vpu_dbg_filter_o         (vpu_dbg_filter),
+      .vpu_dbg_data_o           (vpu_dbg_data),
+      .dcache_ctrl_o            (vpu_dcache_ctl)
+    );
+  end
   /* verilator lint_on PINCONNECTEMPTY */
 
 endmodule

@@ -8,7 +8,9 @@ PKGS := $(REPO_ROOT)/hw/ip/dft/rtl/dft_pkg.sv \
         $(REPO_ROOT)/hw/ip/minion/tlb/rtl/tlb_pkg.sv \
         $(REPO_ROOT)/hw/ip/minion/frontend/rtl/minion_frontend_pkg.sv \
         $(REPO_ROOT)/hw/ip/minion/intpipe/csr/rtl/intpipe_csr_pkg.sv \
-        $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_pkg.sv
+        $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_pkg.sv \
+        $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_pkg.sv \
+        $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_defs_pkg.sv
 
 FRONTEND_RTL := $(REPO_ROOT)/hw/ip/minion/frontend/rtl/minion_frontend_rvc_expander.sv \
                 $(REPO_ROOT)/hw/ip/minion/frontend/rtl/minion_frontend_thread_buffer.sv \
@@ -59,6 +61,33 @@ DCACHE_RTL := $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_atomic_alu_unit
               $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_tensor_load.sv \
               $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_top.sv
 
+TXFMA_RTL := $(wildcard $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma*.sv)
+
+VPU_RTL := $(wildcard $(REPO_ROOT)/hw/ip/minion/vpu/rtl/trans_*_rom_case_*.sv) \
+           $(REPO_ROOT)/hw/ip/minion/vpu/rtl/trans_top.sv \
+           $(TXFMA_RTL) \
+           $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_txfma_trans_top.sv \
+           $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_rf.sv \
+           $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_bypass.sv \
+           $(REPO_ROOT)/hw/ip/minion/vpu/rtl/tima_adder.sv \
+           $(REPO_ROOT)/hw/ip/minion/vpu/rtl/tima_top.sv \
+           $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorb_rf.sv \
+           $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorc_rf.sv \
+           $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_lane_tima.sv \
+           $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_sh_sw.sv \
+           $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorfma.sv \
+           $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorreduce.sv \
+           $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorquant.sv \
+           $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_ml.sv \
+           $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_trans.sv \
+           $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_uinst_decoder.sv \
+           $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensora_rf.sv \
+           $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensortmp_rf.sv \
+           $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_mask.sv \
+           $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_ctrl.sv \
+           $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_lane.sv \
+           $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_top.sv
+
 ROOT_RTL := $(REPO_ROOT)/hw/ip/minion/rtl/minion_debug_apb_slv.sv \
             $(REPO_ROOT)/hw/ip/minion/rtl/null_vpu.sv \
             $(REPO_ROOT)/hw/ip/minion/rtl/core_top.sv \
@@ -70,6 +99,7 @@ PRIMS := $(PRIM_ARB_LRU) \
          $(PRIM_RF_1R1W_PAR_PREVIEW) \
          $(PRIM_RF_1R1W_PREVIEW) \
          $(PRIM_RF_1R1W_REG_PREVIEW) \
+         $(PRIM_RF_3R2W_PREVIEW) \
          $(PRIM_RF_SINGLE_1R1W_PAR_PREVIEW) \
 	         $(PRIM_CLK_GATE) \
 	         $(PRIM_CLK_GATE_N) \
@@ -85,21 +115,30 @@ PRIMS := $(PRIM_ARB_LRU) \
          $(PRIM_RST_SYNC) \
          $(PRIM_RAM_2P)
 
-RTL_SRCS := $(PKGS) $(PRIMS) $(FRONTEND_RTL) $(INTPIPE_CSR_RTL) $(INTPIPE_RTL) $(TLB_RTL) $(DCACHE_RTL) $(ROOT_RTL)
+RTL_SRCS := $(PKGS) $(PRIMS) $(FRONTEND_RTL) $(INTPIPE_CSR_RTL) $(INTPIPE_RTL) $(TLB_RTL) $(DCACHE_RTL) $(VPU_RTL) $(ROOT_RTL)
 
-TESTS := smoke core_top_debug_apb_off null_vpu minion_top minion_top_debug_apb_off minion_top_debug_off minion_top_exec
+# The imported VPU files still use compilation-unit imports of vpu_defs_pkg;
+# combined Minion+VPU builds also contain frontend/intpipe localparams with the
+# same original names. Real-VPU integration also exposes the original
+# VPU<->dcache<->intpipe combinational replay/control feedback that standalone
+# child tests do not flatten together. These integration-local suppressions are
+# for namespace-only VARHIDDEN and verified integrated UNOPTFLAT paths; other
+# warnings remain fatal.
+MINION_FLAGS := +incdir+$(REPO_ROOT)/hw/ip/minion/intpipe/csr/rtl -Wno-VARHIDDEN -Wno-UNOPTFLAT
+
+TESTS := smoke core_top_debug_apb_off null_vpu minion_top minion_top_vpu_off minion_top_debug_apb_off minion_top_debug_off minion_top_exec
 
 smoke_TOP := core_top_tb
 smoke_SRCS := $(RTL_SRCS) \
               $(CURDIR)/core_top_tb.sv \
               $(CURDIR)/core_top_test.cc
-smoke_FLAGS := +incdir+$(REPO_ROOT)/hw/ip/minion/intpipe/csr/rtl
+smoke_FLAGS := $(MINION_FLAGS)
 
 core_top_debug_apb_off_TOP := core_top_tb
 core_top_debug_apb_off_SRCS := $(RTL_SRCS) \
                                $(CURDIR)/core_top_tb.sv \
                                $(CURDIR)/core_top_debug_apb_off_test.cc
-core_top_debug_apb_off_FLAGS := +incdir+$(REPO_ROOT)/hw/ip/minion/intpipe/csr/rtl -GDebugApbEn=0 -GDebugMonEn=1
+core_top_debug_apb_off_FLAGS := $(MINION_FLAGS) -GDebugApbEn=0 -GDebugMonEn=1
 
 null_vpu_TOP := null_vpu_tb
 null_vpu_SRCS := $(REPO_ROOT)/hw/ip/etlink/rtl/etlink_pkg.sv \
@@ -112,27 +151,33 @@ minion_top_TOP := minion_top_tb
 minion_top_SRCS := $(RTL_SRCS) \
                    $(CURDIR)/minion_top_tb.sv \
                    $(CURDIR)/minion_top_test.cc
-minion_top_FLAGS := +incdir+$(REPO_ROOT)/hw/ip/minion/intpipe/csr/rtl
+minion_top_FLAGS := $(MINION_FLAGS)
+
+minion_top_vpu_off_TOP := minion_top_tb
+minion_top_vpu_off_SRCS := $(RTL_SRCS) \
+                            $(CURDIR)/minion_top_tb.sv \
+                            $(CURDIR)/minion_top_vpu_off_test.cc
+minion_top_vpu_off_FLAGS := $(MINION_FLAGS) -GVpuEn=0
 
 minion_top_debug_apb_off_TOP := minion_top_tb
 minion_top_debug_apb_off_SRCS := $(RTL_SRCS) \
                                  $(CURDIR)/minion_top_tb.sv \
                                  $(CURDIR)/minion_top_test.cc
-minion_top_debug_apb_off_FLAGS := +incdir+$(REPO_ROOT)/hw/ip/minion/intpipe/csr/rtl -GDebugApbEn=0 -GDebugMonEn=1
+minion_top_debug_apb_off_FLAGS := $(MINION_FLAGS) -GDebugApbEn=0 -GDebugMonEn=1
 
 minion_top_debug_off_TOP := minion_top_tb
 minion_top_debug_off_SRCS := $(RTL_SRCS) \
                              $(CURDIR)/minion_top_tb.sv \
                              $(CURDIR)/minion_top_debug_off_test.cc
-minion_top_debug_off_FLAGS := +incdir+$(REPO_ROOT)/hw/ip/minion/intpipe/csr/rtl -GDebugApbEn=0 -GDebugMonEn=0
+minion_top_debug_off_FLAGS := $(MINION_FLAGS) -GDebugApbEn=0 -GDebugMonEn=0
 
 minion_top_exec_TOP := minion_top_tb
 minion_top_exec_SRCS := $(RTL_SRCS) \
                         $(CURDIR)/minion_top_tb.sv \
                         $(CURDIR)/minion_top_exec_test.cc
-minion_top_exec_FLAGS := +incdir+$(REPO_ROOT)/hw/ip/minion/intpipe/csr/rtl
+minion_top_exec_FLAGS := $(MINION_FLAGS)
 
 LINT_SRCS := $(filter-out %.cc,$(smoke_SRCS))
-LINT_FLAGS := --top-module $(smoke_TOP) +incdir+$(REPO_ROOT)/hw/ip/minion/intpipe/csr/rtl
+LINT_FLAGS := --top-module $(smoke_TOP) $(MINION_FLAGS)
 
 include $(REPO_ROOT)/mk/verilator.mk

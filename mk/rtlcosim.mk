@@ -67,18 +67,22 @@ NEW_RTL_FINAL := $(NEW_RTL_AUTO) $(NEW_RTL)
 # ── Module renaming ─────────────────────────────────────
 #
 # When ORIG_RENAME is set, each file in ORIG_RTL is copied to
-# build/<basename>_orig.v with all names in ORIG_RENAME appended
-# with _orig (longest names first to avoid partial matches).
-# The sed expression is built once and applied to every file.
+# build/<basename>_orig.v with all complete identifiers in ORIG_RENAME
+# appended with _orig. The sed expression is built once and applied to every
+# file.
 
 ifdef ORIG_RENAME
 
-# Sort names longest-first so 'intpipe_csr_file_conv' is renamed
-# before 'intpipe_csr_file' (avoids partial match).
+# Sort names longest-first for deterministic output and to keep existing
+# long-name-first cosim Makefiles harmless even though the substitution below
+# now matches complete identifiers only.
 ORIG_RENAME_SORTED := $(shell echo '$(ORIG_RENAME)' | tr ' ' '\n' | awk '{ print length, $$0 }' | sort -rn | awk '{ print $$2 }')
 
-# Build sed expression: -e '/include/!s/<name>/<name>_orig/g' for each name.
-ORIG_RENAME_SED := $(foreach n,$(ORIG_RENAME_SORTED),-e '/include/!s/$(n)/$(n)_orig/g')
+# Build sed expression: -e '/include/!s/\<<name>\>/<name>_orig/g' for each name.
+# Match complete identifiers only; module names often appear as prefixes in
+# packed typedef, struct field, and port names that must keep their original
+# spelling for included headers and unrenamed dependencies.
+ORIG_RENAME_SED := $(foreach n,$(ORIG_RENAME_SORTED),-e '/include/!s/\<$(n)\>/$(n)_orig/g')
 
 # For each ORIG_RTL file, create a renamed copy in BUILD_DIR.
 # Also write a path-fixup sed script so .info files can map

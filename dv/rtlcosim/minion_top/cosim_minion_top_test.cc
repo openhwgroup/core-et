@@ -18,9 +18,12 @@ constexpr int kResetCycles = 5;
 constexpr int kDirectedFetchCycles = 96;
 constexpr int kRandomCycles = 4096;
 constexpr uint16_t kDebugAxProgBuf0Addr = 0x0804;
+constexpr uint8_t kMuxVpu0 = 0x00;
+constexpr uint8_t kMuxVpu1 = 0x04;
 constexpr uint8_t kMuxDcacheTl0 = 0x08;
 constexpr uint8_t kMuxDcacheTl1 = 0x0c;
 constexpr uint8_t kMuxIntpipe = 0x28;
+constexpr uint32_t kFrcpPs = 0x5870007Bu;
 
 uint32_t rng_state = 0x41B16EADu;
 
@@ -102,7 +105,7 @@ void tick_and_compare(CosimCtrl<DUT>& sim) {
   compare_all(sim);
 }
 
-void set_integer_fetch_line(DUT* d, uint32_t salt) {
+void set_fetch_line(DUT* d, uint32_t salt, bool include_vpu) {
   static constexpr uint32_t kOps[] = {
       0x00000013u,  // nop
       0x00108093u,  // addi x1, x1, 1
@@ -117,6 +120,10 @@ void set_integer_fetch_line(DUT* d, uint32_t salt) {
   for (int i = 0; i < 8; ++i) {
     d->stim_icache_resp_data[i] = kOps[(salt + static_cast<uint32_t>(i)) & 0x7u];
   }
+
+  if (include_vpu) {
+    d->stim_icache_resp_data[(salt >> 3) & 0x7u] = kFrcpPs;  // FRCP_PS exercises real VPU decode/control.
+  }
 }
 
 void clear_inputs(DUT* d) {
@@ -126,7 +133,7 @@ void clear_inputs(DUT* d) {
   d->stim_nsleepin = 1;
   d->stim_icache_req_ready = 1;
   d->stim_icache_resp_valid = 0;
-  set_integer_fetch_line(d, 0);
+  set_fetch_line(d, 0, false);
   d->stim_debug_halt = 0;
   d->stim_debug_resume = 0;
   d->stim_debug_resethalt = 0;
@@ -205,6 +212,8 @@ int main(int argc, char** argv) {
     tick_and_compare(sim);
   }
 
+  pulse_dbg_mux(sim, kMuxVpu0);
+  pulse_dbg_mux(sim, kMuxVpu1);
   pulse_dbg_mux(sim, kMuxIntpipe);
 
   bool saw_fetch = false;
@@ -215,20 +224,24 @@ int main(int argc, char** argv) {
       break;
     }
   }
-  sim.check(saw_fetch, "integer-only minion_top issues an icache request after reset");
+  sim.check(saw_fetch, "real-VPU minion_top issues an icache request after reset");
 
   for (int cycle = 0; cycle < kDirectedFetchCycles; ++cycle) {
     sim.dut->stim_icache_resp_valid = ((cycle & 3) == 1) ? 1 : 0;
-    set_integer_fetch_line(sim.dut.get(), static_cast<uint32_t>(cycle));
+    set_fetch_line(sim.dut.get(), static_cast<uint32_t>(cycle), (cycle % 5) == 0);
 
     if (cycle == 12) sim.dut->stim_debug_ackhavereset = 0x1;
     if (cycle == 13) sim.dut->stim_debug_ackhavereset = 0x0;
 
-    if (cycle == 24) {
-      pulse_dbg_mux(sim, kMuxDcacheTl0);
+    if (cycle == 16) {
+      pulse_dbg_mux(sim, kMuxVpu0);
+    } else if (cycle == 32) {
+      pulse_dbg_mux(sim, kMuxVpu1);
     } else if (cycle == 48) {
+      pulse_dbg_mux(sim, kMuxDcacheTl0);
+    } else if (cycle == 64) {
       pulse_dbg_mux(sim, kMuxDcacheTl1);
-    } else if (cycle == 72) {
+    } else if (cycle == 80) {
       pulse_dbg_mux(sim, kMuxIntpipe);
     }
 
@@ -239,7 +252,7 @@ int main(int argc, char** argv) {
   bool saw_pready = false;
   bool saw_pslverr = false;
   apb_write(sim, kDebugAxProgBuf0Addr, 0x1122334455667788ull, &saw_pready, &saw_pslverr);
-  sim.check(saw_pready, "debug APB write completes under integer-only cosim");
+  sim.check(saw_pready, "debug APB write completes under real-VPU cosim");
   sim.check(saw_pslverr, "debug APB program-buffer write is rejected outside debug mode");
 
   sim.dut->stim_nsleepin = 0;
@@ -251,7 +264,8 @@ int main(int argc, char** argv) {
     sim.dut->stim_icache_req_ready = (xorshift32() & 0x3u) != 0;
     if ((xorshift32() & 0x3u) == 0) {
       sim.dut->stim_icache_resp_valid = 1;
-      set_integer_fetch_line(sim.dut.get(), xorshift32());
+      uint32_t salt = xorshift32();
+      set_fetch_line(sim.dut.get(), salt, (salt & 0x3u) == 0);
     } else {
       sim.dut->stim_icache_resp_valid = 0;
     }
@@ -262,8 +276,8 @@ int main(int argc, char** argv) {
     sim.dut->stim_debug_ackhavereset = ((xorshift32() & 0x3fu) == 3) ? 0x1 : 0x0;
 
     if ((xorshift32() & 0x1fu) == 0) {
-      static constexpr uint8_t kMuxChoices[] = {kMuxDcacheTl0, kMuxDcacheTl1, kMuxIntpipe};
-      sim.dut->stim_dbg_mux = kMuxChoices[xorshift32() % 3u];
+      static constexpr uint8_t kMuxChoices[] = {kMuxVpu0, kMuxVpu1, kMuxDcacheTl0, kMuxDcacheTl1, kMuxIntpipe};
+      sim.dut->stim_dbg_mux = kMuxChoices[xorshift32() % 5u];
       sim.dut->stim_dbg_enable = 1;
     } else {
       sim.dut->stim_dbg_enable = 0;

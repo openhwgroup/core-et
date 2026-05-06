@@ -7,26 +7,24 @@ authoritative source for module-by-module completion counts.
 
 ## Current state
 
-The translated `minion_top` path is intentionally integer-only for VPU behavior
-at the moment. `hw/ip/minion/rtl/minion_top.sv` preserves the original top-level
-core/VPU split, but the VPU instance is currently satisfied by
-`hw/ip/minion/rtl/null_vpu.sv` instead of a translated `vpu_top`.
+The translated `minion_top` default path now instantiates the real translated
+`hw/ip/minion/vpu/rtl/vpu_top.sv` when `VpuEn=1` (the default), preserving the
+original top-level core/VPU split. The top-level smoke and cosim collateral now
+exercise VPU debug/fetch stimulus and compare against the original real-VPU
+`minion_top`.
 
-`null_vpu` is a bring-up helper, not a CORE-ET translation target. It keeps the
-minion-side VPU boundary connected while failing closed for non-integer work:
-VPU-facing outputs are idle where possible, FP/VPU/ML operations that reach the
-boundary are reported as illegal, and debug data is tied to benign values. This
-is useful for scalar Minion integration and for proving that the shell does not
-hang when the VPU subtree is absent, but it is not original-equivalent VPU
-behavior.
+`null_vpu` remains available only behind `VpuEn=0`. It is a bring-up helper, not
+a CORE-ET translation target. It keeps the minion-side VPU boundary connected
+while failing closed for non-integer work: VPU-facing outputs are idle where
+possible, FP/VPU/ML operations that reach the boundary are reported as illegal,
+and debug data is tied to benign values. This is useful for scalar Minion
+integration and for proving that the shell does not hang when the VPU subtree is
+intentionally absent, but it is not original-equivalent VPU behavior.
 
-The bottom-up VPU subtree under `hw/ip/minion/vpu/` already contains many
-translated and verified leaves. The missing dependency is not the final shell
-wrapper alone: a full original-equivalent `standalone_minion` depends first on a
-real translated `vpu_top` being integrated into `minion_top` and verified there.
-The current `minion_top` cosim is therefore an integer-only integration check;
-it should not be treated as evidence that full VPU/FP/tensor behavior has been
-translated.
+The bottom-up VPU subtree under `hw/ip/minion/vpu/` has standalone closures for
+the translated real `vpu_top` path and is now integrated into `minion_top`. The
+remaining dependency for a full original-equivalent standalone shell is the
+final `standalone_minion` wrapper and its own unit/cosim collateral.
 
 ## Dependency graph
 
@@ -40,22 +38,23 @@ VPU top-half RTL import into hw/ip/minion/vpu/
 standalone VPU unit tests and RTL cosims
         |
         v
-real vpu_top integrated into minion_top
+real vpu_top integrated into minion_top          [done]
         |
         v
-full-VPU minion_top unit tests and RTL cosim
+full-VPU minion_top unit tests and RTL cosim     [done for top-level outputs]
         |
         v
-standalone_minion wrapper RTL
+standalone_minion wrapper RTL                    [next]
         |
         v
 standalone_minion unit tests and RTL cosim
 ```
 
 The standalone shell modules that are independent of the VPU can continue to be
-translated and verified in parallel. The final `standalone_minion` wrapper,
-however, is blocked from being original-equivalent until the `minion_top` it
-instantiates is no longer backed by `null_vpu` for VPU behavior.
+translated and verified in parallel. The final `standalone_minion` wrapper should
+now instantiate the real-VPU default `minion_top`; it must not use the
+intentional `VpuEn=0`/`null_vpu` configuration as evidence of original-equivalent
+VPU behavior.
 
 ## Safe work order
 
@@ -95,18 +94,17 @@ instantiates is no longer backed by `null_vpu` for VPU behavior.
    `dv/rtlcosim/coverage/`, and `STATUS.md` must reflect the exact test and
    cosim counts.
 
-7. **Replace `null_vpu` in `minion_top` with the real `vpu_top`.**
-   Only after `vpu_top` has standalone coverage should `minion_top` be changed
-   to instantiate it. The `minion_top` unit tests and cosim must then expand
-   beyond integer-only stimulus to exercise VPU/FP/tensor paths, DCache/VPU
-   sidebands, debug monitor paths, and kill/replay interactions while comparing
-   all top-level outputs.
+7. **Replace `null_vpu` in `minion_top` with the real `vpu_top`. — Done.**
+   The default `VpuEn=1` path instantiates the translated real `vpu_top`; the
+   `VpuEn=0` path intentionally preserves `null_vpu` for scalar-only bring-up.
+   The `minion_top` unit tests and cosim now expand beyond integer-only stimulus
+   to exercise VPU fetch/debug behavior while comparing all top-level outputs.
 
 8. **Add the final `standalone_minion` wrapper.**
-   The final wrapper should be translated and cosimmed only after the real-VPU
-   `minion_top` path is verified. Otherwise the wrapper would only prove the
-   scalar/null-VPU shell, not full original-equivalent standalone Minion
-   behavior.
+   The final wrapper should be translated and cosimmed after the real-VPU
+   `minion_top` path. It should use the default real-VPU configuration; using
+   `VpuEn=0` would only prove the scalar/null-VPU shell, not full
+   original-equivalent standalone Minion behavior.
 
 ## Completion gates
 
@@ -117,9 +115,9 @@ completion gates are:
 |------|-------------------|
 | VPU top-half imported | RTL follows target package/primitive policy and does not regress existing VPU leaf tests/cosims |
 | VPU top-half verified | Every imported VPU module has standalone unit tests, standalone RTL cosim, Makefile coverage, and `STATUS.md` counts |
-| Real-VPU `minion_top` | `minion_top` instantiates translated `vpu_top`, no longer relies on `null_vpu` for VPU behavior, and has full-path unit/cosim coverage |
+| Real-VPU `minion_top` | Done for top-level integration: default `minion_top` instantiates translated `vpu_top`, keeps `null_vpu` only behind `VpuEn=0`, and has real-VPU unit/cosim coverage |
 | `standalone_minion` complete | The shell instantiates the real-VPU `minion_top`, all shell outputs are compared in cosim, and status/coverage are updated |
 
-Until the real-VPU `minion_top` gate is complete, documentation and status
-entries should describe the top-level path as integer-only or null-VPU-backed
-for VPU behavior.
+After the real-VPU `minion_top` gate, documentation and status entries should
+describe the top-level default path as real-VPU-backed and reserve
+`null_vpu`/integer-only wording for the intentional `VpuEn=0` configuration.
