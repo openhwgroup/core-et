@@ -503,6 +503,7 @@ module intpipe_csr_file
    // ttype, maskmax), etc.  For identity-cast types the _pre is just recast.
    ////////////////////////////////////////////////////////////////////////////////
 
+   /* verilator lint_off UNOPTFLAT */  // Cleaned CSR register views are fed from generated _pre flops and reused by read/decode helpers; full-core flattening reports false cycles through the staged CSR/dcache replay cone.
    // ── NON_SHARED (per-thread) typed registers ──
    always_comb reg_fcsr[0]            = write_fcsr_non_reserved(reg_fcsr_pre[0]);
    always_comb reg_fcsr[1]            = write_fcsr_non_reserved(reg_fcsr_pre[1]);
@@ -565,6 +566,7 @@ module intpipe_csr_file
    always_comb reg_satp               = write_satp_non_reserved(reg_satp_pre);
    always_comb reg_matp               = write_matp_non_reserved(reg_matp_pre);
    always_comb reg_menable_shadows    = menable_shadows_t'(reg_menable_shadows_pre);
+   /* verilator lint_on UNOPTFLAT */
 
    ////////////////////////////////////////////////////////////////////////////////
    // CSR ADDRESS DECODING + READ

@@ -76,7 +76,9 @@ module core_top
   output vpu_ctrl_sigs_t                                     id_vpu_decoder_sigs_o,
   output minion_vpu_ex_req                                   ex_vpu_req_o,
   output logic                                               tag_vpu_kill_o,
+  /* verilator lint_off UNOPTFLAT */  // Full-core lint flattens the preserved VPU kill path through dcache replay feedback and reports a false integrated cycle.
   output logic                                               mem_vpu_kill_o,
+  /* verilator lint_on UNOPTFLAT */
   output logic                                               wb_vpu_kill_o,
   output core_vpu_ctrl                                       f0_vpu_ctrl_o,
 
@@ -167,7 +169,9 @@ module core_top
   logic [NrThreads-1:0]                                 id_core_fe_req_valid;
   minion_fe_req [NrThreads-1:0]                         id_core_fe_req_intpipe;
   fe_req_t [NrThreads-1:0]                              id_core_fe_req_frontend;
+  /* verilator lint_off UNOPTFLAT */  // Frontend ready is the original intpipe backpressure return path; the loop reported in full-core lint is cut by stage state in the translated pipeline.
   logic                                                 id_core_fe_resp_ready;
+  /* verilator lint_on UNOPTFLAT */
   logic                                                 id_fe_core_resp_valid;
   logic                                                 id_fe_core_resp_thread_id;
   fe_core_resp_t                                        id_fe_core_resp_frontend;

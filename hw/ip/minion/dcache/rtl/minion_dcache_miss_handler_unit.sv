@@ -315,6 +315,7 @@ module minion_dcache_miss_handler_unit
     end
   endgenerate
 
+  /* verilator lint_off SYNCASYNCNET */  // rst_ni intentionally preserves this wrapper flop's original synchronous reset timing while child miss handlers use the same reset asynchronously.
   always_ff @(posedge clk_i) begin
     if (!rst_ni) begin
       force_ba_rptr_o <= 1'b0;
@@ -322,6 +323,7 @@ module minion_dcache_miss_handler_unit
       force_ba_rptr_o <= |mh_force_ba_rptr_next;
     end
   end
+  /* verilator lint_on SYNCASYNCNET */
 
   always_comb begin
     force_ba_rptr_qual_o = |mh_force_ba_rptr_qual;

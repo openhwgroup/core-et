@@ -230,6 +230,7 @@ logic                           use_mul_op_f0a_h;
 
 assign c0_ctrl_en_exa_h = in_valid_exa_h & !use_prev_sigs_exa_h;
 
+/* verilator lint_off SYNCASYNCNET */  // reset is the original TXFMA active-high reset; this timing pipeline keeps its synchronous reset while parent blocks also use reset asynchronously.
 always_ff @(posedge clock) begin
   if (reset) begin
     ctrl_valid_f0a_h <= 1'b0;
@@ -253,6 +254,7 @@ always_ff @(posedge clock) begin
     trans_exp_fma2_exc_f0a_h <= trans_exp_fma2_exc_exa_h;
   end
 end
+/* verilator lint_on SYNCASYNCNET */
 
 
 //======================================================================================
