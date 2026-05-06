@@ -86,23 +86,23 @@ VPU-only types and datapath blocks that sit behind that boundary.
 | `vpu_ml` | `rtl/vpu_ml.sv` | `vpu_ml.v` | Done |
 | `vpu_ctrl` | `rtl/vpu_ctrl.sv` | `vpu_ctrl.v` | Done |
 | `vpu_lane` | `rtl/vpu_lane.sv` | `vpu_lane.v` | Done |
-| `vpu_top` | `rtl/vpu_top.sv` | `vpu_top.v` | Done (standalone VPU-local DV/cosim; not connected to `minion_top` yet) |
+| `vpu_top` | `rtl/vpu_top.sv` | `vpu_top.v` | Done (standalone VPU-local DV/cosim plus default `minion_top` integration) |
 
-The remaining VPU top-half integration RTL is now present locally. The current
-standalone closure covers `vpu_tensorreduce`, `vpu_tensorfma`,
-`vpu_tensorquant`, `vpu_ml`, both real and fake `vpu_txfma_trans_top`
-configurations, the standalone TXFMA control/fraction subtops `txfmactl_top`
-and `txfmafrac_top`, plus the `vpu_ctrl`, `vpu_lane`, and `vpu_top`
-integration modules. The real `vpu_top` is still not connected to `minion_top`;
-that replacement remains a later integration step after the standalone VPU-local
-closure.
+The VPU top-half integration RTL is present locally and the default translated
+`minion_top` path now instantiates the real `vpu_top`. The current standalone
+closure covers `vpu_tensorreduce`, `vpu_tensorfma`, `vpu_tensorquant`, `vpu_ml`,
+both real and fake `vpu_txfma_trans_top` configurations, the standalone TXFMA
+control/fraction subtops `txfmactl_top` and `txfmafrac_top`, plus the
+`vpu_ctrl`, `vpu_lane`, and `vpu_top` integration modules. The optional
+integer-only `null_vpu` remains only behind the non-default `minion_top.VpuEn=0`
+configuration and is not original-equivalent VPU behavior.
 
 ## What lives here
 
 - internal VPU-only structs and enums that should not stay in `minion_pkg`
 - VPU leaf datapath blocks
-- later, the integration blocks `vpu_ml`, `vpu_trans`, `vpu_lane`, `vpu_ctrl`,
-  and `vpu_top`
+- integrated blocks `vpu_ml`, `vpu_trans`, `vpu_lane`, `vpu_ctrl`, and
+  `vpu_top`
 
 The shared minion-facing request/response bundles remain in `minion_pkg`
 because they are already used by `core_top`, `minion_top`, and `null_vpu`.
@@ -114,12 +114,14 @@ place; this stage does not overwrite the target-specific VPU RF/MMI policy.
 
 ## Porting strategy
 
-The original VPU tree is large and deeply pipelined. The translation order is:
+The original VPU tree is large and deeply pipelined. The completed translation
+order was:
 
 1. extract internal types to `vpu_pkg`
 2. port leaf modules with standalone unit tests and standalone cosims
 3. port integration modules on top of those leaves
-4. replace `null_vpu` in `minion_top` with a faithful translated `vpu_top`
+4. integrate the faithful translated `vpu_top` into the default `minion_top`
+   path while keeping `null_vpu` only as the explicit `VpuEn=0` bring-up helper
 
 ## Configuration parameters
 
@@ -808,4 +810,4 @@ No functional changes are intended except for the documented fake-TXFMA port-con
 | `vpu_ml` | 26 checks | 602,896 comparisons |
 | `vpu_ctrl` | 25 checks | 2,019,808 comparisons |
 | `vpu_lane` | 16 checks | 780,108 comparisons |
-| `vpu_top` | 19 checks | 4,823,376 comparisons |
+| `vpu_top` | 53 checks | 4,947,579 comparisons |

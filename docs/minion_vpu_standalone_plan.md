@@ -31,8 +31,8 @@ Current verification evidence from `STATUS.md`:
 
 | Integration point | Unit DV | RTL cosim | Status |
 |-------------------|---------|-----------|--------|
-| `minion_top` | 17 smoke checks + 5 `VpuEn=0` checks + 17 debug-APB-off checks + 15 debug-off checks + 9 execution checks | 118,468 comparisons | Done; default `VpuEn=1` uses translated real `vpu_top` |
-| `vpu_top` | 19 checks | 4,823,376 comparisons | Done; standalone VPU-local DV/cosim plus real default `minion_top` integration |
+| `minion_top` | 17 smoke checks + 5 `VpuEn=0` checks + 17 debug-APB-off checks + 15 debug-off checks + 9 execution checks | 235,284 comparisons | Done; default `VpuEn=1` uses translated real `vpu_top` |
+| `vpu_top` | 53 checks | 4,947,579 comparisons | Done; standalone VPU-local DV/cosim plus real default `minion_top` integration |
 | `standalone_minion` | 19 checks | 1,765,940 comparisons | Done; all standalone outputs compared cycle-by-cycle |
 
 ## Dependency graph
@@ -117,7 +117,7 @@ The staged completion gates are now closed:
 |------|-------------------|---------------|
 | VPU top-half imported | RTL follows target package/primitive policy and does not regress existing VPU leaf tests/cosims | Done |
 | VPU top-half verified | Imported VPU modules have standalone unit tests, standalone RTL cosim, Makefile coverage, and `STATUS.md` counts | Done for the integrated real-VPU path |
-| Real-VPU `minion_top` | Default `minion_top` instantiates translated `vpu_top`, keeps `null_vpu` only behind `VpuEn=0`, and has real-VPU unit/cosim coverage | Done; 118,468 cosim comparisons |
+| Real-VPU `minion_top` | Default `minion_top` instantiates translated `vpu_top`, keeps `null_vpu` only behind `VpuEn=0`, and has real-VPU unit/cosim coverage | Done; 235,284 cosim comparisons |
 | `standalone_minion` complete | The shell instantiates the real-VPU `minion_top`, all shell outputs are compared in cosim, and status/coverage are updated | Done; 19 checks and 1,765,940 cosim comparisons |
 
 Documentation and status entries should describe the top-level default path as
