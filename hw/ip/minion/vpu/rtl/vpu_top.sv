@@ -21,13 +21,13 @@ module vpu_top
     input  logic                                     clock,
     input  logic                                     reset,
     // Control signals coming from core
-    input  minion_vpu_id_req                         id_core_req,
-    input  vpu_ctrl_sigs_t                           id_vpu_decoder_sigs,
-    input  minion_vpu_ex_req                         ex_core_req,
+    input  minion_pkg::minion_vpu_id_req             id_core_req,
+    input  minion_pkg::vpu_ctrl_sigs_t               id_vpu_decoder_sigs,
+    input  minion_pkg::minion_vpu_ex_req             ex_core_req,
     input  logic                                     f2_core_kill,
     input  logic                                     f3_core_kill,
     input  logic                                     f4_core_kill,
-    input  core_vpu_ctrl                             f0_core_ctrl,
+    input  minion_pkg::core_vpu_ctrl                 f0_core_ctrl,
     // Chicken_bits
     input  logic                                     chicken_bit_vpulane,
     input  logic                                     chicken_bit_vputima,
@@ -36,20 +36,20 @@ module vpu_top
     input  logic [MINION_MEM_CTRL_BITS-1:0]         mem_ctrl_override,
     // WB Dcache response
     input  logic                                     wb_dcache_resp_valid,
-    input  dcache_vpu_resp                           wb_dcache_resp,
+    input  minion_pkg::dcache_vpu_resp               wb_dcache_resp,
     // DCache SRAM direct port
-    output vpu_dcache_ctrl                           dcache_ctrl,
-    input  dcache_vpu_scp_resp                       dcache_scp_resp,
+    output minion_pkg::vpu_dcache_ctrl               dcache_ctrl,
+    input  minion_pkg::dcache_vpu_scp_resp           dcache_scp_resp,
     input  logic [DCACHE_DATA_SIZE-1:0]                dcache_scp_data,
     input  logic [DCACHE_DATA_SIZE-1:0]                dcache_tenb_data,
     // Dcache reduce control
-    input  dcache_vpu_reduce_ctrl                    dcache_reduce_ctrl,
+    input  minion_pkg::dcache_vpu_reduce_ctrl        dcache_reduce_ctrl,
     // Control signals going to core
-    output vpu_minion_id_ctrl                        id_core_ctrl,
-    output vpu_minion_ex_ctrl                        ex_core_ctrl,
-    output vpu_minion_tag_ctrl                       f2_core_ctrl,
-    output vpu_minion_mem_ctrl                       f3_core_ctrl,
-    output vpu_minion_wb_ctrl                        wb_core_ctrl,
+    output vpu_defs_pkg::vpu_minion_id_ctrl          id_core_ctrl,
+    output minion_pkg::vpu_minion_ex_ctrl            ex_core_ctrl,
+    output minion_pkg::vpu_minion_tag_ctrl           f2_core_ctrl,
+    output minion_pkg::vpu_minion_mem_ctrl           f3_core_ctrl,
+    output minion_pkg::vpu_minion_wb_ctrl            wb_core_ctrl,
     // Events for performance counters
     output logic [CSR_NR_EVENTS_VPU-1:0]            io_events,
     // Signals going to debug monitor
@@ -87,8 +87,8 @@ logic [FREG_ADDR_SIZE-1:0]                               ex_regfile_raddr1;
 logic [FREG_ADDR_SIZE-1:0]                               ex_regfile_raddr2;
 logic [FREG_ADDR_SIZE-1:0]                               ex_regfile_raddr3;
 logic [VPU_LANE_NUM-1:0][1:0][VPU_DATA_S_SZ-1:0]     ex_regfile_rdata_bypass;
-vpu_input_t                                            ex_req;
-vpu_bypass_force_ctrl                                  ex_bypass_force_ctrl;
+vpu_pkg::vpu_input_t                                   ex_req;
+vpu_pkg::vpu_bypass_force_ctrl_t                       ex_bypass_force_ctrl;
 logic                                                  ex_rom_valid;
 logic                                                  f2_tima_ren3;
 logic [VPU_TENC_ADDR_MSB:1]                                 f2_tima_tenc_raddr;

@@ -89,6 +89,7 @@ TESTS := bypass \
          vpu_ml \
          vpu_lane \
          vpu_ctrl \
+         vpu_top \
          sh_sw \
          trans_top_default \
          trans_top_extra_trans \
@@ -404,6 +405,38 @@ vpu_ctrl_SRCS := $(COMMON_RTL) \
                  $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_ctrl.sv \
                  $(CURDIR)/vpu_ctrl_tb.sv \
                  $(CURDIR)/vpu_ctrl_test.cc
+
+vpu_top_TOP := vpu_top_tb
+vpu_top_SRCS := $(COMMON_RTL) \
+                $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_pkg.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_defs_pkg.sv \
+                $(PRIMS) \
+                $(wildcard $(REPO_ROOT)/hw/ip/minion/vpu/rtl/trans_*_rom_case_*.sv) \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/trans_top.sv \
+                $(TXFMA_REAL_RTL) \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_txfma_trans_top.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_rf.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_bypass.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/tima_adder.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/tima_top.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorb_rf.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorc_rf.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_lane_tima.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_sh_sw.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorfma.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorreduce.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorquant.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_ml.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_trans.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_uinst_decoder.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensora_rf.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensortmp_rf.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_mask.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_ctrl.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_lane.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_top.sv \
+                $(CURDIR)/vpu_top_tb.sv \
+                $(CURDIR)/vpu_top_test.cc
 
 sh_sw_TOP := vpu_sh_sw_tb
 sh_sw_SRCS := $(COMMON_RTL) \

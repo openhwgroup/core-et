@@ -86,15 +86,16 @@ VPU-only types and datapath blocks that sit behind that boundary.
 | `vpu_ml` | `rtl/vpu_ml.sv` | `vpu_ml.v` | Done |
 | `vpu_ctrl` | `rtl/vpu_ctrl.sv` | `vpu_ctrl.v` | Done |
 | `vpu_lane` | `rtl/vpu_lane.sv` | `vpu_lane.v` | Done |
-| `vpu_top` | `rtl/vpu_top.sv` | `vpu_top.v` | RTL present for VPU-local lint only; not connected to `minion_top` yet |
+| `vpu_top` | `rtl/vpu_top.sv` | `vpu_top.v` | Done (standalone VPU-local DV/cosim; not connected to `minion_top` yet) |
 
 The remaining VPU top-half integration RTL is now present locally. The current
 standalone closure covers `vpu_tensorreduce`, `vpu_tensorfma`,
 `vpu_tensorquant`, `vpu_ml`, both real and fake `vpu_txfma_trans_top`
 configurations, the standalone TXFMA control/fraction subtops `txfmactl_top`
-and `txfmafrac_top`, plus the `vpu_ctrl` and `vpu_lane` integration modules.
-`vpu_top` is parsed by VPU-local lint, but still needs standalone DV/cosim
-closure before the real `vpu_top` can replace `null_vpu` in `minion_top`.
+and `txfmafrac_top`, plus the `vpu_ctrl`, `vpu_lane`, and `vpu_top`
+integration modules. The real `vpu_top` is still not connected to `minion_top`;
+that replacement remains a later integration step after the standalone VPU-local
+closure.
 
 ## What lives here
 
@@ -736,11 +737,17 @@ the standalone `vpu_uinst_decoder`, `trans_top`, and `vpu_trans` extra-trans
 variants; the `vpu_ctrl` all-output cosim keeps the original default
 `ENABLE_EXTRA_TRANS`-off configuration.
 
-### Top integration pending standalone closure
+### Top integration standalone closure
 
-`vpu_top` is present to keep the translated VPU top-half parseable and ready for
-the next closure job. It is not yet marked done because it still needs standalone
-unit tests and standalone all-output cosim against the original.
+`vpu_top` integrates the translated VPU control and lane blocks behind the
+minion-facing request/control boundary. Its standalone unit test covers
+reset/default behavior, decoded short-path/TXFMA/ROM/TIMA paths, dcache response
+propagation, kill/chicken-bit controls, thread/debug fields, and output sanity.
+The standalone cosim drives every aggregate input bit both low and high across
+directed and random phases and compares all 10 declared top-level outputs against
+`vpu_top.v` on every sampled cycle. The translated `vpu_top` remains disconnected
+from `minion_top`; the integer-only `null_vpu` substitution is left unchanged for
+a later top-level integration job.
 
 ## Differences from original
 
@@ -801,3 +808,4 @@ No functional changes are intended except for the documented fake-TXFMA port-con
 | `vpu_ml` | 26 checks | 602,896 comparisons |
 | `vpu_ctrl` | 25 checks | 2,019,808 comparisons |
 | `vpu_lane` | 16 checks | 780,108 comparisons |
+| `vpu_top` | 19 checks | 4,823,376 comparisons |
