@@ -69,7 +69,7 @@ module cosim_vpu_tensorreduce_tb (
     .load_ctrl              (load_ctrl_orig),
     .reduce_inst_en_next    (orig_reduce_inst_en_next_o),
     .reduce_inst_next       (orig_reduce_inst_next_o),
-    .vpu_tensorreduce_orig_debug (orig_vpu_tensorreduce_debug_o)
+    .vpu_tensorreduce_debug      (orig_vpu_tensorreduce_debug_o)
   );
 
   vpu_tensorreduce u_new (

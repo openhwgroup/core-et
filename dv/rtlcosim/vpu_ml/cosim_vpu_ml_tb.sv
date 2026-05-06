@@ -184,9 +184,9 @@ module cosim_vpu_ml_tb (
     .f3_tima_tenc_waddr          (orig_f3_tima_tenc_waddr_o),
     .f3_tima_rf_wen              (orig_f3_tima_rf_wen_o),
     .io_events_wait_tenb         (orig_io_events_wait_tenb_o),
-    .vpu_tensorquant_orig_debug  (orig_vpu_tensorquant_debug_o),
-    .vpu_tensorreduce_orig_debug (orig_vpu_tensorreduce_debug_o),
-    .vpu_tensorfma_orig_debug    (orig_vpu_tensorfma_debug_o)
+    .vpu_tensorquant_debug       (orig_vpu_tensorquant_debug_o),
+    .vpu_tensorreduce_debug      (orig_vpu_tensorreduce_debug_o),
+    .vpu_tensorfma_debug         (orig_vpu_tensorfma_debug_o)
   );
 
   vpu_ml u_new (

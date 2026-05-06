@@ -149,7 +149,7 @@ module cosim_vpu_tensorfma_tb (
     .f3_tima_tenc_waddr          (orig_f3_tima_tenc_waddr_o),
     .f3_tima_rf_wen              (orig_f3_tima_rf_wen_o),
     .io_events_wait_tenb         (orig_io_events_wait_tenb_o),
-    .vpu_tensorfma_orig_debug    (orig_vpu_tensorfma_debug_o)
+    .vpu_tensorfma_debug         (orig_vpu_tensorfma_debug_o)
   );
 
   vpu_tensorfma u_new (

@@ -66,7 +66,7 @@ module cosim_vpu_tensorquant_tb (
     .quant_tena_en            (orig_quant_tena_en_o),
     .ex_ren                   (orig_ex_ren_o),
     .ex_rdata                 (orig_ex_rdata_o),
-    .vpu_tensorquant_orig_debug (orig_vpu_tensorquant_debug_o)
+    .vpu_tensorquant_debug      (orig_vpu_tensorquant_debug_o)
   );
 
   vpu_tensorquant u_new (
