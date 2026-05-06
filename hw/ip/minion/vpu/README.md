@@ -12,6 +12,7 @@ VPU-only types and datapath blocks that sit behind that boundary.
 | Module | File | Original | Status |
 |--------|------|----------|--------|
 | `vpu_pkg` | `rtl/vpu_pkg.sv` | `vpu_types.vh` + `trans_types.vh` internal types/constants | Done |
+| `vpu_defs_pkg` | `rtl/vpu_defs_pkg.sv` | selected constants/aliases from the original VPU include stack | RTL present for TXFMA top-half support |
 | `vpu_bypass` | `rtl/vpu_bypass.sv` | `vpu_bypass.v` | Done |
 | `vpu_mask` | `rtl/vpu_mask.sv` | `vpu_mask.v` | Done |
 | `vpu_rf` | `rtl/vpu_rf.sv` | `vpu_rf.v` | Done |
@@ -24,6 +25,34 @@ VPU-only types and datapath blocks that sit behind that boundary.
 | `txfma_booth_ppg_32r4` | `rtl/txfma_booth_ppg_32r4.sv` | `txfma_booth_ppg_32r4.v` | Done |
 | `txfma_wallace1` | `rtl/txfma_wallace1.sv` | `txfma_wallace1.v` | Done |
 | `txfma_wallace2` | `rtl/txfma_wallace2.sv` | `txfma_wallace2.v` | Done |
+| `txfma_c0` | `rtl/txfma_c0.sv` | `txfma_c0.v` | RTL present, covered through `txfma_top`/`txfmaexp_top` cosim |
+| `txfma_c1` | `rtl/txfma_c1.sv` | `txfma_c1.v` | RTL present, covered through `txfma_top`/`txfmaexp_top` cosim |
+| `txfma_c2` | `rtl/txfma_c2.sv` | `txfma_c2.v` | RTL present, covered through `txfma_top`/`txfmaexp_top` cosim |
+| `txfma_c3` | `rtl/txfma_c3.sv` | `txfma_c3.v` | RTL present, covered through `txfma_top`/`txfmaexp_top` cosim |
+| `txfma_c4` | `rtl/txfma_c4.sv` | `txfma_c4.v` | RTL present, covered through `txfma_top`/`txfmaexp_top` cosim |
+| `txfma_c5` | `rtl/txfma_c5.sv` | `txfma_c5.v` | RTL present, covered through `txfma_top`/`txfmaexp_top` cosim |
+| `txfma_c6` | `rtl/txfma_c6.sv` | `txfma_c6.v` | RTL present, covered through `txfma_top`/`txfmaexp_top` cosim |
+| `txfma_e1` | `rtl/txfma_e1.sv` | `txfma_e1.v` | RTL present, covered through `txfmaexp_top` cosim |
+| `txfma_e2` | `rtl/txfma_e2.sv` | `txfma_e2.v` | RTL present, covered through `txfmaexp_top` cosim |
+| `txfma_e4` | `rtl/txfma_e4.sv` | `txfma_e4.v` | RTL present, covered through `txfmaexp_top` cosim |
+| `txfma_e5` | `rtl/txfma_e5.sv` | `txfma_e5.v` | RTL present, covered through `txfmaexp_top` cosim |
+| `txfma_e6` | `rtl/txfma_e6.sv` | `txfma_e6.v` | RTL present, covered through `txfmaexp_top` cosim |
+| `txfma_ediff_opdorder_logic` | `rtl/txfma_ediff_opdorder_logic.sv` | `txfma_ediff_opdorder_logic.v` | RTL present, covered through `txfmaexp_top` cosim |
+| `txfma_exp_special_detect` | `rtl/txfma_exp_special_detect.sv` | `txfma_exp_special_detect.v` | RTL present, standalone DV/cosim pending |
+| `txfma_f0` | `rtl/txfma_f0.sv` | `txfma_f0.v` | RTL present, covered through `txfma_top` cosim |
+| `txfma_f1` | `rtl/txfma_f1.sv` | `txfma_f1.v` | RTL present, covered through `txfma_top` cosim |
+| `txfma_f2` | `rtl/txfma_f2.sv` | `txfma_f2.v` | RTL present, covered through `txfma_top` cosim |
+| `txfma_f3` | `rtl/txfma_f3.sv` | `txfma_f3.v` | RTL present, covered through `txfma_top` cosim |
+| `txfma_f4` | `rtl/txfma_f4.sv` | `txfma_f4.v` | RTL present, covered through `txfma_top` cosim |
+| `txfma_f5` | `rtl/txfma_f5.sv` | `txfma_f5.v` | RTL present, covered through `txfma_top` cosim |
+| `txfma_f6` | `rtl/txfma_f6.sv` | `txfma_f6.v` | RTL present, covered through `txfma_top` cosim |
+| `txfma_frac_zero_detect` | `rtl/txfma_frac_zero_detect.sv` | `txfma_frac_zero_detect.v` | RTL present, covered through `txfma_top` cosim |
+| `txfma_rnd_adder` | `rtl/txfma_rnd_adder.sv` | `txfma_rnd_adder.v` | RTL present, covered through `txfma_top` cosim |
+| `txfmactl_top` | `rtl/txfmactl_top.sv` | `txfmactl_top.v` | Done |
+| `txfmaexp_top` | `rtl/txfmaexp_top.sv` | `txfmaexp_top.v` | Done |
+| `txfmafrac_top` | `rtl/txfmafrac_top.sv` | `txfmafrac_top.v` | Done |
+| `txfma_top` | `rtl/txfma_top.sv` | `txfma_top.v` | Done |
+| `txfma_top_fake` | `rtl/txfma_top_fake.sv` | `txfma_top_fake.v` | Done |
 | `txfma_lxd` | `rtl/txfma_lxd.sv` | `txfma_lxd.v` | Done |
 | `txfma_trz` | `rtl/txfma_trz.sv` | `txfma_trz.v` | Done |
 | `txfma_trz2` | `rtl/txfma_trz2.sv` | `txfma_trz2.v` | Done |
@@ -50,27 +79,61 @@ VPU-only types and datapath blocks that sit behind that boundary.
 | `vpu_tensortmp_rf` | `rtl/vpu_tensortmp_rf.sv` | `vpu_tensortmp_rf.v` | Done |
 | `vpu_lane_tima` | `rtl/vpu_lane_tima.sv` | `vpu_lane_tima.v` | Done |
 | `vpu_uinst_decoder` | `rtl/vpu_uinst_decoder.sv` | `vpu_uinst_decoder.v` | Done |
+| `vpu_tensorreduce` | `rtl/vpu_tensorreduce.sv` | `vpu_tensorreduce.v` | Done |
+| `vpu_txfma_trans_top` | `rtl/vpu_txfma_trans_top.sv` | `vpu_txfma_trans_top.v` | Done (`UseFakeTxfma=0/1`) |
+| `vpu_tensorfma` | `rtl/vpu_tensorfma.sv` | `vpu_tensorfma.v` | Done |
+| `vpu_tensorquant` | `rtl/vpu_tensorquant.sv` | `vpu_tensorquant.v` | Done |
+| `vpu_ml` | `rtl/vpu_ml.sv` | `vpu_ml.v` | Done |
+| `vpu_ctrl` | `rtl/vpu_ctrl.sv` | `vpu_ctrl.v` | Done |
+| `vpu_lane` | `rtl/vpu_lane.sv` | `vpu_lane.v` | Done |
+| `vpu_top` | `rtl/vpu_top.sv` | `vpu_top.v` | Done (standalone VPU-local DV/cosim plus default `minion_top` integration) |
 
-Everything else in the original VPU tree is still pending.
+The VPU top-half integration RTL is present locally and the default translated
+`minion_top` path now instantiates the real `vpu_top`. The current standalone
+closure covers `vpu_tensorreduce`, `vpu_tensorfma`, `vpu_tensorquant`, `vpu_ml`,
+both real and fake `vpu_txfma_trans_top` configurations, the standalone TXFMA
+control/fraction subtops `txfmactl_top` and `txfmafrac_top`, plus the
+`vpu_ctrl`, `vpu_lane`, and `vpu_top` integration modules. The optional
+integer-only `null_vpu` remains only behind the non-default `minion_top.VpuEn=0`
+configuration and is not original-equivalent VPU behavior.
 
 ## What lives here
 
 - internal VPU-only structs and enums that should not stay in `minion_pkg`
 - VPU leaf datapath blocks
-- later, the integration blocks `vpu_ml`, `vpu_trans`, `vpu_lane`, `vpu_ctrl`,
-  and `vpu_top`
+- integrated blocks `vpu_ml`, `vpu_trans`, `vpu_lane`, `vpu_ctrl`, and
+  `vpu_top`
 
 The shared minion-facing request/response bundles remain in `minion_pkg`
 because they are already used by `core_top`, `minion_top`, and `null_vpu`.
 
+The imported TXFMA top-half RTL uses `vpu_defs_pkg` as a narrow compatibility
+package for constants and aliases that were originally spread through the global
+VPU include stack. The existing `vpu_pkg` MMI compatibility defaults remain in
+place; this stage does not overwrite the target-specific VPU RF/MMI policy.
+
 ## Porting strategy
 
-The original VPU tree is large and deeply pipelined. The translation order is:
+The original VPU tree is large and deeply pipelined. The completed translation
+order was:
 
 1. extract internal types to `vpu_pkg`
 2. port leaf modules with standalone unit tests and standalone cosims
 3. port integration modules on top of those leaves
-4. replace `null_vpu` in `minion_top` with a faithful translated `vpu_top`
+4. integrate the faithful translated `vpu_top` into the default `minion_top`
+   path while keeping `null_vpu` only as the explicit `VpuEn=0` bring-up helper
+
+## Configuration parameters
+
+The translated VPU keeps original feature and implementation knobs as explicit
+parameters/package defaults instead of synthesizable `` `ifdef `` gates.
+
+| Knob | Default | Used by | Meaning |
+|------|---------|---------|---------|
+| `EnableExtraTransDefault` | `0` | `trans_top`, `vpu_trans`, `vpu_uinst_decoder`, `vpu_ctrl` | Enables the extra transcendental RSQRT/SIN flow beyond the base RCP/LOG/EXP flow |
+| `UseFakeTxfmaDefault` | `0` | `vpu_txfma_trans_top`, `vpu_top` | Selects the translated fake-TXFMA model for verification |
+| `EnableRcg2Default` | `1` | `vpu_lane` | Enables the translated per-submodule clock-gating path in each lane |
+| `UseMmi*Default` | target-specific | VPU RF/TIMA/TXFMA leaves | Preserves the target's existing explicit MMI compatibility policy |
 
 ## Scripts
 
@@ -152,6 +215,14 @@ RTL-visible defaults for the original VPU feature / implementation knobs
 (`EnableExtraTrans`, MMI RF/TIMA/TXFMA selection, fake TXFMA, and `VPU_EN_RCG_2`)
 so translated modules do not need new preprocessor guards. The minion-facing
 VPU boundary types are intentionally not duplicated here.
+
+### `vpu_defs_pkg`
+
+`vpu_defs_pkg` carries TXFMA/top-half constants and compatibility aliases that
+were originally provided by the global VPU include stack. It imports no behavior;
+it only centralizes widths, instruction encodings, TXFMA control-bit positions,
+and aliases such as `vpu_minion_id_ctrl` and `reduce_tensorstore_control` that
+are needed by the translated top-half RTL.
 
 ### `vpu_bypass`
 
@@ -426,6 +497,45 @@ Ports:
 | Inputs | `in1_i`, `in2_i`, and `sub_op_i` form the original PS-side anticipator inputs |
 | Output | `lxd_o` returns the encoded leading distance used by the later TXFMA normalization logic |
 
+### TXFMA staged helpers (`txfma_c*`, `txfma_e*`, `txfma_f*`)
+
+The imported staged TXFMA helpers preserve the original split between control
+(`txfma_c0`..`txfma_c6`), exponent (`txfma_e1`, `txfma_e2`, `txfma_e4`,
+`txfma_e5`, `txfma_e6`), and fraction/result (`txfma_f0`..`txfma_f6`) pipeline
+logic. Smaller helpers such as `txfma_ediff_opdorder_logic`,
+`txfma_exp_special_detect`, `txfma_frac_zero_detect`, and `txfma_rnd_adder`
+keep the original leaf boundaries. Most of these are exercised through the
+imported TXFMA top cosims; `txfma_exp_special_detect` is imported for boundary
+completeness but still needs standalone DV/cosim coverage.
+
+### `txfmactl_top`, `txfmaexp_top`, and `txfmafrac_top`
+
+`txfmactl_top` owns the staged TXFMA control decode and valid/exception control
+pipe. `txfmaexp_top` owns the exponent-side difference, sticky, overflow, and
+underflow decisions. `txfmafrac_top` owns the fraction datapath, local clock-gating seams, and later
+rounding/normalization stages. All three top-level TXFMA subblocks now have
+standalone unit tests and all-output cosims in addition to parent `txfma_top`
+coverage.
+
+### `txfma_top`
+
+`txfma_top` ties the imported control, exponent, and fraction TXFMA subtrees
+together behind the original VPU lane request/response contract. It keeps the
+original active-high `reset` and `clock` names at this translated boundary
+because the surrounding imported TXFMA files are still mechanical top-half
+translations. The standalone unit test provides smoke checks, while the cosim
+compares data, exception flags, and compare-result outputs against the original
+real-TXFMA top.
+
+### `txfma_top_fake`
+
+`txfma_top_fake` is the legacy fake TXFMA model used for verification-only
+bring-up. The translated fake leaf intentionally uses the same
+`out_data_res`/`out_comp_res` port contract as `txfma_top`; `out_comp_res` is
+hardwired low. This intentionally diverges from the original fake leaf's older
+single-output port contract to avoid the original fake-branch elaboration bug
+tracked in [BUGS.md](BUGS.md).
+
 ### `tima_adder`
 
 `tima_adder` is the leaf integer adder used by the TIMA datapath. It is a
@@ -545,6 +655,102 @@ Behavior notes:
 | `SIN_P2` / `TRANS_ROM_SIN3_ID` | Only the packed `taylor` bit is updated; the other coefficient fields intentionally carry the previously selected response |
 | `EXP` | `exc` is re-sourced from `ex_txfma_exc_i` and carried through the original F2->F8 pipe |
 
+### `vpu_tensorreduce`
+
+`vpu_tensorreduce` sequences tensor reduce and tensor-store requests into the
+VPU pipeline. It preserves the original active-high reset, pending-register
+counter, sticky wait bits for scoreboard/TensorFMA/TensorQuant dependencies,
+and dcache-driven `send_reg` / `exec_op` instruction stuffing.
+
+Ports:
+
+| Port group | Description |
+|------------|-------------|
+| Request inputs | `reduce_start`, `tensorstore_start`, `tensorfma_start`, `tensorquant_start`, and packed `reduce_ctrl` select the new tensor operation |
+| Dependency inputs | `scoreboard_pend`, `tensorfma_pend`, and `tensorquant_pend` hold off reduce/store issue until older VPU writes clear |
+| Dcache control | `dcache_reduce_ctrl` advances send/execute/nothing actions from the dcache reduce unit |
+| Outputs | `enabled`, `reduce_wait`, packed load control, the next injected instruction, and debug status |
+
+### `vpu_txfma_trans_top`
+
+`vpu_txfma_trans_top` binds the transcendental ROM pipe to either the real
+seven-stage TXFMA or the translated fake-TXFMA model. The real and fake paths
+share the same parent-visible output contract in this repo; the fake path's
+original port-contract bug is documented in [BUGS.md](BUGS.md).
+
+Parameters:
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `UseFakeTxfma` | `vpu_pkg::UseFakeTxfmaDefault` (`0`) | Selects `txfma_top_fake` instead of the real `txfma_top` implementation |
+
+Ports:
+
+| Port group | Description |
+|------------|-------------|
+| System | Separate `clock_txfma`, `clock_trans_rom`, and active-high `reset` inputs preserve the original boundary |
+| EX inputs | `ex_rom_valid`, `ex_txfma_valid`, and packed `ex_in_bits` feed the ROM and TXFMA paths |
+| F8 outputs | `f8_txfma_res`, `f8_txfma_comp_res`, and two debug bits from the packed ROM response |
+
+### Tensor datapath integration blocks
+
+`vpu_tensorfma` sequences tensor FMA requests, scratchpad reads, tensor A/B load
+control, TIMA/TENC/TMP addressing, and TensorFMA instruction injection. Its
+standalone unit test covers hazard waiting, FP32/FP16/INT8 setup, convolution
+mask waiting, scratchpad fill sequencing, and tensor-temp/TIMA side effects; the
+standalone cosim compares every output against `vpu_tensorfma.v`.
+
+`vpu_tensorquant` translates TensorQuant transform lists into injected VPU
+instructions and scratchpad/TENA read controls. Its standalone unit test covers
+empty transform suppression, scoreboard/TensorFMA/TensorStore hazards,
+FCVT/ReLU/add/mul/saturation transforms, scratchpad availability waiting, and
+TENA/ex read pipelining; the standalone cosim compares every output against
+`vpu_tensorquant.v`.
+
+`vpu_ml` arbitrates the tensor FMA, TensorQuant, and tensor reduce/store child
+blocks. Its standalone unit test covers isolated TensorFMA, TensorQuant, reduce,
+tensorstore, and simultaneous-start paths plus dcache/control muxing; the
+standalone cosim compares every top-level output against `vpu_ml.v` while also
+building the original child modules.
+
+### Lane/control integration
+
+`vpu_lane` integrates the lane RF/bypass, short-path, TXFMA/trans, and TIMA
+children. Its standalone unit test covers reset/default behavior, RF
+read/write/bypass flow, short-path valid/clock-valid behavior, TXFMA/trans and
+ROM clock-valid paths, TIMA/tensor RF controls, and lane-local chicken-bit
+clock-enable inputs. The standalone cosim drives every aggregate input bit both
+low and high and compares all eight declared outputs against `vpu_lane.v`.
+
+`vpu_ctrl` integrates decode, scoreboard/stage control, mask, transpose/ML, and
+tensor child controls. Its standalone unit test covers reset/default behavior,
+normal decoded VPU instruction flow, register read/thread ID generation, swap
+variants, from-int propagation, short/TXFMA/ROM clock-valid paths, and dcache
+writeback response handling. The standalone cosim drives every aggregate input
+bit both low and high, including the TIMA/ML/kill/debug boundary fields, and
+compares all 85 declared outputs against `vpu_ctrl.v`.
+
+The lane/control cosims target the default translated configurations
+(`EnableRcg2=1`, `UseFakeTxfma=0`, `EnableExtraTrans=0`) to match the original
+standalone modules used here. `UseFakeTxfma=1` remains covered at the
+`vpu_txfma_trans_top` boundary because the original fake-TXFMA child has the
+documented port-contract bug noted below. `EnableExtraTrans=1` remains covered by
+the standalone `vpu_uinst_decoder`, `trans_top`, and `vpu_trans` extra-trans
+variants; the `vpu_ctrl` all-output cosim keeps the original default
+`ENABLE_EXTRA_TRANS`-off configuration.
+
+### Top integration standalone closure
+
+`vpu_top` integrates the translated VPU control and lane blocks behind the
+minion-facing request/control boundary. Its standalone unit test covers
+reset/default behavior, decoded short-path/TXFMA/ROM/TIMA paths, dcache response
+propagation, kill/chicken-bit controls, thread/debug fields, and output sanity.
+The standalone cosim drives every aggregate input bit both low and high across
+directed and random phases and compares all 10 declared top-level outputs against
+`vpu_top.v` on every sampled cycle. The translated `vpu_top` remains disconnected
+from `minion_top`; the integer-only `null_vpu` substitution is left unchanged for
+a later top-level integration job.
+
 ## Differences from original
 
 | Aspect | Original | Reimplementation | Rationale |
@@ -552,10 +758,12 @@ Behavior notes:
 | Internal types | `include "soc.vh"` | `vpu_pkg` + `minion_pkg` packages | repo-native package ownership |
 | Naming | `clock`, `ex_req_lane`, `f8_wdata` | `clk_i`, `ex_req_lane_i`, `f8_wdata_o` | lowRISC convention |
 | FF macros | `EN_FF` | explicit `always_ff` | standard SV |
-| Functional `ifdef`s | `` `ifdef ENABLE_EXTRA_TRANS `` / `MINION_USE_MMI_VPU_RF` | explicit RTL-visible parameters / package defaults | repo policy: functional feature selection must not stay in the preprocessor |
-| Reset | none | none | exact original behavior preserved |
+| Functional `ifdef`s | `` `ifdef ENABLE_EXTRA_TRANS `` / original MMI selection defines | explicit RTL-visible parameters / package defaults, while the target keeps its VPU RF/MMI compatibility knobs | repo policy: functional feature selection must not stay in the preprocessor |
+| TXFMA clock gates | `et_clk_gate` in the fraction/top pipeline | `prim_clk_gate` | technology-swappable clock-gating seam |
+| Fake TXFMA parent/leaf output contract | `txfma_top_fake` has only `out_data`; original fake `vpu_txfma_trans_top` branch tries to connect `out_data_res`/`out_comp_res` | translated `txfma_top_fake` and `vpu_txfma_trans_top` expose a consistent `out_data_res` plus hardwired-low compare result contract | intentional divergence for a documented original repository bug; see [BUGS.md](BUGS.md) |
+| Reset | VPU top-half modules use active-high `reset` where present | preserved active-high `reset` at imported VPU top-half boundaries | exact original top-half behavior preserved |
 
-No functional changes are intended.
+No functional changes are intended except for the documented fake-TXFMA port-contract divergence.
 
 ## Verification
 
@@ -573,6 +781,11 @@ No functional changes are intended.
 | `txfma_booth_ppg_32r4` | 9,842 checks | 155,762 comparisons |
 | `txfma_wallace1` | 8,216 checks | 25,288 comparisons |
 | `txfma_wallace2` | 8,200 checks | 25,074 comparisons |
+| `txfmactl_top` | 79 checks | 996,194 comparisons |
+| `txfmaexp_top` | 31 checks | 508,152 comparisons |
+| `txfmafrac_top` | 43 checks | 390,468 comparisons |
+| `txfma_top` | 9 checks | 15,024 comparisons |
+| `txfma_top_fake` | 18 checks | 15,024 comparisons |
 | `txfma_lxd` | 4,102 checks | 25,162 comparisons |
 | `txfma_trz` | 4,102 checks | 25,054 comparisons |
 | `txfma_trz2` | 4,102 checks | 25,162 comparisons |
@@ -590,3 +803,11 @@ No functional changes are intended.
 | `vpu_tensortmp_rf` | 5 checks | 50,010 comparisons |
 | `vpu_lane_tima` | 200,066 checks | 200,040 comparisons |
 | `vpu_uinst_decoder` | 19 checks (`EnableExtraTrans=0`) + 19 checks (`EnableExtraTrans=1`) | 50,294 comparisons (`EnableExtraTrans=0`) + 50,294 comparisons (`EnableExtraTrans=1`) |
+| `vpu_tensorreduce` | 27 checks | 15,030 comparisons |
+| `vpu_txfma_trans_top` | 16 checks (`UseFakeTxfma=0`) + 13 checks (`UseFakeTxfma=1`) | 524,588 comparisons (`UseFakeTxfma=0`) + 262,444 comparisons (`UseFakeTxfma=1`) |
+| `vpu_tensorfma` | 24 checks | 551,854 comparisons |
+| `vpu_tensorquant` | 41 checks | 259,600 comparisons |
+| `vpu_ml` | 26 checks | 602,896 comparisons |
+| `vpu_ctrl` | 25 checks | 2,019,808 comparisons |
+| `vpu_lane` | 16 checks | 780,108 comparisons |
+| `vpu_top` | 53 checks | 4,947,579 comparisons |

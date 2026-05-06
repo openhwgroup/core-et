@@ -16,7 +16,9 @@ package etlink_pkg;
   // ── System constants ────────────────────────────────────
   // These define the SoC-wide address and data widths.
 
+  /* verilator lint_off VARHIDDEN */  // ET-Link/minion_pkg both publish the SoC PA width.
   localparam int unsigned PaSize       = 40;   // Physical address width
+  /* verilator lint_on VARHIDDEN */
   /* verilator lint_off UNUSEDPARAM */  // PaMsb used by downstream modules not yet instantiated
   localparam int unsigned PaMsb        = PaSize - 1;
   /* verilator lint_on UNUSEDPARAM */

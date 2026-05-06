@@ -15,7 +15,9 @@
 //   - Explicit always_ff with _d/_q instead of RST_FF/RST_EN_FF macros
 
 module minion_frontend_thread_sched #(
+  /* verilator lint_off VARHIDDEN */  // Preserve public NrThreads; minion_pkg exports the default too.
   parameter int unsigned NrThreads = 2
+  /* verilator lint_on VARHIDDEN */
 ) (
   input  logic                  clk_i,
   input  logic                  rst_ni,

@@ -1,5 +1,6 @@
 REPO_ROOT := $(shell git rev-parse --show-toplevel)
 include $(REPO_ROOT)/mk/prim.mk
+include $(REPO_ROOT)/mk/minion_vpu_sources.mk
 
 COMMON_RTL := $(REPO_ROOT)/hw/ip/dft/rtl/dft_pkg.sv \
               $(REPO_ROOT)/hw/ip/etlink/rtl/etlink_pkg.sv \
@@ -8,6 +9,8 @@ COMMON_RTL := $(REPO_ROOT)/hw/ip/dft/rtl/dft_pkg.sv \
 PRIMS := $(PRIM_CLK_GATE) \
          $(PRIM_RF_1R1W_PREVIEW) \
          $(PRIM_RF_3R2W_PREVIEW)
+
+TXFMA_REAL_RTL := $(MINION_VPU_TXFMA_REAL_RTL)
 
 TESTS := bypass \
          mask \
@@ -31,9 +34,23 @@ TESTS := bypass \
          txfma_booth_ppg_32r4 \
          txfma_wallace1 \
          txfma_wallace2 \
+         txfmactl_top \
+         txfmafrac_top \
+         txfmaexp_top \
+         txfma_top \
+         txfma_top_fake \
+         txfma_trans_top_default \
+         txfma_trans_top_fake \
          tima_adder \
          tima_top \
          lane_tima \
+         tensorreduce \
+         vpu_tensorfma \
+         vpu_tensorquant \
+         vpu_ml \
+         vpu_lane \
+         vpu_ctrl \
+         vpu_top \
          sh_sw \
          trans_top_default \
          trans_top_extra_trans \
@@ -184,6 +201,74 @@ txfma_wallace2_SRCS := $(COMMON_RTL) \
                        $(CURDIR)/txfma_wallace2_tb.sv \
                        $(CURDIR)/txfma_wallace2_test.cc
 
+txfmactl_top_TOP := txfmactl_top_tb
+txfmactl_top_SRCS := $(COMMON_RTL) \
+                      $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_pkg.sv \
+                      $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_defs_pkg.sv \
+                      $(PRIM_CLK_GATE) \
+                      $(TXFMA_REAL_RTL) \
+                      $(CURDIR)/txfmactl_top_tb.sv \
+                      $(CURDIR)/txfmactl_top_test.cc
+
+txfmafrac_top_TOP := txfmafrac_top_tb
+txfmafrac_top_SRCS := $(COMMON_RTL) \
+                      $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_pkg.sv \
+                      $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_defs_pkg.sv \
+                      $(PRIM_CLK_GATE) \
+                      $(TXFMA_REAL_RTL) \
+                      $(CURDIR)/txfmafrac_top_tb.sv \
+                      $(CURDIR)/txfmafrac_top_test.cc
+
+txfmaexp_top_TOP := txfmaexp_top_tb
+txfmaexp_top_SRCS := $(COMMON_RTL) \
+                     $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_pkg.sv \
+                     $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_defs_pkg.sv \
+                     $(PRIM_CLK_GATE) \
+                     $(TXFMA_REAL_RTL) \
+                     $(CURDIR)/txfmaexp_top_tb.sv \
+                     $(CURDIR)/txfmaexp_top_test.cc
+
+txfma_top_TOP := txfma_top_tb
+txfma_top_SRCS := $(COMMON_RTL) \
+                  $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_pkg.sv \
+                  $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_defs_pkg.sv \
+                  $(PRIM_CLK_GATE) \
+                  $(TXFMA_REAL_RTL) \
+                  $(CURDIR)/txfma_top_tb.sv \
+                  $(CURDIR)/txfma_top_test.cc
+
+txfma_top_fake_TOP := txfma_top_fake_tb
+txfma_top_fake_SRCS := $(COMMON_RTL) \
+                       $(MINION_VPU_TXFMA_FAKE_RTL) \
+                       $(CURDIR)/txfma_top_fake_tb.sv \
+                       $(CURDIR)/txfma_top_fake_test.cc
+# This standalone slice imports the VPU package without the larger TXFMA package set;
+# package-width name shadows are covered by targeted source pragmas.
+txfma_top_fake_FLAGS :=
+
+txfma_trans_top_fake_TOP := vpu_txfma_trans_top_tb
+txfma_trans_top_fake_SRCS := $(COMMON_RTL) \
+                             $(MINION_VPU_TRANS_ROM_RTL) \
+                             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/trans_top.sv \
+                             $(MINION_VPU_TXFMA_FAKE_RTL) \
+                             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_txfma_trans_top.sv \
+                             $(CURDIR)/vpu_txfma_trans_top_tb.sv \
+                             $(CURDIR)/vpu_txfma_trans_top_test.cc
+txfma_trans_top_fake_FLAGS := -GUseFakeTxfma=1
+
+txfma_trans_top_default_TOP := vpu_txfma_trans_top_tb
+txfma_trans_top_default_SRCS := $(COMMON_RTL) \
+                                $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_pkg.sv \
+                                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_defs_pkg.sv \
+                                $(PRIM_CLK_GATE) \
+                                $(MINION_VPU_TRANS_ROM_RTL) \
+                                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/trans_top.sv \
+                                $(TXFMA_REAL_RTL) \
+                                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_txfma_trans_top.sv \
+                                $(CURDIR)/vpu_txfma_trans_top_tb.sv \
+                                $(CURDIR)/vpu_txfma_trans_top_default_test.cc
+txfma_trans_top_default_FLAGS := -GUseFakeTxfma=0
+
 tima_adder_TOP := tima_adder_tb
 tima_adder_SRCS := $(COMMON_RTL) \
                    $(REPO_ROOT)/hw/ip/minion/vpu/rtl/tima_adder.sv \
@@ -208,6 +293,112 @@ lane_tima_SRCS := $(COMMON_RTL) \
                   $(CURDIR)/vpu_lane_tima_tb.sv \
                   $(CURDIR)/vpu_lane_tima_test.cc
 
+tensorreduce_TOP := vpu_tensorreduce_tb
+tensorreduce_SRCS := $(COMMON_RTL) \
+                     $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_pkg.sv \
+                     $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_defs_pkg.sv \
+                     $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorreduce.sv \
+                     $(CURDIR)/vpu_tensorreduce_tb.sv \
+                     $(CURDIR)/vpu_tensorreduce_test.cc
+
+vpu_tensorfma_TOP := vpu_tensorfma_tb
+vpu_tensorfma_SRCS := $(COMMON_RTL) \
+                      $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_pkg.sv \
+                      $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_defs_pkg.sv \
+                      $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorfma.sv \
+                      $(CURDIR)/vpu_tensorfma_tb.sv \
+                      $(CURDIR)/vpu_tensorfma_test.cc
+
+vpu_tensorquant_TOP := vpu_tensorquant_tb
+vpu_tensorquant_SRCS := $(COMMON_RTL) \
+                        $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_pkg.sv \
+                        $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_defs_pkg.sv \
+                        $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorquant.sv \
+                        $(CURDIR)/vpu_tensorquant_tb.sv \
+                        $(CURDIR)/vpu_tensorquant_test.cc
+
+vpu_ml_TOP := vpu_ml_tb
+vpu_ml_SRCS := $(COMMON_RTL) \
+               $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_pkg.sv \
+               $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_defs_pkg.sv \
+               $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorfma.sv \
+               $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorreduce.sv \
+               $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorquant.sv \
+               $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_ml.sv \
+               $(CURDIR)/vpu_ml_tb.sv \
+               $(CURDIR)/vpu_ml_test.cc
+
+vpu_lane_TOP := vpu_lane_tb
+vpu_lane_SRCS := $(COMMON_RTL) \
+                 $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_pkg.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_defs_pkg.sv \
+                 $(PRIMS) \
+                 $(MINION_VPU_TRANS_ROM_RTL) \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/trans_top.sv \
+                 $(TXFMA_REAL_RTL) \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_txfma_trans_top.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_rf.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_bypass.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/tima_adder.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/tima_top.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorb_rf.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorc_rf.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_lane_tima.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_sh_sw.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_lane.sv \
+                 $(CURDIR)/vpu_lane_tb.sv \
+                 $(CURDIR)/vpu_lane_test.cc
+
+vpu_ctrl_TOP := vpu_ctrl_tb
+vpu_ctrl_SRCS := $(COMMON_RTL) \
+                 $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_pkg.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_defs_pkg.sv \
+                 $(PRIMS) \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorfma.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorreduce.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorquant.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_ml.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_trans.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_uinst_decoder.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensora_rf.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensortmp_rf.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_mask.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_ctrl.sv \
+                 $(CURDIR)/vpu_ctrl_tb.sv \
+                 $(CURDIR)/vpu_ctrl_test.cc
+
+vpu_top_TOP := vpu_top_tb
+vpu_top_SRCS := $(COMMON_RTL) \
+                $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_pkg.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_defs_pkg.sv \
+                $(PRIMS) \
+                $(MINION_VPU_TRANS_ROM_RTL) \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/trans_top.sv \
+                $(TXFMA_REAL_RTL) \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_txfma_trans_top.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_rf.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_bypass.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/tima_adder.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/tima_top.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorb_rf.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorc_rf.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_lane_tima.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_sh_sw.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorfma.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorreduce.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorquant.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_ml.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_trans.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_uinst_decoder.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensora_rf.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensortmp_rf.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_mask.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_ctrl.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_lane.sv \
+                $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_top.sv \
+                $(CURDIR)/vpu_top_tb.sv \
+                $(CURDIR)/vpu_top_test.cc
+
 sh_sw_TOP := vpu_sh_sw_tb
 sh_sw_SRCS := $(COMMON_RTL) \
               $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_sh_sw.sv \
@@ -217,7 +408,7 @@ sh_sw_SRCS := $(COMMON_RTL) \
 trans_top_default_TOP := trans_top_tb
 trans_top_default_SRCS := $(COMMON_RTL) \
                           $(REPO_ROOT)/hw/ip/minion/vpu/rtl/trans_top.sv \
-                          $(wildcard $(REPO_ROOT)/hw/ip/minion/vpu/rtl/trans_*_rom_case_*.sv) \
+                          $(MINION_VPU_TRANS_ROM_RTL) \
                           $(CURDIR)/trans_top_tb.sv \
                           $(CURDIR)/trans_top_test.cc
 
@@ -247,8 +438,10 @@ uinst_decoder_extra_trans_SRCS  := $(uinst_decoder_default_SRCS)
 uinst_decoder_extra_trans_FLAGS := -GEnableExtraTrans=1
 
 LINT_SRCS := $(COMMON_RTL) \
+             $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_pkg.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_defs_pkg.sv \
              $(PRIMS) \
-             $(wildcard $(REPO_ROOT)/hw/ip/minion/vpu/rtl/trans_*_rom_case_*.sv) \
+             $(MINION_VPU_TRANS_ROM_RTL) \
              $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_lxd.sv \
              $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_trz.sv \
              $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_trz2.sv \
@@ -263,6 +456,34 @@ LINT_SRCS := $(COMMON_RTL) \
              $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_booth_ppg_32r4.sv \
              $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_wallace1.sv \
              $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_wallace2.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_frac_zero_detect.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_exp_special_detect.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_ediff_opdorder_logic.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_rnd_adder.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_c0.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_c1.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_c2.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_c3.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_c4.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_c5.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_c6.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_e1.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_e2.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_e4.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_e5.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_e6.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_f0.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_f1.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_f2.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_f3.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_f4.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_f5.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_f6.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfmactl_top.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfmaexp_top.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfmafrac_top.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_top.sv \
+             $(MINION_VPU_TXFMA_FAKE_RTL) \
              $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_bypass.sv \
              $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_mask.sv \
              $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_rf.sv \
@@ -277,6 +498,14 @@ LINT_SRCS := $(COMMON_RTL) \
              $(REPO_ROOT)/hw/ip/minion/vpu/rtl/trans_top.sv \
              $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_trans.sv \
              $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_uinst_decoder.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorreduce.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_txfma_trans_top.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorfma.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_tensorquant.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_ml.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_ctrl.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_lane.sv \
+             $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_top.sv \
              $(CURDIR)/vpu_lint_top.sv
 LINT_FLAGS := --top-module vpu_lint_top
 

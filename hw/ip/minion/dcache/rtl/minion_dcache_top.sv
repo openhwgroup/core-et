@@ -347,7 +347,9 @@ module minion_dcache_top
   logic                            s1_is_write;
   logic                            s1_is_store;
   logic                            s1_readwrite;
+  /* verilator lint_off UNOPTFLAT */  // DCache/TLB flush replay cone is staged; flattening reports a false loop.
   logic [NrThreads-1:0]            s1_tlb_flush_pipeline;
+  /* verilator lint_on UNOPTFLAT */
   logic                            s1_valid_to_tlb;
   logic                            s1_translate_only_addr_load;
   minion_dcache_pkg::vm_status_t s1_vm_status;
@@ -683,7 +685,9 @@ module minion_dcache_top
   logic                            reduce_start;
   logic                            tensor_store_start;
   minion_dcache_pkg::vm_status_t vm_status_ts;
+  /* verilator lint_off UNOPTFLAT */  // VPU reduce replay path is staged; flattening reports a false loop.
   dcache_vpu_reduce_ctrl_t         vpu_reduce_ctrl;
+  /* verilator lint_on UNOPTFLAT */
   logic [DcacheErrFlagRange:0][NrThreads-1:0] tensor_reduce_err_all_flags;
   logic [NrThreads-1:0]            bus_err_re;
   logic [minion_dcache_pkg::DcacheDbgCsrTsSize-1:0]   ts_csr_debug_signals;

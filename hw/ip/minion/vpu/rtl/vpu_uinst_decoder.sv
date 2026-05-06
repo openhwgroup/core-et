@@ -14,8 +14,10 @@ module vpu_uinst_decoder
   output vpu_ctrl_sigs_t  id_sigs_o
 );
 
+  /* verilator lint_off VARHIDDEN */  // Local decoder table aliases intentionally mirror package Y/N constants when compiled with wider VPU imports.
   localparam logic Y = 1'b1;
   localparam logic N = 1'b0;
+  /* verilator lint_on VARHIDDEN */
 
   always_comb begin
     id_sigs_o = '0;

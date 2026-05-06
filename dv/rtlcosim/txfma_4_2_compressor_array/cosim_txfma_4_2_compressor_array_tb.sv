@@ -14,10 +14,8 @@ module cosim_txfma_4_2_compressor_array_tb #(
   output logic [Width-1:0] new_s_o
 );
 
-  // ORIG_RENAME also renames the `txfma_4_2_compressor` substring inside the
-  // parent module name, so the generated original top ends up with this exact
-  // composite name in the build tree.
-  txfma_4_2_compressor_orig_array_orig #(
+  // mk/rtlcosim.mk renames complete original module identifiers with `_orig`.
+  txfma_4_2_compressor_array_orig #(
     .width (Width)
   ) u_orig (
     .x0 (x0_i),

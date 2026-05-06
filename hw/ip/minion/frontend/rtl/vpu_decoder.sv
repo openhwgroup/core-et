@@ -25,8 +25,10 @@ module vpu_decoder
   // -----------------------------------------------------------
   // Y / N shorthand
   // -----------------------------------------------------------
+  /* verilator lint_off VARHIDDEN */  // Decoder table aliases intentionally mirror package Y/N constants.
   localparam logic Y = 1'b1;
   localparam logic N = 1'b0;
+  /* verilator lint_on VARHIDDEN */
 
   // -----------------------------------------------------------
   // VPU command aliases (7-bit)

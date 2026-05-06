@@ -137,9 +137,15 @@ update-cosim-coverage:
 	@echo "updated dv/rtlcosim/coverage/ — commit these files"
 
 lint:
-	@for d in $(IP_DIRS); do \
-	  $(MAKE) --no-print-directory -C $$d lint; \
-	done
+	@pass=0; fail=0; \
+	for d in $(IP_DIRS); do \
+	  $(MAKE) --no-print-directory -C $$d lint && pass=$$((pass+1)) || fail=$$((fail+1)); \
+	done; \
+	echo ""; \
+	echo "========================================"; \
+	echo "  $$pass passed, $$fail failed [lint]"; \
+	echo "========================================"; \
+	[ $$fail -eq 0 ]
 
 clean:
 	@for d in $(IP_DIRS); do \

@@ -180,12 +180,14 @@ module intpipe_top
   localparam int IdCtrlStallCntSz    = 3;
 
   // Instruction pattern defines for trans starvation casex
+  /* verilator lint_off VARHIDDEN */  // Local masks intentionally mirror VPU aliases for starvation decode.
   localparam logic [31:0] FRCP_PS       = 32'b010110000111?????000?????1111011;
   localparam logic [31:0] FRSQ_PS       = 32'b010110001000?????000?????1111011;
   localparam logic [31:0] FLOG_PS       = 32'b010110000011?????000?????1111011;
   localparam logic [31:0] FEXP_PS       = 32'b010110000100?????000?????1111011;
   localparam logic [31:0] FSIN_PS       = 32'b010110000110?????000?????1111011;
   localparam logic [31:0] FRCP_FIX_RAST = 32'b0011000??????????000?????1111011;
+  /* verilator lint_on VARHIDDEN */
 
   // Inst bits FF masks
   localparam logic [InstSize-1:0] ExInstBitsFFMask   = InstSize'(32'hf80);
@@ -259,6 +261,7 @@ module intpipe_top
         id_fetch_bus_error = id_fe_resp.bus_error;
         id_fetch_ecc_error = id_fe_resp.ecc_error;
      end
+   /* verilator lint_on UNOPTFLAT */
 
    ////////////////////////////////////////////////////////////////////////////////
    // This module decodes the instruction and generates control information.
@@ -1708,7 +1711,9 @@ module intpipe_top
 
    minion_reg_dest_t  ex_div_dest;               // Destination in EX stage to div unit
    logic [XregSize-1:0] wb_div_resp_data;          // Div unit result data
+   /* verilator lint_off UNOPTFLAT */  // TAG kill is part of the preserved intpipe<->dcache replay/flush feedback cone; full-core flattening reports it as cyclic even though stage registers cut the path.
    logic               tag_kill_common;           // Kill instruction in TAG
+   /* verilator lint_on UNOPTFLAT */
    logic               wb_div_resp_valid_early;   // Next cycle Div will try to write
    logic               tag_div_req;
    logic               mem_div_req;
@@ -2142,9 +2147,12 @@ module intpipe_top
         // Instruction kill
    ////////////////////////////////////////////////////////////////////////////////
 
+   /* verilator lint_off UNOPTFLAT */  // The dcache replay kill helper feeds only the preserved staged replay cone; Verilator 5.046 extracts it as a false combinational cycle in core_top lint.
    logic tag_killed_by_dcache; // Instruction killed by dcache
+   /* verilator lint_on UNOPTFLAT */
    logic tag_valid_qual;       // Valid instruction in TAG stage after kill
 
+   /* verilator lint_off UNOPTFLAT */  // Full-core lint extracts the dcache replay kill expression as cyclic through staged intpipe replay/backpressure state; the translated stage flops cut the real path.
    always_comb
      begin
         // DCache kills TAG instruction because it has higher priority on the RF
@@ -2167,6 +2175,7 @@ module intpipe_top
         tag_ctrl_kill  = tag_kill_common || tag_xcpt;
         tag_valid_qual = tag_reg_valid && !tag_ctrl_kill;
      end
+   /* verilator lint_on UNOPTFLAT */
 
    ////////////////////////////////////////////////////////////////////////////////
    // Sends down information to MEM stage and VPU

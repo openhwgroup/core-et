@@ -215,7 +215,7 @@ Build order: 12→13→14→15→16→17→18
 |--------|----------|------|-------|--------|
 | `minion_debug_apb_slv` | `minion_debug_apb_slv` | Covered by `core_top` smoke test (9 checks) | Covered by `core_top` cosim (1,539,072 comparisons) | RTL translated and exercised through minion-level integration; standalone block-level DV/cosim still pending |
 | `core_top` | `core_top` | 9 smoke checks + 12 debug-APB-off checks | 1,539,072 comparisons | Done |
-| `minion_top` | `minion_top` | 16 smoke checks + 16 debug-APB-off checks + 15 debug-off checks + 9 execution checks | 118,160 comparisons | Done (translated top wrapper with intentional integer-only `null_vpu` substitution in place of the original `vpu_top`) |
+| `minion_top` | `minion_top` | 17 smoke checks + 5 VpuEn=0 checks + 17 debug-APB-off checks + 15 debug-off checks + 9 execution checks | 235,284 comparisons | Done (default `VpuEn=1` instantiates translated real `vpu_top`; cosim checks every practical functional input bit sees both 0 and 1, with DFT scan/OCC/test pins documented as constrained; intentional integer-only `VpuEn=0` path keeps `null_vpu`) |
 | `null_vpu` | — | 55 checks | — | Done (new integer-only bring-up helper; intentionally non-faithful and not part of the CORE-ET translation set) |
 
 ## Minion VPU (`hw/ip/minion/vpu/`)
@@ -223,6 +223,7 @@ Build order: 12→13→14→15→16→17→18
 | Module | Original | Test | Cosim | Status |
 |--------|----------|------|-------|--------|
 | `vpu_pkg` | internal VPU-only types from `vpu_types.vh` + `trans_types.vh` | — | — | Done |
+| `vpu_defs_pkg` | selected constants/aliases from original VPU include stack | — | — | RTL present for TXFMA top-half support |
 | `vpu_bypass` | `vpu_bypass` | 25 checks | 98,412 comparisons | Done |
 | `vpu_mask` | `vpu_mask` | 15 checks | 57,827 comparisons | Done |
 | `vpu_rf` | `vpu_rf` | 12,391 checks (`UseMmi=0`) + 12,391 checks (`UseMmi=1`) | 49,251 comparisons (`UseMmi=0`) + 49,251 comparisons (`UseMmi=1`) | Done |
@@ -235,6 +236,34 @@ Build order: 12→13→14→15→16→17→18
 | `txfma_booth_ppg_32r4` | `txfma_booth_ppg_32r4` | 9,842 checks | 155,762 comparisons | Done |
 | `txfma_wallace1` | `txfma_wallace1` | 8,216 checks | 25,288 comparisons | Done |
 | `txfma_wallace2` | `txfma_wallace2` | 8,200 checks | 25,074 comparisons | Done |
+| `txfma_c0` | `txfma_c0` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_c1` | `txfma_c1` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_c2` | `txfma_c2` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_c3` | `txfma_c3` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_c4` | `txfma_c4` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_c5` | `txfma_c5` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_c6` | `txfma_c6` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_e1` | `txfma_e1` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_e2` | `txfma_e2` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_e4` | `txfma_e4` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_e5` | `txfma_e5` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_e6` | `txfma_e6` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_ediff_opdorder_logic` | `txfma_ediff_opdorder_logic` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_exp_special_detect` | `txfma_exp_special_detect` | — | — | RTL present, standalone DV/cosim pending |
+| `txfma_f0` | `txfma_f0` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_f1` | `txfma_f1` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_f2` | `txfma_f2` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_f3` | `txfma_f3` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_f4` | `txfma_f4` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_f5` | `txfma_f5` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_f6` | `txfma_f6` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_frac_zero_detect` | `txfma_frac_zero_detect` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_rnd_adder` | `txfma_rnd_adder` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfmactl_top` | `txfmactl_top` | 79 checks | 996,194 comparisons | Done |
+| `txfmaexp_top` | `txfmaexp_top` | 31 checks | 508,152 comparisons | Done |
+| `txfmafrac_top` | `txfmafrac_top` | 43 checks | 390,468 comparisons | Done |
+| `txfma_top` | `txfma_top` | 9 checks | 15,024 comparisons | Done |
+| `txfma_top_fake` | `txfma_top_fake` | 18 checks | 15,024 comparisons | Done |
 | `txfma_lxd` | `txfma_lxd` | 4,102 checks | 25,162 comparisons | Done |
 | `txfma_trz` | `txfma_trz` | 4,102 checks | 25,054 comparisons | Done |
 | `txfma_trz2` | `txfma_trz2` | 4,102 checks | 25,162 comparisons | Done |
@@ -261,6 +290,14 @@ Build order: 12→13→14→15→16→17→18
 | `vpu_tensortmp_rf` | `vpu_tensortmp_rf` | 5 checks | 50,010 comparisons | Done |
 | `vpu_lane_tima` | `vpu_lane_tima` | 200,066 checks | 200,040 comparisons | Done |
 | `vpu_uinst_decoder` | `vpu_uinst_decoder` | 19 checks (`EnableExtraTrans=0`) + 19 checks (`EnableExtraTrans=1`) | 50,294 comparisons (`EnableExtraTrans=0`) + 50,294 comparisons (`EnableExtraTrans=1`) | Done |
+| `vpu_tensorreduce` | `vpu_tensorreduce` | 27 checks | 15,030 comparisons | Done |
+| `vpu_txfma_trans_top` | `vpu_txfma_trans_top` | 16 checks (`UseFakeTxfma=0`) + 13 checks (`UseFakeTxfma=1`) | 524,588 comparisons (`UseFakeTxfma=0`) + 262,444 comparisons (`UseFakeTxfma=1`) | Done |
+| `vpu_tensorfma` | `vpu_tensorfma` | 24 checks | 551,854 comparisons | Done |
+| `vpu_tensorquant` | `vpu_tensorquant` | 41 checks | 259,600 comparisons | Done |
+| `vpu_ml` | `vpu_ml` | 26 checks | 602,896 comparisons | Done |
+| `vpu_ctrl` | `vpu_ctrl` | 25 checks | 2,019,808 comparisons | Done |
+| `vpu_lane` | `vpu_lane` | 16 checks | 780,108 comparisons | Done |
+| `vpu_top` | `vpu_top` | 53 checks | 4,947,579 comparisons | Done (standalone VPU-local DV/cosim with directed protocol/mode coverage plus real default `minion_top` integration) |
 
 ## Standalone Minion Shell
 
@@ -287,6 +324,7 @@ Build order: 12→13→14→15→16→17→18
 | `neigh_shared_ptw` | `neigh_shared_ptw` | 18 checks | 45,090 comparisons | Done |
 | `pseudo_lru` | `pseudo_lru` | 266 checks | 5,000 comparisons | Done |
 | `esr_spio` | `esr_spio` | 13 checks | 29,955 comparisons | Done |
+| `standalone_minion` | `standalone_minion` | 19 checks | 1,765,940 comparisons | Done |
 
 ## RBOX (`hw/ip/rbox/`)
 
@@ -368,16 +406,16 @@ row below.
 ## Totals
 
 Structural discovery counts were refreshed from tracked Makefiles on
-2026-05-04. Repo-wide check/comparison totals are not carried as exact sums
+2026-05-05. Repo-wide check/comparison totals are not carried as exact sums
 until every unit test and cosim is rerun and all legacy approximate rows are
 backfilled.
 
 | Metric | Count |
 |--------|-------|
-| Unit-test Makefiles | 64 |
-| Test suites discovered by `make test` | 171 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 199 |
+| Unit-test Makefiles | 65 |
+| Test suites discovered by `make test` | 187 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 214 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 21 unit suites + 22 cosim Makefile runs |
+| Targeted update runs | 37 unit suites + 39 cosim Makefile runs |
 | Targeted update failures | 0 |
