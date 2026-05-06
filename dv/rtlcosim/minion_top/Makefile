@@ -292,9 +292,13 @@ ORIG_RENAME := minion_top \
                txfma_f5 \
                txfma_f6
 
+# Keep UNOPTFLAT scoped to this cosim: the build compiles renamed original
+# Minion/DCache/VPU RTL that reports many preserved combinational replay/latch
+# loops and cannot be annotated in-tree. New RTL-only UNOPTFLAT sites are covered
+# by inline pragmas; VARHIDDEN no longer needs a build-level waiver here.
 EXTRA_FLAGS := --converge-limit 10000 --x-initial-edge -DET_ASSERT_OFF -DVPU_EN_RCG_2 \
                -Wno-TIMESCALEMOD -Wno-WIDTHEXPAND -Wno-WIDTHTRUNC \
-               -Wno-VARHIDDEN -Wno-UNOPTFLAT \
+               -Wno-UNOPTFLAT \
                +incdir+$(REPO_ROOT)/hw/ip/minion/intpipe/csr/rtl \
                +incdir+$(ORIG_ROOT)/rtl/shire/minion/intpipe/csr \
                +incdir+$(ORIG_ROOT)/rtl/shire/minion/vpu

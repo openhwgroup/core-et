@@ -180,12 +180,14 @@ module intpipe_top
   localparam int IdCtrlStallCntSz    = 3;
 
   // Instruction pattern defines for trans starvation casex
+  /* verilator lint_off VARHIDDEN */  // Local masks intentionally mirror VPU aliases for starvation decode.
   localparam logic [31:0] FRCP_PS       = 32'b010110000111?????000?????1111011;
   localparam logic [31:0] FRSQ_PS       = 32'b010110001000?????000?????1111011;
   localparam logic [31:0] FLOG_PS       = 32'b010110000011?????000?????1111011;
   localparam logic [31:0] FEXP_PS       = 32'b010110000100?????000?????1111011;
   localparam logic [31:0] FSIN_PS       = 32'b010110000110?????000?????1111011;
   localparam logic [31:0] FRCP_FIX_RAST = 32'b0011000??????????000?????1111011;
+  /* verilator lint_on VARHIDDEN */
 
   // Inst bits FF masks
   localparam logic [InstSize-1:0] ExInstBitsFFMask   = InstSize'(32'hf80);

@@ -281,9 +281,9 @@ txfma_top_fake_SRCS := $(COMMON_RTL) \
                        $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_top_fake.sv \
                        $(CURDIR)/txfma_top_fake_tb.sv \
                        $(CURDIR)/txfma_top_fake_test.cc
-# This standalone slice imports the VPU package without the larger TXFMA package set,
-# exposing the pre-existing etlink_pkg/minion_pkg PaSize shadow. Both uses are qualified.
-txfma_top_fake_FLAGS := -Wno-VARHIDDEN
+# This standalone slice imports the VPU package without the larger TXFMA package set;
+# package-width name shadows are covered by targeted source pragmas.
+txfma_top_fake_FLAGS :=
 
 txfma_trans_top_fake_TOP := vpu_txfma_trans_top_tb
 txfma_trans_top_fake_SRCS := $(COMMON_RTL) \
@@ -293,7 +293,7 @@ txfma_trans_top_fake_SRCS := $(COMMON_RTL) \
                              $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_txfma_trans_top.sv \
                              $(CURDIR)/vpu_txfma_trans_top_tb.sv \
                              $(CURDIR)/vpu_txfma_trans_top_test.cc
-txfma_trans_top_fake_FLAGS := -GUseFakeTxfma=1 -Wno-VARHIDDEN
+txfma_trans_top_fake_FLAGS := -GUseFakeTxfma=1
 
 txfma_trans_top_default_TOP := vpu_txfma_trans_top_tb
 txfma_trans_top_default_SRCS := $(COMMON_RTL) \

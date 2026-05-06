@@ -117,14 +117,10 @@ PRIMS := $(PRIM_ARB_LRU) \
 
 RTL_SRCS := $(PKGS) $(PRIMS) $(FRONTEND_RTL) $(INTPIPE_CSR_RTL) $(INTPIPE_RTL) $(TLB_RTL) $(DCACHE_RTL) $(VPU_RTL) $(ROOT_RTL)
 
-# The imported VPU files still use compilation-unit imports of vpu_defs_pkg;
-# combined Minion+VPU builds also contain frontend/intpipe localparams with the
-# same original names. Real-VPU integration also exposes the original
-# VPU<->dcache<->intpipe combinational replay/control feedback that standalone
-# child tests do not flatten together. These integration-local suppressions are
-# for namespace-only VARHIDDEN and verified integrated UNOPTFLAT paths; other
-# warnings remain fatal.
-MINION_FLAGS := +incdir+$(REPO_ROOT)/hw/ip/minion/intpipe/csr/rtl -Wno-VARHIDDEN -Wno-UNOPTFLAT
+# Keep only the CSR include path here. Namespace-only VARHIDDEN reports and
+# benign integrated DCache/VPU replay UNOPTFLAT paths are covered by targeted
+# source pragmas with comments, so Minion unit builds do not need broad waivers.
+MINION_FLAGS := +incdir+$(REPO_ROOT)/hw/ip/minion/intpipe/csr/rtl
 
 TESTS := smoke core_top_debug_apb_off null_vpu minion_top minion_top_vpu_off minion_top_debug_apb_off minion_top_debug_off minion_top_exec
 

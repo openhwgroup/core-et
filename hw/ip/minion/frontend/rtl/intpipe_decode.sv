@@ -110,8 +110,10 @@ module intpipe_decode
   localparam logic [2:0] CSR_C = 3'(CsrC);
   localparam logic [2:0] CSR_I = 3'(CsrI);
 
+  /* verilator lint_off VARHIDDEN */  // Decoder table aliases intentionally mirror VPU Y/N constants.
   localparam logic Y = 1'b1;
   localparam logic N = 1'b0;
+  /* verilator lint_on VARHIDDEN */
 
   // ──────────────────────────────────────────────────────
   // Decode table: raw bit concat → struct cast
