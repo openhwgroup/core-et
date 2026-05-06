@@ -215,7 +215,7 @@ Build order: 12→13→14→15→16→17→18
 |--------|----------|------|-------|--------|
 | `minion_debug_apb_slv` | `minion_debug_apb_slv` | Covered by `core_top` smoke test (9 checks) | Covered by `core_top` cosim (1,539,072 comparisons) | RTL translated and exercised through minion-level integration; standalone block-level DV/cosim still pending |
 | `core_top` | `core_top` | 9 smoke checks + 12 debug-APB-off checks | 1,539,072 comparisons | Done |
-| `minion_top` | `minion_top` | 17 smoke checks + 5 VpuEn=0 checks + 17 debug-APB-off checks + 15 debug-off checks + 9 execution checks | 118,468 comparisons | Done (default `VpuEn=1` instantiates translated real `vpu_top`; intentional integer-only `VpuEn=0` path keeps `null_vpu`) |
+| `minion_top` | `minion_top` | 17 smoke checks + 5 VpuEn=0 checks + 17 debug-APB-off checks + 15 debug-off checks + 9 execution checks | 235,284 comparisons | Done (default `VpuEn=1` instantiates translated real `vpu_top`; cosim checks every practical functional input bit sees both 0 and 1, with DFT scan/OCC/test pins documented as constrained; intentional integer-only `VpuEn=0` path keeps `null_vpu`) |
 | `null_vpu` | — | 55 checks | — | Done (new integer-only bring-up helper; intentionally non-faithful and not part of the CORE-ET translation set) |
 
 ## Minion VPU (`hw/ip/minion/vpu/`)
@@ -417,5 +417,5 @@ backfilled.
 | RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 214 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 37 unit suites + 38 cosim Makefile runs |
+| Targeted update runs | 37 unit suites + 39 cosim Makefile runs |
 | Targeted update failures | 0 |
