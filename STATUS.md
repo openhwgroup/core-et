@@ -297,7 +297,7 @@ Build order: 12→13→14→15→16→17→18
 | `vpu_ml` | `vpu_ml` | 26 checks | 602,896 comparisons | Done |
 | `vpu_ctrl` | `vpu_ctrl` | 25 checks | 2,019,808 comparisons | Done |
 | `vpu_lane` | `vpu_lane` | 16 checks | 780,108 comparisons | Done |
-| `vpu_top` | `vpu_top` | 19 checks | 4,823,376 comparisons | Done (standalone VPU-local DV/cosim plus real default `minion_top` integration) |
+| `vpu_top` | `vpu_top` | 53 checks | 4,947,579 comparisons | Done (standalone VPU-local DV/cosim with directed protocol/mode coverage plus real default `minion_top` integration) |
 
 ## Standalone Minion Shell
 

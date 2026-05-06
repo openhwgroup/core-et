@@ -24,6 +24,14 @@ module vpu_top_tb (
   input  logic                              maskop_i,
   input  logic                              wen_i,
   input  logic                              swap12_i,
+  input  logic [6:0]                        cmd_i,
+  input  logic [3:0]                        dtype_i,
+  input  logic                              round_i,
+  input  logic [2:0]                        rm_i,
+  input  logic [2:0]                        fcsr_rm_i,
+  input  logic                              cvt_i,
+  input  logic                              toint_i,
+  input  logic                              tointm_i,
   input  logic                              tensorfma_start_i,
   input  logic                              tensorquant_start_i,
   input  logic                              reduce_start_i,
@@ -47,6 +55,7 @@ module vpu_top_tb (
   output logic [2:0]                        id_core_ctrl_ren_o,
   output logic                              id_core_ctrl_wen_o,
   output logic                              id_core_ctrl_fromint_o,
+  output logic                              id_core_ctrl_mren_any_o,
   output logic                              id_core_ctrl_tfma_enabled_o,
   output logic                              id_core_ctrl_tquant_enabled_o,
   output logic                              id_core_ctrl_reduce_enabled_o,
@@ -71,7 +80,15 @@ module vpu_top_tb (
   output logic [CSR_NR_EVENTS_VPU-1:0]       io_events_o,
   output logic [NEIGH_DEBUG_MATCH_WIDTH-1:0] vpu_dbg_match_o,
   output logic [NEIGH_DEBUG_FILTER_WIDTH-1:0] vpu_dbg_filter_o,
-  output logic                              vpu_dbg_data_nonzero_o
+  output logic [4:0]                        vpu_dbg_data_nonzero_mask_o,
+  output logic                              vpu_dbg_data_nonzero_o,
+  output logic                              ex_core_ctrl_illegal_rm_o,
+  output logic                              wb_core_ctrl_tointm_o,
+  output logic [6:0]                        id_effective_cmd_o,
+  output logic [3:0]                        id_effective_dtype_o,
+  output logic [2:0]                        id_effective_rm_o,
+  output logic [2:0]                        id_regfile_thread_id_o,
+  output logic [2:0]                        ex_regfile_thread_id_o
 );
 
   /* verilator lint_off UNUSEDSIGNAL */  // Unit TB checks selected top-level probes while preserving the complete VPU boundary structs.
@@ -94,6 +111,8 @@ module vpu_top_tb (
   assign id_core_ctrl_ren_o              = {id_core_ctrl.ren3, id_core_ctrl.ren2, id_core_ctrl.ren1};
   assign id_core_ctrl_wen_o              = id_core_ctrl.wen;
   assign id_core_ctrl_fromint_o          = id_core_ctrl.fromint;
+  assign id_core_ctrl_mren_any_o         = id_core_ctrl.m0ren | id_core_ctrl.mallren |
+                                           id_core_ctrl.mren1 | id_core_ctrl.mren2;
   assign id_core_ctrl_tfma_enabled_o     = id_core_ctrl.tfma_enabled;
   assign id_core_ctrl_tquant_enabled_o   = id_core_ctrl.tquant_enabled;
   assign id_core_ctrl_reduce_enabled_o   = id_core_ctrl.reduce_enabled;
@@ -103,26 +122,35 @@ module vpu_top_tb (
   assign f3_core_ctrl_fma_o              = f3_core_ctrl.fma;
   assign wb_core_ctrl_fma_o              = wb_core_ctrl.fma;
   assign wb_core_ctrl_fcsr_flags_valid_o = wb_core_ctrl.fcsr_flags_valid;
+  assign wb_core_ctrl_tointm_o           = wb_core_ctrl.tointm;
+  assign ex_core_ctrl_illegal_rm_o       = ex_core_ctrl.illegal_rm;
   assign dcache_ctrl_read_en_o           = dcache_ctrl.scp_req.read_en;
   assign dcache_ctrl_tenb_credit_o       = dcache_ctrl.tenb_credit;
   assign dcache_ctrl_tfma_enabled_o      = dcache_ctrl.tfma_enabled;
   assign dcache_ctrl_reduce_wait_o       = dcache_ctrl.reduce_wait;
   assign dcache_ctrl_tfma_rf_write_o     = dcache_ctrl.tfma_rf_write;
+  assign vpu_dbg_data_nonzero_mask_o[0]  = |vpu_dbg_data[0];
+  assign vpu_dbg_data_nonzero_mask_o[1]  = |vpu_dbg_data[1];
+  assign vpu_dbg_data_nonzero_mask_o[2]  = |vpu_dbg_data[2];
+  assign vpu_dbg_data_nonzero_mask_o[3]  = |vpu_dbg_data[3];
+  assign vpu_dbg_data_nonzero_mask_o[4]  = |vpu_dbg_data[4];
   assign vpu_dbg_data_nonzero_o          = |vpu_dbg_data;
 
   always_comb begin
     id_core_req = '0;
     id_core_req.valid = id_core_valid_i;
     id_core_req.thread_id = id_core_thread_id_i;
-    id_core_req.fcsr_rm = RNE;
+    id_core_req.fcsr_rm = fcsr_rm_i;
+    id_core_req.inst_bits[VPU_INST_RM_SEL_MSB:VPU_INST_RM_SEL_LSB] = rm_i;
+    id_core_req.inst_bits[VPU_INST_TYP_SEL_MSB:VPU_INST_TYP_SEL_LSB] = dtype_i[1:0];
     id_core_req.inst_bits[VPU_INST_REN1_RA_SEL_MSB:VPU_INST_REN1_RA_SEL_LSB] = ra1_i;
     id_core_req.inst_bits[VPU_INST_REN2_RA_SEL_MSB:VPU_INST_REN2_RA_SEL_LSB] = ra2_i;
     id_core_req.inst_bits[VPU_INST_REN3_RA_SEL_MSB:VPU_INST_REN3_RA_SEL_LSB] = ra3_i;
     id_core_req.inst_bits[VPU_INST_RD_SEL_MSB:VPU_INST_RD_SEL_LSB] = rd_i;
 
     id_vpu_decoder_sigs = '0;
-    id_vpu_decoder_sigs.cmd = txfma_i ? VpuCmdMadd : (rom_i ? VpuTransRcpRr : VpuCmdAdd);
-    id_vpu_decoder_sigs.dtype = VpuDtypeF32;
+    id_vpu_decoder_sigs.cmd = txfma_i ? VpuCmdMadd : (rom_i ? VpuTransRcpRr : minion_pkg::vpu_cmd_e'(cmd_i));
+    id_vpu_decoder_sigs.dtype = minion_pkg::vpu_dtype_e'(dtype_i);
     id_vpu_decoder_sigs.ren1 = ren_mask_i[0];
     id_vpu_decoder_sigs.ren2 = ren_mask_i[1];
     id_vpu_decoder_sigs.ren3 = ren_mask_i[2];
@@ -133,12 +161,20 @@ module vpu_top_tb (
     id_vpu_decoder_sigs.rom = rom_i;
     id_vpu_decoder_sigs.trans = trans_i;
     id_vpu_decoder_sigs.fromint = fromint_i;
+    id_vpu_decoder_sigs.toint = toint_i;
+    id_vpu_decoder_sigs.tointm = tointm_i;
     id_vpu_decoder_sigs.maskop = maskop_i;
+    id_vpu_decoder_sigs.m0ren = maskop_i;
+    id_vpu_decoder_sigs.mallren = maskop_i;
+    id_vpu_decoder_sigs.mren1 = maskop_i;
+    id_vpu_decoder_sigs.mren2 = maskop_i;
+    id_vpu_decoder_sigs.cvt = cvt_i;
+    id_vpu_decoder_sigs.round = round_i;
     id_vpu_decoder_sigs.swap12 = swap12_i;
     id_vpu_decoder_sigs.vector = 1'b1;
     id_vpu_decoder_sigs.fma = txfma_i;
     id_vpu_decoder_sigs.add = shsw_i;
-    id_vpu_decoder_sigs.wflags = txfma_i;
+    id_vpu_decoder_sigs.wflags = txfma_i | round_i;
 
     ex_core_req = '0;
     ex_core_req.thread_id = id_core_thread_id_i;
@@ -227,6 +263,11 @@ module vpu_top_tb (
   assign ex_rom_valid_o          = dut.ex_rom_valid;
   assign ex_rom_clock_valid_o    = dut.ex_rom_clock_valid;
   assign ex_tima_valid_any_o     = |dut.ex_tima_valid;
+  assign id_effective_cmd_o      = dut.ctrl.id_vpu_ctrl.sigs.cmd;
+  assign id_effective_dtype_o    = dut.ctrl.id_vpu_ctrl.sigs.dtype;
+  assign id_effective_rm_o       = dut.ctrl.id_vpu_ctrl.rm;
+  assign id_regfile_thread_id_o  = dut.id_regfile_thread_id;
+  assign ex_regfile_thread_id_o  = dut.ex_regfile_thread_id;
   /* verilator lint_on UNUSEDSIGNAL */
 
 endmodule
