@@ -16,7 +16,7 @@ PRIM := $(PRIM_CLK_GATE) $(PRIM_CLK_MUX) $(PRIM_ECO_PORTS) $(PRIM_RAM_1P) $(PRIM
 
 # ── Test definitions ─────────────────────────────────────
 
-TESTS := lru set swz tram tsram dram sbm cbuf ato rbuf icsm dataq reqq_entry reqq_alloc reqq rspmux xbar mesh l3s ms mm l3b bmbx bwrap l2hpf pmq pm errl trc
+TESTS := lru set swz tram tsram dram sbm cbuf ato rbuf icsm dataq reqq_entry reqq_alloc reqq rspmux xbar mesh l3s ms mm l3b bmbx bwrap l2hpf pmq pm errl trc topclk
 
 lru_TOP  := shirecache_pipe_lru_4w_calc
 lru_SRCS := $(PKGS) $(SC_RTL)/shirecache_pipe_lru_4w_calc.sv \
@@ -135,6 +135,12 @@ l3s_SRCS := $(PKGS) $(PRIM_FIFO_REG) $(PRIM_ARB_RR) \
             $(CURDIR)/shirecache_l3_slave_test.cc
 
 AXI_PKG         := $(RTL_DIR)/axi/rtl/axi_pkg.sv
+
+topclk_TOP  := shirecache_top_freeclk_tb
+topclk_SRCS := $(PKGS) $(AXI_PKG) $(PRIM_RST_SYNC) $(PRIM_FIFO_REG) \
+               $(SC_RTL)/shirecache_top.sv \
+               $(CURDIR)/shirecache_top_freeclk_tb.sv \
+               $(CURDIR)/shirecache_top_freeclk_test.cc
 
 ms_TOP  := shirecache_mesh_slave_tb
 ms_SRCS := $(PKGS) $(AXI_PKG) $(PRIM_FIFO_REG) $(PRIM_FIFO_ASYNC_HIV) $(PRIM_FIFO_ASYNC_LOV) $(PRIM_ARB_RR) \

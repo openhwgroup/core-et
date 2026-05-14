@@ -18,6 +18,9 @@
 // - Original uses debug_axi_port (not present in new)
 // - Original uses status_monitor_gpio[1:0] for bank select; new uses
 //   status_monitor_bank_sel_i
+// - Original top has no separate free-running monitor clock port; new
+//   clk_free_i is driven from cache clk_i here to keep top-level compare
+//   behavior equivalent while unit DV covers the distinct translated path.
 // - Clock: noc_clk = cache_clk for simplicity (no real CDC test)
 
 `include "soc.vh"
@@ -374,6 +377,7 @@ module cosim_top_tb
   // ════════════════════════════════════════════════════════
   shirecache_top u_new (
     .clk_i                            (clk_i),
+    .clk_free_i                       (clk_i),  // original shire_cache has no separate top free-clock port
     .rst_cold_ni                      (rst_ni),
     .rst_ni                           (rst_ni),
     .rst_debug_ni                     (rst_ni),

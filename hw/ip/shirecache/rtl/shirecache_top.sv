@@ -39,6 +39,7 @@ module shirecache_top
 ) (
   // ── Clocks and resets ────────────────────────────────
   input  logic                                             clk_i,         // cache clock
+  input  logic                                             clk_free_i,    // free-running monitor clock (perfmon, trace)
   input  logic                                             rst_cold_ni,   // cold reset (active-low)
   input  logic                                             rst_ni,        // warm reset (active-low)
   input  logic                                             rst_debug_ni,  // debug reset (active-low)
@@ -451,7 +452,7 @@ module shirecache_top
       .L2HpfImplemented (L2hpfImplemented)
     ) u_bank (
       .clk_i                              (clk_i),
-      .clk_free_i                         (clk_i),   // TODO: wire free-running clock
+      .clk_free_i                         (clk_free_i),
       .rst_ni                             (rst_warm_n),
       .rst_c_ni                           (rst_cold_n),
       .rst_d_ni                           (rst_debug_n),
