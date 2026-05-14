@@ -25,13 +25,13 @@ VPU-only types and datapath blocks that sit behind that boundary.
 | `txfma_booth_ppg_32r4` | `rtl/txfma_booth_ppg_32r4.sv` | `txfma_booth_ppg_32r4.v` | Done |
 | `txfma_wallace1` | `rtl/txfma_wallace1.sv` | `txfma_wallace1.v` | Done |
 | `txfma_wallace2` | `rtl/txfma_wallace2.sv` | `txfma_wallace2.v` | Done |
-| `txfma_c0` | `rtl/txfma_c0.sv` | `txfma_c0.v` | RTL present, covered through `txfma_top`/`txfmaexp_top` cosim |
-| `txfma_c1` | `rtl/txfma_c1.sv` | `txfma_c1.v` | RTL present, covered through `txfma_top`/`txfmaexp_top` cosim |
-| `txfma_c2` | `rtl/txfma_c2.sv` | `txfma_c2.v` | RTL present, covered through `txfma_top`/`txfmaexp_top` cosim |
-| `txfma_c3` | `rtl/txfma_c3.sv` | `txfma_c3.v` | RTL present, covered through `txfma_top`/`txfmaexp_top` cosim |
-| `txfma_c4` | `rtl/txfma_c4.sv` | `txfma_c4.v` | RTL present, covered through `txfma_top`/`txfmaexp_top` cosim |
-| `txfma_c5` | `rtl/txfma_c5.sv` | `txfma_c5.v` | RTL present, covered through `txfma_top`/`txfmaexp_top` cosim |
-| `txfma_c6` | `rtl/txfma_c6.sv` | `txfma_c6.v` | RTL present, covered through `txfma_top`/`txfmaexp_top` cosim |
+| `txfma_c0` | `rtl/txfma_c0.sv` | `txfma_c0.v` | Done (903 standalone checks, 9,101,638 standalone cosim comparisons) |
+| `txfma_c1` | `rtl/txfma_c1.sv` | `txfma_c1.v` | Done (295 standalone checks, 65,648 standalone cosim comparisons) |
+| `txfma_c2` | `rtl/txfma_c2.sv` | `txfma_c2.v` | Done (312 standalone checks, 192,888 standalone cosim comparisons) |
+| `txfma_c3` | `rtl/txfma_c3.sv` | `txfma_c3.v` | Done (351 standalone checks, 61,545 standalone cosim comparisons) |
+| `txfma_c4` | `rtl/txfma_c4.sv` | `txfma_c4.v` | Done (283 standalone checks, 32,824 standalone cosim comparisons) |
+| `txfma_c5` | `rtl/txfma_c5.sv` | `txfma_c5.v` | Done (301 standalone checks, 90,266 standalone cosim comparisons) |
+| `txfma_c6` | `rtl/txfma_c6.sv` | `txfma_c6.v` | Done (386 standalone checks, 188,784 standalone cosim comparisons) |
 | `txfma_e1` | `rtl/txfma_e1.sv` | `txfma_e1.v` | RTL present, covered through `txfmaexp_top` cosim |
 | `txfma_e2` | `rtl/txfma_e2.sv` | `txfma_e2.v` | RTL present, covered through `txfmaexp_top` cosim |
 | `txfma_e4` | `rtl/txfma_e4.sv` | `txfma_e4.v` | RTL present, covered through `txfmaexp_top` cosim |
@@ -504,9 +504,11 @@ The imported staged TXFMA helpers preserve the original split between control
 `txfma_e5`, `txfma_e6`), and fraction/result (`txfma_f0`..`txfma_f6`) pipeline
 logic. Smaller helpers such as `txfma_ediff_opdorder_logic`,
 `txfma_exp_special_detect`, `txfma_frac_zero_detect`, and `txfma_rnd_adder`
-keep the original leaf boundaries. Most of these are exercised through the
-imported TXFMA top cosims; `txfma_exp_special_detect` is imported for boundary
-completeness but still needs standalone DV/cosim coverage.
+keep the original leaf boundaries. The C-stage leaves (`txfma_c0`..`txfma_c6`)
+now have standalone expected-value unit tests and all-output standalone cosims
+against the original leaves, in addition to the imported TXFMA top cosims.
+`txfma_exp_special_detect` is imported for boundary completeness but still needs
+standalone DV/cosim coverage.
 
 ### `txfmactl_top`, `txfmaexp_top`, and `txfmafrac_top`
 
