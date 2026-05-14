@@ -1,220 +1,360 @@
 // Copyright (c) 2026 Ainekko
 // SPDX-License-Identifier: Apache-2.0
 //
-// Co-simulation test: original minion_debug_apb_slv vs new translation.
+// Standalone co-simulation for minion_debug_apb_slv.
 
 #include "Vcosim_minion_debug_apb_slv_tb.h"
 #include "cosim_ctrl.h"
+
 #include <cstdint>
+#include <string>
 
 using DUT = Vcosim_minion_debug_apb_slv_tb;
 
 namespace {
 
-constexpr uint16_t kPpMsg = 0x800;
-constexpr uint16_t kThread1 = 0x200;
-constexpr uint16_t kNxData0 = 0x0;
-constexpr uint16_t kNxData1 = 0x1;
-constexpr uint16_t kAxData0 = 0x2;
-constexpr uint16_t kAxProgBuf0 = 0x4;
-constexpr uint16_t kAxProgBuf1 = 0x5;
-constexpr uint16_t kNxProgBuf0 = 0x6;
-constexpr uint16_t kAbsCmd = 0x8;
-constexpr uint16_t kInvalid = 0x1f;
+constexpr uint32_t kPpMsg = 2;
+constexpr uint32_t kPpShift = 10;
+constexpr uint32_t kThreadShift = 9;
+constexpr uint32_t kAddrMask = 0xfff;
+constexpr uint64_t kAll64 = ~uint64_t{0};
 
-uint32_t rng = 0x6d2b79f5u;
-uint32_t next_rand() {
-  rng ^= rng << 13;
-  rng ^= rng >> 17;
-  rng ^= rng << 5;
-  return rng;
-}
-uint64_t next_rand64() {
-  return (static_cast<uint64_t>(next_rand()) << 32) | next_rand();
-}
+enum DebugReg : uint32_t {
+    kNxData0    = 0x0,
+    kNxData1    = 0x1,
+    kAxData0    = 0x2,
+    kAxData1    = 0x3,
+    kAxProgBuf0 = 0x4,
+    kAxProgBuf1 = 0x5,
+    kNxProgBuf0 = 0x6,
+    kNxProgBuf1 = 0x7,
+    kAbsCmd     = 0x8,
+    kInvalidHi  = 0xa,
+};
 
-void idle(DUT* d) {
-  d->stim_apb_paddr = 0;
-  d->stim_apb_pwrite = 0;
-  d->stim_apb_psel = 0;
-  d->stim_apb_penable = 0;
-  d->stim_apb_pwdata = 0;
-  d->stim_csr_wdata = 0;
-  d->stim_update_ddata0 = 0;
-  d->stim_in_debug_mode = 0;
+uint32_t rng_state = 0x4d595df4u;
+
+uint32_t xorshift32() {
+    rng_state ^= rng_state << 13;
+    rng_state ^= rng_state >> 17;
+    rng_state ^= rng_state << 5;
+    return rng_state;
 }
 
-void compare_all(CosimCtrl<DUT>& sim) {
-  auto* d = sim.dut.get();
-  sim.compare("apb_pready", d->orig_apb_pready, d->new_apb_pready);
-  sim.compare("apb_prdata", d->orig_apb_prdata, d->new_apb_prdata);
-  sim.compare("apb_pslverr", d->orig_apb_pslverr, d->new_apb_pslverr);
-  sim.compare("read_ddata0_t0", d->orig_read_ddata0_t0, d->new_read_ddata0_t0);
-  sim.compare("read_ddata0_t1", d->orig_read_ddata0_t1, d->new_read_ddata0_t1);
-  sim.compare("ffb_wdata", d->orig_ffb_wdata, d->new_ffb_wdata);
-  sim.compare("ffb_en", d->orig_ffb_en, d->new_ffb_en);
-  sim.compare("ffb_thread_sel", d->orig_ffb_thread_sel, d->new_ffb_thread_sel);
-  sim.compare("ex_program_buffer", d->orig_ex_program_buffer, d->new_ex_program_buffer);
+uint64_t xorshift64() {
+    return (uint64_t{xorshift32()} << 32) | xorshift32();
 }
 
-void tick_and_compare(CosimCtrl<DUT>& sim) {
-  sim.tick();
-  sim.dut->eval();
-  compare_all(sim);
+uint32_t addr(DebugReg reg, uint32_t thread = 0, uint32_t pp = kPpMsg,
+              uint32_t reg_sel_hi = 0) {
+    return ((pp & 0x3u) << kPpShift) |
+           ((thread & 0x1u) << kThreadShift) |
+           ((reg_sel_hi & 0x1fu) << 4) |
+           (static_cast<uint32_t>(reg) & 0xfu);
 }
 
-void setup_apb(DUT* d, uint16_t addr, bool write, uint64_t data) {
-  d->stim_apb_paddr = addr;
-  d->stim_apb_pwrite = write ? 1 : 0;
-  d->stim_apb_psel = 1;
-  d->stim_apb_penable = 0;
-  d->stim_apb_pwdata = data;
-}
+struct InputCoverage {
+    uint32_t paddr_one = 0;
+    uint32_t paddr_zero = 0;
+    uint64_t pwdata_one = 0;
+    uint64_t pwdata_zero = 0;
+    uint64_t csr_one = 0;
+    uint64_t csr_zero = 0;
+    uint32_t update_one = 0;
+    uint32_t update_zero = 0;
+    uint32_t debug_one = 0;
+    uint32_t debug_zero = 0;
+    bool pwrite_one = false;
+    bool pwrite_zero = false;
+    bool psel_one = false;
+    bool psel_zero = false;
+    bool penable_one = false;
+    bool penable_zero = false;
+    bool reset_one = false;
+    bool reset_zero = false;
 
-void clear_apb(DUT* d) {
-  d->stim_apb_paddr = 0;
-  d->stim_apb_pwrite = 0;
-  d->stim_apb_psel = 0;
-  d->stim_apb_penable = 0;
-  d->stim_apb_pwdata = 0;
-}
-
-bool apb_access(CosimCtrl<DUT>& sim, uint16_t addr, bool write, uint64_t data,
-                bool* pslverr, uint64_t* prdata, uint8_t* ffb_en,
-                uint8_t* ex_program_buffer) {
-  *ffb_en = 0;
-  *ex_program_buffer = 0;
-  setup_apb(sim.dut.get(), addr, write, data);
-  tick_and_compare(sim);
-  *ffb_en |= sim.dut->orig_ffb_en;
-  *ex_program_buffer |= sim.dut->orig_ex_program_buffer;
-  sim.dut->stim_apb_penable = 1;
-
-  *pslverr = false;
-  *prdata = 0;
-  for (int i = 0; i < 8; ++i) {
-    sim.dut->eval();
-    compare_all(sim);
-    *ffb_en |= sim.dut->orig_ffb_en;
-    *ex_program_buffer |= sim.dut->orig_ex_program_buffer;
-    if (sim.dut->orig_apb_pready && sim.dut->new_apb_pready) {
-      *pslverr = sim.dut->orig_apb_pslverr;
-      *prdata = sim.dut->orig_apb_prdata;
-      sim.tick();
-      sim.dut->eval();
-      compare_all(sim);
-      clear_apb(sim.dut.get());
-      tick_and_compare(sim);
-      return true;
+    void sample_reset(uint8_t rst_ni) {
+        reset_one |= rst_ni != 0;
+        reset_zero |= rst_ni == 0;
     }
-    tick_and_compare(sim);
-    *ffb_en |= sim.dut->orig_ffb_en;
-    *ex_program_buffer |= sim.dut->orig_ex_program_buffer;
-  }
 
-  clear_apb(sim.dut.get());
-  tick_and_compare(sim);
-  return false;
+    void sample(const DUT& dut) {
+        const uint32_t paddr = dut.stim_apb_paddr & kAddrMask;
+        paddr_one |= paddr;
+        paddr_zero |= (~paddr) & kAddrMask;
+
+        const uint64_t pwdata = dut.stim_apb_pwdata;
+        pwdata_one |= pwdata;
+        pwdata_zero |= ~pwdata;
+
+        const uint64_t csr = dut.stim_csr_wdata;
+        csr_one |= csr;
+        csr_zero |= ~csr;
+
+        const uint32_t update = dut.stim_update_ddata0 & 0x3u;
+        update_one |= update;
+        update_zero |= (~update) & 0x3u;
+
+        const uint32_t debug = dut.stim_in_debug_mode & 0x3u;
+        debug_one |= debug;
+        debug_zero |= (~debug) & 0x3u;
+
+        pwrite_one |= dut.stim_apb_pwrite != 0;
+        pwrite_zero |= dut.stim_apb_pwrite == 0;
+        psel_one |= dut.stim_apb_psel != 0;
+        psel_zero |= dut.stim_apb_psel == 0;
+        penable_one |= dut.stim_apb_penable != 0;
+        penable_zero |= dut.stim_apb_penable == 0;
+        sample_reset(dut.rst_ni);
+    }
+
+    void check(CosimCtrl<DUT>& sim) const {
+        sim.check((paddr_one & kAddrMask) == kAddrMask && (paddr_zero & kAddrMask) == kAddrMask,
+                  "cosim drove every APB address bit to both 0 and 1");
+        sim.check(pwdata_one == kAll64 && pwdata_zero == kAll64,
+                  "cosim drove every APB write-data bit to both 0 and 1");
+        sim.check(csr_one == kAll64 && csr_zero == kAll64,
+                  "cosim drove every CSR write-data bit to both 0 and 1");
+        sim.check((update_one & 0x3u) == 0x3u && (update_zero & 0x3u) == 0x3u,
+                  "cosim drove every update_ddata0 bit to both 0 and 1");
+        sim.check((debug_one & 0x3u) == 0x3u && (debug_zero & 0x3u) == 0x3u,
+                  "cosim drove every in_debug_mode bit to both 0 and 1");
+        sim.check(pwrite_one && pwrite_zero, "cosim toggled apb_pwrite");
+        sim.check(psel_one && psel_zero, "cosim toggled apb_psel");
+        sim.check(penable_one && penable_zero, "cosim toggled apb_penable");
+        sim.check(reset_one && reset_zero, "cosim toggled reset");
+    }
+};
+
+std::string label(const char* phase, const char* signal) {
+    return std::string(phase) + ":" + signal;
+}
+
+void compare_all(CosimCtrl<DUT>& sim, const char* phase) {
+    sim.compare(label(phase, "apb_pready"),
+                sim.dut->orig_apb_pready_o, sim.dut->new_apb_pready_o);
+    sim.compare(label(phase, "apb_prdata"),
+                sim.dut->orig_apb_prdata_o, sim.dut->new_apb_prdata_o);
+    sim.compare(label(phase, "apb_pslverr"),
+                sim.dut->orig_apb_pslverr_o, sim.dut->new_apb_pslverr_o);
+    sim.compare(label(phase, "read_ddata0_t0"),
+                sim.dut->orig_read_ddata0_t0_o, sim.dut->new_read_ddata0_t0_o);
+    sim.compare(label(phase, "read_ddata0_t1"),
+                sim.dut->orig_read_ddata0_t1_o, sim.dut->new_read_ddata0_t1_o);
+    sim.compare(label(phase, "ffb_wdata"),
+                sim.dut->orig_ffb_wdata_o, sim.dut->new_ffb_wdata_o);
+    sim.compare(label(phase, "ffb_en"),
+                sim.dut->orig_ffb_en_o, sim.dut->new_ffb_en_o);
+    sim.compare(label(phase, "ffb_thread_sel"),
+                sim.dut->orig_ffb_thread_sel_o, sim.dut->new_ffb_thread_sel_o);
+    sim.compare(label(phase, "ex_program_buffer"),
+                sim.dut->orig_ex_program_buffer_o, sim.dut->new_ex_program_buffer_o);
+}
+
+void eval_compare(CosimCtrl<DUT>& sim, InputCoverage& cov, const char* phase) {
+    cov.sample(*sim.dut);
+    sim.dut->eval();
+    compare_all(sim, phase);
+}
+
+void tick_compare(CosimCtrl<DUT>& sim, InputCoverage& cov, const char* phase) {
+    cov.sample(*sim.dut);
+    sim.tick();
+    compare_all(sim, phase);
+}
+
+void drive_idle(CosimCtrl<DUT>& sim) {
+    sim.dut->stim_apb_paddr = 0;
+    sim.dut->stim_apb_pwrite = 0;
+    sim.dut->stim_apb_psel = 0;
+    sim.dut->stim_apb_penable = 0;
+    sim.dut->stim_apb_pwdata = 0;
+    sim.dut->stim_csr_wdata = 0;
+    sim.dut->stim_update_ddata0 = 0;
+    sim.dut->stim_in_debug_mode = 0x3;
+}
+
+void drive_setup(CosimCtrl<DUT>& sim, uint32_t paddr, bool write, uint64_t wdata,
+                 uint64_t csr_wdata = 0, uint32_t update = 0, uint32_t debug = 0x3) {
+    sim.dut->stim_apb_paddr = paddr;
+    sim.dut->stim_apb_pwrite = write ? 1 : 0;
+    sim.dut->stim_apb_psel = 1;
+    sim.dut->stim_apb_penable = 0;
+    sim.dut->stim_apb_pwdata = wdata;
+    sim.dut->stim_csr_wdata = csr_wdata;
+    sim.dut->stim_update_ddata0 = update & 0x3u;
+    sim.dut->stim_in_debug_mode = debug & 0x3u;
+}
+
+void drive_access(CosimCtrl<DUT>& sim, uint64_t csr_wdata = 0,
+                  uint32_t update = 0, uint32_t debug = 0x3) {
+    sim.dut->stim_apb_psel = 1;
+    sim.dut->stim_apb_penable = 1;
+    sim.dut->stim_csr_wdata = csr_wdata;
+    sim.dut->stim_update_ddata0 = update & 0x3u;
+    sim.dut->stim_in_debug_mode = debug & 0x3u;
+}
+
+void apb_read(CosimCtrl<DUT>& sim, InputCoverage& cov, uint32_t paddr,
+              const char* name, uint32_t debug = 0x3) {
+    drive_setup(sim, paddr, false, 0, 0, 0, debug);
+    eval_compare(sim, cov, name);
+    tick_compare(sim, cov, name);
+    drive_access(sim, 0, 0, debug);
+    eval_compare(sim, cov, name);
+    tick_compare(sim, cov, name);
+    drive_idle(sim);
+    eval_compare(sim, cov, name);
+    tick_compare(sim, cov, name);
+}
+
+void apb_write_nonexec(CosimCtrl<DUT>& sim, InputCoverage& cov, uint32_t paddr,
+                       uint64_t wdata, const char* name, uint32_t debug = 0x3,
+                       uint64_t csr_wdata = 0, uint32_t update = 0) {
+    drive_setup(sim, paddr, true, wdata, 0, 0, debug);
+    eval_compare(sim, cov, name);
+    tick_compare(sim, cov, name);
+    drive_access(sim, csr_wdata, update, debug);
+    eval_compare(sim, cov, name);
+    tick_compare(sim, cov, name);
+    drive_idle(sim);
+    eval_compare(sim, cov, name);
+    tick_compare(sim, cov, name);
+}
+
+void apb_write_exec(CosimCtrl<DUT>& sim, InputCoverage& cov, uint32_t paddr,
+                    uint64_t wdata, const char* name, uint32_t debug = 0x3) {
+    drive_setup(sim, paddr, true, wdata, 0, 0, debug);
+    eval_compare(sim, cov, name);
+    tick_compare(sim, cov, name);
+    drive_access(sim, 0, 0, debug);
+    eval_compare(sim, cov, name);
+    tick_compare(sim, cov, name);
+    drive_access(sim, 0, 0, debug);
+    eval_compare(sim, cov, name);
+    tick_compare(sim, cov, name);
+    drive_idle(sim);
+    eval_compare(sim, cov, name);
+    tick_compare(sim, cov, name);
+}
+
+void drive_random(CosimCtrl<DUT>& sim, uint32_t mode) {
+    sim.dut->stim_apb_paddr = xorshift32() & kAddrMask;
+    sim.dut->stim_apb_pwrite = xorshift32() & 0x1u;
+    sim.dut->stim_apb_pwdata = xorshift64();
+    sim.dut->stim_csr_wdata = xorshift64();
+    sim.dut->stim_update_ddata0 = xorshift32() & 0x3u;
+    sim.dut->stim_in_debug_mode = xorshift32() & 0x3u;
+
+    switch (mode & 0x7u) {
+        case 0:
+            sim.dut->stim_apb_psel = 0;
+            sim.dut->stim_apb_penable = 0;
+            break;
+        case 1:
+            sim.dut->stim_apb_psel = 1;
+            sim.dut->stim_apb_penable = 0;
+            break;
+        case 2:
+            sim.dut->stim_apb_psel = 1;
+            sim.dut->stim_apb_penable = 1;
+            break;
+        default:
+            sim.dut->stim_apb_psel = xorshift32() & 0x1u;
+            sim.dut->stim_apb_penable = xorshift32() & 0x1u;
+            break;
+    }
 }
 
 }  // namespace
 
 int main(int argc, char** argv) {
-  CosimCtrl<DUT> sim(argc, argv);
-  sim.max_time = 2000000;
-  auto* d = sim.dut.get();
+    CosimCtrl<DUT> sim(argc, argv);
+    sim.max_time = 200000;
+    InputCoverage cov;
 
-  idle(d);
-  d->rst_ni = 0;
-  for (int i = 0; i < 4; ++i) tick_and_compare(sim);
-  d->rst_ni = 1;
-  tick_and_compare(sim);
+    drive_idle(sim);
+    cov.sample_reset(0);
+    cov.sample_reset(1);
+    sim.reset();
+    eval_compare(sim, cov, "post_reset");
 
-  d->stim_in_debug_mode = 0x3;
-  d->stim_csr_wdata = 0x1122334455667788ull;
-  d->stim_update_ddata0 = 0x1;
-  tick_and_compare(sim);
-  d->stim_update_ddata0 = 0;
-  sim.check(d->orig_read_ddata0_t0 == 0x1122334455667788ull &&
-            d->new_read_ddata0_t0 == 0x1122334455667788ull,
-            "CSR update reaches ddata0 thread0");
+    // Directed protocol and decode coverage.
+    apb_write_nonexec(sim, cov, addr(kNxData0, 0), 0x0000'0000'1122'3344ULL,
+                      "write_t0_nxdata0");
+    apb_write_nonexec(sim, cov, addr(kNxData1, 0), 0x0000'0000'5566'7788ULL,
+                      "write_t0_nxdata1");
+    apb_read(sim, cov, addr(kNxData0, 0), "read_t0_nxdata0");
+    apb_read(sim, cov, addr(kNxData1, 0), "read_t0_nxdata1");
+    apb_write_nonexec(sim, cov, addr(kNxData0, 1), 0x0000'0000'99aa'bbccULL,
+                      "write_t1_nxdata0");
+    apb_write_nonexec(sim, cov, addr(kNxData1, 1), 0x0000'0000'ddee'ff00ULL,
+                      "write_t1_nxdata1");
+    apb_read(sim, cov, addr(kNxData0, 1), "read_t1_nxdata0");
+    apb_read(sim, cov, addr(kNxData1, 1), "read_t1_nxdata1");
 
-  bool err = false;
-  uint64_t rdata = 0;
-  uint8_t ffb_en = 0;
-  uint8_t ex_pb = 0;
-  bool ready = apb_access(sim, kPpMsg | kNxData0, false, 0, &err, &rdata, &ffb_en, &ex_pb);
-  sim.check(ready && !err && rdata == 0x55667788ull,
-            "valid read returns ddata0 low word");
+    apb_write_exec(sim, cov, addr(kAxData0, 0), 0x1111'2222'3333'4444ULL,
+                   "exec_axdata0_t0");
+    apb_write_exec(sim, cov, addr(kAxData1, 1), 0x5555'6666'7777'8888ULL,
+                   "exec_axdata1_t1");
+    apb_write_exec(sim, cov, addr(kAxProgBuf0, 0), 0x9999'aaaa'bbbb'ccccULL,
+                   "exec_axprogbuf0_t0");
+    apb_write_exec(sim, cov, addr(kAxProgBuf1, 1), 0xdddd'eeee'ffff'0001ULL,
+                   "exec_axprogbuf1_t1");
+    apb_write_exec(sim, cov, addr(kAbsCmd, 0), 0x2345'6789'abcd'ef01ULL,
+                   "exec_abscmd_t0");
 
-  // Regression for the EN_FF macro translation: s1_rdata is not reset by the
-  // original reset input, while the adjacent RST_EN_FF control registers are.
-  d->rst_ni = 0;
-  tick_and_compare(sim);
-  sim.check(d->orig_apb_prdata == 0x55667788ull && d->new_apb_prdata == 0x55667788ull,
-            "read-data stage retains value while reset is asserted");
-  d->rst_ni = 1;
-  tick_and_compare(sim);
+    apb_write_nonexec(sim, cov, addr(kNxProgBuf0, 0), 0x1357'9bdf'2468'ace0ULL,
+                      "ffb_nxprogbuf0_t0");
+    apb_write_nonexec(sim, cov, addr(kNxProgBuf1, 1), 0xfdb9'7531'eca8'6420ULL,
+                      "ffb_nxprogbuf1_t1");
 
-  d->stim_in_debug_mode = 0x3;
-  ready = apb_access(sim, kPpMsg | kNxData1, true, 0xaabbccddull, &err, &rdata, &ffb_en, &ex_pb);
-  sim.check(ready && !err && d->orig_read_ddata0_t0 == 0xaabbccdd55667788ull,
-            "write high ddata0 word completes");
+    apb_read(sim, cov, addr(kNxData0, 0, 0), "bad_pp_read");
+    apb_write_nonexec(sim, cov, addr(kInvalidHi, 0), 0x0bad'c0de'0000'0001ULL,
+                      "invalid_register_write");
+    apb_write_nonexec(sim, cov, addr(kNxData0, 1), 0x0000'0000'aaaa'5555ULL,
+                      "debug_disabled_write", 0x1);
+    apb_write_exec(sim, cov, addr(kAxProgBuf0, 1), 0xdead'beef'feed'f00dULL,
+                   "debug_disabled_execute", 0x1);
 
-  ready = apb_access(sim, kPpMsg | kThread1 | kNxData0, true, 0x01020304ull,
-                     &err, &rdata, &ffb_en, &ex_pb);
-  sim.check(ready && !err && d->orig_read_ddata0_t1 == 0x01020304ull,
-            "thread select steers ddata0 write");
+    // CSR writeback path and APB/CSR same-cycle priority.
+    drive_idle(sim);
+    sim.dut->stim_csr_wdata = 0x0123'4567'89ab'cdefULL;
+    sim.dut->stim_update_ddata0 = 0x3;
+    eval_compare(sim, cov, "csr_update_both_eval");
+    tick_compare(sim, cov, "csr_update_both_tick");
+    apb_write_nonexec(sim, cov, addr(kNxData0, 0), 0x0000'0000'1111'2222ULL,
+                      "csr_overrides_apb", 0x3, 0xfedc'ba98'7654'3210ULL, 0x1);
 
-  ready = apb_access(sim, kPpMsg | kAxProgBuf0, true, 0xfeedfacecafebeefull,
-                     &err, &rdata, &ffb_en, &ex_pb);
-  sim.check(ready && !err && (ffb_en & 0x4) && (ex_pb & 0x1),
-            "AX progbuf0 write forwards data and executes");
+    // Deterministic all-zero/all-one samples guarantee vector input bit coverage.
+    sim.dut->stim_apb_paddr = 0;
+    sim.dut->stim_apb_pwrite = 0;
+    sim.dut->stim_apb_psel = 0;
+    sim.dut->stim_apb_penable = 0;
+    sim.dut->stim_apb_pwdata = 0;
+    sim.dut->stim_csr_wdata = 0;
+    sim.dut->stim_update_ddata0 = 0;
+    sim.dut->stim_in_debug_mode = 0;
+    eval_compare(sim, cov, "all_zero_inputs_eval");
+    tick_compare(sim, cov, "all_zero_inputs_tick");
 
-  ready = apb_access(sim, kPpMsg | kAxProgBuf1, true, 0x0123456789abcdefull,
-                     &err, &rdata, &ffb_en, &ex_pb);
-  sim.check(ready && !err && (ffb_en & 0x8) && (ex_pb & 0x1),
-            "AX progbuf1 write enables high program-buffer word and executes");
+    sim.dut->stim_apb_paddr = kAddrMask;
+    sim.dut->stim_apb_pwrite = 1;
+    sim.dut->stim_apb_psel = 1;
+    sim.dut->stim_apb_penable = 1;
+    sim.dut->stim_apb_pwdata = kAll64;
+    sim.dut->stim_csr_wdata = kAll64;
+    sim.dut->stim_update_ddata0 = 0x3;
+    sim.dut->stim_in_debug_mode = 0x3;
+    eval_compare(sim, cov, "all_one_inputs_eval");
+    tick_compare(sim, cov, "all_one_inputs_tick");
 
-  ready = apb_access(sim, kPpMsg | kNxProgBuf0, true, 0xf00dull,
-                     &err, &rdata, &ffb_en, &ex_pb);
-  sim.check(ready && !err && (ffb_en & 0x4) && !(ex_pb & 0x1),
-            "NX progbuf write enables word without execute");
+    for (int i = 0; i < 5000; ++i) {
+        drive_random(sim, xorshift32());
+        eval_compare(sim, cov, "random_eval");
+        tick_compare(sim, cov, "random_tick");
+    }
 
-  ready = apb_access(sim, kPpMsg | kAbsCmd, true, 0x1234ull, &err, &rdata, &ffb_en, &ex_pb);
-  sim.check(ready && !err && ((ffb_en & 0x3) == 0x3) && (ex_pb & 0x1),
-            "abscmd write enables low program-buffer words and executes");
-
-  d->stim_in_debug_mode = 0x0;
-  ready = apb_access(sim, kPpMsg | kNxData0, false, 0, &err, &rdata, &ffb_en, &ex_pb);
-  sim.check(ready && err, "access is rejected when selected thread is not halted");
-
-  d->stim_in_debug_mode = 0x3;
-  ready = apb_access(sim, kPpMsg | kInvalid, false, 0, &err, &rdata, &ffb_en, &ex_pb);
-  sim.check(ready && err, "invalid register address is rejected");
-
-  ready = apb_access(sim, kNxData0, false, 0, &err, &rdata, &ffb_en, &ex_pb);
-  sim.check(ready && err, "invalid protection prefix is rejected");
-
-  // Random APB/control traffic. It intentionally includes protocol-odd cycles
-  // and reset pulses to exercise every input bit and the reset-vs-enable order.
-  for (int cycle = 0; cycle < 6000; ++cycle) {
-    uint32_t r = next_rand();
-    d->rst_ni = ((cycle % 997) == 0) ? 0 : 1;
-    d->stim_apb_paddr = static_cast<uint16_t>(next_rand() & 0xfff);
-    d->stim_apb_pwrite = (r >> 0) & 1;
-    d->stim_apb_psel = (r >> 1) & 1;
-    d->stim_apb_penable = (r >> 2) & 1;
-    d->stim_apb_pwdata = next_rand64();
-    d->stim_csr_wdata = next_rand64();
-    d->stim_update_ddata0 = (r >> 3) & 0x3;
-    d->stim_in_debug_mode = (r >> 5) & 0x3;
-    tick_and_compare(sim);
-  }
-
-  d->rst_ni = 1;
-  idle(d);
-  tick_and_compare(sim);
-
-  return sim.finish();
+    cov.check(sim);
+    return sim.finish();
 }
