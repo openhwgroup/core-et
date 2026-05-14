@@ -52,7 +52,7 @@
 | `prim_arb_lru_2bid` | 30 checks | 2264 comparisons vs `arb_lru_2_bid` | Done |
 | `prim_arb_rr` | 29 checks | 1150 comparisons vs `arb_rr_data` | Done |
 | `prim_arb_prio` | 24 checks | 1068 comparisons vs `arb_prio_data_held` | Done |
-| `prim_hot2bin` | — | — | Implemented; standalone DV pending |
+| `prim_hot2bin` | 311 checks | 12,168 comparisons vs `hot2bin` + `onehot_mux` | Done |
 | `prim_rf_1r1w` | 26 checks | 2122 comparisons vs `rf_latch_1r_1w` | Done |
 | `prim_rf_1r1w_dec` | 12 checks | 2517 comparisons vs `rf_latch_1r_1w_dec` | Done |
 | `prim_rf_1r1w_reg` | 13 checks | 2265 comparisons vs `rf_latch_1r_1w_reg` | Done |
@@ -412,10 +412,10 @@ backfilled.
 
 | Metric | Count |
 |--------|-------|
-| Unit-test Makefiles | 66 |
-| Test suites discovered by `make test` | 222 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 240 |
+| Unit-test Makefiles | 67 |
+| Test suites discovered by `make test` | 223 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 241 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 69 VPU unit suites + 240 cosim Makefile runs |
+| Targeted update runs | 69 VPU unit suites + 241 cosim Makefile runs |
 | Targeted update failures | 0 |
