@@ -8,7 +8,8 @@
 //
 // This C++ driver:
 //   1. Resets both modules
-//   2. Waits for idx_cop_sm post-reset ALL_INV to complete (all 4 banks)
+//   2a. Checks translated top-level DFT MBIST enable propagation
+//   2b. Waits for idx_cop_sm post-reset ALL_INV to complete (all 4 banks)
 //   3. Compares idle behavior (no spurious outputs)
 //   3b. Exercises DFT SRAM clock and override while idle
 //   4-8. L2 read requests: single, multi-bank, back-to-back, cache-hit, cross-bank
@@ -96,6 +97,9 @@ static void clear_inputs(DUT* dut) {
     // DFT SRAM clock override defaults to functional SRAM clock path.
     dut->dft_sram_clk_i     = 0;
     dut->dft_clk_override_i = 0;
+
+    // DFT MBIST disabled by default; directed phases assert it explicitly.
+    dut->dft_mbist_en_i = 0;
 }
 
 // ── Build an L2-aligned address ──
@@ -174,9 +178,48 @@ static void drive_read_with_data(DUT* dut, uint8_t port, uint8_t bank,
         dut->req_data_i[i] = data_seed + i;
 }
 
+// ── Compare top-level icache BIST request fields ──
+static void compare_bist(CosimCtrl<DUT>& sim) {
+    auto* d = sim.dut.get();
+
+    sim.compare("icache_bist.mbist_on",
+                (uint32_t)d->orig_icache_bist_mbist_on_o,
+                (uint32_t)d->new_icache_bist_mbist_on_o);
+
+    sim.compare("icache_bist.mbi_sel",
+                (uint32_t)d->orig_icache_bist_mbi_sel_o,
+                (uint32_t)d->new_icache_bist_mbi_sel_o);
+
+    sim.compare("icache_bist.mbi_rd_en",
+                (uint32_t)d->orig_icache_bist_mbi_rd_en_o,
+                (uint32_t)d->new_icache_bist_mbi_rd_en_o);
+
+    sim.compare("icache_bist.mbi_wr_en",
+                (uint32_t)d->orig_icache_bist_mbi_wr_en_o,
+                (uint32_t)d->new_icache_bist_mbi_wr_en_o);
+
+    sim.compare("icache_bist.mbi_addr",
+                (uint32_t)d->orig_icache_bist_mbi_addr_o,
+                (uint32_t)d->new_icache_bist_mbi_addr_o);
+
+    sim.compare("icache_bist.mbi_wdata_lo",
+                (uint64_t)d->orig_icache_bist_mbi_wdata_lo_o,
+                (uint64_t)d->new_icache_bist_mbi_wdata_lo_o);
+
+    sim.compare("icache_bist.mbi_wdata_mid",
+                (uint64_t)d->orig_icache_bist_mbi_wdata_mid_o,
+                (uint64_t)d->new_icache_bist_mbi_wdata_mid_o);
+
+    sim.compare("icache_bist.mbi_wdata_hi",
+                (uint32_t)d->orig_icache_bist_mbi_wdata_hi_o,
+                (uint32_t)d->new_icache_bist_mbi_wdata_hi_o);
+}
+
 // ── Compare key outputs each cycle (optionally skip neigh_sc_rsp_valid) ──
 static void compare_primary(CosimCtrl<DUT>& sim, bool skip_rsp_valid = false) {
     auto* d = sim.dut.get();
+
+    compare_bist(sim);
 
     if (!skip_rsp_valid) {
         sim.compare("neigh_sc_rsp_valid",
@@ -340,9 +383,52 @@ int main(int argc, char** argv) {
     sim.reset(5);
 
     // ════════════════════════════════════════════════════════
-    // Phase 2: Wait for idx_cop_sm ALL_INV (all 4 banks)
+    // Phase 2a: Directed DFT MBIST enable propagation
     // ════════════════════════════════════════════════════════
-    printf("Phase 2: Wait for post-reset quiescence (4 banks)\n");
+    printf("Phase 2a: DFT MBIST enable propagation\n");
+    {
+        clear_inputs(dut);
+        sim.tick();
+        compare_bist(sim);
+        sim.check(dut->new_icache_bist_mbist_on_o == 0,
+                  "new icache mbist_on starts low");
+        sim.check(dut->orig_icache_bist_mbist_on_o == 0,
+                  "orig icache mbist_on starts low");
+
+        dut->dft_mbist_en_i = 1;
+        bool saw_new_mbist_on = false;
+        bool saw_orig_mbist_on = false;
+        for (int i = 0; i < 6; i++) {
+            sim.tick();
+            compare_bist(sim);
+            saw_new_mbist_on |= dut->new_icache_bist_mbist_on_o;
+            saw_orig_mbist_on |= dut->orig_icache_bist_mbist_on_o;
+        }
+        sim.check(saw_new_mbist_on, "new dft_mbist_en_i drives icache mbist_on high");
+        sim.check(saw_orig_mbist_on, "orig dft__mbist_en drives icache mbist_on high");
+
+        dut->dft_mbist_en_i = 0;
+        bool saw_new_mbist_off = false;
+        bool saw_orig_mbist_off = false;
+        for (int i = 0; i < 6; i++) {
+            sim.tick();
+            compare_bist(sim);
+            saw_new_mbist_off |= !dut->new_icache_bist_mbist_on_o;
+            saw_orig_mbist_off |= !dut->orig_icache_bist_mbist_on_o;
+        }
+        sim.check(saw_new_mbist_off, "new icache mbist_on drops after dft_mbist_en_i deasserts");
+        sim.check(saw_orig_mbist_off, "orig icache mbist_on drops after dft__mbist_en deasserts");
+
+        // Re-apply reset so the functional cache phases begin from the same
+        // post-reset ALL_INV state they used before the MBIST directed check.
+        clear_inputs(dut);
+        sim.reset(5);
+    }
+
+    // ════════════════════════════════════════════════════════
+    // Phase 2b: Wait for idx_cop_sm ALL_INV (all 4 banks)
+    // ════════════════════════════════════════════════════════
+    printf("Phase 2b: Wait for post-reset quiescence (4 banks)\n");
     if (!wait_for_quiescence(sim)) {
         printf("  ERROR: modules did not reach quiescence within timeout\n");
     }
