@@ -399,7 +399,7 @@ Replaces: `shire_cache_bank` (1370 lines).
 
 ### shirecache_top
 
-Top-level cache. Instantiates 4× `shirecache_bank`, 2× `shirecache_xbar` (request + response crossbars), 2× `shirecache_mesh_master` (to_l3, to_sys), 1× `shirecache_mesh_slave`, 3× `prim_rst_sync` (cold, warm, debug), 1× `prim_fifo_reg` (UC response relay). Routes neighborhood request/response ports through crossbars to banks. Clock domains are `clk_i` for cache logic, `noc_clk_i` for NOC/mesh CDC endpoints, and `clk_free_i` for bank-level trace/performance-monitor logic that must remain observable when functional clock gating is applied. The top-level `dft_sram_clk_i` port is routed unchanged to every bank; `dft_i.sram_clk_override` selects that clock inside the RAM-wrapper `prim_clk_mux` seams.
+Top-level cache. Instantiates 4× `shirecache_bank`, 2× `shirecache_xbar` (request + response crossbars), 2× `shirecache_mesh_master` (to_l3, to_sys), 1× `shirecache_mesh_slave`, 3× `prim_rst_sync` (cold, warm, debug), 1× `prim_fifo_reg` (UC response relay). Routes neighborhood request/response ports through crossbars to banks. Clock domains are `clk_i` for cache logic, `noc_clk_i` for NOC/mesh CDC endpoints, and `clk_free_i` for bank-level trace/performance-monitor logic that must remain observable when functional clock gating is applied. The top-level `dft_sram_clk_i` port is routed unchanged to every bank; `dft_i.sram_clk_override` selects that clock inside the RAM-wrapper `prim_clk_mux` seams. The scalar `dft_mbist_en_i` port maps directly from the original `shire_cache.dft__mbist_en` port and is routed to every `shirecache_bank.dft_mbist_en_i`, preserving the existing `shirecache_bist_wrapper` contract.
 
 Key top-level clock/reset ports:
 - `clk_i`: cache/uncore functional clock.
@@ -410,8 +410,9 @@ Key top-level clock/reset ports:
 Key top-level DFT ports:
 - `dft_i`: consolidated DFT control struct; `dft_i.sram_clk_override` selects the SRAM DFT clock path inside RAM-wrapper muxes.
 - `dft_sram_clk_i`: SRAM DFT clock override source forwarded unchanged to every `shirecache_bank.dft_sram_clk_i`.
+- `dft_mbist_en_i`: MBIST insertion enable forwarded unchanged to every `shirecache_bank.dft_mbist_en_i`.
 
-Replaces: `shire_cache` (706 lines). Differences: `prim_rst_sync` instead of `rst_repeat`, `prim_fifo_reg` instead of `gen_fifo_reg`, ESR externalized, adds translated top-level `clk_free_i` hookup for the bank monitor-clock contract, `dft_sram_clk_i` instead of `dft__sram_clock`, drops simulation-only interface.
+Replaces: `shire_cache` (706 lines). Differences: `prim_rst_sync` instead of `rst_repeat`, `prim_fifo_reg` instead of `gen_fifo_reg`, ESR externalized, adds translated top-level `clk_free_i` hookup for the bank monitor-clock contract, `dft_sram_clk_i` instead of `dft__sram_clock`, `dft_mbist_en_i` scalar instead of `dft__mbist_en`, drops simulation-only interface.
 
 ## Differences from CORE-ET `shire_cache`
 
@@ -422,6 +423,7 @@ Replaces: `shire_cache` (706 lines). Differences: `prim_rst_sync` instead of `rs
 | RAM instances | `gen_mem1p`/`gen_mem2p` or foundry SRAMs | `prim_ram_1p`/`prim_ram_2p` | Technology abstraction |
 | Clock gating | `et_clk_gate` + `et_clk_mux2` | `prim_clk_gate` + `prim_clk_mux` | Technology abstraction with DFT |
 | DFT | Individual `dft__*` signals | `dft_pkg::dft_t` struct | Consolidated |
+| DFT MBIST enable | `dft__mbist_en` scalar top-level port | `dft_mbist_en_i` scalar top-level port routed to all banks | Preserves the BIST insertion enable as a scalar outside `dft_t`, matching the existing bank/BIST-wrapper contract |
 | Free-running monitor clock | No separate `shire_cache` top port; banks receive the functional `clock` as `fclock` | `shirecache_top.clk_free_i` forwards a distinct clock to each bank `clk_free_i` | Preserves the translated bank-level trace/perfmon free-clock contract for integration wrappers; top cosim ties it to `clk_i` for original-interface equivalence |
 | RAM config | `esr_shire_cache_ram_cfg_t` | `ram_cfg_pkg::ram_cfg_t` | Standardized |
 | Reset | Active-high synchronous | Active-low async-assert/sync-deassert | Project coding style |
@@ -434,10 +436,10 @@ Replaces: `shire_cache` (706 lines). Differences: `prim_rst_sync` instead of `rs
 
 ## Tests
 
-30 unit test suites, 44 RTL cosims (all passing, 0 mismatches).
+31 unit test suites, 44 RTL cosims (all passing, 0 mismatches).
 
 ```bash
-make -C dv test              # all 30 shirecache unit tests
+make -C dv test              # all 31 shirecache unit tests
 make -C dv lint              # Verilator lint (full hierarchy)
 
 # Individual tests (see dv/Makefile for full list):
@@ -446,6 +448,7 @@ make -C dv test-cbuf         # coalesce buffer
 make -C dv test-reqq         # request queue (full hierarchy)
 make -C dv test-bmbx         # BIST mailbox
 make -C dv test-bwrap        # BIST wrapper
+make -C dv test-topb         # top-level DFT MBIST enable propagation
 make -C dv test-l2hpf        # L2 hardware prefetcher
 make -C dv test-pmq          # perfmon qualifier
 make -C dv test-pm           # perfmon top

@@ -16,7 +16,7 @@ PRIM := $(PRIM_CLK_GATE) $(PRIM_CLK_MUX) $(PRIM_ECO_PORTS) $(PRIM_RAM_1P) $(PRIM
 
 # ── Test definitions ─────────────────────────────────────
 
-TESTS := lru set swz tram tsram dram sbm cbuf ato rbuf icsm dataq reqq_entry reqq_alloc reqq rspmux xbar mesh l3s ms mm l3b bmbx bwrap l2hpf pmq pm errl trc topclk
+TESTS := lru set swz tram tsram dram sbm cbuf ato rbuf icsm dataq reqq_entry reqq_alloc reqq rspmux xbar mesh l3s ms mm l3b bmbx bwrap l2hpf pmq pm errl trc topclk topb
 
 lru_TOP  := shirecache_pipe_lru_4w_calc
 lru_SRCS := $(PKGS) $(SC_RTL)/shirecache_pipe_lru_4w_calc.sv \
@@ -256,5 +256,10 @@ LINT_SRCS := $(PKGS) $(PRIM) $(PRIM_ARB_LRU) $(PRIM_ARB_LRU_2BID) $(PRIM_FIFO_RE
   $(SC_RTL)/shirecache_bank.sv \
   $(SC_RTL)/shirecache_top.sv
 LINT_FLAGS := -Wno-MULTITOP
+
+topb_TOP  := shirecache_top_bist_tb
+topb_SRCS := $(LINT_SRCS) \
+             $(CURDIR)/shirecache_top_bist_tb.sv \
+             $(CURDIR)/shirecache_top_bist_test.cc
 
 include $(REPO_ROOT)/mk/verilator.mk

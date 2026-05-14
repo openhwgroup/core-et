@@ -137,7 +137,7 @@ Build order: 12→13→14→15→16→17→18
 | 17 | `shirecache_mesh_slave` + `shirecache_mesh_slave_axi_port` | `shire_cache_mesh_slave` + `_axi_port` | prim_fifo_async_hiv/lov, prim_fifo_reg, prim_arb_rr, axi_pkg, l3_swizzle_get | Done — 21 unit checks, 6272 cosim comparisons |
 | 18 | `shirecache_l3_to_sys_bridge` | `shire_cache_l3_to_sys_bridge` | prim_fifo_async_hiv/lov, prim_arb_rr, prim_hot2bin | Done — 41 unit checks, 14697 cosim comparisons |
 | 19 | `shirecache_bank` | `shire_cache_bank` | pipe, reqq, dataq, rspmux, mesh, l3_slave, perfmon, err_logger, l2hpf, trace, bist_wrapper | Done — 5535 cosim comparisons (full hierarchy) |
-| 20 | `shirecache_top` | `shire_cache` | bank (×4), xbar (×2), mesh_master, mesh_slave, rst_sync | Done — 7 free-clock smoke checks; 31574 cosim comparisons (full hierarchy, all 4 banks, DFT SRAM clock override) |
+| 20 | `shirecache_top` | `shire_cache` | bank (×4), xbar (×2), mesh_master, mesh_slave, rst_sync | Done — 7 free-clock smoke checks, 10 MBIST propagation checks; 46102 cosim comparisons (full hierarchy, all 4 banks, DFT SRAM clock override, DFT MBIST enable propagation) |
 
 ### Monitoring
 
