@@ -213,7 +213,7 @@ Build order: 12→13→14→15→16→17→18
 
 | Module | Original | Test | Cosim | Status |
 |--------|----------|------|-------|--------|
-| `minion_debug_apb_slv` | `minion_debug_apb_slv` | 18 standalone checks + covered by `core_top` smoke test (9 checks) | 54,495 standalone comparisons + covered by `core_top` cosim (1,539,072 comparisons) | Done |
+| `minion_debug_apb_slv` | `minion_debug_apb_slv` | 246 standalone checks + covered by `core_top` smoke test (9 checks) | 91,251 standalone comparisons + covered by `core_top` cosim (1,539,072 comparisons) | Done (standalone block-level DV/cosim plus minion-level integration coverage) |
 | `core_top` | `core_top` | 9 smoke checks + 12 debug-APB-off checks | 1,539,072 comparisons | Done |
 | `minion_top` | `minion_top` | 17 smoke checks + 5 VpuEn=0 checks + 17 debug-APB-off checks + 15 debug-off checks + 9 execution checks | 235,284 comparisons | Done (default `VpuEn=1` instantiates translated real `vpu_top`; cosim checks every practical functional input bit sees both 0 and 1, with DFT scan/OCC/test pins documented as constrained; intentional integer-only `VpuEn=0` path keeps `null_vpu`) |
 | `null_vpu` | — | 55 checks | — | Done (new integer-only bring-up helper; intentionally non-faithful and not part of the CORE-ET translation set) |
@@ -417,5 +417,5 @@ backfilled.
 | RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 231 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 59 unit suites + 53 cosim Makefile runs |
+| Targeted update runs | 60 unit suites + 54 cosim Makefile runs |
 | Targeted update failures | 0 |
