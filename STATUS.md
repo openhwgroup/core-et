@@ -46,8 +46,8 @@
 | `prim_fifo_sram` | 44 checks (Ports=1+2) | 3549 comparisons vs `rbox_fifo` | Done |
 | `prim_fifo_reg` | 24 checks | 2091 comparisons vs `gen_fifo_reg` | Done |
 | `prim_fifo` | 100 checks | 7122 comparisons vs `gen_fifo` | Done |
-| `prim_fifo_async_hiv` | 30 checks | — (no tracked standalone cosim) | Unit done; standalone cosim pending |
-| `prim_fifo_async_lov` | — | — (no tracked standalone unit/cosim) | Implemented; standalone DV pending |
+| `prim_fifo_async_hiv` | 30 checks | 18,921 comparisons vs `vcfifo_wr_hiv_gcd` | Done |
+| `prim_fifo_async_lov` | 63 checks | 18,921 comparisons vs `vcfifo_wr_lov_gcd` | Done |
 | `prim_arb_lru` | — (tested via cbuf) | — (tested via cbuf cosim) | Done |
 | `prim_arb_lru_2bid` | 30 checks | 2264 comparisons vs `arb_lru_2_bid` | Done |
 | `prim_arb_rr` | 29 checks | 1150 comparisons vs `arb_rr_data` | Done |
@@ -413,8 +413,8 @@ backfilled.
 | Metric | Count |
 |--------|-------|
 | Unit-test Makefiles | 66 |
-| Test suites discovered by `make test` | 196 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 214 |
+| Test suites discovered by `make test` | 199 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 217 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
 | Targeted update runs | 45 unit suites + 39 cosim Makefile runs |

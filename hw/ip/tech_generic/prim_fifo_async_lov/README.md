@@ -23,13 +23,16 @@ level-shifter placement and domain-specific test behavior.
   entry before `pop_i`.
 - `dft_lv_i` controls reset bypass on the write/LV side and `dft_hv_i`
   controls reset bypass on the read/HV side.
+- `ready_o` and `valid_o` are masked low while their respective effective reset
+  is asserted, matching the original reset-visible handshake behavior.
 - The generic model does not include physical level-shifting behavior; it only
   defines the logical FIFO and per-domain reset-bypass contract.
 
 ## Why generic looks like this
 
 - The generic body is a pure RTL Gray-pointer asynchronous FIFO because that is
-  the simplest portable reference implementation.
+  the simplest portable reference implementation. Standalone cosim covers it
+  against `vcfifo_wr_lov_gcd`.
 - A future ASIC implementation may use different cells on the LV and HV sides
   even though the generic body is logically symmetric.
 

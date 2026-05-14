@@ -23,13 +23,16 @@ and domain-specific test handling.
   entry before `pop_i`.
 - `dft_hv_i` controls reset bypass on the write/HV side and `dft_lv_i`
   controls reset bypass on the read/LV side.
+- `ready_o` and `valid_o` are masked low while their respective effective reset
+  is asserted, matching the original reset-visible handshake behavior.
 - The generic model is only a transport and reset-bypass contract. It does not
   model any physical level shifting.
 
 ## Why generic looks like this
 
 - The generic body is a pure RTL Gray-pointer asynchronous FIFO, which is easy
-  to simulate and matches the intended logical behavior.
+  to simulate and matches the intended logical behavior. Standalone cosim covers
+  it against `vcfifo_wr_hiv_gcd`.
 - Keeping the voltage-direction split in the interface preserves the correct
   system intent for future ASIC implementations even though the generic body is
   symmetric.
