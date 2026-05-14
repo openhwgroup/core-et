@@ -158,7 +158,7 @@ Build order: 12→13→14→15→16→17→18
 |--------|----------|------|-------|--------|
 | `minion_frontend_rvc_expander` | `frontend_rvc_expander` | 30 checks | 53,260 comparisons | Done |
 | `minion_frontend_thread_sched` | `frontend_thread_sched` | — | 5,540 comparisons | Done |
-| `minion_frontend_thread_buffer` | `frontend_thread_buffer` | — | 1,427,157 comparisons | Done |
+| `minion_frontend_thread_buffer` | `frontend_thread_buffer` | — | 1,524,292 comparisons | Done |
 | `intpipe_decode` | `intpipe_decode` | 6 checks (`EnableExtraTrans=0`) + 6 checks (`EnableExtraTrans=1`) | 2,000,069 comparisons (`EnableExtraTrans=0`) + 2,000,069 comparisons (`EnableExtraTrans=1`) | Done |
 | `vpu_decoder` | `vpu_decoder` | 6 checks (`EnableExtraTrans=0`) + 6 checks (`EnableExtraTrans=1`) | 4,000,110 comparisons (`EnableExtraTrans=0`) + 4,000,110 comparisons (`EnableExtraTrans=1`) | Done |
 | `minion_frontend` | `frontend_top` | — | 1,169,262 comparisons | Done |
@@ -213,7 +213,7 @@ Build order: 12→13→14→15→16→17→18
 
 | Module | Original | Test | Cosim | Status |
 |--------|----------|------|-------|--------|
-| `minion_debug_apb_slv` | `minion_debug_apb_slv` | Covered by `core_top` smoke test (9 checks) | Covered by `core_top` cosim (1,539,072 comparisons) | RTL translated and exercised through minion-level integration; standalone block-level DV/cosim still pending |
+| `minion_debug_apb_slv` | `minion_debug_apb_slv` | 18 standalone checks + covered by `core_top` smoke test (9 checks) | 54,495 standalone comparisons + covered by `core_top` cosim (1,539,072 comparisons) | Done |
 | `core_top` | `core_top` | 9 smoke checks + 12 debug-APB-off checks | 1,539,072 comparisons | Done |
 | `minion_top` | `minion_top` | 17 smoke checks + 5 VpuEn=0 checks + 17 debug-APB-off checks + 15 debug-off checks + 9 execution checks | 235,284 comparisons | Done (default `VpuEn=1` instantiates translated real `vpu_top`; cosim checks every practical functional input bit sees both 0 and 1, with DFT scan/OCC/test pins documented as constrained; intentional integer-only `VpuEn=0` path keeps `null_vpu`) |
 | `null_vpu` | — | 55 checks | — | Done (new integer-only bring-up helper; intentionally non-faithful and not part of the CORE-ET translation set) |

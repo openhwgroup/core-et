@@ -43,7 +43,7 @@ Two-thread barrel-processor frontend with 7-stage ICache pipeline (F0-F6), instr
 |------|-----------|------|-------------|
 | `clk_i` | input | logic | Always-on clock |
 | `rst_ni` | input | logic | Active-low async reset |
-| `reset_debug_i` | input | logic | Debug reset (clears PFB FFs) |
+| `reset_debug_i` | input | logic | Synchronous local debug clear for PFB/debug-program-buffer staging (matches original `RST_EN_FF` reset argument, not the main reset domain) |
 | `chicken_bit_i` | input | logic | Forces clock gate on |
 | `dft_i` | input | dft_t | DFT control (scanmode, scan_reset) |
 
@@ -121,9 +121,9 @@ No functional or architectural changes. Same pipeline stages, same FIFO depth, s
 |-------|------------|----------|
 | `minion_frontend_rvc_expander` | 53,260 | Exhaustive 16-bit + 32-bit |
 | `minion_frontend_thread_sched` | 5,540 | Random enables/stalls |
-| `minion_frontend_thread_buffer` | 1,427,157 | Miss/fill, PFB, faults, half-cycle response stress, and 40K random cycles |
+| `minion_frontend_thread_buffer` | 1,524,292 | Miss/fill, PFB, faults, reset_debug local-clear regression, half-cycle response stress, and 40K random cycles |
 | `minion_frontend_intpipe_decode` | 2,000,069 | 2M random instructions |
 | `minion_frontend_vpu_decoder` | 4,000,110 | 2M random instructions |
 | `minion_frontend_top` | 1,169,262 | Dual-thread, mispredict, stall, half-cycle preview stress, debug PFB, and 25K random cycles |
 
-Total: 8,655,398 comparisons, 0 mismatches.
+Total: 8,752,533 comparisons, 0 mismatches.
