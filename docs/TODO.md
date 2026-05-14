@@ -16,12 +16,6 @@
 
 ## Shire Cache
 
-- Add the shire cache DFT SRAM clock hookup at `shirecache_top` and route it to
-  `shirecache_bank.dft_sram_clk_i`.
-  Finding: the original `shire_cache` exposed `dft__sram_clock` plus
-  `dft__clk_override`, and the translated RAM wrappers already consume
-  `dft_sram_clk_i` with `dft_i.sram_clk_override`.
-
 - Add the shire cache DFT MBIST enable hookup at `shirecache_top` and route it
   to `shirecache_bank.dft_mbist_en_i`.
   Finding: the original `shire_cache` exposed `dft__mbist_en`, and the

@@ -48,6 +48,7 @@ module shirecache_top
 
   // ── DFT ──────────────────────────────────────────────
   input  dft_pkg::dft_t                                    dft_i,
+  input  logic                                             dft_sram_clk_i,  // SRAM DFT clock override source
 
   // ── RAM config ───────────────────────────────────────
   input  ram_cfg_pkg::ram_cfg_t                            ram_cfg_i,
@@ -457,7 +458,7 @@ module shirecache_top
       .rst_c_ni                           (rst_cold_n),
       .rst_d_ni                           (rst_debug_n),
       .dft_i                              (dft_i),
-      .dft_sram_clk_i                     (1'b0),    // TODO: wire DFT SRAM clock
+      .dft_sram_clk_i                     (dft_sram_clk_i),
       .dft_mbist_en_i                     (1'b0),    // TODO: wire DFT MBIST enable
       .eco_i                              ('0),
       .eco_o                              (),

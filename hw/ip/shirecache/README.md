@@ -399,7 +399,7 @@ Replaces: `shire_cache_bank` (1370 lines).
 
 ### shirecache_top
 
-Top-level cache. Instantiates 4× `shirecache_bank`, 2× `shirecache_xbar` (request + response crossbars), 2× `shirecache_mesh_master` (to_l3, to_sys), 1× `shirecache_mesh_slave`, 3× `prim_rst_sync` (cold, warm, debug), 1× `prim_fifo_reg` (UC response relay). Routes neighborhood request/response ports through crossbars to banks. Clock domains are `clk_i` for cache logic, `noc_clk_i` for NOC/mesh CDC endpoints, and `clk_free_i` for bank-level trace/performance-monitor logic that must remain observable when functional clock gating is applied.
+Top-level cache. Instantiates 4× `shirecache_bank`, 2× `shirecache_xbar` (request + response crossbars), 2× `shirecache_mesh_master` (to_l3, to_sys), 1× `shirecache_mesh_slave`, 3× `prim_rst_sync` (cold, warm, debug), 1× `prim_fifo_reg` (UC response relay). Routes neighborhood request/response ports through crossbars to banks. Clock domains are `clk_i` for cache logic, `noc_clk_i` for NOC/mesh CDC endpoints, and `clk_free_i` for bank-level trace/performance-monitor logic that must remain observable when functional clock gating is applied. The top-level `dft_sram_clk_i` port is routed unchanged to every bank; `dft_i.sram_clk_override` selects that clock inside the RAM-wrapper `prim_clk_mux` seams.
 
 Key top-level clock/reset ports:
 - `clk_i`: cache/uncore functional clock.
@@ -407,7 +407,11 @@ Key top-level clock/reset ports:
 - `noc_clk_i`: mesh/NOC clock.
 - `rst_cold_ni`, `rst_ni`, `rst_debug_ni`, `noc_rst_ni`: active-low reset domains matching the translated reset split.
 
-Replaces: `shire_cache` (706 lines). Differences: `prim_rst_sync` instead of `rst_repeat`, `prim_fifo_reg` instead of `gen_fifo_reg`, ESR externalized, adds translated top-level `clk_free_i` hookup for the bank monitor-clock contract, drops simulation-only interface.
+Key top-level DFT ports:
+- `dft_i`: consolidated DFT control struct; `dft_i.sram_clk_override` selects the SRAM DFT clock path inside RAM-wrapper muxes.
+- `dft_sram_clk_i`: SRAM DFT clock override source forwarded unchanged to every `shirecache_bank.dft_sram_clk_i`.
+
+Replaces: `shire_cache` (706 lines). Differences: `prim_rst_sync` instead of `rst_repeat`, `prim_fifo_reg` instead of `gen_fifo_reg`, ESR externalized, adds translated top-level `clk_free_i` hookup for the bank monitor-clock contract, `dft_sram_clk_i` instead of `dft__sram_clock`, drops simulation-only interface.
 
 ## Differences from CORE-ET `shire_cache`
 
@@ -416,7 +420,7 @@ Replaces: `shire_cache` (706 lines). Differences: `prim_rst_sync` instead of `rs
 | Module prefix | `shire_cache_` | `shirecache_` | Avoids cosim name collision |
 | Package | `shire_cache_defines.vh` + `shire_cache_types.vh` (2000 lines of `define`) | `shirecache_pkg` (SV package, localparams) | Clean, no macro pollution |
 | RAM instances | `gen_mem1p`/`gen_mem2p` or foundry SRAMs | `prim_ram_1p`/`prim_ram_2p` | Technology abstraction |
-| Clock gating | `et_clk_gate` + `et_clk_mux2` | `prim_clk_gate` | Technology abstraction with DFT |
+| Clock gating | `et_clk_gate` + `et_clk_mux2` | `prim_clk_gate` + `prim_clk_mux` | Technology abstraction with DFT |
 | DFT | Individual `dft__*` signals | `dft_pkg::dft_t` struct | Consolidated |
 | Free-running monitor clock | No separate `shire_cache` top port; banks receive the functional `clock` as `fclock` | `shirecache_top.clk_free_i` forwards a distinct clock to each bank `clk_free_i` | Preserves the translated bank-level trace/perfmon free-clock contract for integration wrappers; top cosim ties it to `clk_i` for original-interface equivalence |
 | RAM config | `esr_shire_cache_ram_cfg_t` | `ram_cfg_pkg::ram_cfg_t` | Standardized |

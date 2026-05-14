@@ -10,6 +10,7 @@
 //   1. Resets both modules
 //   2. Waits for idx_cop_sm post-reset ALL_INV to complete (all 4 banks)
 //   3. Compares idle behavior (no spurious outputs)
+//   3b. Exercises DFT SRAM clock and override while idle
 //   4-8. L2 read requests: single, multi-bank, back-to-back, cache-hit, cross-bank
 //   9. Settle
 //  10. Write requests to different banks
@@ -91,6 +92,10 @@ static void clear_inputs(DUT* dut) {
 
     // Trace bank select
     dut->status_monitor_bank_sel_i = 0;
+
+    // DFT SRAM clock override defaults to functional SRAM clock path.
+    dut->dft_sram_clk_i     = 0;
+    dut->dft_clk_override_i = 0;
 }
 
 // ── Build an L2-aligned address ──
@@ -351,6 +356,35 @@ int main(int argc, char** argv) {
         sim.tick();
         compare_primary(sim);
     }
+
+    // ════════════════════════════════════════════════════════
+    // Phase 3b: DFT SRAM clock override idle smoke
+    // ════════════════════════════════════════════════════════
+    printf("Phase 3b: DFT SRAM clock override idle smoke\n");
+    clear_inputs(dut);
+    dut->dft_sram_clk_i     = 0;
+    dut->dft_clk_override_i = 0;
+    sim.tick();
+    compare_primary(sim);
+
+    // Select the DFT SRAM clock and toggle it on otherwise-idle cycles.
+    dut->dft_clk_override_i = 1;
+    for (int i = 0; i < 12; i++) {
+        dut->dft_sram_clk_i = i & 1;
+        sim.tick();
+        compare_primary(sim);
+    }
+
+    // Exercise the DFT SRAM clock input de-selected as well.
+    dut->dft_clk_override_i = 0;
+    for (int i = 0; i < 4; i++) {
+        dut->dft_sram_clk_i = i & 1;
+        sim.tick();
+        compare_primary(sim);
+    }
+    clear_inputs(dut);
+    sim.tick();
+    compare_primary(sim);
 
     // ════════════════════════════════════════════════════════
     // Phase 4: L2 read request to bank 0 from port 0
