@@ -1,0 +1,96 @@
+// Copyright (c) 2026 Ainekko
+// SPDX-License-Identifier: Apache-2.0
+
+module cosim_txfma_e5_tb
+  import vpu_defs_pkg::*;
+(
+  input  logic [VPU_FCMD_SZ-1:0]                 cmd_i,
+  input  logic [FP_RM_BITS-1:0]                  rm_i,
+  input  logic [VPU_DTYPE_SZ-1:0]                op_dtype_i,
+  input  logic [TXFMA_SIGS_SZ-1:0]               sigs_i,
+  input  logic [TXFMA_EXP_SEXT_PS_SZ-1:0]        exp_res_in_i,
+  input  logic [TXFMA_EXP_PS_SZ-1:0]             ea_hi_i,
+  input  logic [TXFMA_EXP_PS_SZ-1:0]             ec_i,
+  input  logic                                    s_res_i,
+  input  logic                                    comp_op_i,
+  input  logic                                    comp_op_true_i,
+  input  logic                                    nshc_i,
+  input  logic                                    int_minmax_mux_sel_a_i,
+  input  logic                                    int_minmax_mux_sel_c_i,
+  input  logic                                    e_force_to_zero_i,
+  input  logic                                    ediff1_zap_i,
+  input  logic                                    e_sticky1_i,
+  input  logic                                    e_sticky2_i,
+  input  logic [TXFMA_LXD_PS_SZ-1:0]             elxd_i,
+  input  logic [TXFMA_WSPS_ETRZ_SZ-1:0]          etrz50_i,
+  input  logic                                    use_elxd_i,
+  input  logic                                    elxd_add_in2_mux_sel_i,
+  input  logic                                    fb_hi_zero_i,
+  input  logic                                    eb_hi_lsb_i,
+  output logic                                    orig_stky2g_o,
+  output logic                                    orig_rmode_o,
+  output logic [TXFMA_EXP_SEXT_PS_SZ-1:0]        orig_exp_res_o,
+  output logic                                    new_stky2g_o,
+  output logic                                    new_rmode_o,
+  output logic [TXFMA_EXP_SEXT_PS_SZ-1:0]        new_exp_res_o
+);
+
+  txfma_e5_orig u_orig (
+    .cmd_f5a_h                  (cmd_i),
+    .rm_f5a_h                   (rm_i),
+    .op_dtype_f5a_h             (op_dtype_i),
+    .sigs_f5a_h                 (sigs_i),
+    .exp_res_in_f5a_h           (exp_res_in_i),
+    .ea_hi_f5a_h                (ea_hi_i),
+    .ec_f5a_h                   (ec_i),
+    .s_res_f5a_h                (s_res_i),
+    .comp_op_f5a_h              (comp_op_i),
+    .comp_op_true_f5a_h         (comp_op_true_i),
+    .nshc_f5a_h                 (nshc_i),
+    .int_minmax_mux_sel_a_f5a_h (int_minmax_mux_sel_a_i),
+    .int_minmax_mux_sel_c_f5a_h (int_minmax_mux_sel_c_i),
+    .e_force_to_zero_f5a_h      (e_force_to_zero_i),
+    .ediff1_zap_f5a_h           (ediff1_zap_i),
+    .e_sticky1_f5a_h            (e_sticky1_i),
+    .e_sticky2_f5a_h            (e_sticky2_i),
+    .elxd_f5a_h                 (elxd_i),
+    .etrz50_f5a_h               (etrz50_i),
+    .use_elxd_f5a_h             (use_elxd_i),
+    .elxd_add_in2_mux_sel_f5a_h (elxd_add_in2_mux_sel_i),
+    .fb_hi_zero_f5a_h           (fb_hi_zero_i),
+    .eb_hi_lsb_f5a_h            (eb_hi_lsb_i),
+    .stky2g_f5a_h               (orig_stky2g_o),
+    .rmode_f5a_h                (orig_rmode_o),
+    .exp_res_f5a_h              (orig_exp_res_o)
+  );
+
+  txfma_e5 u_new (
+    .cmd_f5a_h                  (cmd_i),
+    .rm_f5a_h                   (rm_i),
+    .op_dtype_f5a_h             (op_dtype_i),
+    .sigs_f5a_h                 (sigs_i),
+    .exp_res_in_f5a_h           (exp_res_in_i),
+    .ea_hi_f5a_h                (ea_hi_i),
+    .ec_f5a_h                   (ec_i),
+    .s_res_f5a_h                (s_res_i),
+    .comp_op_f5a_h              (comp_op_i),
+    .comp_op_true_f5a_h         (comp_op_true_i),
+    .nshc_f5a_h                 (nshc_i),
+    .int_minmax_mux_sel_a_f5a_h (int_minmax_mux_sel_a_i),
+    .int_minmax_mux_sel_c_f5a_h (int_minmax_mux_sel_c_i),
+    .e_force_to_zero_f5a_h      (e_force_to_zero_i),
+    .ediff1_zap_f5a_h           (ediff1_zap_i),
+    .e_sticky1_f5a_h            (e_sticky1_i),
+    .e_sticky2_f5a_h            (e_sticky2_i),
+    .elxd_f5a_h                 (elxd_i),
+    .etrz50_f5a_h               (etrz50_i),
+    .use_elxd_f5a_h             (use_elxd_i),
+    .elxd_add_in2_mux_sel_f5a_h (elxd_add_in2_mux_sel_i),
+    .fb_hi_zero_f5a_h           (fb_hi_zero_i),
+    .eb_hi_lsb_f5a_h            (eb_hi_lsb_i),
+    .stky2g_f5a_h               (new_stky2g_o),
+    .rmode_f5a_h                (new_rmode_o),
+    .exp_res_f5a_h              (new_exp_res_o)
+  );
+
+endmodule : cosim_txfma_e5_tb
