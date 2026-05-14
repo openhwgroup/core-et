@@ -174,34 +174,34 @@ Build order: 12→13→14→15→16→17→18
 
 ### Phase 1-3: Leaf modules
 
-| Module | Original | Cosim | Status |
-|--------|----------|-------|--------|
-| `intpipe_alu` | `intpipe_alu` | ~2M comparisons | Done |
-| `intpipe_imm` | `intpipe_imm` | ~500K comparisons | Done |
-| `intpipe_inst_bits_stage` | `intpipe_inst_bits_stage` | ~100K comparisons | Done |
-| `intpipe_rf` | `intpipe_rf` | 80,270 comparisons | Done |
-| `intpipe_int_scoreboard` | `intpipe_int_scoreboard` | ~1M comparisons | Done |
-| `intpipe_fp_scoreboard` | `intpipe_fp_scoreboard` | ~1M comparisons | Done |
-| `intpipe_mask_scoreboard` | `intpipe_mask_scoreboard` | ~1M comparisons | Done |
-| `debug_breakpoint` | `debug_breakpoint` | ~1M comparisons | Done |
-| `intpipe_mul_div_dp` | `intpipe_mul_div_dp` | ~16M comparisons | Done |
-| `intpipe_mul_div_ctl` | `intpipe_mul_div_ctl` | ~16M comparisons | Done |
-| `intpipe_mul_div_top` | `intpipe_mul_div_top` | ~16M comparisons | Done |
-| `prim_rf_2r1w` | `rf_latch_2r_1w` | 224,876 comparisons | Done |
-| `prim_cmp_32` | `r32cmp` | — (tested via mul_div_dp cosim) | Done |
-| `prim_cmp_42` | `r42cmp` | — (tested via mul_div_dp cosim) | Done |
-| `prim_clk_gate_n` | `et_clk_gate_n` | — (tested via mul_div_dp cosim) | Done |
+| Module | Original | Test | Cosim | Status |
+|--------|----------|------|-------|--------|
+| `intpipe_alu` | `intpipe_alu` | 44 checks | ~2M comparisons | Done |
+| `intpipe_imm` | `intpipe_imm` | — | ~500K comparisons | Done |
+| `intpipe_inst_bits_stage` | `intpipe_inst_bits_stage` | — | ~100K comparisons | Done |
+| `intpipe_rf` | `intpipe_rf` | — | 80,270 comparisons | Done |
+| `intpipe_int_scoreboard` | `intpipe_int_scoreboard` | 27 checks | ~1M comparisons | Done |
+| `intpipe_fp_scoreboard` | `intpipe_fp_scoreboard` | 14 checks | ~1M comparisons | Done |
+| `intpipe_mask_scoreboard` | `intpipe_mask_scoreboard` | 12 checks | ~1M comparisons | Done |
+| `debug_breakpoint` | `debug_breakpoint` | 112 checks | ~1M comparisons | Done |
+| `intpipe_mul_div_dp` | `intpipe_mul_div_dp` | — | ~16M comparisons | Done |
+| `intpipe_mul_div_ctl` | `intpipe_mul_div_ctl` | — | ~16M comparisons | Done |
+| `intpipe_mul_div_top` | `intpipe_mul_div_top` | — | ~16M comparisons | Done |
+| `prim_rf_2r1w` | `rf_latch_2r_1w` | — | 224,876 comparisons | Done |
+| `prim_cmp_32` | `r32cmp` | — | — (tested via mul_div_dp cosim) | Done |
+| `prim_cmp_42` | `r42cmp` | — | — (tested via mul_div_dp cosim) | Done |
+| `prim_clk_gate_n` | `et_clk_gate_n` | — | — (tested via mul_div_dp cosim) | Done |
 
 ### Phase 4: CSR subsystem
 
-| Module | Original | Cosim | Status |
-|--------|----------|-------|--------|
-| `intpipe_csr_file_fl_barrier` | `intpipe_csr_file_fl_barrier` | 62,808 comparisons | Done |
-| `intpipe_csr_file_conv` | `intpipe_csr_file_conv` | 22,440 comparisons | Done |
-| `intpipe_csr_pmu_read_interface` | `intpipe_csr_pmu_read_interface` | 21,356 comparisons | Done |
-| `intpipe_csr_replay` | `intpipe_csr_replay` | 10,466 comparisons | Done |
-| `intpipe_csr_msgs` | `intpipe_csr_msgs` | 33,770 comparisons | Done |
-| `intpipe_csr_file` | `intpipe_csr_file` | 187,040 comparisons | Done |
+| Module | Original | Test | Cosim | Status |
+|--------|----------|------|-------|--------|
+| `intpipe_csr_file_fl_barrier` | `intpipe_csr_file_fl_barrier` | — | 62,808 comparisons | Done |
+| `intpipe_csr_file_conv` | `intpipe_csr_file_conv` | — | 22,440 comparisons | Done |
+| `intpipe_csr_pmu_read_interface` | `intpipe_csr_pmu_read_interface` | — | 21,356 comparisons | Done |
+| `intpipe_csr_replay` | `intpipe_csr_replay` | 122 checks (`VpuEn=1`) + 122 checks (`VpuEn=0`) | 10,466 comparisons | Done |
+| `intpipe_csr_msgs` | `intpipe_csr_msgs` | 36 checks | 33,770 comparisons | Done |
+| `intpipe_csr_file` | `intpipe_csr_file` | — | 187,040 comparisons | Done |
 
 ### Phase 5: Top integration
 
@@ -412,10 +412,10 @@ backfilled.
 
 | Metric | Count |
 |--------|-------|
-| Unit-test Makefiles | 65 |
-| Test suites discovered by `make test` | 187 |
+| Unit-test Makefiles | 66 |
+| Test suites discovered by `make test` | 195 |
 | RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 214 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 37 unit suites + 39 cosim Makefile runs |
+| Targeted update runs | 45 unit suites + 39 cosim Makefile runs |
 | Targeted update failures | 0 |
