@@ -399,9 +399,15 @@ Replaces: `shire_cache_bank` (1370 lines).
 
 ### shirecache_top
 
-Top-level cache. Instantiates 4× `shirecache_bank`, 2× `shirecache_xbar` (request + response crossbars), 2× `shirecache_mesh_master` (to_l3, to_sys), 1× `shirecache_mesh_slave`, 3× `prim_rst_sync` (cold, warm, debug), 1× `prim_fifo_reg` (UC response relay). Routes neighborhood request/response ports through crossbars to banks. Dual clock domains (cache + NOC).
+Top-level cache. Instantiates 4× `shirecache_bank`, 2× `shirecache_xbar` (request + response crossbars), 2× `shirecache_mesh_master` (to_l3, to_sys), 1× `shirecache_mesh_slave`, 3× `prim_rst_sync` (cold, warm, debug), 1× `prim_fifo_reg` (UC response relay). Routes neighborhood request/response ports through crossbars to banks. Clock domains are `clk_i` for cache logic, `noc_clk_i` for NOC/mesh CDC endpoints, and `clk_free_i` for bank-level trace/performance-monitor logic that must remain observable when functional clock gating is applied.
 
-Replaces: `shire_cache` (706 lines). Differences: `prim_rst_sync` instead of `rst_repeat`, `prim_fifo_reg` instead of `gen_fifo_reg`, ESR externalized, drops simulation-only interface.
+Key top-level clock/reset ports:
+- `clk_i`: cache/uncore functional clock.
+- `clk_free_i`: free-running monitor clock forwarded unchanged to every `shirecache_bank.clk_free_i` for trace/perfmon logic.
+- `noc_clk_i`: mesh/NOC clock.
+- `rst_cold_ni`, `rst_ni`, `rst_debug_ni`, `noc_rst_ni`: active-low reset domains matching the translated reset split.
+
+Replaces: `shire_cache` (706 lines). Differences: `prim_rst_sync` instead of `rst_repeat`, `prim_fifo_reg` instead of `gen_fifo_reg`, ESR externalized, adds translated top-level `clk_free_i` hookup for the bank monitor-clock contract, drops simulation-only interface.
 
 ## Differences from CORE-ET `shire_cache`
 
@@ -412,6 +418,7 @@ Replaces: `shire_cache` (706 lines). Differences: `prim_rst_sync` instead of `rs
 | RAM instances | `gen_mem1p`/`gen_mem2p` or foundry SRAMs | `prim_ram_1p`/`prim_ram_2p` | Technology abstraction |
 | Clock gating | `et_clk_gate` + `et_clk_mux2` | `prim_clk_gate` | Technology abstraction with DFT |
 | DFT | Individual `dft__*` signals | `dft_pkg::dft_t` struct | Consolidated |
+| Free-running monitor clock | No separate `shire_cache` top port; banks receive the functional `clock` as `fclock` | `shirecache_top.clk_free_i` forwards a distinct clock to each bank `clk_free_i` | Preserves the translated bank-level trace/perfmon free-clock contract for integration wrappers; top cosim ties it to `clk_i` for original-interface equivalence |
 | RAM config | `esr_shire_cache_ram_cfg_t` | `ram_cfg_pkg::ram_cfg_t` | Standardized |
 | Reset | Active-high synchronous | Active-low async-assert/sync-deassert | Project coding style |
 | Flip-flop macros | `RST_FF`, `EN_FF`, `RST_EN_FF` | Explicit `always_ff` | No macro dependencies |
@@ -423,10 +430,10 @@ Replaces: `shire_cache` (706 lines). Differences: `prim_rst_sync` instead of `rs
 
 ## Tests
 
-29 unit test suites, 44 RTL cosims (all passing, 0 mismatches).
+30 unit test suites, 44 RTL cosims (all passing, 0 mismatches).
 
 ```bash
-make -C dv test              # all 29 shirecache unit tests
+make -C dv test              # all 30 shirecache unit tests
 make -C dv lint              # Verilator lint (full hierarchy)
 
 # Individual tests (see dv/Makefile for full list):
@@ -440,4 +447,5 @@ make -C dv test-pmq          # perfmon qualifier
 make -C dv test-pm           # perfmon top
 make -C dv test-errl         # error logger
 make -C dv test-trc          # trace
+make -C dv test-topclk       # shirecache_top free-running clock hookup smoke test
 ```

@@ -16,11 +16,6 @@
 
 ## Shire Cache
 
-- Add the intended free-running clock integration at `shirecache_top` and route
-  it to `shirecache_bank.clk_free_i`.
-  Finding: `shirecache_top` currently ties `clk_free_i` to `clk_i`, while the
-  bank-level trace/perfmon path keeps a separate free-running-clock contract.
-
 - Add the shire cache DFT SRAM clock hookup at `shirecache_top` and route it to
   `shirecache_bank.dft_sram_clk_i`.
   Finding: the original `shire_cache` exposed `dft__sram_clock` plus
