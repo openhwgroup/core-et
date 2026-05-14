@@ -89,14 +89,14 @@
 
 ### RAM wrappers
 
-Cosim blocked: originals use hierarchical refs (`pipe.sub_bank.*`) — will cosim at `sub_bank` level.
+Standalone cosims are enabled with `-DET_ASSERT_OFF`; the original wrappers' hierarchical references (`pipe.sub_bank.*` / `mem.*`) are assertion-only.
 
 | Module | Original | Test | Cosim | Status |
 |--------|----------|------|-------|--------|
-| `shirecache_pipe_tag_ram_wrap` | `shire_cache_pipe_tag_ram_wrap` | 12 checks | blocked | Done — has dft_sram_clk_i, ram_delay_i, dft_i.ram_rei/wei, ram_cfg_i.deep_sleep/shut_down |
-| `shirecache_pipe_tag_state_ram_wrap` | `shire_cache_pipe_tag_state_ram_wrap` | 12 checks | blocked | Done |
-| `shirecache_pipe_data_ram_wrap` | `shire_cache_pipe_data_ram_wrap` | 8 checks | blocked | Done |
-| `shirecache_pipe_sub_bank_mem` | `shire_cache_pipe_sub_bank_mem` | 11 checks | blocked | Done — variable read-delay pipeline (2/3/4 cycles) |
+| `shirecache_pipe_tag_ram_wrap` | `shire_cache_pipe_tag_ram_wrap` | 12 checks | 11,240 comparisons | Done — has dft_sram_clk_i, ram_delay_i, dft_i.ram_rei/wei, ram_cfg_i.deep_sleep/shut_down |
+| `shirecache_pipe_tag_state_ram_wrap` | `shire_cache_pipe_tag_state_ram_wrap` | 12 checks | 2,837 comparisons | Done |
+| `shirecache_pipe_data_ram_wrap` | `shire_cache_pipe_data_ram_wrap` | 8 checks | 51,858 comparisons | Done |
+| `shirecache_pipe_sub_bank_mem` | `shire_cache_pipe_sub_bank_mem` | 7 checks | 90,912 comparisons | Done — variable read-delay pipeline (2/3/4 cycles) |
 
 ### Pipeline Build Order
 
@@ -414,8 +414,8 @@ backfilled.
 |--------|-------|
 | Unit-test Makefiles | 67 |
 | Test suites discovered by `make test` | 223 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 241 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 244 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 69 VPU unit suites + 241 cosim Makefile runs |
+| Targeted update runs | 222 unit suites + 244 cosim Makefile runs |
 | Targeted update failures | 0 |
