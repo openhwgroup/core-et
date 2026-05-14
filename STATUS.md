@@ -243,13 +243,13 @@ Build order: 12→13→14→15→16→17→18
 | `txfma_c4` | `txfma_c4` | 283 checks | 32,824 comparisons | Done |
 | `txfma_c5` | `txfma_c5` | 301 checks | 90,266 comparisons | Done |
 | `txfma_c6` | `txfma_c6` | 386 checks | 188,784 comparisons | Done |
-| `txfma_e1` | `txfma_e1` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_e2` | `txfma_e2` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_e4` | `txfma_e4` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_e5` | `txfma_e5` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_e6` | `txfma_e6` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_ediff_opdorder_logic` | `txfma_ediff_opdorder_logic` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_exp_special_detect` | `txfma_exp_special_detect` | — | — | RTL present, standalone DV/cosim pending |
+| `txfma_e1` | `txfma_e1` | 4,224 checks | 40,088 comparisons | Done |
+| `txfma_e2` | `txfma_e2` | 16,614 checks | 80,192 comparisons | Done |
+| `txfma_e4` | `txfma_e4` | 8 checks | 2,048 comparisons | Done |
+| `txfma_e5` | `txfma_e5` | 3,157 checks | 15,027 comparisons | Done |
+| `txfma_e6` | `txfma_e6` | 10,382 checks | 50,130 comparisons | Done |
+| `txfma_ediff_opdorder_logic` | `txfma_ediff_opdorder_logic` | 14,534 checks | 70,182 comparisons | Done |
+| `txfma_exp_special_detect` | `txfma_exp_special_detect` | 10,416 checks | 50,160 comparisons | Done |
 | `txfma_f0` | `txfma_f0` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
 | `txfma_f1` | `txfma_f1` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
 | `txfma_f2` | `txfma_f2` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
@@ -406,16 +406,16 @@ row below.
 ## Totals
 
 Structural discovery counts were refreshed from tracked Makefiles on
-2026-05-05. Repo-wide check/comparison totals are not carried as exact sums
+2026-05-14. Repo-wide check/comparison totals are not carried as exact sums
 until every unit test and cosim is rerun and all legacy approximate rows are
 backfilled.
 
 | Metric | Count |
 |--------|-------|
 | Unit-test Makefiles | 66 |
-| Test suites discovered by `make test` | 206 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 224 |
+| Test suites discovered by `make test` | 213 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 231 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 52 unit suites + 46 cosim Makefile runs |
+| Targeted update runs | 59 unit suites + 53 cosim Makefile runs |
 | Targeted update failures | 0 |
