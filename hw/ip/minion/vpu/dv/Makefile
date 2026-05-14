@@ -11,6 +11,9 @@ PRIMS := $(PRIM_CLK_GATE) \
          $(PRIM_RF_3R2W_PREVIEW)
 
 TXFMA_REAL_RTL := $(MINION_VPU_TXFMA_REAL_RTL)
+TXFMA_C_STAGE_COMMON_RTL := $(COMMON_RTL) \
+                            $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_pkg.sv \
+                            $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_defs_pkg.sv
 
 TESTS := bypass \
          mask \
@@ -34,6 +37,13 @@ TESTS := bypass \
          txfma_booth_ppg_32r4 \
          txfma_wallace1 \
          txfma_wallace2 \
+         txfma_c0 \
+         txfma_c1 \
+         txfma_c2 \
+         txfma_c3 \
+         txfma_c4 \
+         txfma_c5 \
+         txfma_c6 \
          txfmactl_top \
          txfmafrac_top \
          txfmaexp_top \
@@ -200,6 +210,48 @@ txfma_wallace2_SRCS := $(COMMON_RTL) \
                        $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_wallace2.sv \
                        $(CURDIR)/txfma_wallace2_tb.sv \
                        $(CURDIR)/txfma_wallace2_test.cc
+
+txfma_c0_TOP := txfma_c0_tb
+txfma_c0_SRCS := $(TXFMA_C_STAGE_COMMON_RTL) \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_c0.sv \
+                 $(CURDIR)/txfma_c0_tb.sv \
+                 $(CURDIR)/txfma_c0_test.cc
+
+txfma_c1_TOP := txfma_c1_tb
+txfma_c1_SRCS := $(TXFMA_C_STAGE_COMMON_RTL) \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_c1.sv \
+                 $(CURDIR)/txfma_c1_tb.sv \
+                 $(CURDIR)/txfma_c1_test.cc
+
+txfma_c2_TOP := txfma_c2_tb
+txfma_c2_SRCS := $(TXFMA_C_STAGE_COMMON_RTL) \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_c2.sv \
+                 $(CURDIR)/txfma_c2_tb.sv \
+                 $(CURDIR)/txfma_c2_test.cc
+
+txfma_c3_TOP := txfma_c3_tb
+txfma_c3_SRCS := $(TXFMA_C_STAGE_COMMON_RTL) \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_c3.sv \
+                 $(CURDIR)/txfma_c3_tb.sv \
+                 $(CURDIR)/txfma_c3_test.cc
+
+txfma_c4_TOP := txfma_c4_tb
+txfma_c4_SRCS := $(TXFMA_C_STAGE_COMMON_RTL) \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_c4.sv \
+                 $(CURDIR)/txfma_c4_tb.sv \
+                 $(CURDIR)/txfma_c4_test.cc
+
+txfma_c5_TOP := txfma_c5_tb
+txfma_c5_SRCS := $(TXFMA_C_STAGE_COMMON_RTL) \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_c5.sv \
+                 $(CURDIR)/txfma_c5_tb.sv \
+                 $(CURDIR)/txfma_c5_test.cc
+
+txfma_c6_TOP := txfma_c6_tb
+txfma_c6_SRCS := $(TXFMA_C_STAGE_COMMON_RTL) \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_c6.sv \
+                 $(CURDIR)/txfma_c6_tb.sv \
+                 $(CURDIR)/txfma_c6_test.cc
 
 txfmactl_top_TOP := txfmactl_top_tb
 txfmactl_top_SRCS := $(COMMON_RTL) \

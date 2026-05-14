@@ -236,13 +236,13 @@ Build order: 12→13→14→15→16→17→18
 | `txfma_booth_ppg_32r4` | `txfma_booth_ppg_32r4` | 9,842 checks | 155,762 comparisons | Done |
 | `txfma_wallace1` | `txfma_wallace1` | 8,216 checks | 25,288 comparisons | Done |
 | `txfma_wallace2` | `txfma_wallace2` | 8,200 checks | 25,074 comparisons | Done |
-| `txfma_c0` | `txfma_c0` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_c1` | `txfma_c1` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_c2` | `txfma_c2` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_c3` | `txfma_c3` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_c4` | `txfma_c4` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_c5` | `txfma_c5` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_c6` | `txfma_c6` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_c0` | `txfma_c0` | 903 checks | 9,101,638 comparisons | Done |
+| `txfma_c1` | `txfma_c1` | 295 checks | 65,648 comparisons | Done |
+| `txfma_c2` | `txfma_c2` | 312 checks | 192,888 comparisons | Done |
+| `txfma_c3` | `txfma_c3` | 351 checks | 61,545 comparisons | Done |
+| `txfma_c4` | `txfma_c4` | 283 checks | 32,824 comparisons | Done |
+| `txfma_c5` | `txfma_c5` | 301 checks | 90,266 comparisons | Done |
+| `txfma_c6` | `txfma_c6` | 386 checks | 188,784 comparisons | Done |
 | `txfma_e1` | `txfma_e1` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
 | `txfma_e2` | `txfma_e2` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
 | `txfma_e4` | `txfma_e4` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
@@ -413,9 +413,9 @@ backfilled.
 | Metric | Count |
 |--------|-------|
 | Unit-test Makefiles | 66 |
-| Test suites discovered by `make test` | 199 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 217 |
+| Test suites discovered by `make test` | 206 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 224 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 45 unit suites + 39 cosim Makefile runs |
+| Targeted update runs | 52 unit suites + 46 cosim Makefile runs |
 | Targeted update failures | 0 |
