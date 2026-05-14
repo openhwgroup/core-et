@@ -103,6 +103,7 @@ module shirecache_top_freeclk_tb
     .noc_clk_i                   (clk_i),
     .noc_rst_ni                  (rst_ni),
     .dft_i                       (dft),
+    .dft_sram_clk_i              (1'b0),
     .ram_cfg_i                   (ram_cfg),
     .neigh_sc_req_ready_o        (neigh_sc_req_ready),
     .neigh_sc_req_valid_i        (neigh_sc_req_valid),

@@ -21,6 +21,8 @@
 // - Original top has no separate free-running monitor clock port; new
 //   clk_free_i is driven from cache clk_i here to keep top-level compare
 //   behavior equivalent while unit DV covers the distinct translated path.
+// - Original dft__sram_clock/dft__clk_override map to
+//   dft_sram_clk_i/dft_i.sram_clk_override.
 // - Clock: noc_clk = cache_clk for simplicity (no real CDC test)
 
 `include "soc.vh"
@@ -39,6 +41,10 @@ module cosim_top_tb
 (
   input  logic                        clk_i,
   input  logic                        rst_ni,
+
+  // ── DFT SRAM clock override ────────────────────────────────
+  input  logic                        dft_sram_clk_i,
+  input  logic                        dft_clk_override_i,
 
   // ── Neighborhood request interface (per-port, decomposed) ──
   // We support driving one request at a time via port_sel
@@ -247,7 +253,10 @@ module cosim_top_tb
   // DFT/RAM config
   // ════════════════════════════════════════════════════════
   dft_t new_dft;
-  assign new_dft = '0;
+  always_comb begin
+    new_dft = '0;
+    new_dft.sram_clk_override = dft_clk_override_i;
+  end
 
   ram_cfg_t new_ram_cfg;
   assign new_ram_cfg = '0;
@@ -385,6 +394,7 @@ module cosim_top_tb
     .noc_rst_ni                       (rst_ni),
 
     .dft_i                            (new_dft),
+    .dft_sram_clk_i                   (dft_sram_clk_i),
     .ram_cfg_i                        (new_ram_cfg),
 
     // Neighborhood request
@@ -595,8 +605,8 @@ module cosim_top_tb
     .dft__reset_hv                    (1'b0),
     .dft__reset_byp_lv                (1'b0),
     .dft__reset_lv                    (1'b0),
-    .dft__sram_clock                  (1'b0),
-    .dft__clk_override                (1'b0),
+    .dft__sram_clock                  (dft_sram_clk_i),
+    .dft__clk_override                (dft_clk_override_i),
     .dft__mbist_en                    (1'b0),
 
     // BIST
