@@ -39,15 +39,15 @@ VPU-only types and datapath blocks that sit behind that boundary.
 | `txfma_e6` | `rtl/txfma_e6.sv` | `txfma_e6.v` | Done (standalone DV/cosim plus `txfmaexp_top` coverage) |
 | `txfma_ediff_opdorder_logic` | `rtl/txfma_ediff_opdorder_logic.sv` | `txfma_ediff_opdorder_logic.v` | Done (standalone DV/cosim plus `txfmaexp_top` coverage) |
 | `txfma_exp_special_detect` | `rtl/txfma_exp_special_detect.sv` | `txfma_exp_special_detect.v` | Done (standalone DV/cosim plus `txfmaexp_top` coverage) |
-| `txfma_f0` | `rtl/txfma_f0.sv` | `txfma_f0.v` | RTL present, covered through `txfma_top` cosim |
-| `txfma_f1` | `rtl/txfma_f1.sv` | `txfma_f1.v` | RTL present, covered through `txfma_top` cosim |
-| `txfma_f2` | `rtl/txfma_f2.sv` | `txfma_f2.v` | RTL present, covered through `txfma_top` cosim |
-| `txfma_f3` | `rtl/txfma_f3.sv` | `txfma_f3.v` | RTL present, covered through `txfma_top` cosim |
-| `txfma_f4` | `rtl/txfma_f4.sv` | `txfma_f4.v` | RTL present, covered through `txfma_top` cosim |
-| `txfma_f5` | `rtl/txfma_f5.sv` | `txfma_f5.v` | RTL present, covered through `txfma_top` cosim |
-| `txfma_f6` | `rtl/txfma_f6.sv` | `txfma_f6.v` | RTL present, covered through `txfma_top` cosim |
-| `txfma_frac_zero_detect` | `rtl/txfma_frac_zero_detect.sv` | `txfma_frac_zero_detect.v` | RTL present, covered through `txfma_top` cosim |
-| `txfma_rnd_adder` | `rtl/txfma_rnd_adder.sv` | `txfma_rnd_adder.v` | RTL present, covered through `txfma_top` cosim |
+| `txfma_f0` | `rtl/txfma_f0.sv` | `txfma_f0.v` | Done (standalone unit + cosim) |
+| `txfma_f1` | `rtl/txfma_f1.sv` | `txfma_f1.v` | Done (standalone unit + cosim) |
+| `txfma_f2` | `rtl/txfma_f2.sv` | `txfma_f2.v` | Done (standalone unit + cosim) |
+| `txfma_f3` | `rtl/txfma_f3.sv` | `txfma_f3.v` | Done (standalone unit + cosim) |
+| `txfma_f4` | `rtl/txfma_f4.sv` | `txfma_f4.v` | Done (standalone unit + cosim) |
+| `txfma_f5` | `rtl/txfma_f5.sv` | `txfma_f5.v` | Done (standalone unit + cosim) |
+| `txfma_f6` | `rtl/txfma_f6.sv` | `txfma_f6.v` | Done (standalone unit + cosim) |
+| `txfma_frac_zero_detect` | `rtl/txfma_frac_zero_detect.sv` | `txfma_frac_zero_detect.v` | Done (standalone unit + cosim) |
+| `txfma_rnd_adder` | `rtl/txfma_rnd_adder.sv` | `txfma_rnd_adder.v` | Done (standalone unit + cosim) |
 | `txfmactl_top` | `rtl/txfmactl_top.sv` | `txfmactl_top.v` | Done |
 | `txfmaexp_top` | `rtl/txfmaexp_top.sv` | `txfmaexp_top.v` | Done |
 | `txfmafrac_top` | `rtl/txfmafrac_top.sv` | `txfmafrac_top.v` | Done |

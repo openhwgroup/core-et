@@ -250,15 +250,15 @@ Build order: 12→13→14→15→16→17→18
 | `txfma_e6` | `txfma_e6` | 10,382 checks | 50,130 comparisons | Done |
 | `txfma_ediff_opdorder_logic` | `txfma_ediff_opdorder_logic` | 14,534 checks | 70,182 comparisons | Done |
 | `txfma_exp_special_detect` | `txfma_exp_special_detect` | 10,416 checks | 50,160 comparisons | Done |
-| `txfma_f0` | `txfma_f0` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_f1` | `txfma_f1` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_f2` | `txfma_f2` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_f3` | `txfma_f3` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_f4` | `txfma_f4` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_f5` | `txfma_f5` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_f6` | `txfma_f6` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_frac_zero_detect` | `txfma_frac_zero_detect` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_rnd_adder` | `txfma_rnd_adder` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_f0` | `txfma_f0` | 27 checks | 50,985 comparisons | Done |
+| `txfma_f1` | `txfma_f1` | 13 checks | 25,260 comparisons | Done |
+| `txfma_f2` | `txfma_f2` | 9 checks | 25,053 comparisons | Done |
+| `txfma_f3` | `txfma_f3` | 12 checks | 50,106 comparisons | Done |
+| `txfma_f4` | `txfma_f4` | 10 checks | 25,090 comparisons | Done |
+| `txfma_f5` | `txfma_f5` | 16 checks | 50,310 comparisons | Done |
+| `txfma_f6` | `txfma_f6` | 5 checks | 50,036 comparisons | Done |
+| `txfma_frac_zero_detect` | `txfma_frac_zero_detect` | 4,101 checks | 2,502 comparisons | Done |
+| `txfma_rnd_adder` | `txfma_rnd_adder` | 4,166 checks | 2,502 comparisons | Done |
 | `txfmactl_top` | `txfmactl_top` | 79 checks | 996,194 comparisons | Done |
 | `txfmaexp_top` | `txfmaexp_top` | 31 checks | 508,152 comparisons | Done |
 | `txfmafrac_top` | `txfmafrac_top` | 43 checks | 390,468 comparisons | Done |
@@ -413,9 +413,9 @@ backfilled.
 | Metric | Count |
 |--------|-------|
 | Unit-test Makefiles | 66 |
-| Test suites discovered by `make test` | 213 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 231 |
+| Test suites discovered by `make test` | 222 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 240 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 60 unit suites + 54 cosim Makefile runs |
+| Targeted update runs | 69 VPU unit suites + 240 cosim Makefile runs |
 | Targeted update failures | 0 |
