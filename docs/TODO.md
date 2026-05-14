@@ -14,17 +14,6 @@
   - `intpipe_csr_replay`
   - `intpipe_csr_msgs`
 
-- Audit remaining minion reset/macro translations outside the checked
-  `intpipe_csr_msgs` message-port path when editing those modules.
-  Finding: the original `RST_FF` / `RST_EN_FF` macros make local clears
-  synchronous, even when the clear signal name includes `reset`. True reset
-  domains should map to the corresponding `rst_*_ni` input, while local clears
-  should stay in the clocked body. Remaining useful audit targets:
-  - `hw/ip/minion/rtl/core_top.sv` reset-domain mapping
-  - `hw/ip/minion/frontend/rtl/minion_frontend_thread_buffer.sv`
-    `reset_debug`-style clears
-  - `hw/ip/minion/rtl/minion_debug_apb_slv.sv` translated `RST_EN_FF` stages
-
 ## Shire Cache
 
 - Add the intended free-running clock integration at `shirecache_top` and route

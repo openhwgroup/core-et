@@ -210,6 +210,12 @@ static void compare_outputs(CosimCtrl<DUT>& sim) {
     sim.compare("ffb_update_read_pointer",
                 (uint64_t)sim.dut->orig_ffb_update_read_pointer_o,
                 (uint64_t)sim.dut->new_ffb_update_read_pointer_o);
+    sim.compare("debug_ffb_en_2",
+                (uint64_t)sim.dut->orig_debug_ffb_en_2_o,
+                (uint64_t)sim.dut->new_debug_ffb_en_2_o);
+    sim.compare("debug_ffb_exec_2",
+                (uint64_t)sim.dut->orig_debug_ffb_exec_2_o,
+                (uint64_t)sim.dut->new_debug_ffb_exec_2_o);
     sim.comparisons++;
     if (sim.dut->orig_f6_write_ad_o != sim.dut->new_f6_write_ad_o) {
         if (sim.mismatches == 1) {
@@ -275,7 +281,7 @@ static void compare_outputs(CosimCtrl<DUT>& sim) {
 static void idle_all(DUT* dut) {
     dut->f0_thread_enabled_i = 0; dut->f0_reset_vector_i = 0;
     dut->f0_disable_thread_i = 0; dut->f0_enable_thread_i = 0;
-    dut->in_debug_mode_i = 0; dut->vm_status_i = 0;
+    dut->in_debug_mode_i = 0; dut->reset_debug_i = 0; dut->vm_status_i = 0;
     dut->f0_icache_req_ready_i = 0; dut->f1_icache_req_ready_i = 0;
     dut->f5_icache_resp_miss_i = 0;
     dut->f6_icache_resp_valid_i = 0; dut->f6_icache_resp_miss_i = 0;
@@ -293,6 +299,12 @@ static void step(CosimCtrl<DUT>& sim) {
     sim.dut->eval();
     compare_outputs(sim);
     sim.tick();
+}
+
+static void tick_then_compare(CosimCtrl<DUT>& sim) {
+    sim.tick();
+    sim.dut->eval();
+    compare_outputs(sim);
 }
 
 static void step_half(CosimCtrl<DUT>& sim, int clk_level) {
@@ -579,7 +591,42 @@ int main(int argc, char** argv) {
     sim.check(saw_debug_inst, "debug program buffer produced at least one instruction");
     sim.dut->in_debug_mode_i = 0;
 
-    printf("=== test 7d: half-cycle response pulse ===\n");
+    // reset_debug is a synchronous local clear for the debug-program-buffer
+    // staging flops. The main fetch reset must not asynchronously clear them:
+    // with reset asserted and debug APB inputs active, the original RST_EN_FF
+    // still captures on the gated clock unless reset_debug itself is asserted.
+    printf("=== test 7d: reset_debug local clear under main reset ===\n");
+    idle_all(sim.dut.get());
+    sim.reset();
+    idle_all(sim.dut.get());
+    sim.dut->debug_ffb_en_i = 0x5;
+    sim.dut->debug_ffb_exec_i = 1;
+    sim.dut->rst_ni = 0;
+    tick_then_compare(sim);
+    sim.check(sim.dut->orig_debug_ffb_en_2_o == 0x5 &&
+              sim.dut->new_debug_ffb_en_2_o == 0x5,
+              "main reset does not clear reset_debug-local debug_ffb_en_2 capture");
+    sim.check(sim.dut->orig_debug_ffb_exec_2_o == 1 &&
+              sim.dut->new_debug_ffb_exec_2_o == 1,
+              "main reset does not clear reset_debug-local debug_ffb_exec_2 capture");
+
+    sim.dut->reset_debug_i = 1;
+    sim.dut->debug_ffb_en_i = 0xf;
+    sim.dut->debug_ffb_exec_i = 1;
+    tick_then_compare(sim);
+    sim.check(sim.dut->orig_debug_ffb_en_2_o == 0 &&
+              sim.dut->new_debug_ffb_en_2_o == 0,
+              "reset_debug synchronously clears debug_ffb_en_2");
+    sim.check(sim.dut->orig_debug_ffb_exec_2_o == 0 &&
+              sim.dut->new_debug_ffb_exec_2_o == 0,
+              "reset_debug synchronously clears debug_ffb_exec_2");
+    sim.dut->rst_ni = 1;
+    sim.dut->reset_debug_i = 0;
+    sim.dut->debug_ffb_en_i = 0;
+    sim.dut->debug_ffb_exec_i = 0;
+    tick_then_compare(sim);
+
+    printf("=== test 7e: half-cycle response pulse ===\n");
     idle_all(sim.dut.get());
     sim.reset();
     idle_all(sim.dut.get());
@@ -605,7 +652,7 @@ int main(int argc, char** argv) {
     sim.dut->f6_icache_resp_valid_i = 0;
     for (int i = 0; i < 24; i++) step(sim);
 
-    printf("=== test 7e: half-cycle random (4000 iterations) ===\n");
+    printf("=== test 7f: half-cycle random (4000 iterations) ===\n");
     idle_all(sim.dut.get());
     sim.reset();
     idle_all(sim.dut.get());

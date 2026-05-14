@@ -123,7 +123,7 @@ RTL_SRCS := $(PKGS) $(PRIMS) $(FRONTEND_RTL) $(INTPIPE_CSR_RTL) $(INTPIPE_RTL) $
 # source pragmas with comments, so Minion unit builds do not need broad waivers.
 MINION_FLAGS := +incdir+$(REPO_ROOT)/hw/ip/minion/intpipe/csr/rtl
 
-TESTS := smoke core_top_debug_apb_off null_vpu minion_top minion_top_vpu_off minion_top_debug_apb_off minion_top_debug_off minion_top_exec
+TESTS := smoke core_top_debug_apb_off minion_debug_apb_slv null_vpu minion_top minion_top_vpu_off minion_top_debug_apb_off minion_top_debug_off minion_top_exec
 
 smoke_TOP := core_top_tb
 smoke_SRCS := $(RTL_SRCS) \
@@ -136,6 +136,13 @@ core_top_debug_apb_off_SRCS := $(RTL_SRCS) \
                                $(CURDIR)/core_top_tb.sv \
                                $(CURDIR)/core_top_debug_apb_off_test.cc
 core_top_debug_apb_off_FLAGS := $(MINION_FLAGS) -GDebugApbEn=0 -GDebugMonEn=1
+
+minion_debug_apb_slv_TOP := minion_debug_apb_slv_tb
+minion_debug_apb_slv_SRCS := $(REPO_ROOT)/hw/ip/etlink/rtl/etlink_pkg.sv \
+                              $(REPO_ROOT)/hw/ip/minion/rtl/minion_pkg.sv \
+                              $(REPO_ROOT)/hw/ip/minion/rtl/minion_debug_apb_slv.sv \
+                              $(CURDIR)/minion_debug_apb_slv_tb.sv \
+                              $(CURDIR)/minion_debug_apb_slv_test.cc
 
 null_vpu_TOP := null_vpu_tb
 null_vpu_SRCS := $(REPO_ROOT)/hw/ip/etlink/rtl/etlink_pkg.sv \

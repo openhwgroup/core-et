@@ -208,7 +208,8 @@ High-level status:
 
 | Sub-block | Status | Notes |
 |-----------|--------|-------|
-| core_top | Done | `core_top.sv` has a passing minion-level smoke test (9 checks), a debug-APB-off test (12 checks), and a passing `dv/rtlcosim/core_top` run (1,539,072 comparisons); `minion_debug_apb_slv.sv` is exercised through that integration path |
+| core_top | Done | `core_top.sv` has a passing minion-level smoke test (9 checks), a debug-APB-off test (12 checks), and a passing `dv/rtlcosim/core_top` run (1,539,072 comparisons); reset-domain fanout was audited against the original |
+| minion_debug_apb_slv | Done | `minion_debug_apb_slv.sv` has a standalone unit test (18 checks) and standalone `dv/rtlcosim/minion_debug_apb_slv` run (54,495 comparisons); it is also exercised through `core_top` and `minion_top` integration |
 | minion_top | Done | `minion_top.sv` defaults to the translated real `vpu_top` and preserves the intentional integer-only `VpuEn=0` `null_vpu` path; it has passing top-level smoke, VPU-off, debug-APB-off, debug-off, retire-path execution tests, and a passing `dv/rtlcosim/minion_top` run against the original wrapper with real-VPU stimulus |
 | null_vpu | Done | `null_vpu.sv` is a new integer-only bring-up helper with a standalone smoke test; it is intentionally non-faithful and is meant for `minion_top` configurations that trap all FP/VPU/ML usage rather than execute it |
 | frontend | Done | `minion_frontend`, thread buffer/scheduler, both decoders, and the frontend top cosim all pass; see `frontend/README.md` for current comparison counts |

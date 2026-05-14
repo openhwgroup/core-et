@@ -239,11 +239,11 @@ module minion_frontend_thread_buffer
   logic ffb_ff_en_2;
   assign ffb_ff_en_2 = (|debug_ffb_en_2) | (|debug_ffb_en_i) | debug_ffb_exec_2 | debug_ffb_exec_i;
 
-  always_ff @(posedge clock_gated or negedge rst_ni) begin
-    if (!rst_ni) begin
-      debug_ffb_en_2   <= '0;
-      debug_ffb_exec_2 <= 1'b0;
-    end else if (reset_debug_i) begin
+  // `reset_debug_i` is the original RST_EN_FF reset argument for this
+  // debug-program-buffer staging pair. It is a synchronous local clear on the
+  // gated frontend clock, not the thread-buffer `reset` domain.
+  always_ff @(posedge clock_gated) begin
+    if (reset_debug_i) begin
       debug_ffb_en_2   <= '0;
       debug_ffb_exec_2 <= 1'b0;
     end else if (ffb_ff_en_2) begin
