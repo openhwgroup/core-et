@@ -477,7 +477,7 @@ Follow the existing table format. Keep the same section grouping (Packages, Prim
 
 ## Build system
 
-- `mk/verilator.mk` — shared Verilator build rules with coverage, included by each IP's `dv/Makefile`. Supports single-test and multi-test modes. Multi-test per-test variables: `<t>_TOP`, `<t>_SRCS`, `<t>_ARGS`, `<t>_FLAGS`.
+- `mk/verilator.mk` — shared Verilator build rules with coverage, included by each IP's `dv/Makefile`. Supports single-test and multi-test modes. Multi-test per-test variables: `<t>_TOP`, `<t>_SRCS`, `<t>_ARGS`, `<t>_FLAGS`. With `TESTS := foo bar`, the runnable per-test targets are `test-foo`, `test-bar`, `test-xrand-foo`, and `test-xrand-bar`; raw `foo`/`bar` targets do not exist unless a local Makefile defines them separately.
 - `mk/rtlcosim.mk` — shared RTL co-simulation build rules, included by each cosim `dv/rtlcosim/<module>/Makefile`. Handles `ORIG_ROOT`, coverage, module renaming, and per-file coverage reporting.
 - `mk/yosys.mk` — shared Yosys FPGA synthesis rules using the slang SystemVerilog frontend, included by project synthesis heads
 - `mk/prim.mk` — technology-specific primitive selection. Set `TECH` (generic, ice40, xilinx) before including; provides `PRIM_*` variables pointing to the correct source files

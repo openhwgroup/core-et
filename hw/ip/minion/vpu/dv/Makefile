@@ -207,7 +207,6 @@ txfma_exp_special_detect_SRCS := $(TXFMA_E_STAGE_COMMON_RTL) \
                                  $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_exp_special_detect.sv \
                                  $(CURDIR)/txfma_exp_special_detect_tb.sv \
                                  $(CURDIR)/txfma_exp_special_detect_test.cc
-txfma_exp_special_detect_FLAGS := -Wno-UNUSEDSIGNAL -Wno-CASEINCOMPLETE
 
 txfma_adder_TOP := txfma_adder_tb
 txfma_adder_SRCS := $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_adder.sv \
