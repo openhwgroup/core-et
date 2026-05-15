@@ -14,6 +14,5 @@ NEW_RTL := $(REPO_ROOT)/hw/ip/dft/rtl/dft_pkg.sv \
 
 ORIG_RTL := $(ORIG_ROOT)/rtl/shire/minion/vpu/txfma_7s/txfma_exp_special_detect.v
 ORIG_RENAME := txfma_exp_special_detect
-EXTRA_FLAGS := -Wno-UNUSEDSIGNAL -Wno-CASEINCOMPLETE
 
 include $(REPO_ROOT)/mk/rtlcosim.mk
