@@ -326,6 +326,7 @@ Build order: 12→13→14→15→16→17→18
 | `icache_data_ram_wrap` | `icache_data_ram_wrap` | 26 checks | 85,918 comparisons | Done |
 | `icache_tlb_array` | `icache_tlb_array` | 18 checks | 44,066 comparisons | Done |
 | `icache_top` | `icache_top` | 29 checks | 1,261,827 comparisons | Done |
+| `neigh_shared_icache` | `neigh_shared_icache` | 30 checks | 295,735 comparisons | Done |
 | `ptw_top` | `ptw_top` | 32 checks | 72,288 comparisons | Done |
 | `neigh_shared_ptw` | `neigh_shared_ptw` | 18 checks | 45,090 comparisons | Done |
 | `pseudo_lru` | `pseudo_lru` | 266 checks | 5,000 comparisons | Done |
@@ -448,10 +449,10 @@ backfilled.
 
 | Metric | Count |
 |--------|-------|
-| Unit-test Makefiles | 77 |
-| Test suites discovered by `make test` | 235 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 276 |
+| Unit-test Makefiles | 78 |
+| Test suites discovered by `make test` | 236 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 277 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 234 unit suites + 276 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run |
+| Targeted update runs | 235 unit suites + 277 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run |
 | Targeted update failures | 0 |
