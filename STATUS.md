@@ -13,6 +13,7 @@
 | `icache_pkg` | Standalone-Icache constants, enums, TLB/error structs, and LRU helpers | Done |
 | `minion_frontend_pkg` | Frontend fetch-buffer, ICache response, issue, and thread-buffer types | Done |
 | `neigh_pkg` | Neighborhood shell types and response-agent constants | Done |
+| `neigh_ch_apb_mux_pkg` | Neighborhood channel APB mux request/response structs and address-decode constants | Done |
 | `neigh_hv_logic_pkg` | Neighborhood HV/LV support-leaf APB/BPAM types and sizing constants | Done |
 | `neigh_voltage_cross_pkg` | Neighborhood voltage-crossing wrapper local types and geometry constants | Done |
 | `shirecache_pkg` | Cache constants, enums, L3 swizzle struct, pipeline/cbuf/atomic types, perfmon types | Done |
@@ -346,6 +347,8 @@ Build order: 12→13→14→15→16→17→18
 | `neigh_lo_voltage_cross` | `neigh_lo_voltage_cross` | 41 grouped crossing-wrapper checks | 59,744 comparisons | Done |
 | `dll_dly_est_core` | `dll_dly_est_core` | 26 grouped estimator checks | 13,716 comparisons | Done |
 | `dll_dly_est` | `dll_dly_est` | 26 grouped estimator checks | 6,166 default-width comparisons + 6,166 Width=4 wrapper-parameter comparisons | Done |
+| `bpam2minions` | `bpam2minions` | 189 checks | 9,960 comparisons | Done |
+| `neigh_ch_apb_mux` | `neigh_ch_apb_mux` | 73 checks | 23,759 comparisons | Done |
 | `standalone_minion` | `standalone_minion` | 19 checks | 1,765,940 comparisons | Done |
 
 ## RBOX (`hw/ip/rbox/`)
@@ -434,10 +437,10 @@ backfilled.
 
 | Metric | Count |
 |--------|-------|
-| Unit-test Makefiles | 72 |
-| Test suites discovered by `make test` | 229 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 264 |
+| Unit-test Makefiles | 73 |
+| Test suites discovered by `make test` | 231 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 266 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 228 unit suites + 264 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run |
+| Targeted update runs | 230 unit suites + 266 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run |
 | Targeted update failures | 0 |
