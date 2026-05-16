@@ -344,6 +344,8 @@ Build order: 12→13→14→15→16→17→18
 | `neigh_hv_logic_fcc` | `neigh_hv_logic_fcc` | — | — | Excluded — no instantiation in audited `neigh_top`/`neigh_channel` hierarchy; live path uses `neigh_hv_logic_uc_fcc` |
 | `neigh_hi_voltage_cross` | `neigh_hi_voltage_cross` | 41 grouped crossing-wrapper checks | 144,496 comparisons | Done |
 | `neigh_lo_voltage_cross` | `neigh_lo_voltage_cross` | 41 grouped crossing-wrapper checks | 59,744 comparisons | Done |
+| `dll_dly_est_core` | `dll_dly_est_core` | 26 grouped estimator checks | 13,716 comparisons | Done |
+| `dll_dly_est` | `dll_dly_est` | 26 grouped estimator checks | 6,166 default-width comparisons + 6,166 Width=4 wrapper-parameter comparisons | Done |
 | `standalone_minion` | `standalone_minion` | 19 checks | 1,765,940 comparisons | Done |
 
 ## RBOX (`hw/ip/rbox/`)
@@ -432,10 +434,10 @@ backfilled.
 
 | Metric | Count |
 |--------|-------|
-| Unit-test Makefiles | 71 |
-| Test suites discovered by `make test` | 228 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 262 |
+| Unit-test Makefiles | 72 |
+| Test suites discovered by `make test` | 229 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 264 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 227 unit suites + 262 cosim Makefile runs |
+| Targeted update runs | 228 unit suites + 264 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run |
 | Targeted update failures | 0 |

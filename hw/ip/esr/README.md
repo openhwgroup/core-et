@@ -11,9 +11,10 @@ subsystem integration logic.
 
 The shared package at [`rtl/esr_pkg.sv`](rtl/esr_pkg.sv) carries ESR-wide type
 definitions, reset values, and address constants that are needed by hand-ported
-ESR blocks such as `esr_spio` and `esr_neigh`. Neighborhood ICache error-log
-payload structs remain in `icache_pkg` and are referenced by `esr_neigh` to keep
-one packed-layout definition for the ICache/ESR boundary.
+ESR blocks such as `esr_spio`, `esr_neigh`, and the DLL delay estimator.
+Neighborhood ICache error-log payload structs remain in `icache_pkg` and are
+referenced by `esr_neigh` to keep one packed-layout definition for the
+ICache/ESR boundary.
 
 ## Status
 

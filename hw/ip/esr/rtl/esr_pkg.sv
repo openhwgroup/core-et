@@ -95,6 +95,18 @@ package esr_pkg;
   } esr_ipi_pc_t;
 
   typedef struct packed {
+    logic       ctl_enable;
+    logic       ctl_init;
+    logic       ctl_start;
+    logic [7:0] ctl_txn;
+  } esr_dll_dly_est_ctl_t;
+
+  typedef struct packed {
+    logic [7:0] sts_errn;
+    logic       sts_done;
+  } esr_dll_dly_est_sts_t;
+
+  typedef struct packed {
     logic       enable_secure_memory;
     logic [1:0] dram_size;
     logic       disable_osbox_access;
