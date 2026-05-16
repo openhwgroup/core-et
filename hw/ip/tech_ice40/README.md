@@ -55,6 +55,11 @@ implementation for iCE40. The current shirecache payload widths are far wider
 than the 16-bit per-port EBR width, so a dedicated EBR-backed override would
 cost dozens of blocks per FIFO and is not the right target-specific tradeoff.
 
+`prim_fifo_semisync_hiv` and `prim_fifo_semisync_lov` also stay on the generic
+fallback for iCE40. They are logical semi-synchronous voltage-boundary seams for
+1:1 phase-controlled clocks; no iCE40-specific FIFO macro or level-shifter
+mapping is currently validated for those neighborhood crossings.
+
 `prim_clk_mux` also stays on the generic fallback for iCE40. That is
 intentional: iCE40 does not have a general internal glitchless clock-mux
 primitive, and this seam is only used for static SRAM DFT clock override rather

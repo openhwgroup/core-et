@@ -29,7 +29,11 @@ These are the current technology seams in the system:
 - Reset-domain handoff: `prim_rst_sync` is the project reset repeater and is
   used heavily in shirecache to derive local cold, warm, and debug resets.
 - Cross-domain transport: `prim_fifo_async_hiv` and `prim_fifo_async_lov` are
-  the shire/NOC CDC seam today, and the future level-shifter insertion point.
+  the shire/NOC GCD-style CDC seam today, and the future level-shifter insertion
+  point for arbitrary asynchronous crossings.
+- Semi-synchronous voltage transport: `prim_fifo_semisync_hiv` and
+  `prim_fifo_semisync_lov` preserve the CORE-ET `_ss` FIFO contract used by the
+  neighborhood HV/LV crossings with 1:1 phase-controlled clocks.
 
 This list is not a promise that no other technology primitives will ever be
 added. The rule is narrower: add a true tech primitive only when the module is
@@ -278,8 +282,10 @@ phase relationship visible to shared RTL must remain the same.
 | `prim_rf_3r2w` | Latch-timed 3-read/2-write register-file primitive |
 | `prim_rf_single_1r1w_par` | Latch-timed single-entry write-capture primitive with direct readback |
 | `prim_rst_sync` | Reset repeater: async assert, sync release, scan-reset bypass |
-| `prim_fifo_async_hiv` | CDC FIFO from shire/HV write side to NOC/LV read side |
-| `prim_fifo_async_lov` | CDC FIFO from NOC/LV write side to shire/HV read side |
+| `prim_fifo_async_hiv` | GCD-style CDC FIFO from shire/HV write side to NOC/LV read side |
+| `prim_fifo_async_lov` | GCD-style CDC FIFO from NOC/LV write side to shire/HV read side |
+| `prim_fifo_semisync_hiv` | Semi-synchronous FIFO from HV write side to LV read side for 1:1 phase-controlled clocks |
+| `prim_fifo_semisync_lov` | Semi-synchronous FIFO from LV write side to HV read side for 1:1 phase-controlled clocks |
 
 `mk/prim.mk` selects these by default (`TECH=generic`). DV and simulation
 heads should consume the primitive variables rather than hard-coding paths, so

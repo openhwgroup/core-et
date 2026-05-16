@@ -48,6 +48,8 @@
 | `prim_fifo` | 100 checks | 7122 comparisons vs `gen_fifo` | Done |
 | `prim_fifo_async_hiv` | 30 checks | 18,921 comparisons vs `vcfifo_wr_hiv_gcd` | Done |
 | `prim_fifo_async_lov` | 63 checks | 18,921 comparisons vs `vcfifo_wr_lov_gcd` | Done |
+| `prim_fifo_semisync_hiv` | 50 checks | 7,668 comparisons vs `vcfifo_wr_hiv_ss` | Done |
+| `prim_fifo_semisync_lov` | 50 checks | 7,668 comparisons vs `vcfifo_wr_lov_ss` | Done |
 | `prim_arb_lru` | — (tested via cbuf) | — (tested via cbuf cosim) | Done |
 | `prim_arb_lru_2bid` | 30 checks | 2264 comparisons vs `arb_lru_2_bid` | Done |
 | `prim_arb_rr` | 29 checks | 1150 comparisons vs `arb_rr_data` | Done |
@@ -412,10 +414,10 @@ backfilled.
 
 | Metric | Count |
 |--------|-------|
-| Unit-test Makefiles | 67 |
-| Test suites discovered by `make test` | 223 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 244 |
+| Unit-test Makefiles | 68 |
+| Test suites discovered by `make test` | 225 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 247 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 222 unit suites + 244 cosim Makefile runs |
+| Targeted update runs | 224 unit suites + 247 cosim Makefile runs |
 | Targeted update failures | 0 |

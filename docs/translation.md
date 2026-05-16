@@ -115,6 +115,10 @@ These are the standard CORE-ET-to-ETASP primitive mappings.
 | `gen_mem2p` | `prim_ram_2p` | same policy as above |
 | `rbox_fifo` | `prim_fifo_sram` | preserve original handshake/latency |
 | `gen_fifo_reg` | `prim_fifo_reg` | register FIFO |
+| `vcfifo_wr_hiv_gcd` | `prim_fifo_async_hiv` | GCD-style arbitrary asynchronous HV-write/LV-read CDC FIFO |
+| `vcfifo_wr_lov_gcd` | `prim_fifo_async_lov` | GCD-style arbitrary asynchronous LV-write/HV-read CDC FIFO |
+| `vcfifo_wr_hiv_ss` | `prim_fifo_semisync_hiv` | Semi-synchronous HV-write/LV-read FIFO for 1:1 phase-controlled clocks |
+| `vcfifo_wr_lov_ss` | `prim_fifo_semisync_lov` | Semi-synchronous LV-write/HV-read FIFO for 1:1 phase-controlled clocks |
 | `rst_repeat` | `prim_rst_sync` | DFT-aware reset seam |
 | `et_clk_gate` | `prim_clk_gate` | real local clock gate |
 | `et_clk_gate_n` | `prim_clk_gate_n` | negative-phase helper gate |
