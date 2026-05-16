@@ -13,6 +13,7 @@
 | `icache_pkg` | Standalone-Icache constants, enums, TLB/error structs, and LRU helpers | Done |
 | `minion_frontend_pkg` | Frontend fetch-buffer, ICache response, issue, and thread-buffer types | Done |
 | `neigh_pkg` | Neighborhood shell types and response-agent constants | Done |
+| `neigh_hv_logic_pkg` | Neighborhood HV/LV support-leaf APB/BPAM types and sizing constants | Done |
 | `shirecache_pkg` | Cache constants, enums, L3 swizzle struct, pipeline/cbuf/atomic types, perfmon types | Done |
 | `axi_pkg` | AXI4 channel types (AR, AW, W, R, B) | Done |
 | `rbox_pkg` | RBOX constants, packet/control structs, APB/ET-Link helper types, and utility functions | Done |
@@ -327,6 +328,19 @@ Build order: 12→13→14→15→16→17→18
 | `pseudo_lru` | `pseudo_lru` | 266 checks | 5,000 comparisons | Done |
 | `esr_spio` | `esr_spio` | 13 checks | 29,955 comparisons | Done |
 | `esr_neigh` | `esr_neigh` | 129 checks | 98,096 comparisons | Done |
+| `neigh_hv_logic_apb_req` | `neigh_hv_logic_apb_req` | 57 grouped support-leaf checks | 4,096 comparisons | Done |
+| `neigh_hv_logic_apb_rsp` | `neigh_hv_logic_apb_rsp` | 57 grouped support-leaf checks | 6,144 comparisons | Done |
+| `neigh_hv_logic_bpam` | `neigh_hv_logic_bpam` | 57 grouped support-leaf checks | 4,096 comparisons | Done |
+| `neigh_hv_logic_bpam_rc_tbox_ack` | `neigh_hv_logic_bpam_rc_tbox_ack` | 57 grouped support-leaf checks | 8,192 comparisons | Done |
+| `neigh_hv_logic_clock_feedback` | `neigh_hv_logic_clock_feedback` | 57 grouped support-leaf checks | 4,096 comparisons | Done |
+| `neigh_hv_logic_constants` | `neigh_hv_logic_constants` | 57 grouped support-leaf checks | 2,048 comparisons | Done |
+| `neigh_hv_logic_icache_err` | `neigh_hv_logic_icache_err` | 57 grouped support-leaf checks | 4,096 comparisons | Done |
+| `neigh_hv_logic_ipi` | `neigh_hv_logic_ipi` | 57 grouped support-leaf checks | 2,048 comparisons | Done |
+| `neigh_hv_logic_l2_bank` | `neigh_hv_logic_l2_bank` | 57 grouped support-leaf checks | 155,648 comparisons | Done |
+| `neigh_hv_logic_neigh_sc` | `neigh_hv_logic_neigh_sc` | 57 grouped support-leaf checks | 163,840 comparisons | Done |
+| `neigh_hv_logic_pwr_ctrl_tdr_isolate` | `neigh_hv_logic_pwr_ctrl_tdr_isolate` | 57 grouped support-leaf checks | 2,048 comparisons | Done |
+| `neigh_hv_logic_uc_fcc` | `neigh_hv_logic_uc_fcc` | 57 grouped support-leaf checks | 2,048 comparisons | Done |
+| `neigh_hv_logic_fcc` | `neigh_hv_logic_fcc` | — | — | Excluded — no instantiation in audited `neigh_top`/`neigh_channel` hierarchy; live path uses `neigh_hv_logic_uc_fcc` |
 | `standalone_minion` | `standalone_minion` | 19 checks | 1,765,940 comparisons | Done |
 
 ## RBOX (`hw/ip/rbox/`)
@@ -409,16 +423,16 @@ row below.
 ## Totals
 
 Structural discovery counts were refreshed from tracked Makefiles on
-2026-05-14. Repo-wide check/comparison totals are not carried as exact sums
+2026-05-16. Repo-wide check/comparison totals are not carried as exact sums
 until every unit test and cosim is rerun and all legacy approximate rows are
 backfilled.
 
 | Metric | Count |
 |--------|-------|
-| Unit-test Makefiles | 69 |
-| Test suites discovered by `make test` | 226 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 248 |
+| Unit-test Makefiles | 70 |
+| Test suites discovered by `make test` | 227 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 260 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 225 unit suites + 248 cosim Makefile runs |
+| Targeted update runs | 226 unit suites + 260 cosim Makefile runs |
 | Targeted update failures | 0 |
