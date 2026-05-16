@@ -37,6 +37,28 @@ make -C dv/rtlcosim/prim_fifo_sram test
 make -C dv/rtlcosim/prim_fifo_sram test-trace
 ```
 
+## Checked-in coverage updates
+
+CI uses checked-in LCOV snapshots under `dv/rtlcosim/coverage/`; generated
+`build/` outputs are local artifacts and must not be committed.
+
+For a full refresh, run every cosim before copying coverage snapshots:
+
+```bash
+make -C dv/rtlcosim test
+make update-cosim-coverage
+```
+
+For a task-scoped targeted update, running `make update-cosim-coverage` after
+`make -C dv/rtlcosim clean` plus only selected cosims can create targeted-only
+`.info` files. Do not commit those files as replacements for the global checked-in
+coverage snapshots. Preserve the baseline `dv/rtlcosim/coverage/*.info`, save the
+targeted `dv/rtlcosim/build/coverage/coverage_*_cosim.info` output, and merge or
+append only the targeted module records into the checked-in files. The final
+`git diff -- dv/rtlcosim/coverage/` must be scoped to the targeted cosims
+(insertion-only for new cosims). If that safe merge cannot be produced or
+audited, run the full refresh flow instead.
+
 ## Adding a new co-simulation
 
 1. Create `dv/rtlcosim/<module>/`

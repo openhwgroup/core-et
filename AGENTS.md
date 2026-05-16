@@ -375,6 +375,17 @@ git add dv/rtlcosim/coverage/
 git commit -m "Update cosim coverage data"
 ```
 
+For scoped jobs that intentionally run only new or changed cosims, do **not**
+commit direct `make update-cosim-coverage` output after a clean plus targeted
+run if it replaces the global checked-in snapshots with targeted-only records.
+Instead, preserve the checked-in `dv/rtlcosim/coverage/*.info` baseline, save the
+targeted `dv/rtlcosim/build/coverage/coverage_*_cosim.info` output, then merge or
+append only the targeted module records into the checked-in files. Before review,
+verify `git diff -- dv/rtlcosim/coverage/` is scoped to the targeted cosims
+(insertion-only for newly added cosims). If a safe targeted merge cannot be
+produced and audited, run the full flow above. Generated `build/` outputs remain
+untracked and must not be committed.
+
 ### Writing a new cosim test
 
 A cosim test has three files in `dv/rtlcosim/<module>/`:
