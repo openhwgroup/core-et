@@ -16,6 +16,7 @@
 | `neigh_ch_apb_mux_pkg` | Neighborhood channel APB mux request/response structs and address-decode constants | Done |
 | `neigh_hv_logic_pkg` | Neighborhood HV/LV support-leaf APB/BPAM types and sizing constants | Done |
 | `neigh_voltage_cross_pkg` | Neighborhood voltage-crossing wrapper local types and geometry constants | Done |
+| `neigh_ch_dbg_pkg` | Neighborhood channel debug TBOX run-control struct and resume-FSM enum | Done |
 | `shirecache_pkg` | Cache constants, enums, L3 swizzle struct, pipeline/cbuf/atomic types, perfmon types | Done |
 | `axi_pkg` | AXI4 channel types (AR, AW, W, R, B) | Done |
 | `rbox_pkg` | RBOX constants, packet/control structs, APB/ET-Link helper types, and utility functions | Done |
@@ -353,6 +354,7 @@ Build order: 12→13→14→15→16→17→18
 | `dll_dly_est` | `dll_dly_est` | 26 grouped estimator checks | 6,166 default-width comparisons + 6,166 Width=4 wrapper-parameter comparisons | Done |
 | `bpam2minions` | `bpam2minions` | 189 checks | 9,960 comparisons | Done |
 | `neigh_ch_apb_mux` | `neigh_ch_apb_mux` | 73 checks | 23,759 comparisons | Done |
+| `neigh_ch_dbg` | `neigh_ch_dbg` | 50 checks | 132,288 comparisons | Done — preserves original resume-status indexing behavior documented in `hw/ip/neigh_ch_dbg/BUGS.md` |
 | `neigh_coop_tload_tag_table` | `neigh_coop_tload_tag_table` | 37 grouped cooperative TLoad checks | 12,002 comparisons | Done |
 | `neigh_coop_tload_ports` | `neigh_coop_tload_ports` | 37 grouped cooperative TLoad checks | 32,776 comparisons | Done |
 | `neigh_coop_tload` | `neigh_coop_tload` | 37 grouped cooperative TLoad checks | 220,352 comparisons | Done |
@@ -446,10 +448,10 @@ backfilled.
 
 | Metric | Count |
 |--------|-------|
-| Unit-test Makefiles | 76 |
-| Test suites discovered by `make test` | 234 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 275 |
+| Unit-test Makefiles | 77 |
+| Test suites discovered by `make test` | 235 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 276 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 233 unit suites + 275 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run |
+| Targeted update runs | 234 unit suites + 276 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run |
 | Targeted update failures | 0 |
