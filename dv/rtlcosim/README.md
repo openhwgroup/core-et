@@ -65,3 +65,16 @@ audited, run the full refresh flow instead.
 2. Write a `*_cosim_tb.sv` that instantiates both old and new modules with an adapter for reset polarity and tied-off ASIC ports
 3. Write a `*_cosim_test.cc` that drives stimulus and uses `CosimCtrl<>` from `dv/rtlcosim/common/cosim_ctrl.h` with `sim.compare()` to compare outputs
 4. Create a `Makefile` following the pattern in existing cosim tests
+5. If the cosim adds new untracked files, remember that plain `git diff --check`
+   will not inspect them. Before review, run a whitespace check that includes the
+   new cosim and any approved coverage snapshot paths, for example:
+
+   ```bash
+   git add -N dv/rtlcosim/<module> dv/rtlcosim/coverage/<approved-files>.info
+   git diff --check -- dv/rtlcosim/<module> dv/rtlcosim/coverage/<approved-files>.info
+   ```
+
+   Alternatively, stage only the approved cosim/coverage paths, run
+   `git diff --cached --check`, then `git reset` those paths if the review
+   handoff should remain unstaged. Do not stage generated `build/` outputs or
+   unrelated local changes just to run the whitespace check.

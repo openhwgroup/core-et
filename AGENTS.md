@@ -473,6 +473,28 @@ git add -A
 git commit
 ```
 
+Plain `git diff --check` only checks tracked changes; it does **not** inspect
+untracked new files. Before review, and again before integration, jobs that add
+new source, DV, cosim, documentation, or coverage files must make those paths
+visible to a whitespace check. Use one of these safe workflows:
+
+```bash
+# Option A: keep files unstaged but mark new approved paths as intent-to-add.
+git add -N <new-approved-paths>
+git diff --check -- <new-approved-paths>
+
+# Option B: stage only the approved paths for a commit-style check, then unstage
+# if the job should leave the worktree unstaged for review.
+git add <approved-paths>
+git diff --cached --check
+git reset -- <approved-paths>
+```
+
+Do not stage generated `build/` outputs, unit-test coverage, or unrelated local
+changes just to make a whitespace check see new files. If generated or unrelated
+paths are present, scope the `git add -N`, `git add`, and diff-check commands to
+the approved artifact paths only.
+
 Do not commit or close out work with failing lint or tests. Do not commit without updating the cosim coverage `.info` files when cosim behavior changes — CI uses these for the coverage dashboard. Do not commit generated `build/coverage/*` or `build/coverview/index.html`.
 
 ## STATUS.md
