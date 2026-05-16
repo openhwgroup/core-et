@@ -353,6 +353,9 @@ Build order: 12→13→14→15→16→17→18
 | `dll_dly_est` | `dll_dly_est` | 26 grouped estimator checks | 6,166 default-width comparisons + 6,166 Width=4 wrapper-parameter comparisons | Done |
 | `bpam2minions` | `bpam2minions` | 189 checks | 9,960 comparisons | Done |
 | `neigh_ch_apb_mux` | `neigh_ch_apb_mux` | 73 checks | 23,759 comparisons | Done |
+| `neigh_coop_tload_tag_table` | `neigh_coop_tload_tag_table` | 37 grouped cooperative TLoad checks | 12,002 comparisons | Done |
+| `neigh_coop_tload_ports` | `neigh_coop_tload_ports` | 37 grouped cooperative TLoad checks | 32,776 comparisons | Done |
+| `neigh_coop_tload` | `neigh_coop_tload` | 37 grouped cooperative TLoad checks | 220,352 comparisons | Done |
 | `standalone_minion` | `standalone_minion` | 19 checks | 1,765,940 comparisons | Done |
 
 ## RBOX (`hw/ip/rbox/`)
@@ -441,10 +444,10 @@ backfilled.
 
 | Metric | Count |
 |--------|-------|
-| Unit-test Makefiles | 74 |
-| Test suites discovered by `make test` | 232 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 270 |
+| Unit-test Makefiles | 75 |
+| Test suites discovered by `make test` | 233 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 273 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 231 unit suites + 270 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run |
+| Targeted update runs | 232 unit suites + 273 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run |
 | Targeted update failures | 0 |
