@@ -8,7 +8,7 @@
 | `ram_cfg_pkg` | SRAM config struct (`ram_cfg_t`: timing margins, deep_sleep, shut_down) | Done |
 | `etlink_pkg` | ET-Link bus protocol types and opcodes | Done |
 | `apb_pkg` | APB3 request/response structs for ESR register blocks | Done |
-| `esr_pkg` | Shared ESR structs and SPIO address constants | Done |
+| `esr_pkg` | Shared ESR structs plus SPIO/neighborhood address constants | Done |
 | `icache_geom_pkg` | Shared standalone-Icache geometry and SRAM-layout constants | Done |
 | `icache_pkg` | Standalone-Icache constants, enums, TLB/error structs, and LRU helpers | Done |
 | `minion_frontend_pkg` | Frontend fetch-buffer, ICache response, issue, and thread-buffer types | Done |
@@ -326,6 +326,7 @@ Build order: 12→13→14→15→16→17→18
 | `neigh_shared_ptw` | `neigh_shared_ptw` | 18 checks | 45,090 comparisons | Done |
 | `pseudo_lru` | `pseudo_lru` | 266 checks | 5,000 comparisons | Done |
 | `esr_spio` | `esr_spio` | 13 checks | 29,955 comparisons | Done |
+| `esr_neigh` | `esr_neigh` | 129 checks | 98,096 comparisons | Done |
 | `standalone_minion` | `standalone_minion` | 19 checks | 1,765,940 comparisons | Done |
 
 ## RBOX (`hw/ip/rbox/`)
@@ -414,10 +415,10 @@ backfilled.
 
 | Metric | Count |
 |--------|-------|
-| Unit-test Makefiles | 68 |
-| Test suites discovered by `make test` | 225 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 247 |
+| Unit-test Makefiles | 69 |
+| Test suites discovered by `make test` | 226 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 248 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 224 unit suites + 247 cosim Makefile runs |
+| Targeted update runs | 225 unit suites + 248 cosim Makefile runs |
 | Targeted update failures | 0 |
