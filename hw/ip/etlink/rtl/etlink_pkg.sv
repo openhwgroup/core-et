@@ -61,6 +61,14 @@ package etlink_pkg;
     RspErr        = 2'd3
   } rsp_opcode_e;
 
+  // ── WriteAround request subopcodes ──────────────────────
+
+  typedef enum logic [SubopcodeSize-1:0] {
+    SubWriteAround     = 7'd0,
+    SubWriteAround2Way = 7'd1,
+    SubWriteAround4Way = 7'd2
+  } write_around_subopcode_e;
+
   // ── Transaction size ────────────────────────────────────
 
   typedef enum logic [2:0] {

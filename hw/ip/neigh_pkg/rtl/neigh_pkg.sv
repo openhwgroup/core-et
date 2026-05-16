@@ -27,6 +27,7 @@ package neigh_pkg;
   parameter int unsigned NeighMinTboxReqFifoSize = 2;
   parameter int unsigned TboxNeighReqFifoSize = 2;
   parameter int unsigned NeighScTboxRspFifoSize = 2;
+  parameter int unsigned TstoreReqFifoDepth = 2;
   /* verilator lint_on UNUSEDPARAM */
 
   /* verilator lint_off UNUSEDPARAM */  // Cooperative TLoad constants are consumed only by the corresponding channel leaves.
@@ -110,5 +111,16 @@ package neigh_pkg;
   typedef struct packed {
     logic [13:0] local_message_valid_out;
   } fln_dbg_sm_t;
+
+  parameter int unsigned TstoreBlockDbgWidth = 22;
+
+  typedef struct packed {
+    logic [TstoreBlockDbgWidth-1:0] tstore_internal_dbg_signals;
+  } tstore_block_dbg_sm_t;
+
+  typedef struct packed {
+    tstore_block_dbg_sm_t tstore_north_dbg_sm_signals;
+    tstore_block_dbg_sm_t tstore_south_dbg_sm_signals;
+  } tstore_dbg_sm_t;
 
 endpackage : neigh_pkg

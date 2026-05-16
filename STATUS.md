@@ -6,13 +6,13 @@
 |---------|-------------|--------|
 | `dft_pkg` | DFT control struct (`dft_t`: scanmode, scan_reset_n, sram_clk_override, ram_rei, ram_wei) | Done |
 | `ram_cfg_pkg` | SRAM config struct (`ram_cfg_t`: timing margins, deep_sleep, shut_down) | Done |
-| `etlink_pkg` | ET-Link bus protocol types and opcodes | Done |
+| `etlink_pkg` | ET-Link bus protocol types, opcodes, and WriteAround subopcodes | Done |
 | `apb_pkg` | APB3 request/response structs for ESR register blocks | Done |
 | `esr_pkg` | Shared ESR structs plus SPIO/neighborhood address constants | Done |
 | `icache_geom_pkg` | Shared standalone-Icache geometry and SRAM-layout constants | Done |
 | `icache_pkg` | Standalone-Icache constants, enums, TLB/error structs, and LRU helpers | Done |
 | `minion_frontend_pkg` | Frontend fetch-buffer, ICache response, issue, and thread-buffer types | Done |
-| `neigh_pkg` | Neighborhood shell/channel types, response-agent constants, FLB/local/TBOX constants | Done |
+| `neigh_pkg` | Neighborhood shell/channel types, response-agent constants, FLB/local/TBOX/tensor-store constants and debug payloads | Done |
 | `neigh_ch_apb_mux_pkg` | Neighborhood channel APB mux request/response structs and address-decode constants | Done |
 | `neigh_hv_logic_pkg` | Neighborhood HV/LV support-leaf APB/BPAM types and sizing constants | Done |
 | `neigh_voltage_cross_pkg` | Neighborhood voltage-crossing wrapper local types and geometry constants | Done |
@@ -356,6 +356,8 @@ Build order: 12→13→14→15→16→17→18
 | `neigh_coop_tload_tag_table` | `neigh_coop_tload_tag_table` | 37 grouped cooperative TLoad checks | 12,002 comparisons | Done |
 | `neigh_coop_tload_ports` | `neigh_coop_tload_ports` | 37 grouped cooperative TLoad checks | 32,776 comparisons | Done |
 | `neigh_coop_tload` | `neigh_coop_tload` | 37 grouped cooperative TLoad checks | 220,352 comparisons | Done |
+| `neigh_tensor_store_buffer_block` | `neigh_tensor_store_buffer_block` | 34 grouped tensor-store checks | 260,988 comparisons | Done |
+| `neigh_tensor_store_buffer` | `neigh_tensor_store_buffer` | 34 grouped tensor-store checks | 505,512 comparisons | Done |
 | `standalone_minion` | `standalone_minion` | 19 checks | 1,765,940 comparisons | Done |
 
 ## RBOX (`hw/ip/rbox/`)
@@ -444,10 +446,10 @@ backfilled.
 
 | Metric | Count |
 |--------|-------|
-| Unit-test Makefiles | 75 |
-| Test suites discovered by `make test` | 233 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 273 |
+| Unit-test Makefiles | 76 |
+| Test suites discovered by `make test` | 234 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 275 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 232 unit suites + 273 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run |
+| Targeted update runs | 233 unit suites + 275 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run |
 | Targeted update failures | 0 |
