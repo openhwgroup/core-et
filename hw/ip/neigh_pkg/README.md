@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Ainekko
+// SPDX-License-Identifier: Apache-2.0
+
 # neigh_pkg
 
 Neighborhood-shell package for the standalone Minion path.
@@ -9,6 +12,7 @@ shared by the translated neighborhood response path:
 - cooperative tensor-load controller sizing, sideband, tag-table, and debug payloads
 - fill FIFO entry payloads
 - neighborhood channel leaf constants for FLB, local-message, TBOX FIFOs, and tensor-store buffering
+- shire TDR reset-control payload used by the translated `neigh_channel` sys-gasket reset seam
 
 The current contents are:
 
@@ -27,6 +31,7 @@ The current contents are:
 | `NumNeigh` / `NumOtherNeigh` / `NumNeighWidth` | Neighborhood-count constants for cooperative sideband ports (`4`, `3`, `2`) |
 | `ShireCoopMissReqs` / `ShireCoopNumIds` / `ShireCoopRdyCreds` / `ShireCoopTagTableDepth` | Cooperative TLoad controller sizing and credit constants (`2`, `32`, `3`, `32`) |
 | `ShireCoop*Start/Size` constants | Bit layout of the cooperative TLoad minion request payload and load tag |
+| `shire_tdr_reset_cntl_t` | Shire TDR reset override fields forwarded to `sys_gasket_lov` by `neigh_channel` |
 | `coop_tload_slv_req_t` / `coop_tload_slv_rdy_req_t` | Cooperative TLoad slave path and slave-ready sideband payloads |
 | `coop_tload_tag_table_data_t` / `coop_tload_tag_table_req_t` | Cooperative tensor-load CAM payload and write request |
 | `coop_tload_dbg_sm_t` | Cooperative TLoad debug-monitor payload exported to the status monitor |

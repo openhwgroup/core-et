@@ -56,6 +56,16 @@ package neigh_pkg;
   /* verilator lint_on UNUSEDPARAM */
 
   typedef struct packed {
+    logic reset_warm_in;
+    logic gpio_ndmreset_in;
+    logic ndmreset_in;
+    logic dmactive_in;
+    logic reset_cold_in;
+    logic reset_n_system;
+    logic reset_n_system_debug;
+  } shire_tdr_reset_cntl_t;
+
+  typedef struct packed {
     logic [NumNeighWidth-1:0]      master_neigh;
     logic [ShireCoopIdSize-1:0]    coop_id;
     logic [ShireCoopSeqIdSize-1:0] coop_seq_id;
