@@ -100,7 +100,7 @@ Inserts sub_bank, bank, and shire_id fields into an L3 physical address. Output 
 
 ### shirecache_pipe_tag_ram_wrap
 
-Tag RAM wrapper. Single-port, `TagRamDataSize` bits wide (116), `SetsPerSubBank` deep. Clock gated via `prim_clk_gate`. Read and write are mutually exclusive. 1-cycle read latency.
+Tag RAM wrapper. Single-port, `TagRamDataSize` bits wide (116), `SetsPerSubBank` deep. Preserves the original `sram_clock_pre` pulse generator and `prim_clk_mux` DFT SRAM-clock override; `ram_delay_i` is assertion/control-plane metadata for this wrapper and does not extend the SRAM clock. Read and write are mutually exclusive. 1-cycle read latency.
 
 | Port | Direction | Description |
 |------|-----------|-------------|
@@ -115,11 +115,13 @@ Tag RAM wrapper. Single-port, `TagRamDataSize` bits wide (116), `SetsPerSubBank`
 
 ### shirecache_pipe_tag_state_ram_wrap
 
-Tag state RAM (LRU + flags). Supports single-port (`DualPort=0`) and dual-port (`DualPort=1`, independent read/write addresses). `TagStateRamDataSize` bits wide (40). Clock gated.
+Tag state RAM (LRU + flags). Supports single-port (`DualPort=0`) and dual-port (`DualPort=1`, independent read/write addresses). `TagStateRamDataSize` bits wide (40). Dual-port mode preserves the original `sram_clock_pre` pulse generator; single-port mode preserves the original `et_clk_gate` behavior via `prim_clk_gate`. The reimplementation intentionally preserves the ASIC/DFT `ram_rei` read-inhibit contract rather than the original generic dual-port simulation bug documented in `BUGS.md`.
 
 ### shirecache_pipe_data_ram_wrap
 
-Data RAM wrapper. Internally uses `LineQwSize` (4) independent `prim_ram_1p` instances, one per quadword. Supports per-quadword write enable (`wr_qwen_i`). `DataRamDataSize` bits wide (576 = 512 data + 64 ECC). Clock gated.
+Data RAM wrapper. Internally uses `LineQwSize` (4) independent `prim_ram_1p` instances, one per quadword. Supports per-quadword write enable (`wr_qwen_i`). `DataRamDataSize` bits wide (576 = 512 data + 64 ECC). Preserves the original `sram_clock_pre` pulse generator and `prim_clk_mux` DFT SRAM-clock override; `ram_delay_i` is assertion/control-plane metadata for this wrapper and does not extend the SRAM clock.
+
+Standalone cosim decision for the RAM wrappers: feasible. The original `pipe.sub_bank.esr_sc_ram_delay_*` and `mem.data_ram_wr_xcheck_disable_da` hierarchical references are inside assertion-only code, so the standalone wrappers compile with `-DET_ASSERT_OFF` and compare all functional outputs cycle-by-cycle. The functional variable read-delay behavior is covered by `shirecache_pipe_sub_bank_mem` and `shirecache_sub_bank` cosims.
 
 ### shirecache_pipe_cbuf
 
@@ -315,9 +317,9 @@ L3-to-sys bypass bridge. Passes Writes, Reads, and Atomics through to the sys me
 
 ### shirecache_pipe_sub_bank_mem
 
-Memory subsystem for one sub-bank. Instantiates tag RAM, tag state RAM, and data RAM wrappers. Implements variable read-delay pipeline (2/3/4 cycles) based on `esr_sc_ram_delay`. Manages BIST mux for DFT memory testing. Clock gated per-RAM.
+Memory subsystem for one sub-bank. Instantiates tag RAM, tag state RAM, and data RAM wrappers. Implements the input request staging plus variable read-delay pipeline (2/3/4 cycles) based on `esr_sc_ram_delay`. DFT SRAM clock override, RAM inhibit, and SRAM timing/power config are carried through the RAM wrappers.
 
-Replaces: `shire_cache_pipe_sub_bank_mem`.
+Replaces: `shire_cache_pipe_sub_bank_mem`. Differences: reset polarity, flattened RAM request/response ports, `dft_pkg::dft_t` plus `ram_cfg_pkg::ram_cfg_t` instead of CORE-ET DFT/RAM config ports, and `prim_ram_*`/`prim_clk_mux` technology seams. Standalone cosim is feasible with `-DET_ASSERT_OFF` because the original wrapper hierarchy references are assertion-only.
 
 ### shirecache_pipe_sub_bank
 
@@ -399,9 +401,20 @@ Replaces: `shire_cache_bank` (1370 lines).
 
 ### shirecache_top
 
-Top-level cache. Instantiates 4× `shirecache_bank`, 2× `shirecache_xbar` (request + response crossbars), 2× `shirecache_mesh_master` (to_l3, to_sys), 1× `shirecache_mesh_slave`, 3× `prim_rst_sync` (cold, warm, debug), 1× `prim_fifo_reg` (UC response relay). Routes neighborhood request/response ports through crossbars to banks. Dual clock domains (cache + NOC).
+Top-level cache. Instantiates 4× `shirecache_bank`, 2× `shirecache_xbar` (request + response crossbars), 2× `shirecache_mesh_master` (to_l3, to_sys), 1× `shirecache_mesh_slave`, 3× `prim_rst_sync` (cold, warm, debug), 1× `prim_fifo_reg` (UC response relay). Routes neighborhood request/response ports through crossbars to banks. Clock domains are `clk_i` for cache logic, `noc_clk_i` for NOC/mesh CDC endpoints, and `clk_free_i` for bank-level trace/performance-monitor logic that must remain observable when functional clock gating is applied. The top-level `dft_sram_clk_i` port is routed unchanged to every bank; `dft_i.sram_clk_override` selects that clock inside the RAM-wrapper `prim_clk_mux` seams. The scalar `dft_mbist_en_i` port maps directly from the original `shire_cache.dft__mbist_en` port and is routed to every `shirecache_bank.dft_mbist_en_i`, preserving the existing `shirecache_bist_wrapper` contract.
 
-Replaces: `shire_cache` (706 lines). Differences: `prim_rst_sync` instead of `rst_repeat`, `prim_fifo_reg` instead of `gen_fifo_reg`, ESR externalized, drops simulation-only interface.
+Key top-level clock/reset ports:
+- `clk_i`: cache/uncore functional clock.
+- `clk_free_i`: free-running monitor clock forwarded unchanged to every `shirecache_bank.clk_free_i` for trace/perfmon logic.
+- `noc_clk_i`: mesh/NOC clock.
+- `rst_cold_ni`, `rst_ni`, `rst_debug_ni`, `noc_rst_ni`: active-low reset domains matching the translated reset split.
+
+Key top-level DFT ports:
+- `dft_i`: consolidated DFT control struct; `dft_i.sram_clk_override` selects the SRAM DFT clock path inside RAM-wrapper muxes.
+- `dft_sram_clk_i`: SRAM DFT clock override source forwarded unchanged to every `shirecache_bank.dft_sram_clk_i`.
+- `dft_mbist_en_i`: MBIST insertion enable forwarded unchanged to every `shirecache_bank.dft_mbist_en_i`.
+
+Replaces: `shire_cache` (706 lines). Differences: `prim_rst_sync` instead of `rst_repeat`, `prim_fifo_reg` instead of `gen_fifo_reg`, ESR externalized, adds translated top-level `clk_free_i` hookup for the bank monitor-clock contract, `dft_sram_clk_i` instead of `dft__sram_clock`, `dft_mbist_en_i` scalar instead of `dft__mbist_en`, drops simulation-only interface.
 
 ## Differences from CORE-ET `shire_cache`
 
@@ -410,8 +423,10 @@ Replaces: `shire_cache` (706 lines). Differences: `prim_rst_sync` instead of `rs
 | Module prefix | `shire_cache_` | `shirecache_` | Avoids cosim name collision |
 | Package | `shire_cache_defines.vh` + `shire_cache_types.vh` (2000 lines of `define`) | `shirecache_pkg` (SV package, localparams) | Clean, no macro pollution |
 | RAM instances | `gen_mem1p`/`gen_mem2p` or foundry SRAMs | `prim_ram_1p`/`prim_ram_2p` | Technology abstraction |
-| Clock gating | `et_clk_gate` + `et_clk_mux2` | `prim_clk_gate` | Technology abstraction with DFT |
+| Clock/RAM clock seams | `sram_clock_pre` + `et_clk_mux2` for tag/data/dual-port tag-state RAMs; `et_clk_gate` for single-port tag-state and local gated clocks | Preserved `sram_clock_pre` pulse generation with `prim_clk_mux`; `prim_clk_gate` where the original used `et_clk_gate` | Technology abstraction with DFT while preserving original RAM pulse timing |
 | DFT | Individual `dft__*` signals | `dft_pkg::dft_t` struct | Consolidated |
+| DFT MBIST enable | `dft__mbist_en` scalar top-level port | `dft_mbist_en_i` scalar top-level port routed to all banks | Preserves the BIST insertion enable as a scalar outside `dft_t`, matching the existing bank/BIST-wrapper contract |
+| Free-running monitor clock | No separate `shire_cache` top port; banks receive the functional `clock` as `fclock` | `shirecache_top.clk_free_i` forwards a distinct clock to each bank `clk_free_i` | Preserves the translated bank-level trace/perfmon free-clock contract for integration wrappers; top cosim ties it to `clk_i` for original-interface equivalence |
 | RAM config | `esr_shire_cache_ram_cfg_t` | `ram_cfg_pkg::ram_cfg_t` | Standardized |
 | Reset | Active-high synchronous | Active-low async-assert/sync-deassert | Project coding style |
 | Flip-flop macros | `RST_FF`, `EN_FF`, `RST_EN_FF` | Explicit `always_ff` | No macro dependencies |
@@ -423,10 +438,10 @@ Replaces: `shire_cache` (706 lines). Differences: `prim_rst_sync` instead of `rs
 
 ## Tests
 
-29 unit test suites, 44 RTL cosims (all passing, 0 mismatches).
+31 unit test suites and 34 shirecache RTL cosim directories (all passing, 0 mismatches in the latest targeted/full runs).
 
 ```bash
-make -C dv test              # all 29 shirecache unit tests
+make -C dv test              # all 31 shirecache unit tests
 make -C dv lint              # Verilator lint (full hierarchy)
 
 # Individual tests (see dv/Makefile for full list):
@@ -435,9 +450,11 @@ make -C dv test-cbuf         # coalesce buffer
 make -C dv test-reqq         # request queue (full hierarchy)
 make -C dv test-bmbx         # BIST mailbox
 make -C dv test-bwrap        # BIST wrapper
+make -C dv test-topb         # top-level DFT MBIST enable propagation
 make -C dv test-l2hpf        # L2 hardware prefetcher
 make -C dv test-pmq          # perfmon qualifier
 make -C dv test-pm           # perfmon top
 make -C dv test-errl         # error logger
 make -C dv test-trc          # trace
+make -C dv test-topclk       # shirecache_top free-running clock hookup smoke test
 ```

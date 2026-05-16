@@ -15,7 +15,9 @@ module prim_fifo_async_lov
   parameter int unsigned SyncStages = 2,
   localparam int unsigned PtrW     = $clog2(Depth),
   localparam int unsigned MemDepth = 2**PtrW,
-  localparam int unsigned GrayW    = PtrW + 1
+  localparam int unsigned GrayW    = PtrW + 1,
+  localparam logic [GrayW-1:0] PtrOne    = 1,
+  localparam logic [GrayW-1:0] DepthValue = Depth[GrayW-1:0]
 ) (
   input  logic              clk_wr_i,
   input  logic              rst_wr_ni,
@@ -58,8 +60,8 @@ module prim_fifo_async_lov
       wptr_bin_q  <= '0;
       wptr_gray_q <= '0;
     end else if (push_i & ~full) begin
-      wptr_bin_q  <= wptr_bin_q + GrayW'(1);
-      wptr_gray_q <= bin2gray(wptr_bin_q + GrayW'(1));
+      wptr_bin_q  <= wptr_bin_q + PtrOne;
+      wptr_gray_q <= bin2gray(wptr_bin_q + PtrOne);
     end
   end
 
@@ -70,8 +72,8 @@ module prim_fifo_async_lov
   logic [GrayW-1:0] rptr_bin_sync, occupancy_wr;
   assign rptr_bin_sync = gray2bin(rptr_gray_sync);
   assign occupancy_wr  = wptr_bin_q - rptr_bin_sync;
-  assign full          = (occupancy_wr >= GrayW'(Depth));
-  assign ready_o       = ~full;
+  assign full          = (occupancy_wr >= DepthValue);
+  assign ready_o       = rst_wr_n & ~full;
 
   // Read domain
   logic [GrayW-1:0] rptr_bin_q, rptr_gray_q, wptr_gray_sync;
@@ -82,14 +84,14 @@ module prim_fifo_async_lov
       rptr_bin_q  <= '0;
       rptr_gray_q <= '0;
     end else if (pop_i & ~empty) begin
-      rptr_bin_q  <= rptr_bin_q + GrayW'(1);
-      rptr_gray_q <= bin2gray(rptr_bin_q + GrayW'(1));
+      rptr_bin_q  <= rptr_bin_q + PtrOne;
+      rptr_gray_q <= bin2gray(rptr_bin_q + PtrOne);
     end
   end
 
   assign rdata_o = mem[rptr_bin_q[PtrW-1:0]];
   assign empty   = (rptr_gray_q == wptr_gray_sync);
-  assign valid_o = ~empty;
+  assign valid_o = rst_rd_n & ~empty;
 
   // CDC synchronizers
   logic [GrayW-1:0] wptr_sync [SyncStages];

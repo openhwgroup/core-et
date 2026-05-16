@@ -39,6 +39,7 @@ module shirecache_top
 ) (
   // ── Clocks and resets ────────────────────────────────
   input  logic                                             clk_i,         // cache clock
+  input  logic                                             clk_free_i,    // free-running monitor clock (perfmon, trace)
   input  logic                                             rst_cold_ni,   // cold reset (active-low)
   input  logic                                             rst_ni,        // warm reset (active-low)
   input  logic                                             rst_debug_ni,  // debug reset (active-low)
@@ -47,6 +48,8 @@ module shirecache_top
 
   // ── DFT ──────────────────────────────────────────────
   input  dft_pkg::dft_t                                    dft_i,
+  input  logic                                             dft_sram_clk_i,  // SRAM DFT clock override source
+  input  logic                                             dft_mbist_en_i,  // MBIST insertion enable
 
   // ── RAM config ───────────────────────────────────────
   input  ram_cfg_pkg::ram_cfg_t                            ram_cfg_i,
@@ -451,13 +454,13 @@ module shirecache_top
       .L2HpfImplemented (L2hpfImplemented)
     ) u_bank (
       .clk_i                              (clk_i),
-      .clk_free_i                         (clk_i),   // TODO: wire free-running clock
+      .clk_free_i                         (clk_free_i),
       .rst_ni                             (rst_warm_n),
       .rst_c_ni                           (rst_cold_n),
       .rst_d_ni                           (rst_debug_n),
       .dft_i                              (dft_i),
-      .dft_sram_clk_i                     (1'b0),    // TODO: wire DFT SRAM clock
-      .dft_mbist_en_i                     (1'b0),    // TODO: wire DFT MBIST enable
+      .dft_sram_clk_i                     (dft_sram_clk_i),
+      .dft_mbist_en_i                     (dft_mbist_en_i),
       .eco_i                              ('0),
       .eco_o                              (),
       .ram_cfg_i                          (ram_cfg_i),

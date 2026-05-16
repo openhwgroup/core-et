@@ -133,16 +133,18 @@ module minion_debug_apb_slv
     end
   end
 
+  // Original EN_FF: no reset on the read-data staging register.
+  always_ff @(posedge clk_i) begin
+    if (s0_en && !apb_pwrite_i)
+      s1_rdata_q <= s0_rdata;
+  end
+
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
-      s1_rdata_q <= '0;
       s1_reg_en_q <= '0;
       s1_addr_valid_q <= 1'b0;
       s1_pp_valid_q <= 1'b0;
     end else begin
-      if (s0_en && !apb_pwrite_i)
-        s1_rdata_q <= s0_rdata;
-
       if (s0_en || s1_en) begin
         s1_reg_en_q <= s0_reg_en;
       end

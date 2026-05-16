@@ -46,13 +46,13 @@
 | `prim_fifo_sram` | 44 checks (Ports=1+2) | 3549 comparisons vs `rbox_fifo` | Done |
 | `prim_fifo_reg` | 24 checks | 2091 comparisons vs `gen_fifo_reg` | Done |
 | `prim_fifo` | 100 checks | 7122 comparisons vs `gen_fifo` | Done |
-| `prim_fifo_async_hiv` | 30 checks | — (no tracked standalone cosim) | Unit done; standalone cosim pending |
-| `prim_fifo_async_lov` | — | — (no tracked standalone unit/cosim) | Implemented; standalone DV pending |
+| `prim_fifo_async_hiv` | 30 checks | 18,921 comparisons vs `vcfifo_wr_hiv_gcd` | Done |
+| `prim_fifo_async_lov` | 63 checks | 18,921 comparisons vs `vcfifo_wr_lov_gcd` | Done |
 | `prim_arb_lru` | — (tested via cbuf) | — (tested via cbuf cosim) | Done |
 | `prim_arb_lru_2bid` | 30 checks | 2264 comparisons vs `arb_lru_2_bid` | Done |
 | `prim_arb_rr` | 29 checks | 1150 comparisons vs `arb_rr_data` | Done |
 | `prim_arb_prio` | 24 checks | 1068 comparisons vs `arb_prio_data_held` | Done |
-| `prim_hot2bin` | — | — | Implemented; standalone DV pending |
+| `prim_hot2bin` | 311 checks | 12,168 comparisons vs `hot2bin` + `onehot_mux` | Done |
 | `prim_rf_1r1w` | 26 checks | 2122 comparisons vs `rf_latch_1r_1w` | Done |
 | `prim_rf_1r1w_dec` | 12 checks | 2517 comparisons vs `rf_latch_1r_1w_dec` | Done |
 | `prim_rf_1r1w_reg` | 13 checks | 2265 comparisons vs `rf_latch_1r_1w_reg` | Done |
@@ -89,14 +89,14 @@
 
 ### RAM wrappers
 
-Cosim blocked: originals use hierarchical refs (`pipe.sub_bank.*`) — will cosim at `sub_bank` level.
+Standalone cosims are enabled with `-DET_ASSERT_OFF`; the original wrappers' hierarchical references (`pipe.sub_bank.*` / `mem.*`) are assertion-only.
 
 | Module | Original | Test | Cosim | Status |
 |--------|----------|------|-------|--------|
-| `shirecache_pipe_tag_ram_wrap` | `shire_cache_pipe_tag_ram_wrap` | 12 checks | blocked | Done — has dft_sram_clk_i, ram_delay_i, dft_i.ram_rei/wei, ram_cfg_i.deep_sleep/shut_down |
-| `shirecache_pipe_tag_state_ram_wrap` | `shire_cache_pipe_tag_state_ram_wrap` | 12 checks | blocked | Done |
-| `shirecache_pipe_data_ram_wrap` | `shire_cache_pipe_data_ram_wrap` | 8 checks | blocked | Done |
-| `shirecache_pipe_sub_bank_mem` | `shire_cache_pipe_sub_bank_mem` | 11 checks | blocked | Done — variable read-delay pipeline (2/3/4 cycles) |
+| `shirecache_pipe_tag_ram_wrap` | `shire_cache_pipe_tag_ram_wrap` | 12 checks | 11,240 comparisons | Done — has dft_sram_clk_i, ram_delay_i, dft_i.ram_rei/wei, ram_cfg_i.deep_sleep/shut_down |
+| `shirecache_pipe_tag_state_ram_wrap` | `shire_cache_pipe_tag_state_ram_wrap` | 12 checks | 2,837 comparisons | Done |
+| `shirecache_pipe_data_ram_wrap` | `shire_cache_pipe_data_ram_wrap` | 8 checks | 51,858 comparisons | Done |
+| `shirecache_pipe_sub_bank_mem` | `shire_cache_pipe_sub_bank_mem` | 7 checks | 90,912 comparisons | Done — variable read-delay pipeline (2/3/4 cycles) |
 
 ### Pipeline Build Order
 
@@ -137,7 +137,7 @@ Build order: 12→13→14→15→16→17→18
 | 17 | `shirecache_mesh_slave` + `shirecache_mesh_slave_axi_port` | `shire_cache_mesh_slave` + `_axi_port` | prim_fifo_async_hiv/lov, prim_fifo_reg, prim_arb_rr, axi_pkg, l3_swizzle_get | Done — 21 unit checks, 6272 cosim comparisons |
 | 18 | `shirecache_l3_to_sys_bridge` | `shire_cache_l3_to_sys_bridge` | prim_fifo_async_hiv/lov, prim_arb_rr, prim_hot2bin | Done — 41 unit checks, 14697 cosim comparisons |
 | 19 | `shirecache_bank` | `shire_cache_bank` | pipe, reqq, dataq, rspmux, mesh, l3_slave, perfmon, err_logger, l2hpf, trace, bist_wrapper | Done — 5535 cosim comparisons (full hierarchy) |
-| 20 | `shirecache_top` | `shire_cache` | bank (×4), xbar (×2), mesh_master, mesh_slave, rst_sync | Done — 10134 cosim comparisons (full hierarchy, all 4 banks) |
+| 20 | `shirecache_top` | `shire_cache` | bank (×4), xbar (×2), mesh_master, mesh_slave, rst_sync | Done — 7 free-clock smoke checks, 10 MBIST propagation checks; 46102 cosim comparisons (full hierarchy, all 4 banks, DFT SRAM clock override, DFT MBIST enable propagation) |
 
 ### Monitoring
 
@@ -158,7 +158,7 @@ Build order: 12→13→14→15→16→17→18
 |--------|----------|------|-------|--------|
 | `minion_frontend_rvc_expander` | `frontend_rvc_expander` | 30 checks | 53,260 comparisons | Done |
 | `minion_frontend_thread_sched` | `frontend_thread_sched` | — | 5,540 comparisons | Done |
-| `minion_frontend_thread_buffer` | `frontend_thread_buffer` | — | 1,427,157 comparisons | Done |
+| `minion_frontend_thread_buffer` | `frontend_thread_buffer` | — | 1,524,292 comparisons | Done |
 | `intpipe_decode` | `intpipe_decode` | 6 checks (`EnableExtraTrans=0`) + 6 checks (`EnableExtraTrans=1`) | 2,000,069 comparisons (`EnableExtraTrans=0`) + 2,000,069 comparisons (`EnableExtraTrans=1`) | Done |
 | `vpu_decoder` | `vpu_decoder` | 6 checks (`EnableExtraTrans=0`) + 6 checks (`EnableExtraTrans=1`) | 4,000,110 comparisons (`EnableExtraTrans=0`) + 4,000,110 comparisons (`EnableExtraTrans=1`) | Done |
 | `minion_frontend` | `frontend_top` | — | 1,169,262 comparisons | Done |
@@ -174,34 +174,34 @@ Build order: 12→13→14→15→16→17→18
 
 ### Phase 1-3: Leaf modules
 
-| Module | Original | Cosim | Status |
-|--------|----------|-------|--------|
-| `intpipe_alu` | `intpipe_alu` | ~2M comparisons | Done |
-| `intpipe_imm` | `intpipe_imm` | ~500K comparisons | Done |
-| `intpipe_inst_bits_stage` | `intpipe_inst_bits_stage` | ~100K comparisons | Done |
-| `intpipe_rf` | `intpipe_rf` | 80,270 comparisons | Done |
-| `intpipe_int_scoreboard` | `intpipe_int_scoreboard` | ~1M comparisons | Done |
-| `intpipe_fp_scoreboard` | `intpipe_fp_scoreboard` | ~1M comparisons | Done |
-| `intpipe_mask_scoreboard` | `intpipe_mask_scoreboard` | ~1M comparisons | Done |
-| `debug_breakpoint` | `debug_breakpoint` | ~1M comparisons | Done |
-| `intpipe_mul_div_dp` | `intpipe_mul_div_dp` | ~16M comparisons | Done |
-| `intpipe_mul_div_ctl` | `intpipe_mul_div_ctl` | ~16M comparisons | Done |
-| `intpipe_mul_div_top` | `intpipe_mul_div_top` | ~16M comparisons | Done |
-| `prim_rf_2r1w` | `rf_latch_2r_1w` | 224,876 comparisons | Done |
-| `prim_cmp_32` | `r32cmp` | — (tested via mul_div_dp cosim) | Done |
-| `prim_cmp_42` | `r42cmp` | — (tested via mul_div_dp cosim) | Done |
-| `prim_clk_gate_n` | `et_clk_gate_n` | — (tested via mul_div_dp cosim) | Done |
+| Module | Original | Test | Cosim | Status |
+|--------|----------|------|-------|--------|
+| `intpipe_alu` | `intpipe_alu` | 44 checks | ~2M comparisons | Done |
+| `intpipe_imm` | `intpipe_imm` | — | ~500K comparisons | Done |
+| `intpipe_inst_bits_stage` | `intpipe_inst_bits_stage` | — | ~100K comparisons | Done |
+| `intpipe_rf` | `intpipe_rf` | — | 80,270 comparisons | Done |
+| `intpipe_int_scoreboard` | `intpipe_int_scoreboard` | 27 checks | ~1M comparisons | Done |
+| `intpipe_fp_scoreboard` | `intpipe_fp_scoreboard` | 14 checks | ~1M comparisons | Done |
+| `intpipe_mask_scoreboard` | `intpipe_mask_scoreboard` | 12 checks | ~1M comparisons | Done |
+| `debug_breakpoint` | `debug_breakpoint` | 112 checks | ~1M comparisons | Done |
+| `intpipe_mul_div_dp` | `intpipe_mul_div_dp` | — | ~16M comparisons | Done |
+| `intpipe_mul_div_ctl` | `intpipe_mul_div_ctl` | — | ~16M comparisons | Done |
+| `intpipe_mul_div_top` | `intpipe_mul_div_top` | — | ~16M comparisons | Done |
+| `prim_rf_2r1w` | `rf_latch_2r_1w` | — | 224,876 comparisons | Done |
+| `prim_cmp_32` | `r32cmp` | — | — (tested via mul_div_dp cosim) | Done |
+| `prim_cmp_42` | `r42cmp` | — | — (tested via mul_div_dp cosim) | Done |
+| `prim_clk_gate_n` | `et_clk_gate_n` | — | — (tested via mul_div_dp cosim) | Done |
 
 ### Phase 4: CSR subsystem
 
-| Module | Original | Cosim | Status |
-|--------|----------|-------|--------|
-| `intpipe_csr_file_fl_barrier` | `intpipe_csr_file_fl_barrier` | 62,808 comparisons | Done |
-| `intpipe_csr_file_conv` | `intpipe_csr_file_conv` | 22,440 comparisons | Done |
-| `intpipe_csr_pmu_read_interface` | `intpipe_csr_pmu_read_interface` | 21,356 comparisons | Done |
-| `intpipe_csr_replay` | `intpipe_csr_replay` | 10,466 comparisons | Done |
-| `intpipe_csr_msgs` | `intpipe_csr_msgs` | 33,770 comparisons | Done |
-| `intpipe_csr_file` | `intpipe_csr_file` | 187,040 comparisons | Done |
+| Module | Original | Test | Cosim | Status |
+|--------|----------|------|-------|--------|
+| `intpipe_csr_file_fl_barrier` | `intpipe_csr_file_fl_barrier` | — | 62,808 comparisons | Done |
+| `intpipe_csr_file_conv` | `intpipe_csr_file_conv` | — | 22,440 comparisons | Done |
+| `intpipe_csr_pmu_read_interface` | `intpipe_csr_pmu_read_interface` | — | 21,356 comparisons | Done |
+| `intpipe_csr_replay` | `intpipe_csr_replay` | 122 checks (`VpuEn=1`) + 122 checks (`VpuEn=0`) | 10,466 comparisons | Done |
+| `intpipe_csr_msgs` | `intpipe_csr_msgs` | 36 checks | 33,770 comparisons | Done |
+| `intpipe_csr_file` | `intpipe_csr_file` | — | 187,040 comparisons | Done |
 
 ### Phase 5: Top integration
 
@@ -213,7 +213,7 @@ Build order: 12→13→14→15→16→17→18
 
 | Module | Original | Test | Cosim | Status |
 |--------|----------|------|-------|--------|
-| `minion_debug_apb_slv` | `minion_debug_apb_slv` | Covered by `core_top` smoke test (9 checks) | Covered by `core_top` cosim (1,539,072 comparisons) | RTL translated and exercised through minion-level integration; standalone block-level DV/cosim still pending |
+| `minion_debug_apb_slv` | `minion_debug_apb_slv` | 246 standalone checks + covered by `core_top` smoke test (9 checks) | 91,251 standalone comparisons + covered by `core_top` cosim (1,539,072 comparisons) | Done (standalone block-level DV/cosim plus minion-level integration coverage) |
 | `core_top` | `core_top` | 9 smoke checks + 12 debug-APB-off checks | 1,539,072 comparisons | Done |
 | `minion_top` | `minion_top` | 17 smoke checks + 5 VpuEn=0 checks + 17 debug-APB-off checks + 15 debug-off checks + 9 execution checks | 235,284 comparisons | Done (default `VpuEn=1` instantiates translated real `vpu_top`; cosim checks every practical functional input bit sees both 0 and 1, with DFT scan/OCC/test pins documented as constrained; intentional integer-only `VpuEn=0` path keeps `null_vpu`) |
 | `null_vpu` | — | 55 checks | — | Done (new integer-only bring-up helper; intentionally non-faithful and not part of the CORE-ET translation set) |
@@ -236,29 +236,29 @@ Build order: 12→13→14→15→16→17→18
 | `txfma_booth_ppg_32r4` | `txfma_booth_ppg_32r4` | 9,842 checks | 155,762 comparisons | Done |
 | `txfma_wallace1` | `txfma_wallace1` | 8,216 checks | 25,288 comparisons | Done |
 | `txfma_wallace2` | `txfma_wallace2` | 8,200 checks | 25,074 comparisons | Done |
-| `txfma_c0` | `txfma_c0` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_c1` | `txfma_c1` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_c2` | `txfma_c2` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_c3` | `txfma_c3` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_c4` | `txfma_c4` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_c5` | `txfma_c5` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_c6` | `txfma_c6` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_e1` | `txfma_e1` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_e2` | `txfma_e2` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_e4` | `txfma_e4` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_e5` | `txfma_e5` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_e6` | `txfma_e6` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_ediff_opdorder_logic` | `txfma_ediff_opdorder_logic` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_exp_special_detect` | `txfma_exp_special_detect` | — | — | RTL present, standalone DV/cosim pending |
-| `txfma_f0` | `txfma_f0` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_f1` | `txfma_f1` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_f2` | `txfma_f2` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_f3` | `txfma_f3` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_f4` | `txfma_f4` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_f5` | `txfma_f5` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_f6` | `txfma_f6` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_frac_zero_detect` | `txfma_frac_zero_detect` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_rnd_adder` | `txfma_rnd_adder` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_c0` | `txfma_c0` | 903 checks | 9,101,638 comparisons | Done |
+| `txfma_c1` | `txfma_c1` | 295 checks | 65,648 comparisons | Done |
+| `txfma_c2` | `txfma_c2` | 312 checks | 192,888 comparisons | Done |
+| `txfma_c3` | `txfma_c3` | 351 checks | 61,545 comparisons | Done |
+| `txfma_c4` | `txfma_c4` | 283 checks | 32,824 comparisons | Done |
+| `txfma_c5` | `txfma_c5` | 301 checks | 90,266 comparisons | Done |
+| `txfma_c6` | `txfma_c6` | 386 checks | 188,784 comparisons | Done |
+| `txfma_e1` | `txfma_e1` | 4,224 checks | 40,088 comparisons | Done |
+| `txfma_e2` | `txfma_e2` | 16,614 checks | 80,192 comparisons | Done |
+| `txfma_e4` | `txfma_e4` | 8 checks | 2,048 comparisons | Done |
+| `txfma_e5` | `txfma_e5` | 3,157 checks | 15,027 comparisons | Done |
+| `txfma_e6` | `txfma_e6` | 10,382 checks | 50,130 comparisons | Done |
+| `txfma_ediff_opdorder_logic` | `txfma_ediff_opdorder_logic` | 14,534 checks | 70,182 comparisons | Done |
+| `txfma_exp_special_detect` | `txfma_exp_special_detect` | 10,416 checks | 50,160 comparisons | Done |
+| `txfma_f0` | `txfma_f0` | 27 checks | 50,985 comparisons | Done |
+| `txfma_f1` | `txfma_f1` | 13 checks | 25,260 comparisons | Done |
+| `txfma_f2` | `txfma_f2` | 9 checks | 25,053 comparisons | Done |
+| `txfma_f3` | `txfma_f3` | 12 checks | 50,106 comparisons | Done |
+| `txfma_f4` | `txfma_f4` | 10 checks | 25,090 comparisons | Done |
+| `txfma_f5` | `txfma_f5` | 16 checks | 50,310 comparisons | Done |
+| `txfma_f6` | `txfma_f6` | 5 checks | 50,036 comparisons | Done |
+| `txfma_frac_zero_detect` | `txfma_frac_zero_detect` | 4,101 checks | 2,502 comparisons | Done |
+| `txfma_rnd_adder` | `txfma_rnd_adder` | 4,166 checks | 2,502 comparisons | Done |
 | `txfmactl_top` | `txfmactl_top` | 79 checks | 996,194 comparisons | Done |
 | `txfmaexp_top` | `txfmaexp_top` | 31 checks | 508,152 comparisons | Done |
 | `txfmafrac_top` | `txfmafrac_top` | 43 checks | 390,468 comparisons | Done |
@@ -406,16 +406,16 @@ row below.
 ## Totals
 
 Structural discovery counts were refreshed from tracked Makefiles on
-2026-05-05. Repo-wide check/comparison totals are not carried as exact sums
+2026-05-14. Repo-wide check/comparison totals are not carried as exact sums
 until every unit test and cosim is rerun and all legacy approximate rows are
 backfilled.
 
 | Metric | Count |
 |--------|-------|
-| Unit-test Makefiles | 65 |
-| Test suites discovered by `make test` | 187 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 214 |
+| Unit-test Makefiles | 67 |
+| Test suites discovered by `make test` | 223 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 244 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 37 unit suites + 39 cosim Makefile runs |
+| Targeted update runs | 222 unit suites + 244 cosim Makefile runs |
 | Targeted update failures | 0 |

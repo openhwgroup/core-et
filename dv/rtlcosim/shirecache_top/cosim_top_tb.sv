@@ -18,6 +18,12 @@
 // - Original uses debug_axi_port (not present in new)
 // - Original uses status_monitor_gpio[1:0] for bank select; new uses
 //   status_monitor_bank_sel_i
+// - Original top has no separate free-running monitor clock port; new
+//   clk_free_i is driven from cache clk_i here to keep top-level compare
+//   behavior equivalent while unit DV covers the distinct translated path.
+// - Original dft__sram_clock/dft__clk_override map to
+//   dft_sram_clk_i/dft_i.sram_clk_override.
+// - Original dft__mbist_en maps to scalar dft_mbist_en_i.
 // - Clock: noc_clk = cache_clk for simplicity (no real CDC test)
 
 `include "soc.vh"
@@ -36,6 +42,11 @@ module cosim_top_tb
 (
   input  logic                        clk_i,
   input  logic                        rst_ni,
+
+  // ── DFT controls ───────────────────────────────────────────
+  input  logic                        dft_sram_clk_i,
+  input  logic                        dft_clk_override_i,
+  input  logic                        dft_mbist_en_i,
 
   // ── Neighborhood request interface (per-port, decomposed) ──
   // We support driving one request at a time via port_sel
@@ -119,6 +130,14 @@ module cosim_top_tb
   output logic [L3SlavePorts-1:0]     new_l3_axi_w_ready_o,
   output logic [L3SlavePorts-1:0]     new_l3_axi_r_valid_o,
   output logic [L3SlavePorts-1:0]     new_l3_axi_b_valid_o,
+  output logic                        new_icache_bist_mbist_on_o,
+  output logic                        new_icache_bist_mbi_sel_o,
+  output logic                        new_icache_bist_mbi_rd_en_o,
+  output logic                        new_icache_bist_mbi_wr_en_o,
+  output logic [MbiAddrSize-1:0]      new_icache_bist_mbi_addr_o,
+  output logic [63:0]                 new_icache_bist_mbi_wdata_lo_o,
+  output logic [63:0]                 new_icache_bist_mbi_wdata_mid_o,
+  output logic [MbiDataSize-129:0]    new_icache_bist_mbi_wdata_hi_o,
 
   // ── Comparison outputs: ORIGINAL ──
   output logic [Ports-1:0]            orig_neigh_sc_rsp_valid_o,
@@ -143,7 +162,15 @@ module cosim_top_tb
   output logic [L3SlavePorts-1:0]     orig_l3_axi_aw_ready_o,
   output logic [L3SlavePorts-1:0]     orig_l3_axi_w_ready_o,
   output logic [L3SlavePorts-1:0]     orig_l3_axi_r_valid_o,
-  output logic [L3SlavePorts-1:0]     orig_l3_axi_b_valid_o
+  output logic [L3SlavePorts-1:0]     orig_l3_axi_b_valid_o,
+  output logic                        orig_icache_bist_mbist_on_o,
+  output logic                        orig_icache_bist_mbi_sel_o,
+  output logic                        orig_icache_bist_mbi_rd_en_o,
+  output logic                        orig_icache_bist_mbi_wr_en_o,
+  output logic [MbiAddrSize-1:0]      orig_icache_bist_mbi_addr_o,
+  output logic [63:0]                 orig_icache_bist_mbi_wdata_lo_o,
+  output logic [63:0]                 orig_icache_bist_mbi_wdata_mid_o,
+  output logic [MbiDataSize-129:0]    orig_icache_bist_mbi_wdata_hi_o
 );
 
   // ════════════════════════════════════════════════════════
@@ -244,7 +271,10 @@ module cosim_top_tb
   // DFT/RAM config
   // ════════════════════════════════════════════════════════
   dft_t new_dft;
-  assign new_dft = '0;
+  always_comb begin
+    new_dft = '0;
+    new_dft.sram_clk_override = dft_clk_override_i;
+  end
 
   ram_cfg_t new_ram_cfg;
   assign new_ram_cfg = '0;
@@ -326,6 +356,24 @@ module cosim_top_tb
   assign orig_icache_bist_rsp = '0;
   sc_icache_bist_req_t orig_icache_bist_req;
 
+  assign new_icache_bist_mbist_on_o       = new_icache_bist_req.mbist_on;
+  assign new_icache_bist_mbi_sel_o        = new_icache_bist_req.mbi_sel;
+  assign new_icache_bist_mbi_rd_en_o      = new_icache_bist_req.mbi_rd_en;
+  assign new_icache_bist_mbi_wr_en_o      = new_icache_bist_req.mbi_wr_en;
+  assign new_icache_bist_mbi_addr_o       = new_icache_bist_req.mbi_addr;
+  assign new_icache_bist_mbi_wdata_lo_o   = new_icache_bist_req.mbi_wdata[63:0];
+  assign new_icache_bist_mbi_wdata_mid_o  = new_icache_bist_req.mbi_wdata[127:64];
+  assign new_icache_bist_mbi_wdata_hi_o   = new_icache_bist_req.mbi_wdata[MbiDataSize-1:128];
+
+  assign orig_icache_bist_mbist_on_o      = orig_icache_bist_req.mbist_on;
+  assign orig_icache_bist_mbi_sel_o       = orig_icache_bist_req.mbi_sel;
+  assign orig_icache_bist_mbi_rd_en_o     = orig_icache_bist_req.mbi_rd_en;
+  assign orig_icache_bist_mbi_wr_en_o     = orig_icache_bist_req.mbi_wr_en;
+  assign orig_icache_bist_mbi_addr_o      = orig_icache_bist_req.mbi_addr;
+  assign orig_icache_bist_mbi_wdata_lo_o  = orig_icache_bist_req.mbi_wdata[63:0];
+  assign orig_icache_bist_mbi_wdata_mid_o = orig_icache_bist_req.mbi_wdata[127:64];
+  assign orig_icache_bist_mbi_wdata_hi_o  = orig_icache_bist_req.mbi_wdata[MbiDataSize-1:128];
+
   // ════════════════════════════════════════════════════════
   // Unused outputs from new
   // ════════════════════════════════════════════════════════
@@ -374,6 +422,7 @@ module cosim_top_tb
   // ════════════════════════════════════════════════════════
   shirecache_top u_new (
     .clk_i                            (clk_i),
+    .clk_free_i                       (clk_i),  // original shire_cache has no separate top free-clock port
     .rst_cold_ni                      (rst_ni),
     .rst_ni                           (rst_ni),
     .rst_debug_ni                     (rst_ni),
@@ -381,6 +430,8 @@ module cosim_top_tb
     .noc_rst_ni                       (rst_ni),
 
     .dft_i                            (new_dft),
+    .dft_sram_clk_i                   (dft_sram_clk_i),
+    .dft_mbist_en_i                   (dft_mbist_en_i),
     .ram_cfg_i                        (new_ram_cfg),
 
     // Neighborhood request
@@ -591,9 +642,9 @@ module cosim_top_tb
     .dft__reset_hv                    (1'b0),
     .dft__reset_byp_lv                (1'b0),
     .dft__reset_lv                    (1'b0),
-    .dft__sram_clock                  (1'b0),
-    .dft__clk_override                (1'b0),
-    .dft__mbist_en                    (1'b0),
+    .dft__sram_clock                  (dft_sram_clk_i),
+    .dft__clk_override                (dft_clk_override_i),
+    .dft__mbist_en                    (dft_mbist_en_i),
 
     // BIST
     .icache_bist_req_info             (orig_icache_bist_req),
