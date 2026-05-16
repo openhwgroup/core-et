@@ -14,6 +14,7 @@
 | `minion_frontend_pkg` | Frontend fetch-buffer, ICache response, issue, and thread-buffer types | Done |
 | `neigh_pkg` | Neighborhood shell types and response-agent constants | Done |
 | `neigh_hv_logic_pkg` | Neighborhood HV/LV support-leaf APB/BPAM types and sizing constants | Done |
+| `neigh_voltage_cross_pkg` | Neighborhood voltage-crossing wrapper local types and geometry constants | Done |
 | `shirecache_pkg` | Cache constants, enums, L3 swizzle struct, pipeline/cbuf/atomic types, perfmon types | Done |
 | `axi_pkg` | AXI4 channel types (AR, AW, W, R, B) | Done |
 | `rbox_pkg` | RBOX constants, packet/control structs, APB/ET-Link helper types, and utility functions | Done |
@@ -341,6 +342,8 @@ Build order: 12→13→14→15→16→17→18
 | `neigh_hv_logic_pwr_ctrl_tdr_isolate` | `neigh_hv_logic_pwr_ctrl_tdr_isolate` | 57 grouped support-leaf checks | 2,048 comparisons | Done |
 | `neigh_hv_logic_uc_fcc` | `neigh_hv_logic_uc_fcc` | 57 grouped support-leaf checks | 2,048 comparisons | Done |
 | `neigh_hv_logic_fcc` | `neigh_hv_logic_fcc` | — | — | Excluded — no instantiation in audited `neigh_top`/`neigh_channel` hierarchy; live path uses `neigh_hv_logic_uc_fcc` |
+| `neigh_hi_voltage_cross` | `neigh_hi_voltage_cross` | 41 grouped crossing-wrapper checks | 144,496 comparisons | Done |
+| `neigh_lo_voltage_cross` | `neigh_lo_voltage_cross` | 41 grouped crossing-wrapper checks | 59,744 comparisons | Done |
 | `standalone_minion` | `standalone_minion` | 19 checks | 1,765,940 comparisons | Done |
 
 ## RBOX (`hw/ip/rbox/`)
@@ -429,10 +432,10 @@ backfilled.
 
 | Metric | Count |
 |--------|-------|
-| Unit-test Makefiles | 70 |
-| Test suites discovered by `make test` | 227 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 260 |
+| Unit-test Makefiles | 71 |
+| Test suites discovered by `make test` | 228 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 262 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 226 unit suites + 260 cosim Makefile runs |
+| Targeted update runs | 227 unit suites + 262 cosim Makefile runs |
 | Targeted update failures | 0 |
