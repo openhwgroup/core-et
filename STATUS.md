@@ -12,7 +12,7 @@
 | `icache_geom_pkg` | Shared standalone-Icache geometry and SRAM-layout constants | Done |
 | `icache_pkg` | Standalone-Icache constants, enums, TLB/error structs, and LRU helpers | Done |
 | `minion_frontend_pkg` | Frontend fetch-buffer, ICache response, issue, and thread-buffer types | Done |
-| `neigh_pkg` | Neighborhood shell types and response-agent constants | Done |
+| `neigh_pkg` | Neighborhood shell/channel types, response-agent constants, FLB/local/TBOX constants | Done |
 | `neigh_ch_apb_mux_pkg` | Neighborhood channel APB mux request/response structs and address-decode constants | Done |
 | `neigh_hv_logic_pkg` | Neighborhood HV/LV support-leaf APB/BPAM types and sizing constants | Done |
 | `neigh_voltage_cross_pkg` | Neighborhood voltage-crossing wrapper local types and geometry constants | Done |
@@ -345,6 +345,10 @@ Build order: 12→13→14→15→16→17→18
 | `neigh_hv_logic_fcc` | `neigh_hv_logic_fcc` | — | — | Excluded — no instantiation in audited `neigh_top`/`neigh_channel` hierarchy; live path uses `neigh_hv_logic_uc_fcc` |
 | `neigh_hi_voltage_cross` | `neigh_hi_voltage_cross` | 41 grouped crossing-wrapper checks | 144,496 comparisons | Done |
 | `neigh_lo_voltage_cross` | `neigh_lo_voltage_cross` | 41 grouped crossing-wrapper checks | 59,744 comparisons | Done |
+| `neigh_fl_barrier` | `neigh_fl_barrier` | 33 grouped channel-routing checks | 12,068 comparisons | Done |
+| `neigh_local_message_network` | `neigh_local_message_network` | 33 grouped channel-routing checks | 385,077 comparisons | Done |
+| `neigh_pmu` | `neigh_pmu` | 33 grouped channel-routing checks | 160,032 comparisons | Done |
+| `neigh_tbox_router` | `neigh_tbox_router` | 33 grouped channel-routing checks | 176,260 comparisons | Done — preserves original stale-route behavior documented in `hw/ip/neigh_channel_routing/BUGS.md` |
 | `dll_dly_est_core` | `dll_dly_est_core` | 26 grouped estimator checks | 13,716 comparisons | Done |
 | `dll_dly_est` | `dll_dly_est` | 26 grouped estimator checks | 6,166 default-width comparisons + 6,166 Width=4 wrapper-parameter comparisons | Done |
 | `bpam2minions` | `bpam2minions` | 189 checks | 9,960 comparisons | Done |
@@ -437,10 +441,10 @@ backfilled.
 
 | Metric | Count |
 |--------|-------|
-| Unit-test Makefiles | 73 |
-| Test suites discovered by `make test` | 231 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 266 |
+| Unit-test Makefiles | 74 |
+| Test suites discovered by `make test` | 232 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 270 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 230 unit suites + 266 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run |
+| Targeted update runs | 231 unit suites + 270 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run |
 | Targeted update failures | 0 |

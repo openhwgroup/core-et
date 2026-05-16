@@ -19,6 +19,11 @@ package neigh_pkg;
   parameter int unsigned NeighAgentPtw      = MinPerN + IcachePerN;
   parameter int unsigned NeighAgentTbox     = MinPerN + IcachePerN + PtwPerN;
   parameter int unsigned NeighFillFifoSize  = 4;
+  parameter int unsigned NeighFlbElemsPerNeigh = 4;
+  parameter int unsigned NeighMaxLocalConnect = 3;
+  parameter int unsigned NeighMinTboxReqFifoSize = 2;
+  parameter int unsigned TboxNeighReqFifoSize = 2;
+  parameter int unsigned NeighScTboxRspFifoSize = 2;
   /* verilator lint_on UNUSEDPARAM */
 
   parameter int unsigned ShireMaxCoop       = 8;
@@ -52,5 +57,9 @@ package neigh_pkg;
     logic [1:0]                    req_prv;
     logic [VaSize-1:VaUntransSize] req_addr;
   } ptw_dbg_sm_t;
+
+  typedef struct packed {
+    logic [13:0] local_message_valid_out;
+  } fln_dbg_sm_t;
 
 endpackage : neigh_pkg
