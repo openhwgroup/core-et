@@ -169,6 +169,20 @@ Build order: 12→13→14→15→16→17→18
 | `esr_shire_other` | `esr_shire_other` | 97 checks | 338,832 comparisons | Done |
 | RBOX ESR/APB compatibility audit | `esr_rbox`, `rbox_top`, `shire_channel` APB routing | documented in `hw/ip/shire_esr/doc/rbox_esr_compat.md` | covered by existing RBOX cosims plus this audit | Done |
 
+## Shire Channel Leaves (`hw/ip/shire_channel_leaves/`)
+
+| Module | Original | Test | Cosim | Status |
+|--------|----------|------|-------|--------|
+| `shire_channel_leaves_pkg` | Shared shire-channel leaf constants | — | — | Done |
+| `shire_dmctrl` | `shire_dmctrl` | 32 grouped shire-channel leaf checks | 2,200 comparisons | Done |
+| `shire_bpam_run_control` | `shire_bpam_run_control` | 32 grouped shire-channel leaf checks | 4,096 comparisons | Done |
+| `shire_and_or_tree_daisychain` | `shire_and_or_tree_daisychain` | 32 grouped shire-channel leaf checks | 8,192 comparisons | Done |
+| `shire_coop_tload_bus` | `shire_coop_tload_bus` | 32 grouped shire-channel leaf checks | 12,288 comparisons | Done |
+| `shire_ioshire_noc_ints` | `shire_ioshire_noc_ints` | 32 grouped shire-channel leaf checks | 4,096 comparisons | Done — retained normal NoC interrupt subset only |
+| `shire_xll_control` | `shire_xll_control` | 32 grouped shire-channel leaf checks | 31,460 comparisons | Done |
+| `shire_pll_wrapper` | `shire_pll_wrapper` | 32 grouped shire-channel leaf checks | 43,560 comparisons | Done — native clock/lock seam omits third-party PLL/DLL/debug hard-macro surfaces |
+| `icache_mems` | `icache_mems` | 32 grouped shire-channel leaf checks | 181,056 comparisons | Done |
+
 ## Minion Frontend (`hw/ip/minion/frontend/`)
 
 | Module | Original | Test | Cosim | Status |
@@ -463,10 +477,10 @@ backfilled.
 
 | Metric | Count |
 |--------|-------|
-| Unit-test Makefiles | 81 |
-| Test suites discovered by `make test` | 242 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 283 |
+| Unit-test Makefiles | 82 |
+| Test suites discovered by `make test` | 243 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 291 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 241 unit suites + 283 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run |
+| Targeted update runs | 241 unit suites + 283 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run + 1 shire-channel leaf unit suite + 8 shire-channel leaf cosim runs |
 | Targeted update failures | 0 |
