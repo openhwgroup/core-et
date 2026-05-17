@@ -643,6 +643,7 @@ When reimplementing modules that use CORE-ET library primitives, use these repla
 | `gen_fifo_reg` | `prim_fifo_reg` | Register FIFO (depth 1-4) |
 | `rbox_fifo` | `prim_fifo_sram` | SRAM-backed FIFO with 1-cycle read latency |
 | `rst_repeat` | `prim_rst_sync` | Reset synchronizer with DFT bypass via `dft_t` |
+| `arb_lru_grant` | Precisely matched grant-visible-on-stall arbiter seam/helper | Original keeps `grant` visible while `stall` is asserted and stalls only priority updates; `prim_arb_lru` gates `grant_o` with `~stall_i`, so do not use it when grant-visible-on-stall behavior is required. |
 | `hot2bin` + `onehot_mux` | `prim_hot2bin` | One-hot to binary encoder |
 | `vcfifo_wr_hiv_gcd` | `prim_fifo_async_hiv` | Async CDC FIFO, write=high-voltage, read=low-voltage. DFT bypass via `dft_hv_i`/`dft_lv_i` |
 | `vcfifo_wr_lov_gcd` | `prim_fifo_async_lov` | Async CDC FIFO, write=low-voltage, read=high-voltage. DFT bypass via `dft_lv_i`/`dft_hv_i` |
@@ -671,6 +672,12 @@ When reimplementing modules that use CORE-ET library primitives, use these repla
 | `esr_shire_cache_ram_cfg_t` | `ram_cfg_pkg::ram_cfg_t` | Clean standardized RAM config struct |
 | DFT ports (`dft__*`) | `dft_pkg::dft_t dft_i` | Consolidated into single struct |
 | UltraSoC modules | Drop (replace with own debug IP later) | Third-party debug/trace IP |
+
+Do not silently substitute a primitive whose stall semantics differ from the
+original. In particular, an `arb_lru_grant` site that observes `grant` while
+`stall` is asserted needs a precisely matched primitive or named local helper
+with the required unit test, standalone cosim, `STATUS.md`, and checked-in
+cosim coverage deliverables.
 
 ### Latch-heavy translation policy
 

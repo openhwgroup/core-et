@@ -120,6 +120,7 @@ These are the standard CORE-ET-to-ETASP primitive mappings.
 | `vcfifo_wr_hiv_ss` | `prim_fifo_semisync_hiv` | Semi-synchronous HV-write/LV-read FIFO for 1:1 phase-controlled clocks |
 | `vcfifo_wr_lov_ss` | `prim_fifo_semisync_lov` | Semi-synchronous LV-write/HV-read FIFO for 1:1 phase-controlled clocks |
 | `rst_repeat` | `prim_rst_sync` | DFT-aware reset seam |
+| `arb_lru_grant` | matched grant-visible-on-stall arbiter seam/helper | Original keeps `grant` visible while `stall` is asserted and stalls only priority updates; `prim_arb_lru` gates `grant_o` with `~stall_i`, so it is not equivalent when a translated site observes grants under stall. |
 | `et_clk_gate` | `prim_clk_gate` | real local clock gate |
 | `et_clk_gate_n` | `prim_clk_gate_n` | negative-phase helper gate |
 | `et_clk_mux2` | `prim_clk_mux` | DFT SRAM clock select seam |
@@ -131,6 +132,12 @@ These are the standard CORE-ET-to-ETASP primitive mappings.
 | `rf_latch_2r_1w` | `prim_rf_2r1w` | 2R1W RF |
 | `r32cmp` | `prim_cmp_32` | compressor primitive |
 | `r42cmp` | `prim_cmp_42` | compressor primitive |
+
+For original `arb_lru_grant` users, first determine whether the downstream
+logic depends on grant-visible-on-stall behavior. If it does, do not silently
+substitute `prim_arb_lru`; use or add a precisely matched project primitive or
+named local helper and provide the normal RTL, README, unit-test, standalone
+cosim, `STATUS.md`, and cosim-coverage deliverables for that seam.
 
 DFT translation preserves existing original DFT surfaces; it does not create
 new module-level DFT behavior at unrelated sites. If the original module has
