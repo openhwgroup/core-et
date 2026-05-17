@@ -31,7 +31,9 @@ module neigh_lo_voltage_cross
   input  logic                                      esr_icache_err_logged_i,
   output logic                                      esr_icache_err_logged_sync_o,
 
+  /* verilator lint_off UNUSEDSIGNAL */  // In direct same-clock voltage-crossing mode the BPAM ack path is tied off by the original channel shell.
   input  neigh_hv_logic_pkg::bpam_rc_tbox_ack_t     bpam_rc_tbox_ack_i,
+  /* verilator lint_on UNUSEDSIGNAL */
   output neigh_hv_logic_pkg::bpam_rc_tbox_ack_t     bpam_rc_tbox_ack_sync_o,
 
   input  minion_pkg::neigh_sm_dbg_monitor_t         neigh_sm_signals_i,

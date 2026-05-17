@@ -15,6 +15,14 @@ package neigh_pkg;
   parameter int unsigned PtwPerN            = MinPerN / MinPerPtw;
   /* verilator lint_off UNUSEDPARAM */  // Neighborhood-shell sizing constants are consumed incrementally as the standalone shell comes in.
   parameter int unsigned NeighNumRespAgents = MinPerN + IcachePerN + PtwPerN + 1;
+  parameter int unsigned EtEcoNeighInputWidth = 10;
+  parameter int unsigned EtEcoNeighOutputWidth = 10;
+  parameter int unsigned ShireDftModeWidth = 4;
+  parameter int unsigned ShireDftCntlWidth = 10;
+  parameter int unsigned ShireDftScaninNeighWidth = 12;
+  parameter int unsigned ShireDftScanoutNeighWidth = 12;
+  parameter int unsigned ShireDftScaninTboxWidth = 8;
+  parameter int unsigned ShireDftScanoutTboxWidth = 8;
 
   /* verilator lint_off UNUSEDPARAM */  // These agent indices are shared neighborhood-shell constants.
   parameter int unsigned NeighAgentMinion   = 0;

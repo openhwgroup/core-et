@@ -362,6 +362,8 @@ Build order: 12→13→14→15→16→17→18
 | `neigh_tensor_store_buffer_block` | `neigh_tensor_store_buffer_block` | 34 grouped tensor-store checks | 260,988 comparisons | Done |
 | `neigh_tensor_store_buffer` | `neigh_tensor_store_buffer` | 34 grouped tensor-store checks | 505,512 comparisons | Done |
 | `neigh_channel` | `neigh_channel` | 21 smoke checks | 2,560,000 comparisons | Done |
+| `neigh_top_pwrstub` | `neigh_top_pwrstub` | 62 checks | 32,768 comparisons | Done |
+| `neigh_top` | `neigh_top` | 31 checks | 524,288 comparisons | Done — non-GFX all-stub full top-shell cosim |
 | `standalone_minion` | `standalone_minion` | 19 checks | 1,765,940 comparisons | Done |
 
 ## RBOX (`hw/ip/rbox/`)
@@ -450,10 +452,10 @@ backfilled.
 
 | Metric | Count |
 |--------|-------|
-| Unit-test Makefiles | 79 |
-| Test suites discovered by `make test` | 237 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 278 |
+| Unit-test Makefiles | 80 |
+| Test suites discovered by `make test` | 239 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 280 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 236 unit suites + 278 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run |
+| Targeted update runs | 238 unit suites + 280 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run |
 | Targeted update failures | 0 |
