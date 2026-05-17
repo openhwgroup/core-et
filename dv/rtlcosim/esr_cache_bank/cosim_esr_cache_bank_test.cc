@@ -12,6 +12,9 @@ namespace {
 constexpr uint16_t M = 3u << 10;
 constexpr uint16_t U = 0u << 10;
 constexpr uint16_t D = 2u << 10;
+constexpr uint16_t kTraceAddrEnable = D | 0x3f0u;
+constexpr uint16_t kTraceAddrValue = D | 0x3f1u;
+constexpr uint16_t kTraceCtl = D | 0x3f2u;
 constexpr std::array<uint16_t, 35> kAddrs = {
     uint16_t(M | 0x000), uint16_t(M | 0x001), uint16_t(M | 0x002),
     uint16_t(M | 0x003), uint16_t(M | 0x004), uint16_t(M | 0x005),
@@ -68,6 +71,37 @@ void tick_cmp(CosimCtrl<Vcosim_esr_cache_bank_tb>& sim, uint64_t& seed) {
     sim.tick();
     compare_all(sim);
 }
+
+void apb_write(CosimCtrl<Vcosim_esr_cache_bank_tb>& sim, uint16_t addr, uint64_t data,
+               uint64_t& seed) {
+    auto* d = sim.dut.get();
+    d->apb_paddr_i = addr;
+    d->apb_pwdata_i = data;
+    d->apb_pwrite_i = 1;
+    d->apb_psel_i = 1;
+    d->apb_penable_i = 0;
+    tick_cmp(sim, seed);
+    d->apb_penable_i = 1;
+    tick_cmp(sim, seed);
+    d->apb_psel_i = 0;
+    d->apb_penable_i = 0;
+    d->apb_pwrite_i = 0;
+    tick_cmp(sim, seed);
+}
+
+void pulse_debug_reset(CosimCtrl<Vcosim_esr_cache_bank_tb>& sim, uint64_t& seed) {
+    sim.dut->rst_d_ni = 0;
+    tick_cmp(sim, seed);
+    sim.dut->rst_d_ni = 1;
+    tick_cmp(sim, seed);
+}
+
+void pulse_cache_reset(CosimCtrl<Vcosim_esr_cache_bank_tb>& sim, uint64_t& seed) {
+    sim.dut->rst_c_ni = 0;
+    tick_cmp(sim, seed);
+    sim.dut->rst_c_ni = 1;
+    tick_cmp(sim, seed);
+}
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -76,6 +110,14 @@ int main(int argc, char** argv) {
     reset_all(sim);
     uint64_t seed = 0x1234;
     compare_all(sim);
+
+    apb_write(sim, kTraceAddrEnable, 0x000000f00dull, seed);
+    apb_write(sim, kTraceAddrValue, 0x0012345678ull, seed);
+    apb_write(sim, kTraceCtl, 0x5a5u, seed);
+    pulse_debug_reset(sim, seed);
+    apb_write(sim, kTraceAddrEnable, 0x0000000aceull, seed);
+    apb_write(sim, kTraceCtl, 0x3c3u, seed);
+    pulse_cache_reset(sim, seed);
 
     auto* d = sim.dut.get();
     std::mt19937_64 rng(0xcaceba5e);

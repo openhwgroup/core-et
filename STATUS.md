@@ -165,7 +165,7 @@ Build order: 12→13→14→15→16→17→18
 | Module | Original | Test | Cosim | Status |
 |--------|----------|------|-------|--------|
 | `apb_esr_ff` | `apb_esr_ff` + `apb_ff` | 19 checks | 48,016 comparisons | Done |
-| `esr_cache_bank` | `esr_cache_bank` | 33 checks | 39,714 comparisons | Done |
+| `esr_cache_bank` | `esr_cache_bank` | 55 checks | 39,828 comparisons | Done |
 | `esr_shire_other` | `esr_shire_other` | 97 checks | 338,832 comparisons | Done |
 | RBOX ESR/APB compatibility audit | `esr_rbox`, `rbox_top`, `shire_channel` APB routing | documented in `hw/ip/shire_esr/doc/rbox_esr_compat.md` | covered by existing RBOX cosims plus this audit | Done |
 

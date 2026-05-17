@@ -20,6 +20,8 @@ constexpr uint16_t kIdxCtl = kMachine | 0x006u;
 constexpr uint16_t kErrInfo = kMachine | 0x00cu;
 constexpr uint16_t kPerfCyc = kMachine | 0x018u;
 constexpr uint16_t kIdxCtlUser = kUser | 0x020u;
+constexpr uint16_t kTraceAddrEnable = kDebug | 0x3f0u;
+constexpr uint16_t kTraceAddrValue = kDebug | 0x3f1u;
 constexpr uint16_t kTraceCtl = kDebug | 0x3f2u;
 constexpr uint16_t kBadAddr = kMachine | 0x155u;
 
@@ -95,6 +97,22 @@ void apb_write(SimCtrl<Vesr_cache_bank_tb>& sim, uint16_t addr, uint64_t data, b
     sim.check(d->apb_pslverr_o == (expect_err ? 1 : 0), "cache bank APB write pslverr");
     idle(sim);
 }
+
+void pulse_debug_reset(SimCtrl<Vesr_cache_bank_tb>& sim) {
+    auto* d = sim.dut.get();
+    d->rst_d_ni = 0;
+    sim.tick();
+    d->rst_d_ni = 1;
+    sim.tick();
+}
+
+void pulse_cache_reset(SimCtrl<Vesr_cache_bank_tb>& sim) {
+    auto* d = sim.dut.get();
+    d->rst_c_ni = 0;
+    sim.tick();
+    d->rst_c_ni = 1;
+    sim.tick();
+}
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -151,6 +169,41 @@ int main(int argc, char** argv) {
     apb_write(sim, kTraceCtl, 0x12345u);
     idle(sim, 16);
     sim.check(d->access_in_flight_o == 0, "access_in_flight drains after timeout window");
+
+    constexpr uint64_t kTraceEnableBeforeD = 0x000000f00dull;
+    constexpr uint64_t kTraceEnableAfterD = 0x0000000aceull;
+    constexpr uint64_t kTraceAddressValue = 0x0012345678ull;
+    apb_write(sim, kTraceAddrEnable, kTraceEnableBeforeD);
+    apb_write(sim, kTraceAddrValue, kTraceAddressValue);
+    apb_write(sim, kTraceCtl, 0x5a5u);
+    sim.check(d->trace_address_enable_o == kTraceEnableBeforeD,
+              "trace address-enable write visible before debug reset");
+    sim.check(d->trace_address_value_o == kTraceAddressValue,
+              "trace address-value write visible before reset pulses");
+    sim.check(d->trace_type_hot_enable_o == 0x5a5u,
+              "trace control write visible before debug reset");
+
+    pulse_debug_reset(sim);
+    sim.check(d->trace_address_enable_o == 0,
+              "debug reset clears trace address-enable register");
+    sim.check(d->trace_type_hot_enable_o == 0,
+              "debug reset clears trace control register");
+    sim.check(d->trace_address_value_o == kTraceAddressValue,
+              "debug reset preserves no-reset trace address-value register");
+
+    apb_write(sim, kTraceAddrEnable, kTraceEnableAfterD);
+    apb_write(sim, kTraceCtl, 0x3c3u);
+    pulse_cache_reset(sim);
+    sim.check(d->cbuf_enable_o == 1, "cache reset restores REQ queue cbuf enable");
+    sim.check(d->num_l3_reqq_entries_o == 21,
+              "cache reset restores REQ queue L3 entries default");
+    sim.check(d->l2_set_base_o == 640, "cache reset restores L2 set-base default");
+    sim.check(d->trace_address_enable_o == kTraceEnableAfterD,
+              "cache reset preserves debug-reset trace address-enable register");
+    sim.check(d->trace_type_hot_enable_o == 0x3c3u,
+              "cache reset preserves debug-reset trace control register");
+    sim.check(d->trace_address_value_o == kTraceAddressValue,
+              "cache reset preserves no-reset trace address-value register");
 
     return sim.finish();
 }

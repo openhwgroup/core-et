@@ -42,6 +42,7 @@ Reset domains are preserved from the original:
 - `rst_c_ni`: cold/control reset for APB address-valid and selected shire-level state.
 - `rst_w_ni`: warm reset for most programmable ESR state.
 - `rst_d_ni`: debug reset for debug/run-control state where the original used `reset_d`.
+- In `esr_cache_bank`, the trace address-enable and trace-control registers reset from `rst_d_ni`; the trace address-value register intentionally has no reset, matching the original generated ESR write sequence.
 
 ## Integration notes
 

@@ -35,7 +35,10 @@ module esr_cache_bank_tb (
   output logic [9:0]  scp_set_base_o,
   output logic [5:0]  num_l3_reqq_entries_o,
   output logic        cbuf_enable_o,
-  output logic        idx_user_enable_o
+  output logic        idx_user_enable_o,
+  output logic [39:0] trace_address_enable_o,
+  output logic [39:0] trace_address_value_o,
+  output logic [11:0] trace_type_hot_enable_o
 );
   /* verilator lint_off UNUSEDSIGNAL */  // Unit-test wrapper exposes only the control fields checked by C++.
   shirecache_pkg::bank_esr_ctl_t ctl;
@@ -86,6 +89,9 @@ module esr_cache_bank_tb (
   assign num_l3_reqq_entries_o = ctl.esr_sc_num_l3_reqq_entries;
   assign cbuf_enable_o = ctl.esr_sc_cbuf_enable;
   assign idx_user_enable_o = ctl.esr_sc_idx_cop_sm_ctl_user_en;
+  assign trace_address_enable_o = ctl.esr_sc_trace_filter_address_enable;
+  assign trace_address_value_o = ctl.esr_sc_trace_filter_address_value;
+  assign trace_type_hot_enable_o = ctl.esr_sc_trace_type_hot_enable;
 
   logic unused_wrapper_outputs;
   assign unused_wrapper_outputs = &{1'b0, swizzle_unused, eco_unused};

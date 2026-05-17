@@ -9,8 +9,8 @@ module esr_cache_bank #(
   input  logic                            clk_i,
   input  logic                            rst_c_ni,
   input  logic                            rst_w_ni,
-  /* verilator lint_off UNUSEDSIGNAL */  // Original reset_d and test_en are preserved; cache-bank ESR state is reset by reset_c/reset_w only.
   input  logic                            rst_d_ni,
+  /* verilator lint_off UNUSEDSIGNAL */  // Original test_en port is preserved; generated ESR flops do not consume it.
   input  logic                            test_en_i,
   /* verilator lint_on UNUSEDSIGNAL */
 
@@ -554,9 +554,6 @@ module esr_cache_bank #(
           ScpSetMaskDefault[11:0], ScpTagMaskDefault[11:0]);
       reg_sc_err_log_ctl_q <= reset_err_log_ctl();
       reg_sc_eco_ctl_q <= '0;
-      reg_sc_trace_address_enable_q <= '0;
-      reg_sc_trace_address_value_q <= '0;
-      reg_sc_trace_ctl_q <= '0;
     end else begin
       reg_sc_l3_shire_swizzle_ctl_q <= reg_sc_l3_shire_swizzle_ctl_d;
       reg_sc_reqq_ctl_q <= reg_sc_reqq_ctl_d;
@@ -566,10 +563,21 @@ module esr_cache_bank #(
       reg_sc_scp_cache_ctl_q <= reg_sc_scp_cache_ctl_d;
       reg_sc_err_log_ctl_q <= reg_sc_err_log_ctl_d;
       reg_sc_eco_ctl_q <= reg_sc_eco_ctl_d;
+    end
+  end
+
+  always_ff @(posedge clk_i or negedge rst_d_ni) begin
+    if (!rst_d_ni) begin
+      reg_sc_trace_address_enable_q <= '0;
+      reg_sc_trace_ctl_q <= '0;
+    end else begin
       reg_sc_trace_address_enable_q <= reg_sc_trace_address_enable_d;
-      reg_sc_trace_address_value_q <= reg_sc_trace_address_value_d;
       reg_sc_trace_ctl_q <= reg_sc_trace_ctl_d;
     end
+  end
+
+  always_ff @(posedge clk_i) begin
+    reg_sc_trace_address_value_q <= reg_sc_trace_address_value_d;
   end
 
   assign esr_access_cnt_d = apb_psel_i ? 4'hf : (esr_access_cnt_q - 4'h1);
@@ -689,7 +697,6 @@ module esr_cache_bank #(
   logic unused_inputs;
   assign unused_inputs = &{
     1'b0,
-    rst_d_ni,
     test_en_i,
     reg_sc_l2_cache_ctl_q.set_base_rsvd,
     reg_sc_l2_cache_ctl_q.set_size_rsvd,
