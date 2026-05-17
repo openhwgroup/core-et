@@ -20,6 +20,7 @@
 | `shirecache_pkg` | Cache constants, enums, L3 swizzle struct, pipeline/cbuf/atomic types, perfmon types | Done |
 | `axi_pkg` | AXI4 channel types (AR, AW, W, R, B) | Done |
 | `rbox_pkg` | RBOX constants, packet/control structs, APB/ET-Link helper types, and utility functions | Done |
+| `shire_esr_pkg` | Shire ESR/APB address constants and packed control/status structs for compute-shire ESR blocks | Done |
 
 ## Primitives
 
@@ -157,6 +158,16 @@ Build order: 12→13→14→15→16→17→18
 | 24 | `shirecache_bank_l2hpf` | `shire_cache_bank_l2hpf` | 23 checks | 1011 comparisons | Done — L2 HPF interface monitor (L2HpfImplemented=1) |
 | 25 | `shirecache_bist_mbx` | `shire_cache_bist_mbx` | 27 checks | 1890 comparisons | Done — BIST mailbox with back-to-back blocking |
 | 25b | `shirecache_bist_wrapper` | `shire_cache_bist_wrapper` | 40 checks | 9064 comparisons | Done — BIST wrapper (4x mbx: MBS/MBT/MBD/MBI) |
+
+
+## Shire ESR/APB (`hw/ip/shire_esr/`)
+
+| Module | Original | Test | Cosim | Status |
+|--------|----------|------|-------|--------|
+| `apb_esr_ff` | `apb_esr_ff` + `apb_ff` | 19 checks | 48,016 comparisons | Done |
+| `esr_cache_bank` | `esr_cache_bank` | 33 checks | 39,714 comparisons | Done |
+| `esr_shire_other` | `esr_shire_other` | 97 checks | 338,832 comparisons | Done |
+| RBOX ESR/APB compatibility audit | `esr_rbox`, `rbox_top`, `shire_channel` APB routing | documented in `hw/ip/shire_esr/doc/rbox_esr_compat.md` | covered by existing RBOX cosims plus this audit | Done |
 
 ## Minion Frontend (`hw/ip/minion/frontend/`)
 
@@ -452,10 +463,10 @@ backfilled.
 
 | Metric | Count |
 |--------|-------|
-| Unit-test Makefiles | 80 |
-| Test suites discovered by `make test` | 239 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 280 |
+| Unit-test Makefiles | 81 |
+| Test suites discovered by `make test` | 242 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 283 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 238 unit suites + 280 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run |
+| Targeted update runs | 241 unit suites + 283 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run |
 | Targeted update failures | 0 |
