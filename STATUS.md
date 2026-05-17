@@ -21,6 +21,7 @@
 | `axi_pkg` | AXI4 channel types (AR, AW, W, R, B) | Done |
 | `rbox_pkg` | RBOX constants, packet/control structs, APB/ET-Link helper types, and utility functions | Done |
 | `shire_esr_pkg` | Shire ESR/APB address constants and packed control/status structs for compute-shire ESR blocks | Done |
+| `shire_sbm_pkg` | Compute-shire SBM/APB lane constants, APB structs, and native SBM AXI helper structs | Done |
 
 ## Primitives
 
@@ -168,6 +169,14 @@ Build order: 12→13→14→15→16→17→18
 | `esr_cache_bank` | `esr_cache_bank` | 55 checks | 39,828 comparisons | Done |
 | `esr_shire_other` | `esr_shire_other` | 97 checks | 338,832 comparisons | Done |
 | RBOX ESR/APB compatibility audit | `esr_rbox`, `rbox_top`, `shire_channel` APB routing | documented in `hw/ip/shire_esr/doc/rbox_esr_compat.md` | covered by existing RBOX cosims plus this audit | Done |
+
+## Shire SBM/APB (`hw/ip/shire_sbm/`)
+
+| Module | Original | Test | Cosim | Status |
+|--------|----------|------|-------|--------|
+| `mshire_axi_to_apb` | `mshire_axi_to_apb` | covered by 51-check `shire_sbm` top-level unit test | 111,452 comparisons | Done |
+| `shire_bus_master` | `shire_bus_master` | 51 checks via `sbm_top`/`shire_sbm_tb` | 467,514 comparisons | Done |
+| `sbm_top` | `sbm_top` | 51 checks | 492,120 comparisons (BPAM/UltraSoc path held idle per native seam) | Done |
 
 ## Minion Frontend (`hw/ip/minion/frontend/`)
 
@@ -463,10 +472,10 @@ backfilled.
 
 | Metric | Count |
 |--------|-------|
-| Unit-test Makefiles | 81 |
-| Test suites discovered by `make test` | 242 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 283 |
+| Unit-test Makefiles | 82 |
+| Test suites discovered by `make test` | 243 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 286 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 241 unit suites + 283 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run |
+| Targeted update runs | 242 unit suites + 286 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run |
 | Targeted update failures | 0 |
