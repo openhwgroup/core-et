@@ -166,6 +166,72 @@ int main(int argc, char** argv) {
     sim.check(dut->r_data_lo_o == 0, "invalid read response data zero");
     sim.tick();
 
+    // Reset-gated RBOX read returns a decode error and never issues APB.
+    sim.check(wait_for_axi_ready(sim, false), "AR ready before RBOX reset-gated read");
+    dut->rst_rbox_ni = 0;
+    dut->ar_valid_i = 1;
+    dut->ar_id_i = 0x1a;
+    dut->ar_addr_i = make_addr(3, 1, 0, 0x12);
+    dut->obs_index_i = 9;
+    sim.tick();
+    dut->ar_valid_i = 0;
+    dut->rst_rbox_ni = 1;
+    sim.check(dut->r_valid_o == 1, "RBOX reset-gated read returns RVALID");
+    sim.check(dut->r_id_o == 0x1a, "RBOX reset-gated read response ID");
+    sim.check(dut->r_resp_o == 2, "RBOX reset-gated read response SLVERR");
+    sim.check(dut->r_data_lo_o == 0, "RBOX reset-gated read response data zero");
+    sim.check(dut->apb_psel_o == 0, "RBOX reset-gated read does not issue APB");
+    sim.tick();
+
+    // Reset-gated shire-cache bank write returns a decode error and never issues APB.
+    sim.check(wait_for_axi_ready(sim, true), "AW ready before shire-cache reset-gated write");
+    dut->rst_shire_cache_ni = 0;
+    dut->aw_valid_i = 1;
+    dut->aw_id_i = 0x1b;
+    dut->aw_addr_i = make_addr(3, 0, 1, 0x35);
+    dut->wdata_i = 0x0badc0de12345678ull;
+    dut->obs_index_i = 5;
+    sim.tick();
+    dut->aw_valid_i = 0;
+    dut->rst_shire_cache_ni = 1;
+    sim.check(dut->b_valid_o == 1, "shire-cache reset-gated write returns BVALID");
+    sim.check(dut->b_id_o == 0x1b, "shire-cache reset-gated write response ID");
+    sim.check(dut->b_resp_o == 2, "shire-cache reset-gated write response SLVERR");
+    sim.check(dut->apb_psel_o == 0, "shire-cache reset-gated write does not issue APB");
+    sim.tick();
+
+    // Nonzero ARLEN is unsupported and returns a read decode error.
+    sim.check(wait_for_axi_ready(sim, false), "AR ready before nonzero ARLEN read");
+    dut->ar_valid_i = 1;
+    dut->ar_id_i = 0x1c;
+    dut->ar_addr_i = shire_addr;
+    dut->ar_len_i = 2;
+    sim.tick();
+    dut->ar_valid_i = 0;
+    dut->ar_len_i = 0;
+    sim.check(dut->r_valid_o == 1, "nonzero ARLEN read returns RVALID");
+    sim.check(dut->r_id_o == 0x1c, "nonzero ARLEN read response ID");
+    sim.check(dut->r_resp_o == 2, "nonzero ARLEN read response SLVERR");
+    sim.check(dut->r_data_lo_o == 0, "nonzero ARLEN read response data zero");
+    sim.check(dut->apb_psel_o == 0, "nonzero ARLEN read does not issue APB");
+    sim.tick();
+
+    // Nonzero AWLEN is unsupported and returns a write decode error.
+    sim.check(wait_for_axi_ready(sim, true), "AW ready before nonzero AWLEN write");
+    dut->aw_valid_i = 1;
+    dut->aw_id_i = 0x1d;
+    dut->aw_addr_i = bank2_addr;
+    dut->aw_len_i = 4;
+    dut->wdata_i = 0x123456789abcdef0ull;
+    sim.tick();
+    dut->aw_valid_i = 0;
+    dut->aw_len_i = 0;
+    sim.check(dut->b_valid_o == 1, "nonzero AWLEN write returns BVALID");
+    sim.check(dut->b_id_o == 0x1d, "nonzero AWLEN write response ID");
+    sim.check(dut->b_resp_o == 2, "nonzero AWLEN write response SLVERR");
+    sim.check(dut->apb_psel_o == 0, "nonzero AWLEN write does not issue APB");
+    sim.tick();
+
     // Reset while APB response is held off clears in-flight state.
     defaults(dut);
     dut->apb_pready_i = 0;

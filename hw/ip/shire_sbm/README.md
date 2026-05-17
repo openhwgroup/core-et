@@ -36,7 +36,13 @@ The IP contains three RTL modules:
 | `ShiftDataEnRd` | `1'b1` | Replicate 64-bit APB read data across the 256-bit SYS R payload when set; otherwise zero-extend. |
 | `ResponseControl` | `1'b0` | Preserve original optional response-hold stage behavior. |
 
-`sbm_top` has no user parameters.
+`sbm_top` parameters are advanced integration parameters and should normally
+keep their package defaults:
+
+| Parameter | Default | Meaning |
+| --- | --- | --- |
+| `SbmInterfaces` | `shire_sbm_pkg::SbmInterfaces` | Number of internal `shire_bus_master` APB lanes (10). |
+| `ShireApbInterfaces` | `shire_sbm_pkg::ShireApbInterfaces` | Number of native shire APB fanout ports after the top APB flop stage (11). |
 
 ## Interfaces
 
@@ -70,8 +76,9 @@ APB request/response structs are defined in `shire_sbm_pkg.sv`:
 | 8 | Shire ESR/APB window |
 | 9 | RBox APB window |
 
-`sbm_top` exposes 11 APB ports. Port 10 is currently a native placeholder for the
-old BPAM/UltraSoc debug APB path and remains idle.
+`sbm_top` exposes 11 APB ports. Ports 0..9 are driven by the translated SBM.
+Port 10 is held idle in native RTL because the original BPAM/UltraSoc debug
+master path is omitted per the compute-shire native seam policy.
 
 ### Reset and status inputs
 
@@ -108,6 +115,6 @@ endpoint, and tie unused APB response fields low/ready as appropriate. Use
 | Active-low `rst_*_ni` ports replace active-high `reset*` inputs. | Project reset convention; reset-domain separation is preserved. |
 | Native SYS AXI structs from `axi_pkg` replace original include-file structs/macros. | Project-native typed interface. |
 | APB ports use packed request/response structs rather than parallel arrays. | Project style and C++/Verilator-friendly integration. |
-| Original BPAM/UltraSoc debug arbitration is not instantiated; `sbm_top` port 10 is idle. | Third-party UltraSoc debug IP is outside the clean compute-shire native seam and is dropped per project policy. |
+| Original BPAM/UltraSoc debug master arbitration is omitted; native `sbm_top` holds APB port 10 idle. | The compute-shire native seam policy drops that third-party debug path instead of carrying a compatibility placeholder. |
 | `prim_fifo_reg` and `prim_arb_rr` replace original `gen_fifo_reg` and `arb_rr_data`. | Project primitive/library equivalents with standalone cosims. |
 | `sbm_top` implements the original APB flop stage directly in native SV. | Keeps the original top-visible APB staging without carrying raw include/macros. |

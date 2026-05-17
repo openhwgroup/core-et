@@ -92,6 +92,84 @@ static void compare_outputs(CosimCtrl<DUT>& sim) {
 
 static void tick(CosimCtrl<DUT>& sim) { sim.tick(); compare_outputs(sim); }
 
+static bool wait_for_axi_ready(CosimCtrl<DUT>& sim, bool want_write, int max_cycles = 80) {
+    for (int i = 0; i < max_cycles; ++i) {
+        auto* d = sim.dut.get();
+        if (want_write) {
+            if (d->new_aw_ready_o && d->new_w_ready_o) return true;
+        } else {
+            if (d->new_ar_ready_o) return true;
+        }
+        tick(sim);
+    }
+    return false;
+}
+
+static void run_decode_error_directed(CosimCtrl<DUT>& sim) {
+    auto* d = sim.dut.get();
+    printf("reset-gated and nonzero LEN decode errors\n");
+    d->b_ready_i = 1;
+    d->r_ready_i = 1;
+    d->apb_pready_i = (1u << kIf) - 1u;
+    d->apb_pslverr_i = 0;
+    d->ar_len_i = 0;
+    d->aw_len_i = 0;
+
+    sim.check(wait_for_axi_ready(sim, false), "AR ready before RBOX reset read");
+    d->rst_rbox_ni = 0;
+    d->ar_valid_i = 1;
+    d->ar_id_i = 0x1c0;
+    d->ar_addr_i = make_addr(4, 0, 0x61);
+    tick(sim);
+    d->ar_valid_i = 0;
+    d->rst_rbox_ni = 1;
+    sim.check(d->new_r_valid_o == 1, "RBOX reset read returns RVALID");
+    sim.check(d->new_r_resp_o == 2, "RBOX reset read returns SLVERR");
+    sim.check(d->new_apb_psel_o == 0, "RBOX reset read does not issue APB");
+    tick(sim);
+
+    sim.check(wait_for_axi_ready(sim, true), "AW ready before cache reset write");
+    d->rst_shire_cache_ni = 0;
+    d->aw_valid_i = 1;
+    d->aw_id_i = 0x1c1;
+    d->aw_addr_i = make_addr(2, 0, 0x62);
+    d->wdata_i = 0xcafebabedead0001ull;
+    tick(sim);
+    d->aw_valid_i = 0;
+    d->rst_shire_cache_ni = 1;
+    sim.check(d->new_b_valid_o == 1, "cache reset write returns BVALID");
+    sim.check(d->new_b_resp_o == 2, "cache reset write returns SLVERR");
+    sim.check(d->new_apb_psel_o == 0, "cache reset write does not issue APB");
+    tick(sim);
+
+    sim.check(wait_for_axi_ready(sim, false), "AR ready before nonzero ARLEN read");
+    d->ar_valid_i = 1;
+    d->ar_id_i = 0x1c2;
+    d->ar_addr_i = make_addr(3, 0, 0x63);
+    d->ar_len_i = 3;
+    tick(sim);
+    d->ar_valid_i = 0;
+    d->ar_len_i = 0;
+    sim.check(d->new_r_valid_o == 1, "nonzero ARLEN read returns RVALID");
+    sim.check(d->new_r_resp_o == 2, "nonzero ARLEN read returns SLVERR");
+    sim.check(d->new_apb_psel_o == 0, "nonzero ARLEN read does not issue APB");
+    tick(sim);
+
+    sim.check(wait_for_axi_ready(sim, true), "AW ready before nonzero AWLEN write");
+    d->aw_valid_i = 1;
+    d->aw_id_i = 0x1c3;
+    d->aw_addr_i = make_addr(2, 1, 0x64);
+    d->aw_len_i = 5;
+    d->wdata_i = 0xcafebabedead0002ull;
+    tick(sim);
+    d->aw_valid_i = 0;
+    d->aw_len_i = 0;
+    sim.check(d->new_b_valid_o == 1, "nonzero AWLEN write returns BVALID");
+    sim.check(d->new_b_resp_o == 2, "nonzero AWLEN write returns SLVERR");
+    sim.check(d->new_apb_psel_o == 0, "nonzero AWLEN write does not issue APB");
+    tick(sim);
+}
+
 int main(int argc, char** argv) {
     CosimCtrl<DUT> sim(argc, argv);
     auto* d = sim.dut.get();
@@ -181,6 +259,8 @@ int main(int argc, char** argv) {
     d->rst_neigh_ni = 0xf;
     for (int i = 0; i < 8; ++i) tick(sim);
 
+    run_decode_error_directed(sim);
+
     printf("random traffic\n");
     uint32_t seed = 0x98761234;
     for (int cyc = 0; cyc < 12000; ++cyc) {
@@ -193,6 +273,8 @@ int main(int argc, char** argv) {
         d->rst_neigh_ni = 0xf;
         d->rst_rbox_ni = 1;
         d->rst_shire_cache_ni = 1;
+        d->ar_len_i = 0;
+        d->aw_len_i = 0;
 
         d->ar_valid_i = 0;
         d->aw_valid_i = 0;
@@ -200,20 +282,38 @@ int main(int argc, char** argv) {
             uint32_t lane = (r >> 8) % 10;
             uint32_t kind = (lane < 4) ? 1 : ((lane < 8) ? 2 : ((lane == 8) ? 3 : 4));
             uint32_t idx = (lane < 4) ? lane : ((lane < 8) ? (lane - 4) : 0);
+            if (((r >> 22) & 0x3f) == 0) {
+                kind = 4;
+                idx = 0;
+                d->rst_rbox_ni = 0;
+            } else if (((r >> 22) & 0x3f) == 1) {
+                kind = 2;
+                idx = (r >> 16) & 3;
+                d->rst_shire_cache_ni = 0;
+            }
             d->ar_valid_i = 1;
             d->ar_id_i = r & 0x7ffff;
             d->ar_addr_i = make_addr(kind, idx, (r >> 12) & 0x3ff);
-            d->ar_len_i = 0;
+            d->ar_len_i = (((r >> 24) & 0x1f) == 0) ? (((r >> 16) & 0xff) | 1u) : 0;
         }
         if (d->new_aw_ready_o && ((r >> 6) & 3) == 2) {
             uint32_t lane = (r >> 10) % 10;
             uint32_t kind = (lane < 4) ? 1 : ((lane < 8) ? 2 : ((lane == 8) ? 3 : 4));
             uint32_t idx = (lane < 4) ? lane : ((lane < 8) ? (lane - 4) : 0);
             if (((r >> 20) & 0x1f) == 0) { kind = ((r >> 25) & 1) ? 1 : 2; idx = 0xf; }
+            if (((r >> 27) & 0x3f) == 0) {
+                kind = 4;
+                idx = 0;
+                d->rst_rbox_ni = 0;
+            } else if (((r >> 27) & 0x3f) == 1) {
+                kind = 2;
+                idx = (r >> 16) & 3;
+                d->rst_shire_cache_ni = 0;
+            }
             d->aw_valid_i = 1;
             d->aw_id_i = (r ^ 0x15555u) & 0x7ffff;
             d->aw_addr_i = make_addr(kind, idx, (r >> 12) & 0x3ff);
-            d->aw_len_i = 0;
+            d->aw_len_i = (((r >> 24) & 0x1f) == 1) ? (((r >> 8) & 0xff) | 1u) : 0;
             d->wdata_i = (static_cast<uint64_t>(xs(seed)) << 32) | xs(seed);
         }
         tick(sim);

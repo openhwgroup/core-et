@@ -174,9 +174,9 @@ Build order: 12→13→14→15→16→17→18
 
 | Module | Original | Test | Cosim | Status |
 |--------|----------|------|-------|--------|
-| `mshire_axi_to_apb` | `mshire_axi_to_apb` | covered by `shire_sbm` top-level unit test | 111,452 comparisons | Done |
-| `shire_bus_master` | `shire_bus_master` | 29 checks via `sbm_top`/`shire_sbm_tb` | 467,210 comparisons | Done |
-| `sbm_top` | `sbm_top` | 29 checks | 491,800 comparisons (BPAM/UltraSoc path held idle per native seam) | Done |
+| `mshire_axi_to_apb` | `mshire_axi_to_apb` | covered by 51-check `shire_sbm` top-level unit test | 111,452 comparisons | Done |
+| `shire_bus_master` | `shire_bus_master` | 51 checks via `sbm_top`/`shire_sbm_tb` | 467,514 comparisons | Done |
+| `sbm_top` | `sbm_top` | 51 checks | 492,120 comparisons (BPAM/UltraSoc path held idle per native seam) | Done |
 
 ## Minion Frontend (`hw/ip/minion/frontend/`)
 
