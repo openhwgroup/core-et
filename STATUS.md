@@ -178,6 +178,20 @@ Build order: 12→13→14→15→16→17→18
 | `shire_bus_master` | `shire_bus_master` | 51 checks via `sbm_top`/`shire_sbm_tb` | 467,514 comparisons | Done |
 | `sbm_top` | `sbm_top` | 51 checks | 492,120 comparisons (BPAM/UltraSoc path held idle per native seam) | Done |
 
+## Shire Channel Leaves (`hw/ip/shire_channel_leaves/`)
+
+| Module | Original | Test | Cosim | Status |
+|--------|----------|------|-------|--------|
+| `shire_channel_leaves_pkg` | Shared shire-channel leaf constants | — | — | Done |
+| `shire_dmctrl` | `shire_dmctrl` | 36 grouped shire-channel leaf checks | 2,200 comparisons | Done |
+| `shire_bpam_run_control` | `shire_bpam_run_control` | 36 grouped shire-channel leaf checks | 4,096 comparisons | Done |
+| `shire_and_or_tree_daisychain` | `shire_and_or_tree_daisychain` | 36 grouped shire-channel leaf checks | 8,192 comparisons | Done |
+| `shire_coop_tload_bus` | `shire_coop_tload_bus` | 36 grouped shire-channel leaf checks | 12,288 comparisons | Done |
+| `shire_ioshire_noc_ints` | `shire_ioshire_noc_ints` | 36 grouped shire-channel leaf checks | 4,096 comparisons | Done — retained normal NoC interrupt subset only |
+| `shire_xll_control` | `shire_xll_control` | 36 grouped shire-channel leaf checks | 31,460 comparisons | Done |
+| `shire_pll_wrapper` | `shire_pll_wrapper` | 36 grouped shire-channel leaf checks | 43,560 comparisons | Done — native clock/lock/DFT reset seam omits third-party PLL/DLL/debug hard-macro surfaces |
+| `icache_mems` | `icache_mems` | 36 grouped shire-channel leaf checks | 181,056 comparisons | Done |
+
 ## Minion Frontend (`hw/ip/minion/frontend/`)
 
 | Module | Original | Test | Cosim | Status |
@@ -472,10 +486,10 @@ backfilled.
 
 | Metric | Count |
 |--------|-------|
-| Unit-test Makefiles | 82 |
-| Test suites discovered by `make test` | 243 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 286 |
+| Unit-test Makefiles | 83 |
+| Test suites discovered by `make test` | 244 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 294 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 242 unit suites + 286 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run |
+| Targeted update runs | 243 unit suites + 294 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run |
 | Targeted update failures | 0 |
