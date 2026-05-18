@@ -192,6 +192,12 @@ Build order: 12→13→14→15→16→17→18
 | `shire_pll_wrapper` | `shire_pll_wrapper` | 36 grouped shire-channel leaf checks | 43,560 comparisons | Done — native clock/lock/DFT reset seam omits third-party PLL/DLL/debug hard-macro surfaces |
 | `icache_mems` | `icache_mems` | 36 grouped shire-channel leaf checks | 181,056 comparisons | Done |
 
+## Shire Channel (`hw/ip/shire_channel/`)
+
+| Module | Original | Test | Cosim | Status |
+|--------|----------|------|-------|--------|
+| `shire_channel` | `shire_channel` | 30 directed integration checks | 278,783 comparisons | Done — native container integrates shirecache, RBOX, uncached, shire ESR/APB, ICache memories, run-control/status leaves, DFT/RAM config, and reset-domain fanout |
+
 ## Minion Frontend (`hw/ip/minion/frontend/`)
 
 | Module | Original | Test | Cosim | Status |
@@ -506,10 +512,10 @@ backfilled.
 
 | Metric | Count |
 |--------|-------|
-| Unit-test Makefiles | 84 |
-| Test suites discovered by `make test` | 245 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 308 |
+| Unit-test Makefiles | 85 |
+| Test suites discovered by `make test` | 246 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 309 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 244 unit suites + 294 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run + 14 uncached-path cosims + full lint + root unit test suite |
+| Targeted update runs | 245 unit suites + 295 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run + 14 uncached-path cosims + shire_channel lint/unit/cosim + full lint + root unit test suite |
 | Targeted update failures | 0 |
