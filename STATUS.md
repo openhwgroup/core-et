@@ -21,6 +21,7 @@
 | `axi_pkg` | AXI4 channel types (AR, AW, W, R, B) | Done |
 | `rbox_pkg` | RBOX constants, packet/control structs, APB/ET-Link helper types, and utility functions | Done |
 | `shire_esr_pkg` | Shire ESR/APB address constants and packed control/status structs for compute-shire ESR blocks | Done |
+| `shire_sbm_pkg` | Compute-shire SBM/APB lane constants, APB structs, and native SBM AXI helper structs | Done |
 
 ## Primitives
 
@@ -168,6 +169,28 @@ Build order: 12→13→14→15→16→17→18
 | `esr_cache_bank` | `esr_cache_bank` | 55 checks | 39,828 comparisons | Done |
 | `esr_shire_other` | `esr_shire_other` | 97 checks | 338,832 comparisons | Done |
 | RBOX ESR/APB compatibility audit | `esr_rbox`, `rbox_top`, `shire_channel` APB routing | documented in `hw/ip/shire_esr/doc/rbox_esr_compat.md` | covered by existing RBOX cosims plus this audit | Done |
+
+## Shire SBM/APB (`hw/ip/shire_sbm/`)
+
+| Module | Original | Test | Cosim | Status |
+|--------|----------|------|-------|--------|
+| `mshire_axi_to_apb` | `mshire_axi_to_apb` | covered by 51-check `shire_sbm` top-level unit test | 111,452 comparisons | Done |
+| `shire_bus_master` | `shire_bus_master` | 51 checks via `sbm_top`/`shire_sbm_tb` | 467,514 comparisons | Done |
+| `sbm_top` | `sbm_top` | 51 checks | 492,120 comparisons (BPAM/UltraSoc path held idle per native seam) | Done |
+
+## Shire Channel Leaves (`hw/ip/shire_channel_leaves/`)
+
+| Module | Original | Test | Cosim | Status |
+|--------|----------|------|-------|--------|
+| `shire_channel_leaves_pkg` | Shared shire-channel leaf constants | — | — | Done |
+| `shire_dmctrl` | `shire_dmctrl` | 36 grouped shire-channel leaf checks | 2,200 comparisons | Done |
+| `shire_bpam_run_control` | `shire_bpam_run_control` | 36 grouped shire-channel leaf checks | 4,096 comparisons | Done |
+| `shire_and_or_tree_daisychain` | `shire_and_or_tree_daisychain` | 36 grouped shire-channel leaf checks | 8,192 comparisons | Done |
+| `shire_coop_tload_bus` | `shire_coop_tload_bus` | 36 grouped shire-channel leaf checks | 12,288 comparisons | Done |
+| `shire_ioshire_noc_ints` | `shire_ioshire_noc_ints` | 36 grouped shire-channel leaf checks | 4,096 comparisons | Done — retained normal NoC interrupt subset only |
+| `shire_xll_control` | `shire_xll_control` | 36 grouped shire-channel leaf checks | 31,460 comparisons | Done |
+| `shire_pll_wrapper` | `shire_pll_wrapper` | 36 grouped shire-channel leaf checks | 43,560 comparisons | Done — native clock/lock/DFT reset seam omits third-party PLL/DLL/debug hard-macro surfaces |
+| `icache_mems` | `icache_mems` | 36 grouped shire-channel leaf checks | 181,056 comparisons | Done |
 
 ## Minion Frontend (`hw/ip/minion/frontend/`)
 
@@ -483,10 +506,10 @@ backfilled.
 
 | Metric | Count |
 |--------|-------|
-| Unit-test Makefiles | 82 |
-| Test suites discovered by `make test` | 243 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 284 |
+| Unit-test Makefiles | 84 |
+| Test suites discovered by `make test` | 245 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 308 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 82 unit suites + 14 uncached-path cosims + full lint + root unit test suite |
+| Targeted update runs | 244 unit suites + 294 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run + 14 uncached-path cosims + full lint + root unit test suite |
 | Targeted update failures | 0 |
