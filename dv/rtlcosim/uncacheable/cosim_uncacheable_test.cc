@@ -160,14 +160,20 @@ static void prime_payload_state(SimT &sim) {
 
     clear_valids(d);
     d->sbm_sys_axi_b_i = 0x2;
-    clear_words(d->sbm_sys_axi_r_i);
+    d->sbm_sys_axi_r_i[0] = 0x13579bdfu;
+    d->sbm_sys_axi_r_i[1] = 0x2468ace0u;
+    d->sbm_sys_axi_r_i[2] = 0x000155aau;
     d->sbm_sys_axi_b_valid_i = 1;
     d->sbm_sys_axi_r_valid_i = 1;
     d->sbm_write_credit_return_i = 1;
     sim.tick();
 
     clear_valids(d);
-    for (int i = 0; i < 32; ++i) sim.tick();
+    for (int i = 0; i < 32; ++i) {
+        d->shire_id_i = (i == 0) ? 0 : 0x7f;
+        d->esr_uc_config_i = (i == 0) ? 1 : 0;
+        sim.tick();
+    }
 }
 
 template <typename SimT>
