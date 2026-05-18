@@ -69,6 +69,47 @@ module cosim_shire_channel_tb
   input  logic [shire_esr_pkg::NumNeigh-1:0][neigh_pkg::ShireCoopIdSize-1:0] coop_done_id_i,
   input  logic [shire_esr_pkg::NumNeigh-1:0][shire_esr_pkg::NumNeigh-2:0] coop_done_valid_i,
 
+  input  logic [shire_esr_pkg::NumNeigh-1:0] neigh_sc_rsp_ready_stim_i,
+  input  logic [shirecache_pkg::L3MasterPorts-1:0] to_l3_axi_ar_ready_stim_i,
+  input  logic [shirecache_pkg::L3MasterPorts-1:0] to_l3_axi_aw_ready_stim_i,
+  input  logic [shirecache_pkg::L3MasterPorts-1:0] to_l3_axi_w_ready_stim_i,
+  input  logic [shirecache_pkg::L3MasterPorts-1:0] to_l3_axi_b_valid_stim_i,
+  input  logic [shirecache_pkg::L3MasterPorts-1:0] to_l3_axi_r_valid_stim_i,
+  input  logic [shirecache_pkg::SysPorts-1:0] to_sys_axi_ar_ready_stim_i,
+  input  logic [shirecache_pkg::SysPorts-1:0] to_sys_axi_aw_ready_stim_i,
+  input  logic [shirecache_pkg::SysPorts-1:0] to_sys_axi_w_ready_stim_i,
+  input  logic [shirecache_pkg::SysPorts-1:0] to_sys_axi_b_valid_stim_i,
+  input  logic [shirecache_pkg::SysPorts-1:0] to_sys_axi_r_valid_stim_i,
+  input  logic [shirecache_pkg::L3SlavePorts-1:0] l3_axi_ar_valid_stim_i,
+  input  logic [shirecache_pkg::L3SlavePorts-1:0] l3_axi_aw_valid_stim_i,
+  input  logic [shirecache_pkg::L3SlavePorts-1:0] l3_axi_w_valid_stim_i,
+  input  logic [shirecache_pkg::L3SlavePorts-1:0] l3_axi_b_ready_stim_i,
+  input  logic [shirecache_pkg::L3SlavePorts-1:0] l3_axi_r_ready_stim_i,
+  input  logic uc_to_l3_axi_ar_ready_stim_i,
+  input  logic uc_to_l3_axi_aw_ready_stim_i,
+  input  logic uc_to_l3_axi_w_ready_stim_i,
+  input  logic uc_to_l3_axi_b_valid_stim_i,
+  input  logic uc_to_l3_axi_r_valid_stim_i,
+  input  logic uc_to_sys_axi_ar_ready_stim_i,
+  input  logic uc_to_sys_axi_aw_ready_stim_i,
+  input  logic uc_to_sys_axi_w_ready_stim_i,
+  input  logic uc_to_sys_axi_b_valid_stim_i,
+  input  logic uc_to_sys_axi_r_valid_stim_i,
+  input  logic sys_axi_ar_valid_stim_i,
+  input  logic sys_axi_aw_valid_stim_i,
+  input  logic sys_axi_w_valid_stim_i,
+  input  logic sys_axi_b_ready_stim_i,
+  input  logic sys_axi_r_ready_stim_i,
+  input  logic [1:0] sys_axi_aw_vcvalid_stim_i,
+  input  logic [1:0] sys_axi_w_vcvalid_stim_i,
+  input  logic sbm_write_credit_return_stim_i,
+  input  logic sbm_sys_axi_ar_ready_stim_i,
+  input  logic sbm_sys_axi_aw_ready_stim_i,
+  input  logic sbm_sys_axi_w_ready_stim_i,
+  input  logic sbm_sys_axi_b_valid_stim_i,
+  input  logic sbm_sys_axi_r_valid_stim_i,
+  input  logic [31:0] axi_stim_i,
+
   output logic [shire_esr_pkg::NumNeigh-1:0] orig_rst_c_shire_no_o,
   output logic [shire_esr_pkg::NumNeigh-1:0] new_rst_c_shire_no_o,
   output logic [shire_esr_pkg::NumNeigh-1:0] orig_rst_w_shire_no_o,
@@ -593,7 +634,7 @@ module cosim_shire_channel_tb
     neigh_sc_req_info[0].size = et_link_size_t'(neigh0_req_size_i);
     neigh_sc_req_info[0].address = neigh0_req_addr_i;
     neigh_sc_req_info[0].qwen = neigh0_req_qwen_i;
-    neigh_sc_rsp_ready = '1;
+    neigh_sc_rsp_ready = neigh_sc_rsp_ready_stim_i;
 
     flb_neigh_l2_req_valid = flb_neigh_l2_req_valid_i;
     flb_neigh_l2_req_data = flb_neigh_l2_req_data_i;
@@ -626,60 +667,140 @@ module cosim_shire_channel_tb
     esr_dll_rrdy_ip = 1'b0;
     esr_dll_lock_ip = 1'b0;
 
-    to_l3_mesh_master_axi_ARREADY = '1;
-    to_l3_mesh_master_axi_AWREADY = '1;
-    to_l3_mesh_master_axi_WREADY = '1;
+    to_l3_mesh_master_axi_ARREADY = to_l3_axi_ar_ready_stim_i;
+    to_l3_mesh_master_axi_AWREADY = to_l3_axi_aw_ready_stim_i;
+    to_l3_mesh_master_axi_WREADY = to_l3_axi_w_ready_stim_i;
     to_l3_mesh_master_axi_B = '{default: '0};
-    to_l3_mesh_master_axi_BVALID = '0;
+    to_l3_mesh_master_axi_BVALID = to_l3_axi_b_valid_stim_i;
     to_l3_mesh_master_axi_R = '{default: '0};
-    to_l3_mesh_master_axi_RVALID = '0;
-    to_sys_mesh_master_axi_ARREADY = 1'b1;
-    to_sys_mesh_master_axi_AWREADY = 1'b1;
-    to_sys_mesh_master_axi_WREADY = 1'b1;
+    to_l3_mesh_master_axi_RVALID = to_l3_axi_r_valid_stim_i;
+    for (int unsigned axi_idx = 0; axi_idx < NUM_L3_MASTER_PORTS; axi_idx++) begin
+      to_l3_mesh_master_axi_B[axi_idx].ID = axi_stim_i[`SC_MESH_MASTER_AXI_ID_SIZE-1:0];
+      to_l3_mesh_master_axi_B[axi_idx].RESP = axi_stim_i[1:0];
+      to_l3_mesh_master_axi_R[axi_idx].ID = axi_stim_i[`SC_MESH_MASTER_AXI_ID_SIZE-1:0];
+      to_l3_mesh_master_axi_R[axi_idx].RESP = axi_stim_i[3:2];
+      to_l3_mesh_master_axi_R[axi_idx].LAST = axi_stim_i[4];
+      to_l3_mesh_master_axi_R[axi_idx].DATA = {16{axi_stim_i}};
+    end
+    to_sys_mesh_master_axi_ARREADY = to_sys_axi_ar_ready_stim_i[0];
+    to_sys_mesh_master_axi_AWREADY = to_sys_axi_aw_ready_stim_i[0];
+    to_sys_mesh_master_axi_WREADY = to_sys_axi_w_ready_stim_i[0];
     to_sys_mesh_master_axi_B = '0;
-    to_sys_mesh_master_axi_BVALID = 1'b0;
+    to_sys_mesh_master_axi_B.ID = axi_stim_i[`SC_MESH_MASTER_AXI_ID_SIZE-1:0];
+    to_sys_mesh_master_axi_B.RESP = axi_stim_i[5:4];
+    to_sys_mesh_master_axi_BVALID = to_sys_axi_b_valid_stim_i[0];
     to_sys_mesh_master_axi_R = '0;
-    to_sys_mesh_master_axi_RVALID = 1'b0;
+    to_sys_mesh_master_axi_R.ID = axi_stim_i[`SC_MESH_MASTER_AXI_ID_SIZE-1:0];
+    to_sys_mesh_master_axi_R.RESP = axi_stim_i[7:6];
+    to_sys_mesh_master_axi_R.LAST = axi_stim_i[8];
+    to_sys_mesh_master_axi_R.DATA = {16{axi_stim_i}};
+    to_sys_mesh_master_axi_RVALID = to_sys_axi_r_valid_stim_i[0];
     l3_mesh_slave_axi_AR = '{default: '0};
-    l3_mesh_slave_axi_ARVALID = '0;
+    l3_mesh_slave_axi_ARVALID = l3_axi_ar_valid_stim_i;
     l3_mesh_slave_axi_AW = '{default: '0};
-    l3_mesh_slave_axi_AWVALID = '0;
+    l3_mesh_slave_axi_AWVALID = l3_axi_aw_valid_stim_i;
     l3_mesh_slave_axi_W = '{default: '0};
-    l3_mesh_slave_axi_WVALID = '0;
-    l3_mesh_slave_axi_BREADY = '1;
-    l3_mesh_slave_axi_RREADY = '1;
-    uc_to_l3_mesh_master_axi_ARREADY = 1'b1;
-    uc_to_l3_mesh_master_axi_AWREADY = 1'b1;
-    uc_to_l3_mesh_master_axi_WREADY = 1'b1;
+    l3_mesh_slave_axi_WVALID = l3_axi_w_valid_stim_i;
+    l3_mesh_slave_axi_BREADY = l3_axi_b_ready_stim_i;
+    l3_mesh_slave_axi_RREADY = l3_axi_r_ready_stim_i;
+    for (int unsigned l3_idx = 0; l3_idx < NUM_L3_SLAVE_PORTS; l3_idx++) begin
+      l3_mesh_slave_axi_AR[l3_idx].ID = axi_stim_i[`SC_MESH_SLAVE_AXI_ID_SIZE-1:0];
+      l3_mesh_slave_axi_AR[l3_idx].ADDR = {8'h00, axi_stim_i};
+      l3_mesh_slave_axi_AR[l3_idx].LEN = axi_stim_i[15:8];
+      l3_mesh_slave_axi_AR[l3_idx].SIZE = axi_stim_i[10:8];
+      l3_mesh_slave_axi_AR[l3_idx].BURST = 2'b01;
+      l3_mesh_slave_axi_AR[l3_idx].LOCK = axi_stim_i[11];
+      l3_mesh_slave_axi_AR[l3_idx].CACHE = axi_stim_i[15:12];
+      l3_mesh_slave_axi_AR[l3_idx].PROT = axi_stim_i[18:16];
+      l3_mesh_slave_axi_AR[l3_idx].QOS = axi_stim_i[22:19];
+      l3_mesh_slave_axi_AR[l3_idx].USER = axi_stim_i[23];
+      l3_mesh_slave_axi_AW[l3_idx].ID = axi_stim_i[`SC_MESH_SLAVE_AXI_ID_SIZE-1:0];
+      l3_mesh_slave_axi_AW[l3_idx].ADDR = {8'h00, axi_stim_i};
+      l3_mesh_slave_axi_AW[l3_idx].LEN = axi_stim_i[31:24];
+      l3_mesh_slave_axi_AW[l3_idx].SIZE = axi_stim_i[26:24];
+      l3_mesh_slave_axi_AW[l3_idx].BURST = 2'b01;
+      l3_mesh_slave_axi_AW[l3_idx].LOCK = axi_stim_i[27];
+      l3_mesh_slave_axi_AW[l3_idx].CACHE = axi_stim_i[7:4];
+      l3_mesh_slave_axi_AW[l3_idx].PROT = axi_stim_i[10:8];
+      l3_mesh_slave_axi_AW[l3_idx].QOS = axi_stim_i[14:11];
+      l3_mesh_slave_axi_AW[l3_idx].USER = axi_stim_i[19:15];
+      l3_mesh_slave_axi_W[l3_idx].DATA = {16{axi_stim_i}};
+      l3_mesh_slave_axi_W[l3_idx].STRB = {64{axi_stim_i[0]}};
+      l3_mesh_slave_axi_W[l3_idx].LAST = axi_stim_i[1];
+    end
+    uc_to_l3_mesh_master_axi_ARREADY = uc_to_l3_axi_ar_ready_stim_i;
+    uc_to_l3_mesh_master_axi_AWREADY = uc_to_l3_axi_aw_ready_stim_i;
+    uc_to_l3_mesh_master_axi_WREADY = uc_to_l3_axi_w_ready_stim_i;
     uc_to_l3_mesh_master_axi_B = '0;
-    uc_to_l3_mesh_master_axi_BVALID = 1'b0;
+    uc_to_l3_mesh_master_axi_B.ID = axi_stim_i[`SC_MESH_MASTER_AXI_ID_SIZE-1:0];
+    uc_to_l3_mesh_master_axi_B.RESP = axi_stim_i[9:8];
+    uc_to_l3_mesh_master_axi_BVALID = uc_to_l3_axi_b_valid_stim_i;
     uc_to_l3_mesh_master_axi_R = '0;
-    uc_to_l3_mesh_master_axi_RVALID = 1'b0;
-    uc_to_sys_mesh_master_axi_ARREADY = 1'b1;
-    uc_to_sys_mesh_master_axi_AWREADY = 1'b1;
-    uc_to_sys_mesh_master_axi_WREADY = 1'b1;
+    uc_to_l3_mesh_master_axi_R.ID = axi_stim_i[`SC_MESH_MASTER_AXI_ID_SIZE-1:0];
+    uc_to_l3_mesh_master_axi_R.RESP = axi_stim_i[11:10];
+    uc_to_l3_mesh_master_axi_R.LAST = axi_stim_i[12];
+    uc_to_l3_mesh_master_axi_R.DATA = {16{axi_stim_i}};
+    uc_to_l3_mesh_master_axi_RVALID = uc_to_l3_axi_r_valid_stim_i;
+    uc_to_sys_mesh_master_axi_ARREADY = uc_to_sys_axi_ar_ready_stim_i;
+    uc_to_sys_mesh_master_axi_AWREADY = uc_to_sys_axi_aw_ready_stim_i;
+    uc_to_sys_mesh_master_axi_WREADY = uc_to_sys_axi_w_ready_stim_i;
     uc_to_sys_mesh_master_axi_B = '0;
-    uc_to_sys_mesh_master_axi_BVALID = 1'b0;
+    uc_to_sys_mesh_master_axi_B.ID = axi_stim_i[`SC_MESH_MASTER_AXI_ID_SIZE-1:0];
+    uc_to_sys_mesh_master_axi_B.RESP = axi_stim_i[13:12];
+    uc_to_sys_mesh_master_axi_BVALID = uc_to_sys_axi_b_valid_stim_i;
     uc_to_sys_mesh_master_axi_R = '0;
-    uc_to_sys_mesh_master_axi_RVALID = 1'b0;
+    uc_to_sys_mesh_master_axi_R.ID = axi_stim_i[`SC_MESH_MASTER_AXI_ID_SIZE-1:0];
+    uc_to_sys_mesh_master_axi_R.RESP = axi_stim_i[15:14];
+    uc_to_sys_mesh_master_axi_R.LAST = axi_stim_i[16];
+    uc_to_sys_mesh_master_axi_R.DATA = {16{axi_stim_i}};
+    uc_to_sys_mesh_master_axi_RVALID = uc_to_sys_axi_r_valid_stim_i;
     sys_mesh_slave_axi_AR = '0;
-    sys_mesh_slave_axi_ARVALID = 1'b0;
+    sys_mesh_slave_axi_AR.ID = axi_stim_i[`SC_MESH_SLAVE_AXI_ID_SIZE-1:0];
+    sys_mesh_slave_axi_AR.ADDR = {8'h00, axi_stim_i};
+    sys_mesh_slave_axi_AR.LEN = axi_stim_i[15:8];
+    sys_mesh_slave_axi_AR.SIZE = axi_stim_i[18:16];
+    sys_mesh_slave_axi_AR.BURST = 2'b01;
+    sys_mesh_slave_axi_AR.LOCK = axi_stim_i[19];
+    sys_mesh_slave_axi_AR.CACHE = axi_stim_i[23:20];
+    sys_mesh_slave_axi_AR.PROT = axi_stim_i[26:24];
+    sys_mesh_slave_axi_AR.QOS = axi_stim_i[30:27];
+    sys_mesh_slave_axi_AR.USER = axi_stim_i[31];
+    sys_mesh_slave_axi_ARVALID = sys_axi_ar_valid_stim_i;
     sys_mesh_slave_axi_AW = '0;
-    sys_mesh_slave_axi_AWVALID = 1'b0;
+    sys_mesh_slave_axi_AW.ID = axi_stim_i[`SC_MESH_SLAVE_AXI_ID_SIZE-1:0];
+    sys_mesh_slave_axi_AW.ADDR = {8'h00, axi_stim_i};
+    sys_mesh_slave_axi_AW.LEN = axi_stim_i[15:8];
+    sys_mesh_slave_axi_AW.SIZE = axi_stim_i[18:16];
+    sys_mesh_slave_axi_AW.BURST = 2'b01;
+    sys_mesh_slave_axi_AW.LOCK = axi_stim_i[19];
+    sys_mesh_slave_axi_AW.CACHE = axi_stim_i[23:20];
+    sys_mesh_slave_axi_AW.PROT = axi_stim_i[26:24];
+    sys_mesh_slave_axi_AW.QOS = axi_stim_i[30:27];
+    sys_mesh_slave_axi_AW.USER = axi_stim_i[4:0];
+    sys_mesh_slave_axi_AWVALID = sys_axi_aw_valid_stim_i;
     sys_mesh_slave_axi_W = '0;
-    sys_mesh_slave_axi_WVALID = 1'b0;
-    sys_mesh_slave_axi_BREADY = 1'b1;
-    sys_mesh_slave_axi_RREADY = 1'b1;
-    sys_mesh_slave_axi_AWvcvalid = '0;
-    sys_mesh_slave_axi_Wvcvalid = '0;
-    sbm_write_credit_return = 1'b0;
-    sbm_sys_mesh_slave_axi_ARREADY = 1'b1;
-    sbm_sys_mesh_slave_axi_AWREADY = 1'b1;
-    sbm_sys_mesh_slave_axi_WREADY = 1'b1;
+    sys_mesh_slave_axi_W.DATA = {8{axi_stim_i}};
+    sys_mesh_slave_axi_W.STRB = {32{axi_stim_i[0]}};
+    sys_mesh_slave_axi_W.LAST = axi_stim_i[1];
+    sys_mesh_slave_axi_WVALID = sys_axi_w_valid_stim_i;
+    sys_mesh_slave_axi_BREADY = sys_axi_b_ready_stim_i;
+    sys_mesh_slave_axi_RREADY = sys_axi_r_ready_stim_i;
+    sys_mesh_slave_axi_AWvcvalid = sys_axi_aw_vcvalid_stim_i;
+    sys_mesh_slave_axi_Wvcvalid = sys_axi_w_vcvalid_stim_i;
+    sbm_write_credit_return = sbm_write_credit_return_stim_i;
+    sbm_sys_mesh_slave_axi_ARREADY = sbm_sys_axi_ar_ready_stim_i;
+    sbm_sys_mesh_slave_axi_AWREADY = sbm_sys_axi_aw_ready_stim_i;
+    sbm_sys_mesh_slave_axi_WREADY = sbm_sys_axi_w_ready_stim_i;
     sbm_sys_mesh_slave_axi_B = '0;
-    sbm_sys_mesh_slave_axi_BVALID = 1'b0;
+    sbm_sys_mesh_slave_axi_B.ID = axi_stim_i[`SC_MESH_SLAVE_AXI_ID_SIZE-1:0];
+    sbm_sys_mesh_slave_axi_B.RESP = axi_stim_i[17:16];
+    sbm_sys_mesh_slave_axi_BVALID = sbm_sys_axi_b_valid_stim_i;
     sbm_sys_mesh_slave_axi_R = '0;
-    sbm_sys_mesh_slave_axi_RVALID = 1'b0;
+    sbm_sys_mesh_slave_axi_R.ID = axi_stim_i[`SC_MESH_SLAVE_AXI_ID_SIZE-1:0];
+    sbm_sys_mesh_slave_axi_R.RESP = axi_stim_i[19:18];
+    sbm_sys_mesh_slave_axi_R.LAST = axi_stim_i[20];
+    sbm_sys_mesh_slave_axi_R.DATA = {8{axi_stim_i}};
+    sbm_sys_mesh_slave_axi_RVALID = sbm_sys_axi_r_valid_stim_i;
 
     icache_f2_sram_req_write = icache_req_write_i;
     icache_f2_sram_req_addr = icache_req_addr_i;
@@ -764,6 +885,46 @@ module cosim_shire_channel_tb
     .coop_slv_valid_i,
     .coop_done_id_i,
     .coop_done_valid_i,
+    .neigh_sc_rsp_ready_stim_i,
+    .to_l3_axi_ar_ready_stim_i,
+    .to_l3_axi_aw_ready_stim_i,
+    .to_l3_axi_w_ready_stim_i,
+    .to_l3_axi_b_valid_stim_i,
+    .to_l3_axi_r_valid_stim_i,
+    .to_sys_axi_ar_ready_stim_i,
+    .to_sys_axi_aw_ready_stim_i,
+    .to_sys_axi_w_ready_stim_i,
+    .to_sys_axi_b_valid_stim_i,
+    .to_sys_axi_r_valid_stim_i,
+    .l3_axi_ar_valid_stim_i,
+    .l3_axi_aw_valid_stim_i,
+    .l3_axi_w_valid_stim_i,
+    .l3_axi_b_ready_stim_i,
+    .l3_axi_r_ready_stim_i,
+    .uc_to_l3_axi_ar_ready_stim_i,
+    .uc_to_l3_axi_aw_ready_stim_i,
+    .uc_to_l3_axi_w_ready_stim_i,
+    .uc_to_l3_axi_b_valid_stim_i,
+    .uc_to_l3_axi_r_valid_stim_i,
+    .uc_to_sys_axi_ar_ready_stim_i,
+    .uc_to_sys_axi_aw_ready_stim_i,
+    .uc_to_sys_axi_w_ready_stim_i,
+    .uc_to_sys_axi_b_valid_stim_i,
+    .uc_to_sys_axi_r_valid_stim_i,
+    .sys_axi_ar_valid_stim_i,
+    .sys_axi_aw_valid_stim_i,
+    .sys_axi_w_valid_stim_i,
+    .sys_axi_b_ready_stim_i,
+    .sys_axi_r_ready_stim_i,
+    .sys_axi_aw_vcvalid_stim_i,
+    .sys_axi_w_vcvalid_stim_i,
+    .sbm_write_credit_return_stim_i,
+    .sbm_sys_axi_ar_ready_stim_i,
+    .sbm_sys_axi_aw_ready_stim_i,
+    .sbm_sys_axi_w_ready_stim_i,
+    .sbm_sys_axi_b_valid_stim_i,
+    .sbm_sys_axi_r_valid_stim_i,
+    .axi_stim_i,
     .rst_c_shire_no_o(new_rst_c_shire_no_o),
     .rst_w_shire_no_o(new_rst_w_shire_no_o),
     .rst_d_shire_no_o(new_rst_d_shire_no_o),

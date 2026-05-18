@@ -68,6 +68,47 @@ module shire_channel_tb
   input  logic [shire_esr_pkg::NumNeigh-1:0][neigh_pkg::ShireCoopIdSize-1:0] coop_done_id_i,
   input  logic [shire_esr_pkg::NumNeigh-1:0][shire_esr_pkg::NumNeigh-2:0] coop_done_valid_i,
 
+  input  logic [shire_esr_pkg::NumNeigh-1:0] neigh_sc_rsp_ready_stim_i,
+  input  logic [shirecache_pkg::L3MasterPorts-1:0] to_l3_axi_ar_ready_stim_i,
+  input  logic [shirecache_pkg::L3MasterPorts-1:0] to_l3_axi_aw_ready_stim_i,
+  input  logic [shirecache_pkg::L3MasterPorts-1:0] to_l3_axi_w_ready_stim_i,
+  input  logic [shirecache_pkg::L3MasterPorts-1:0] to_l3_axi_b_valid_stim_i,
+  input  logic [shirecache_pkg::L3MasterPorts-1:0] to_l3_axi_r_valid_stim_i,
+  input  logic [shirecache_pkg::SysPorts-1:0] to_sys_axi_ar_ready_stim_i,
+  input  logic [shirecache_pkg::SysPorts-1:0] to_sys_axi_aw_ready_stim_i,
+  input  logic [shirecache_pkg::SysPorts-1:0] to_sys_axi_w_ready_stim_i,
+  input  logic [shirecache_pkg::SysPorts-1:0] to_sys_axi_b_valid_stim_i,
+  input  logic [shirecache_pkg::SysPorts-1:0] to_sys_axi_r_valid_stim_i,
+  input  logic [shirecache_pkg::L3SlavePorts-1:0] l3_axi_ar_valid_stim_i,
+  input  logic [shirecache_pkg::L3SlavePorts-1:0] l3_axi_aw_valid_stim_i,
+  input  logic [shirecache_pkg::L3SlavePorts-1:0] l3_axi_w_valid_stim_i,
+  input  logic [shirecache_pkg::L3SlavePorts-1:0] l3_axi_b_ready_stim_i,
+  input  logic [shirecache_pkg::L3SlavePorts-1:0] l3_axi_r_ready_stim_i,
+  input  logic uc_to_l3_axi_ar_ready_stim_i,
+  input  logic uc_to_l3_axi_aw_ready_stim_i,
+  input  logic uc_to_l3_axi_w_ready_stim_i,
+  input  logic uc_to_l3_axi_b_valid_stim_i,
+  input  logic uc_to_l3_axi_r_valid_stim_i,
+  input  logic uc_to_sys_axi_ar_ready_stim_i,
+  input  logic uc_to_sys_axi_aw_ready_stim_i,
+  input  logic uc_to_sys_axi_w_ready_stim_i,
+  input  logic uc_to_sys_axi_b_valid_stim_i,
+  input  logic uc_to_sys_axi_r_valid_stim_i,
+  input  logic sys_axi_ar_valid_stim_i,
+  input  logic sys_axi_aw_valid_stim_i,
+  input  logic sys_axi_w_valid_stim_i,
+  input  logic sys_axi_b_ready_stim_i,
+  input  logic sys_axi_r_ready_stim_i,
+  input  logic [1:0] sys_axi_aw_vcvalid_stim_i,
+  input  logic [1:0] sys_axi_w_vcvalid_stim_i,
+  input  logic sbm_write_credit_return_stim_i,
+  input  logic sbm_sys_axi_ar_ready_stim_i,
+  input  logic sbm_sys_axi_aw_ready_stim_i,
+  input  logic sbm_sys_axi_w_ready_stim_i,
+  input  logic sbm_sys_axi_b_valid_stim_i,
+  input  logic sbm_sys_axi_r_valid_stim_i,
+  input  logic [31:0] axi_stim_i,
+
   output logic [shire_esr_pkg::NumNeigh-1:0] rst_c_shire_no_o,
   output logic [shire_esr_pkg::NumNeigh-1:0] rst_w_shire_no_o,
   output logic [shire_esr_pkg::NumNeigh-1:0] rst_d_shire_no_o,
@@ -119,6 +160,9 @@ module shire_channel_tb
   localparam int unsigned NumRbox = shirecache_pkg::RboxPerShire;
   localparam int unsigned NumPorts = NumNeigh + NumRbox;
   localparam int unsigned NumBanks = shirecache_pkg::Banks;
+  localparam int unsigned NumL3MasterPorts = shirecache_pkg::L3MasterPorts;
+  localparam int unsigned NumL3SlavePorts = shirecache_pkg::L3SlavePorts;
+  localparam int unsigned NumSysPorts = shirecache_pkg::SysPorts;
   localparam int unsigned NumUc = 1;
   localparam int unsigned ApbSlaves = NumBanks + NumRbox + 2;
   localparam logic [2:0] ApbSlavesSelLimit = ApbSlaves[2:0];
@@ -381,62 +425,144 @@ module shire_channel_tb
     neigh_sc_req_info_i[0].address = neigh0_req_addr_i;
     neigh_sc_req_info_i[0].size = etlink_pkg::size_e'(neigh0_req_size_i);
     neigh_sc_req_info_i[0].qwen = neigh0_req_qwen_i;
-    neigh_sc_rsp_ready_i = '1;
+    neigh_sc_rsp_ready_i = neigh_sc_rsp_ready_stim_i;
 
-    to_l3_axi_ar_ready_i = '1;
-    to_l3_axi_aw_ready_i = '1;
-    to_l3_axi_w_ready_i = '1;
+    to_l3_axi_ar_ready_i = to_l3_axi_ar_ready_stim_i;
+    to_l3_axi_aw_ready_i = to_l3_axi_aw_ready_stim_i;
+    to_l3_axi_w_ready_i = to_l3_axi_w_ready_stim_i;
     to_l3_axi_b_i = '{default: '0};
-    to_l3_axi_b_valid_i = '0;
+    to_l3_axi_b_valid_i = to_l3_axi_b_valid_stim_i;
     to_l3_axi_r_i = '{default: '0};
-    to_l3_axi_r_valid_i = '0;
-    to_sys_axi_ar_ready_i = '1;
-    to_sys_axi_aw_ready_i = '1;
-    to_sys_axi_w_ready_i = '1;
+    to_l3_axi_r_valid_i = to_l3_axi_r_valid_stim_i;
+    for (int unsigned axi_idx = 0; axi_idx < NumL3MasterPorts; axi_idx++) begin
+      to_l3_axi_b_i[axi_idx].id = axi_stim_i[axi_pkg::ScMasterIdSize-1:0];
+      to_l3_axi_b_i[axi_idx].resp = axi_pkg::resp_e'(axi_stim_i[1:0]);
+      to_l3_axi_r_i[axi_idx].id = axi_stim_i[axi_pkg::ScMasterIdSize-1:0];
+      to_l3_axi_r_i[axi_idx].resp = axi_pkg::resp_e'(axi_stim_i[3:2]);
+      to_l3_axi_r_i[axi_idx].last = axi_stim_i[4];
+      to_l3_axi_r_i[axi_idx].data = {16{axi_stim_i}};
+    end
+    to_sys_axi_ar_ready_i = to_sys_axi_ar_ready_stim_i;
+    to_sys_axi_aw_ready_i = to_sys_axi_aw_ready_stim_i;
+    to_sys_axi_w_ready_i = to_sys_axi_w_ready_stim_i;
     to_sys_axi_b_i = '{default: '0};
-    to_sys_axi_b_valid_i = '0;
+    to_sys_axi_b_valid_i = to_sys_axi_b_valid_stim_i;
     to_sys_axi_r_i = '{default: '0};
-    to_sys_axi_r_valid_i = '0;
+    to_sys_axi_r_valid_i = to_sys_axi_r_valid_stim_i;
+    for (int unsigned sys_m_idx = 0; sys_m_idx < NumSysPorts; sys_m_idx++) begin
+      to_sys_axi_b_i[sys_m_idx].id = axi_stim_i[axi_pkg::ScMasterIdSize-1:0];
+      to_sys_axi_b_i[sys_m_idx].resp = axi_pkg::resp_e'(axi_stim_i[5:4]);
+      to_sys_axi_r_i[sys_m_idx].id = axi_stim_i[axi_pkg::ScMasterIdSize-1:0];
+      to_sys_axi_r_i[sys_m_idx].resp = axi_pkg::resp_e'(axi_stim_i[7:6]);
+      to_sys_axi_r_i[sys_m_idx].last = axi_stim_i[8];
+      to_sys_axi_r_i[sys_m_idx].data = {16{axi_stim_i}};
+    end
     l3_axi_ar_i = '{default: '0};
-    l3_axi_ar_valid_i = '0;
+    l3_axi_ar_valid_i = l3_axi_ar_valid_stim_i;
     l3_axi_aw_i = '{default: '0};
-    l3_axi_aw_valid_i = '0;
+    l3_axi_aw_valid_i = l3_axi_aw_valid_stim_i;
     l3_axi_w_i = '{default: '0};
-    l3_axi_w_valid_i = '0;
-    l3_axi_b_ready_i = '1;
-    l3_axi_r_ready_i = '1;
-    uc_to_l3_axi_ar_ready_i = 1'b1;
-    uc_to_l3_axi_aw_ready_i = 1'b1;
-    uc_to_l3_axi_w_ready_i = 1'b1;
+    l3_axi_w_valid_i = l3_axi_w_valid_stim_i;
+    l3_axi_b_ready_i = l3_axi_b_ready_stim_i;
+    l3_axi_r_ready_i = l3_axi_r_ready_stim_i;
+    for (int unsigned l3_idx = 0; l3_idx < NumL3SlavePorts; l3_idx++) begin
+      l3_axi_ar_i[l3_idx].id = axi_stim_i[axi_pkg::ScSlaveIdSize-1:0];
+      l3_axi_ar_i[l3_idx].addr = {8'h00, axi_stim_i};
+      l3_axi_ar_i[l3_idx].len = axi_stim_i[15:8];
+      l3_axi_ar_i[l3_idx].size = axi_stim_i[10:8];
+      l3_axi_ar_i[l3_idx].burst = 2'b01;
+      l3_axi_ar_i[l3_idx].lock = axi_stim_i[11];
+      l3_axi_ar_i[l3_idx].cache = axi_stim_i[15:12];
+      l3_axi_ar_i[l3_idx].prot = axi_stim_i[18:16];
+      l3_axi_ar_i[l3_idx].qos = axi_stim_i[22:19];
+      l3_axi_ar_i[l3_idx].user = axi_stim_i[23];
+      l3_axi_aw_i[l3_idx].id = axi_stim_i[axi_pkg::ScSlaveIdSize-1:0];
+      l3_axi_aw_i[l3_idx].addr = {8'h00, axi_stim_i};
+      l3_axi_aw_i[l3_idx].len = axi_stim_i[31:24];
+      l3_axi_aw_i[l3_idx].size = axi_stim_i[26:24];
+      l3_axi_aw_i[l3_idx].burst = 2'b01;
+      l3_axi_aw_i[l3_idx].lock = axi_stim_i[27];
+      l3_axi_aw_i[l3_idx].cache = axi_stim_i[7:4];
+      l3_axi_aw_i[l3_idx].prot = axi_stim_i[10:8];
+      l3_axi_aw_i[l3_idx].qos = axi_stim_i[14:11];
+      l3_axi_aw_i[l3_idx].user = axi_stim_i[19:15];
+      l3_axi_w_i[l3_idx].data = {16{axi_stim_i}};
+      l3_axi_w_i[l3_idx].strb = {64{axi_stim_i[0]}};
+      l3_axi_w_i[l3_idx].last = axi_stim_i[1];
+    end
+    uc_to_l3_axi_ar_ready_i = uc_to_l3_axi_ar_ready_stim_i;
+    uc_to_l3_axi_aw_ready_i = uc_to_l3_axi_aw_ready_stim_i;
+    uc_to_l3_axi_w_ready_i = uc_to_l3_axi_w_ready_stim_i;
     uc_to_l3_axi_b_i = '0;
-    uc_to_l3_axi_b_valid_i = 1'b0;
+    uc_to_l3_axi_b_i.id = axi_stim_i[axi_pkg::ScMasterIdSize-1:0];
+    uc_to_l3_axi_b_i.resp = axi_pkg::resp_e'(axi_stim_i[9:8]);
+    uc_to_l3_axi_b_valid_i = uc_to_l3_axi_b_valid_stim_i;
     uc_to_l3_axi_r_i = '0;
-    uc_to_l3_axi_r_valid_i = 1'b0;
-    uc_to_sys_axi_ar_ready_i = 1'b1;
-    uc_to_sys_axi_aw_ready_i = 1'b1;
-    uc_to_sys_axi_w_ready_i = 1'b1;
+    uc_to_l3_axi_r_i.id = axi_stim_i[axi_pkg::ScMasterIdSize-1:0];
+    uc_to_l3_axi_r_i.resp = axi_pkg::resp_e'(axi_stim_i[11:10]);
+    uc_to_l3_axi_r_i.last = axi_stim_i[12];
+    uc_to_l3_axi_r_i.data = {16{axi_stim_i}};
+    uc_to_l3_axi_r_valid_i = uc_to_l3_axi_r_valid_stim_i;
+    uc_to_sys_axi_ar_ready_i = uc_to_sys_axi_ar_ready_stim_i;
+    uc_to_sys_axi_aw_ready_i = uc_to_sys_axi_aw_ready_stim_i;
+    uc_to_sys_axi_w_ready_i = uc_to_sys_axi_w_ready_stim_i;
     uc_to_sys_axi_b_i = '0;
-    uc_to_sys_axi_b_valid_i = 1'b0;
+    uc_to_sys_axi_b_i.id = axi_stim_i[axi_pkg::ScMasterIdSize-1:0];
+    uc_to_sys_axi_b_i.resp = axi_pkg::resp_e'(axi_stim_i[13:12]);
+    uc_to_sys_axi_b_valid_i = uc_to_sys_axi_b_valid_stim_i;
     uc_to_sys_axi_r_i = '0;
-    uc_to_sys_axi_r_valid_i = 1'b0;
+    uc_to_sys_axi_r_i.id = axi_stim_i[axi_pkg::ScMasterIdSize-1:0];
+    uc_to_sys_axi_r_i.resp = axi_pkg::resp_e'(axi_stim_i[15:14]);
+    uc_to_sys_axi_r_i.last = axi_stim_i[16];
+    uc_to_sys_axi_r_i.data = {16{axi_stim_i}};
+    uc_to_sys_axi_r_valid_i = uc_to_sys_axi_r_valid_stim_i;
     sys_axi_ar_i = '0;
-    sys_axi_ar_valid_i = 1'b0;
+    sys_axi_ar_i.id = axi_stim_i[axi_pkg::ScSlaveIdSize-1:0];
+    sys_axi_ar_i.addr = {8'h00, axi_stim_i};
+    sys_axi_ar_i.len = axi_stim_i[15:8];
+    sys_axi_ar_i.size = axi_stim_i[18:16];
+    sys_axi_ar_i.burst = 2'b01;
+    sys_axi_ar_i.lock = axi_stim_i[19];
+    sys_axi_ar_i.cache = axi_stim_i[23:20];
+    sys_axi_ar_i.prot = axi_stim_i[26:24];
+    sys_axi_ar_i.qos = axi_stim_i[30:27];
+    sys_axi_ar_i.user = axi_stim_i[31];
+    sys_axi_ar_valid_i = sys_axi_ar_valid_stim_i;
     sys_axi_aw_i = '0;
-    sys_axi_aw_valid_i = 1'b0;
+    sys_axi_aw_i.id = axi_stim_i[axi_pkg::ScSlaveIdSize-1:0];
+    sys_axi_aw_i.addr = {8'h00, axi_stim_i};
+    sys_axi_aw_i.len = axi_stim_i[15:8];
+    sys_axi_aw_i.size = axi_stim_i[18:16];
+    sys_axi_aw_i.burst = 2'b01;
+    sys_axi_aw_i.lock = axi_stim_i[19];
+    sys_axi_aw_i.cache = axi_stim_i[23:20];
+    sys_axi_aw_i.prot = axi_stim_i[26:24];
+    sys_axi_aw_i.qos = axi_stim_i[30:27];
+    sys_axi_aw_i.user = axi_stim_i[4:0];
+    sys_axi_aw_valid_i = sys_axi_aw_valid_stim_i;
     sys_axi_w_i = '0;
-    sys_axi_w_valid_i = 1'b0;
-    sys_axi_b_ready_i = 1'b1;
-    sys_axi_r_ready_i = 1'b1;
-    sys_axi_aw_vcvalid_i = '0;
-    sys_axi_w_vcvalid_i = '0;
-    sbm_write_credit_return_i = 1'b1;
-    sbm_sys_axi_ar_ready_i = 1'b1;
-    sbm_sys_axi_aw_ready_i = 1'b1;
-    sbm_sys_axi_w_ready_i = 1'b1;
+    sys_axi_w_i.data = {8{axi_stim_i}};
+    sys_axi_w_i.strb = {32{axi_stim_i[0]}};
+    sys_axi_w_i.last = axi_stim_i[1];
+    sys_axi_w_valid_i = sys_axi_w_valid_stim_i;
+    sys_axi_b_ready_i = sys_axi_b_ready_stim_i;
+    sys_axi_r_ready_i = sys_axi_r_ready_stim_i;
+    sys_axi_aw_vcvalid_i = sys_axi_aw_vcvalid_stim_i;
+    sys_axi_w_vcvalid_i = sys_axi_w_vcvalid_stim_i;
+    sbm_write_credit_return_i = sbm_write_credit_return_stim_i;
+    sbm_sys_axi_ar_ready_i = sbm_sys_axi_ar_ready_stim_i;
+    sbm_sys_axi_aw_ready_i = sbm_sys_axi_aw_ready_stim_i;
+    sbm_sys_axi_w_ready_i = sbm_sys_axi_w_ready_stim_i;
     sbm_sys_axi_b_i = '0;
-    sbm_sys_axi_b_valid_i = 1'b0;
+    sbm_sys_axi_b_i.id = axi_stim_i[axi_pkg::ScSlaveIdSize-1:0];
+    sbm_sys_axi_b_i.resp = axi_pkg::resp_e'(axi_stim_i[17:16]);
+    sbm_sys_axi_b_valid_i = sbm_sys_axi_b_valid_stim_i;
     sbm_sys_axi_r_i = '0;
-    sbm_sys_axi_r_valid_i = 1'b0;
+    sbm_sys_axi_r_i.id = axi_stim_i[axi_pkg::ScSlaveIdSize-1:0];
+    sbm_sys_axi_r_i.resp = axi_pkg::resp_e'(axi_stim_i[19:18]);
+    sbm_sys_axi_r_i.last = axi_stim_i[20];
+    sbm_sys_axi_r_i.data = {8{axi_stim_i}};
+    sbm_sys_axi_r_valid_i = sbm_sys_axi_r_valid_stim_i;
     status_monitor_bank_sel_i = '0;
 
     coop_tload_slv_rdy_out_data_i = '{default: '0};

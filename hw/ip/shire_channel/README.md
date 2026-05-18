@@ -119,13 +119,20 @@ interrupt aggregation; cooperative TLoad fanout; ICache/cache readiness; and DFT
 struct/MBIST/run-control propagation.
 
 `dv/rtlcosim/shire_channel` instantiates the original CORE-ET `shire_channel`
-and the new native container together with cache/ICache/RBOX/uncached children
-enabled. The cosim exposes and compares every retained original/native output
-pair cycle-by-cycle, including resets, ESR/APB, run-control/status, cache and
+and the new native container together with real cache/ICache/uncached children
+and the native integrated RBOX path. The cosim exposes every retained input seam
+and compares every retained original/native output pair cycle-by-cycle during
+stable compared traffic, including resets, ESR/APB, run-control/status, cache and
 ICache request/response outputs, uncached FLB/FCC/SBM paths, power-control and
 RAM/clock-control fields, L2 HPF/trace outputs, and L3/SYS AXI channels. It also
 checks native-only wrapper-level leaves such as the normal NoC interrupt combiner
-and cooperative TLoad fanout when no original `shire_channel` output exists.
+and cooperative TLoad fanout when no original `shire_channel` output exists. The
+available original shire-channel build leaves the `GFX_ENABLED` RBOX hierarchy
+disabled; enabling it changes unrelated original minion-feature reset behavior.
+Most retained AXI/DFT response and request pins are therefore driven under full
+comparison, while the RBOX APB lane plus standalone SYS/SBM write-credit and
+response-valid bookkeeping are driven in explicit non-compared compatibility
+micro-phases documented in the cosim driver.
 
 ## Intentional differences from original CORE-ET
 

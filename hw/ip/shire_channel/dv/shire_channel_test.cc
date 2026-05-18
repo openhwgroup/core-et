@@ -62,6 +62,46 @@ void clear_inputs(Vshire_channel_tb* dut) {
     dut->coop_slv_valid_i = 0;
     dut->coop_done_id_i = 0;
     dut->coop_done_valid_i = 0;
+    dut->neigh_sc_rsp_ready_stim_i = 0xf;
+    dut->to_l3_axi_ar_ready_stim_i = 0xf;
+    dut->to_l3_axi_aw_ready_stim_i = 0xf;
+    dut->to_l3_axi_w_ready_stim_i = 0xf;
+    dut->to_l3_axi_b_valid_stim_i = 0;
+    dut->to_l3_axi_r_valid_stim_i = 0;
+    dut->to_sys_axi_ar_ready_stim_i = 1;
+    dut->to_sys_axi_aw_ready_stim_i = 1;
+    dut->to_sys_axi_w_ready_stim_i = 1;
+    dut->to_sys_axi_b_valid_stim_i = 0;
+    dut->to_sys_axi_r_valid_stim_i = 0;
+    dut->l3_axi_ar_valid_stim_i = 0;
+    dut->l3_axi_aw_valid_stim_i = 0;
+    dut->l3_axi_w_valid_stim_i = 0;
+    dut->l3_axi_b_ready_stim_i = 0xf;
+    dut->l3_axi_r_ready_stim_i = 0xf;
+    dut->uc_to_l3_axi_ar_ready_stim_i = 1;
+    dut->uc_to_l3_axi_aw_ready_stim_i = 1;
+    dut->uc_to_l3_axi_w_ready_stim_i = 1;
+    dut->uc_to_l3_axi_b_valid_stim_i = 0;
+    dut->uc_to_l3_axi_r_valid_stim_i = 0;
+    dut->uc_to_sys_axi_ar_ready_stim_i = 1;
+    dut->uc_to_sys_axi_aw_ready_stim_i = 1;
+    dut->uc_to_sys_axi_w_ready_stim_i = 1;
+    dut->uc_to_sys_axi_b_valid_stim_i = 0;
+    dut->uc_to_sys_axi_r_valid_stim_i = 0;
+    dut->sys_axi_ar_valid_stim_i = 0;
+    dut->sys_axi_aw_valid_stim_i = 0;
+    dut->sys_axi_w_valid_stim_i = 0;
+    dut->sys_axi_b_ready_stim_i = 1;
+    dut->sys_axi_r_ready_stim_i = 1;
+    dut->sys_axi_aw_vcvalid_stim_i = 0;
+    dut->sys_axi_w_vcvalid_stim_i = 0;
+    dut->sbm_write_credit_return_stim_i = 1;
+    dut->sbm_sys_axi_ar_ready_stim_i = 1;
+    dut->sbm_sys_axi_aw_ready_stim_i = 1;
+    dut->sbm_sys_axi_w_ready_stim_i = 1;
+    dut->sbm_sys_axi_b_valid_stim_i = 0;
+    dut->sbm_sys_axi_r_valid_stim_i = 0;
+    dut->axi_stim_i = 0;
 }
 
 void apb_idle(Vshire_channel_tb* dut) {
