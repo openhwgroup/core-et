@@ -111,11 +111,12 @@ cooperative TLoad fanout.
 ## Verification
 
 `hw/ip/shire_channel/dv` contains `shire_channel_tb` and a directed C++ test with
-56 explicit `check()` assertions. The test covers reset-domain sequencing,
+59 explicit `check()` assertions. The test covers reset-domain sequencing,
 including DFT scan reset and the raw public RBOX reset behavior; APB/ESR writes,
 readback, and cache-bank/RBOX/ICache APB lane fanout; shire ID/TBOX IDs/enables;
 IPI, mtime, power control, RAM config, and clock-control fields; normal NoC/error
-interrupt aggregation; cooperative TLoad fanout; ICache/cache readiness; and DFT
+interrupt aggregation; retained status/debug/power/PLL/DLL wrapper inputs;
+cooperative TLoad valid and done-ID fanout; ICache/cache readiness; and DFT
 struct/MBIST/run-control propagation.
 
 `dv/rtlcosim/shire_channel` instantiates the original CORE-ET `shire_channel`
@@ -124,10 +125,13 @@ and the native integrated RBOX path. The cosim exposes every retained input seam
 and compares every retained original/native output pair cycle-by-cycle during
 stable compared traffic, including resets, ESR/APB, run-control/status, cache and
 ICache request/response outputs, uncached FLB/FCC/SBM paths, power-control and
-RAM/clock-control fields, L2 HPF/trace outputs, and L3/SYS AXI channels. It also
-checks native-only wrapper-level leaves such as the normal NoC interrupt combiner
-and cooperative TLoad fanout when no original `shire_channel` output exists. The
-available original shire-channel build leaves the `GFX_ENABLED` RBOX hierarchy
+RAM/clock-control fields, PLL/DLL/status-control stimulus, L2 HPF/trace outputs,
+and L3/SYS AXI channels. It also checks native-only wrapper-level leaves such as the
+normal NoC interrupt combiner and cooperative TLoad valid/done-ID fanout when no
+original `shire_channel` output exists. The C++ driver records explicit
+zero/nonzero coverage for the retained status/run-control/power/clock-control
+and cooperative done-ID wrapper stimulus ports. The available original
+shire-channel build leaves the `GFX_ENABLED` RBOX hierarchy
 disabled; enabling it changes unrelated original minion-feature reset behavior.
 Most retained AXI/DFT response and request pins are therefore driven under full
 comparison, while the RBOX APB lane plus standalone SYS/SBM write-credit and

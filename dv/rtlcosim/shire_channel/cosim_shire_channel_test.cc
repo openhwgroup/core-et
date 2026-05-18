@@ -3,6 +3,7 @@
 
 #include "Vcosim_shire_channel_tb.h"
 #include "cosim_ctrl.h"
+#include <array>
 #include <cstdint>
 #include <string>
 
@@ -24,6 +25,57 @@ constexpr uint64_t kConfigEnableAll =
     (uint64_t(3) << 24) | (uint64_t(2) << 22) | (uint64_t(1) << 20) |
     (uint64_t(1) << 17) | (uint64_t(0xf) << 13) | (uint64_t(0xf) << 9) |
     (uint64_t(1) << 8) | uint64_t(0x2a);
+
+enum retained_stim_e {
+    kStimDebugTreeL2,
+    kStimIcachePrefetchDone,
+    kStimAndOrTreeL0,
+    kStimBpAck,
+    kStimPwrGlbNsleepout,
+    kStimPwrNeighNsleepout,
+    kStimPllBusy,
+    kStimPllRdata,
+    kStimPllRrdy,
+    kStimPllLock,
+    kStimDllDlyEstSts,
+    kStimDllBusy,
+    kStimDllRdata,
+    kStimDllRrdy,
+    kStimDllLock,
+    kStimStatusMonitorBankSel,
+    kStimCoopDoneId,
+    kStimCount
+};
+
+const std::array<const char*, kStimCount> kRetainedStimNames = {{
+    "debug_and_or_tree_l2_i",
+    "esr_icache_prefetch_done_i",
+    "esr_and_or_tree_l0_i",
+    "bpam_rc_tbox_ack_i",
+    "esr_pwr_ctrl_glb_nsleepout_i",
+    "esr_pwr_ctrl_neigh_nsleepout_i",
+    "esr_pll_busy_i",
+    "esr_pll_rdata_i",
+    "esr_pll_rrdy_i",
+    "esr_pll_lock_i",
+    "esr_dll_dly_est_sts_i",
+    "esr_dll_busy_i",
+    "esr_dll_rdata_i",
+    "esr_dll_rrdy_i",
+    "esr_dll_lock_i",
+    "status_monitor_bank_sel_i",
+    "coop_done_id_i",
+}};
+
+struct RetainedStimCoverage {
+    std::array<bool, kStimCount> saw_zero{};
+    std::array<bool, kStimCount> saw_nonzero{};
+
+    void sample(retained_stim_e id, uint64_t value) {
+        if (value == 0) saw_zero[id] = true;
+        else saw_nonzero[id] = true;
+    }
+};
 
 uint32_t xs(uint32_t& s) {
     s ^= s << 13;
@@ -71,6 +123,22 @@ void clear_inputs(Vcosim_shire_channel_tb* d) {
     d->coop_slv_valid_i = 0;
     d->coop_done_id_i = 0;
     d->coop_done_valid_i = 0;
+    d->esr_icache_prefetch_done_stim_i = 0;
+    d->esr_and_or_tree_l0_flat_stim_i = 0;
+    d->debug_and_or_tree_l2_stim_i = 0;
+    d->bpam_rc_tbox_ack_flat_stim_i = 0;
+    d->esr_pwr_ctrl_glb_nsleepout_stim_i = 0;
+    d->esr_pwr_ctrl_neigh_nsleepout_stim_i = 0;
+    d->esr_pll_busy_stim_i = 0;
+    d->esr_pll_rdata_stim_i = 0;
+    d->esr_pll_rrdy_stim_i = 0;
+    d->esr_pll_lock_stim_i = 0;
+    d->esr_dll_dly_est_sts_flat_stim_i = 0;
+    d->esr_dll_busy_stim_i = 0;
+    d->esr_dll_rdata_stim_i = 0;
+    d->esr_dll_rrdy_stim_i = 0;
+    d->esr_dll_lock_stim_i = 0;
+    d->status_monitor_bank_sel_i = 0;
     d->neigh_sc_rsp_ready_stim_i = 0xf;
     d->to_l3_axi_ar_ready_stim_i = 0xf;
     d->to_l3_axi_aw_ready_stim_i = 0xf;
@@ -111,6 +179,35 @@ void clear_inputs(Vcosim_shire_channel_tb* d) {
     d->sbm_sys_axi_b_valid_stim_i = 0;
     d->sbm_sys_axi_r_valid_stim_i = 0;
     d->axi_stim_i = 0;
+}
+
+void sample_retained_stim(Vcosim_shire_channel_tb* d, RetainedStimCoverage& cov) {
+    cov.sample(kStimDebugTreeL2, d->debug_and_or_tree_l2_stim_i);
+    cov.sample(kStimIcachePrefetchDone, d->esr_icache_prefetch_done_stim_i);
+    cov.sample(kStimAndOrTreeL0, d->esr_and_or_tree_l0_flat_stim_i);
+    cov.sample(kStimBpAck, d->bpam_rc_tbox_ack_flat_stim_i);
+    cov.sample(kStimPwrGlbNsleepout, d->esr_pwr_ctrl_glb_nsleepout_stim_i);
+    cov.sample(kStimPwrNeighNsleepout, d->esr_pwr_ctrl_neigh_nsleepout_stim_i);
+    cov.sample(kStimPllBusy, d->esr_pll_busy_stim_i);
+    cov.sample(kStimPllRdata, d->esr_pll_rdata_stim_i);
+    cov.sample(kStimPllRrdy, d->esr_pll_rrdy_stim_i);
+    cov.sample(kStimPllLock, d->esr_pll_lock_stim_i);
+    cov.sample(kStimDllDlyEstSts, d->esr_dll_dly_est_sts_flat_stim_i);
+    cov.sample(kStimDllBusy, d->esr_dll_busy_stim_i);
+    cov.sample(kStimDllRdata, d->esr_dll_rdata_stim_i);
+    cov.sample(kStimDllRrdy, d->esr_dll_rrdy_stim_i);
+    cov.sample(kStimDllLock, d->esr_dll_lock_stim_i);
+    cov.sample(kStimStatusMonitorBankSel, d->status_monitor_bank_sel_i);
+    cov.sample(kStimCoopDoneId, d->coop_done_id_i);
+}
+
+void check_retained_stim(CosimCtrl<Vcosim_shire_channel_tb>& sim,
+                         const RetainedStimCoverage& cov) {
+    for (int i = 0; i < kStimCount; ++i) {
+        sim.check(cov.saw_zero[i] && cov.saw_nonzero[i],
+                  std::string("retained input ") + kRetainedStimNames[i] +
+                      " drove both zero and nonzero");
+    }
 }
 
 void compare_retained(CosimCtrl<Vcosim_shire_channel_tb>& sim) {
@@ -345,7 +442,9 @@ int main(int argc, char** argv) {
     CosimCtrl<Vcosim_shire_channel_tb> sim(argc, argv);
     sim.max_time = 400000;
     auto* d = sim.dut.get();
+    RetainedStimCoverage retained_stim_cov;
     clear_inputs(d);
+    sample_retained_stim(d, retained_stim_cov);
     sim.reset(8);
     d->dft_scanmode_i = 1;
     d->dft_scan_reset_ni = 0;
@@ -472,17 +571,48 @@ int main(int argc, char** argv) {
     for (int i = 0; i < 4; ++i) tick_cmp(sim);
     d->neigh_sc_err_logged_i = 0;
 
+    // Drive retained status/run-control/power/clock-control seams under full
+    // output comparison, and record explicit zero/nonzero coverage so wrapper
+    // stimulus ports cannot silently regress to tied constants.
+    d->esr_icache_prefetch_done_stim_i = 0xa;
+    d->esr_and_or_tree_l0_flat_stim_i = 0x155555555ull;
+    d->debug_and_or_tree_l2_stim_i = 0x155;
+    d->bpam_rc_tbox_ack_flat_stim_i = 0xa5;
+    d->esr_pwr_ctrl_glb_nsleepout_stim_i = 0x5;
+    d->esr_pwr_ctrl_neigh_nsleepout_stim_i = 0x1357;
+    d->esr_pll_busy_stim_i = 1;
+    d->esr_pll_rdata_stim_i = 0x5aa5;
+    d->esr_pll_rrdy_stim_i = 1;
+    d->esr_pll_lock_stim_i = 1;
+    d->esr_dll_dly_est_sts_flat_stim_i = 0x155555555ull;
+    d->esr_dll_busy_stim_i = 1;
+    d->esr_dll_rdata_stim_i = 0xa55a;
+    d->esr_dll_rrdy_stim_i = 1;
+    d->esr_dll_lock_stim_i = 1;
+    d->status_monitor_bank_sel_i = 2;
+    sample_retained_stim(d, retained_stim_cov);
+    tick_cmp(sim);
+    clear_inputs(d);
+    sample_retained_stim(d, retained_stim_cov);
+
     // Exercise native-only retained seams that were moved from the original wrapper.
     d->noc_err_int_srcs_i = 0x15;
     d->coop_slv_valid_i = 0x1;
+    d->coop_done_id_i = 0x3210;
     d->coop_done_valid_i = 0x12;
+    sample_retained_stim(d, retained_stim_cov);
     tick_cmp(sim);
     sim.check((d->new_noc_all_err_int_srcs_o & 0x15) == 0x15, "native NOC interrupt combiner active");
     sim.check(d->new_ioshire_noc_err_int_o == 1, "native NOC interrupt output active");
     sim.check(d->new_coop_slv_valid_o != 0, "native cooperative TLoad valid fanout active");
+    sim.check(d->new_coop_done_valid_o != 0, "native cooperative TLoad done valid fanout active");
+    sim.check(d->new_coop_done_id_o != 0, "native cooperative TLoad done ID fanout active");
     d->noc_err_int_srcs_i = 0;
     d->coop_slv_valid_i = 0;
+    d->coop_done_id_i = 0;
     d->coop_done_valid_i = 0;
+    sample_retained_stim(d, retained_stim_cov);
+    check_retained_stim(sim, retained_stim_cov);
 
     // Compared stress phase for the exposed retained AXI/SYS/SBM/cache-response
     // inputs.  The long phase exercises backpressure inputs without issuing

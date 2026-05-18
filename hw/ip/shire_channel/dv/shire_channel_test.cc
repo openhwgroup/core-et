@@ -62,6 +62,22 @@ void clear_inputs(Vshire_channel_tb* dut) {
     dut->coop_slv_valid_i = 0;
     dut->coop_done_id_i = 0;
     dut->coop_done_valid_i = 0;
+    dut->esr_icache_prefetch_done_stim_i = 0;
+    dut->esr_and_or_tree_l0_flat_stim_i = 0;
+    dut->debug_and_or_tree_l2_stim_i = 0;
+    dut->bpam_rc_tbox_ack_flat_stim_i = 0;
+    dut->esr_pwr_ctrl_glb_nsleepout_stim_i = 0;
+    dut->esr_pwr_ctrl_neigh_nsleepout_stim_i = 0;
+    dut->esr_pll_busy_stim_i = 0;
+    dut->esr_pll_rdata_stim_i = 0;
+    dut->esr_pll_rrdy_stim_i = 0;
+    dut->esr_pll_lock_stim_i = 1;
+    dut->esr_dll_dly_est_sts_flat_stim_i = 0;
+    dut->esr_dll_busy_stim_i = 0;
+    dut->esr_dll_rdata_stim_i = 0;
+    dut->esr_dll_rrdy_stim_i = 0;
+    dut->esr_dll_lock_stim_i = 1;
+    dut->status_monitor_bank_sel_i = 0;
     dut->neigh_sc_rsp_ready_stim_i = 0xf;
     dut->to_l3_axi_ar_ready_stim_i = 0xf;
     dut->to_l3_axi_aw_ready_stim_i = 0xf;
@@ -208,6 +224,27 @@ int main(int argc, char** argv) {
     sim.check(dut->ioshire_noc_err_int_o == 1, "NOC error interrupt asserted");
     dut->noc_err_int_srcs_i = 0;
 
+    dut->esr_icache_prefetch_done_stim_i = 0xa;
+    dut->esr_and_or_tree_l0_flat_stim_i = 0x155555555ull;
+    dut->debug_and_or_tree_l2_stim_i = 0x155;
+    dut->bpam_rc_tbox_ack_flat_stim_i = 0xa5;
+    dut->esr_pwr_ctrl_glb_nsleepout_stim_i = 0x5;
+    dut->esr_pwr_ctrl_neigh_nsleepout_stim_i = 0x1357;
+    dut->esr_pll_busy_stim_i = 1;
+    dut->esr_pll_rdata_stim_i = 0x5aa5;
+    dut->esr_pll_rrdy_stim_i = 1;
+    dut->esr_pll_lock_stim_i = 0;
+    dut->esr_dll_dly_est_sts_flat_stim_i = 0x155555555ull;
+    dut->esr_dll_busy_stim_i = 1;
+    dut->esr_dll_rdata_stim_i = 0xa55a;
+    dut->esr_dll_rrdy_stim_i = 1;
+    dut->esr_dll_lock_stim_i = 0;
+    dut->status_monitor_bank_sel_i = 2;
+    sim.tick();
+    sim.check(dut->debug_and_or_tree_l2_flat_o != 0,
+              "retained debug/status stimulus reaches and-or daisy-chain output");
+    clear_inputs(dut);
+
     dut->neigh_sc_err_detected_i = 0x1;
     sim.tick();
     sim.tick();
@@ -219,6 +256,14 @@ int main(int argc, char** argv) {
     sim.check((dut->coop_slv_valid_o & 0x7) == 0, "coop bus excludes source neighborhood from its own receive set");
     sim.check(((dut->coop_slv_valid_o >> 3) & 0x1) == 1, "coop bus forwards source 0 to neighborhood 1");
     dut->coop_slv_valid_i = 0;
+
+    dut->coop_done_id_i = 0x3210;
+    dut->coop_done_valid_i = 0x12;
+    sim.tick();
+    sim.check(dut->coop_done_valid_o != 0, "coop done valid fanout forwards valid traffic");
+    sim.check(dut->coop_done_id_o != 0, "coop done ID fanout forwards nonzero IDs");
+    dut->coop_done_id_i = 0;
+    dut->coop_done_valid_i = 0;
 
     dut->icache_req_valid_i = 0x1;
     dut->icache_resp_ready_i = 0xf;

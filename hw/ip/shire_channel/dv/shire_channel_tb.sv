@@ -68,6 +68,28 @@ module shire_channel_tb
   input  logic [shire_esr_pkg::NumNeigh-1:0][neigh_pkg::ShireCoopIdSize-1:0] coop_done_id_i,
   input  logic [shire_esr_pkg::NumNeigh-1:0][shire_esr_pkg::NumNeigh-2:0] coop_done_valid_i,
 
+  input  logic [shire_esr_pkg::IcachePerShire-1:0] esr_icache_prefetch_done_stim_i,
+  input  logic [shire_esr_pkg::NumNeigh*$bits(esr_pkg::esr_and_or_tree_l0_t)-1:0]
+      esr_and_or_tree_l0_flat_stim_i,
+  input  logic [$bits(shire_channel_leaves_pkg::esr_and_or_tree_l2_t)-1:0]
+      debug_and_or_tree_l2_stim_i,
+  input  logic [shire_esr_pkg::NumNeigh*$bits(neigh_hv_logic_pkg::bpam_rc_tbox_ack_t)-1:0]
+      bpam_rc_tbox_ack_flat_stim_i,
+  input  logic [shire_esr_pkg::NumNeigh-1:0] esr_pwr_ctrl_glb_nsleepout_stim_i,
+  input  logic [shire_esr_pkg::NumNeigh*shire_esr_pkg::MinPerNeigh-1:0]
+      esr_pwr_ctrl_neigh_nsleepout_stim_i,
+  input  logic esr_pll_busy_stim_i,
+  input  logic [shire_esr_pkg::ShirePllDataBits-1:0] esr_pll_rdata_stim_i,
+  input  logic esr_pll_rrdy_stim_i,
+  input  logic esr_pll_lock_stim_i,
+  input  logic [shire_esr_pkg::NumNeigh*$bits(esr_pkg::esr_dll_dly_est_sts_t)-1:0]
+      esr_dll_dly_est_sts_flat_stim_i,
+  input  logic esr_dll_busy_stim_i,
+  input  logic [shire_esr_pkg::ShireDllDataBits-1:0] esr_dll_rdata_stim_i,
+  input  logic esr_dll_rrdy_stim_i,
+  input  logic esr_dll_lock_stim_i,
+  input  logic [shirecache_pkg::BankIdSize-1:0] status_monitor_bank_sel_i,
+
   input  logic [shire_esr_pkg::NumNeigh-1:0] neigh_sc_rsp_ready_stim_i,
   input  logic [shirecache_pkg::L3MasterPorts-1:0] to_l3_axi_ar_ready_stim_i,
   input  logic [shirecache_pkg::L3MasterPorts-1:0] to_l3_axi_aw_ready_stim_i,
@@ -151,6 +173,8 @@ module shire_channel_tb
   output logic [$bits(shire_esr_pkg::esr_clk_gate_ctrl_t)-1:0] clk_gate_ctrl_flat_o,
   output logic debug_clk_gate_ctrl_o,
   output logic [shire_esr_pkg::NumNeigh-1:0][shire_esr_pkg::NumNeigh-2:0] coop_slv_valid_o,
+  output logic [shire_esr_pkg::NumNeigh-1:0][shire_esr_pkg::NumNeigh-2:0][neigh_pkg::ShireCoopIdSize-1:0]
+      coop_done_id_o,
   output logic [shire_esr_pkg::NumNeigh-1:0][shire_esr_pkg::NumNeigh-2:0] coop_done_valid_o,
   output logic sbm_enable_read_o,
   output logic sbm_enable_write_o
@@ -165,6 +189,9 @@ module shire_channel_tb
   localparam int unsigned NumSysPorts = shirecache_pkg::SysPorts;
   localparam int unsigned NumUc = 1;
   localparam int unsigned ApbSlaves = NumBanks + NumRbox + 2;
+  localparam int unsigned EsrAndOrTreeL0Bits = $bits(esr_pkg::esr_and_or_tree_l0_t);
+  localparam int unsigned BpamRcTboxAckBits = $bits(neigh_hv_logic_pkg::bpam_rc_tbox_ack_t);
+  localparam int unsigned DllDlyEstStsBits = $bits(esr_pkg::esr_dll_dly_est_sts_t);
   localparam logic [2:0] ApbSlavesSelLimit = ApbSlaves[2:0];
 
   logic rst_c_ni;
@@ -369,7 +396,6 @@ module shire_channel_tb
   logic [NumNeigh-1:0][icache_geom_pkg::IcacheSramDataWidth-1:0] icache_resp_dout_o;
   shirecache_pkg::neigh_l2hpf_req_t [NumBanks-1:0] sc_neigh_l2hpf_req_info_o;
   logic [NumBanks-1:0] sc_neigh_l2hpf_req_valid_o;
-  logic [shirecache_pkg::BankIdSize-1:0] status_monitor_bank_sel_i;
   shirecache_pkg::trace_packet_t sc_trace_data_o;
   logic sc_trace_valid_o;
 
@@ -403,20 +429,25 @@ module shire_channel_tb
     apb_prdata_o = apb_rsp_o[apb_sel_q].prdata;
     apb_pslverr_o = apb_rsp_o[apb_sel_q].pslverr;
 
-    esr_icache_prefetch_done_i = '0;
-    esr_and_or_tree_l0_i = '{default: '0};
-    debug_and_or_tree_l2_i = '0;
-    esr_pwr_ctrl_glb_nsleepout_i = '0;
-    esr_pwr_ctrl_neigh_nsleepout_i = '0;
-    esr_dll_dly_est_sts_i = '{default: '0};
-    esr_pll_busy_i = 1'b0;
-    esr_pll_rdata_i = '0;
-    esr_pll_rrdy_i = 1'b0;
-    esr_pll_lock_i = 1'b1;
-    esr_dll_busy_i = 1'b0;
-    esr_dll_rdata_i = '0;
-    esr_dll_rrdy_i = 1'b0;
-    esr_dll_lock_i = 1'b1;
+    esr_icache_prefetch_done_i = esr_icache_prefetch_done_stim_i;
+    debug_and_or_tree_l2_i = shire_channel_leaves_pkg::esr_and_or_tree_l2_t'(
+        debug_and_or_tree_l2_stim_i);
+    esr_pwr_ctrl_glb_nsleepout_i = esr_pwr_ctrl_glb_nsleepout_stim_i;
+    esr_pwr_ctrl_neigh_nsleepout_i = esr_pwr_ctrl_neigh_nsleepout_stim_i;
+    for (int unsigned neigh_idx = 0; neigh_idx < NumNeigh; neigh_idx++) begin
+      esr_and_or_tree_l0_i[neigh_idx] = esr_pkg::esr_and_or_tree_l0_t'(
+          esr_and_or_tree_l0_flat_stim_i[neigh_idx*EsrAndOrTreeL0Bits +: EsrAndOrTreeL0Bits]);
+      esr_dll_dly_est_sts_i[neigh_idx] = esr_pkg::esr_dll_dly_est_sts_t'(
+          esr_dll_dly_est_sts_flat_stim_i[neigh_idx*DllDlyEstStsBits +: DllDlyEstStsBits]);
+    end
+    esr_pll_busy_i = esr_pll_busy_stim_i;
+    esr_pll_rdata_i = esr_pll_rdata_stim_i;
+    esr_pll_rrdy_i = esr_pll_rrdy_stim_i;
+    esr_pll_lock_i = esr_pll_lock_stim_i;
+    esr_dll_busy_i = esr_dll_busy_stim_i;
+    esr_dll_rdata_i = esr_dll_rdata_stim_i;
+    esr_dll_rrdy_i = esr_dll_rrdy_stim_i;
+    esr_dll_lock_i = esr_dll_lock_stim_i;
 
     neigh_sc_req_valid_i = '0;
     neigh_sc_req_info_i = '{default: '0};
@@ -563,7 +594,6 @@ module shire_channel_tb
     sbm_sys_axi_r_i.last = axi_stim_i[20];
     sbm_sys_axi_r_i.data = {8{axi_stim_i}};
     sbm_sys_axi_r_valid_i = sbm_sys_axi_r_valid_stim_i;
-    status_monitor_bank_sel_i = '0;
 
     coop_tload_slv_rdy_out_data_i = '{default: '0};
     coop_tload_slv_rdy_out_valid_i = coop_slv_valid_i;
@@ -573,7 +603,10 @@ module shire_channel_tb
 
   neigh_hv_logic_pkg::bpam_rc_tbox_ack_t bpam_rc_tbox_ack_i [NumNeigh-1:0];
   always_comb begin
-    bpam_rc_tbox_ack_i = '{default: '0};
+    for (int unsigned neigh_idx = 0; neigh_idx < NumNeigh; neigh_idx++) begin
+      bpam_rc_tbox_ack_i[neigh_idx] = neigh_hv_logic_pkg::bpam_rc_tbox_ack_t'(
+          bpam_rc_tbox_ack_flat_stim_i[neigh_idx*BpamRcTboxAckBits +: BpamRcTboxAckBits]);
+    end
   end
 
   shire_channel u_dut (.*);
@@ -605,6 +638,7 @@ module shire_channel_tb
   end
 
   assign coop_slv_valid_o = coop_tload_slv_rdy_in_valid_o;
+  assign coop_done_id_o = coop_tload_mst_done_in_coop_id_o;
   assign coop_done_valid_o = coop_tload_mst_done_in_valid_o;
 
 endmodule

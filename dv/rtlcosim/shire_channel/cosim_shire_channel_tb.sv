@@ -69,6 +69,28 @@ module cosim_shire_channel_tb
   input  logic [shire_esr_pkg::NumNeigh-1:0][neigh_pkg::ShireCoopIdSize-1:0] coop_done_id_i,
   input  logic [shire_esr_pkg::NumNeigh-1:0][shire_esr_pkg::NumNeigh-2:0] coop_done_valid_i,
 
+  input  logic [shire_esr_pkg::IcachePerShire-1:0] esr_icache_prefetch_done_stim_i,
+  input  logic [shire_esr_pkg::NumNeigh*$bits(esr_pkg::esr_and_or_tree_l0_t)-1:0]
+      esr_and_or_tree_l0_flat_stim_i,
+  input  logic [$bits(shire_channel_leaves_pkg::esr_and_or_tree_l2_t)-1:0]
+      debug_and_or_tree_l2_stim_i,
+  input  logic [shire_esr_pkg::NumNeigh*$bits(neigh_hv_logic_pkg::bpam_rc_tbox_ack_t)-1:0]
+      bpam_rc_tbox_ack_flat_stim_i,
+  input  logic [shire_esr_pkg::NumNeigh-1:0] esr_pwr_ctrl_glb_nsleepout_stim_i,
+  input  logic [shire_esr_pkg::NumNeigh*shire_esr_pkg::MinPerNeigh-1:0]
+      esr_pwr_ctrl_neigh_nsleepout_stim_i,
+  input  logic esr_pll_busy_stim_i,
+  input  logic [shire_esr_pkg::ShirePllDataBits-1:0] esr_pll_rdata_stim_i,
+  input  logic esr_pll_rrdy_stim_i,
+  input  logic esr_pll_lock_stim_i,
+  input  logic [shire_esr_pkg::NumNeigh*$bits(esr_pkg::esr_dll_dly_est_sts_t)-1:0]
+      esr_dll_dly_est_sts_flat_stim_i,
+  input  logic esr_dll_busy_stim_i,
+  input  logic [shire_esr_pkg::ShireDllDataBits-1:0] esr_dll_rdata_stim_i,
+  input  logic esr_dll_rrdy_stim_i,
+  input  logic esr_dll_lock_stim_i,
+  input  logic [shirecache_pkg::BankIdSize-1:0] status_monitor_bank_sel_i,
+
   input  logic [shire_esr_pkg::NumNeigh-1:0] neigh_sc_rsp_ready_stim_i,
   input  logic [shirecache_pkg::L3MasterPorts-1:0] to_l3_axi_ar_ready_stim_i,
   input  logic [shirecache_pkg::L3MasterPorts-1:0] to_l3_axi_aw_ready_stim_i,
@@ -331,6 +353,8 @@ module cosim_shire_channel_tb
   output logic [$bits(shirecache_pkg::trace_packet_t)-1:0] orig_sc_trace_data_flat_o,
   output logic [$bits(shirecache_pkg::trace_packet_t)-1:0] new_sc_trace_data_flat_o,
   output logic [shire_esr_pkg::NumNeigh-1:0][shire_esr_pkg::NumNeigh-2:0] new_coop_slv_valid_o,
+  output logic [shire_esr_pkg::NumNeigh-1:0][shire_esr_pkg::NumNeigh-2:0][neigh_pkg::ShireCoopIdSize-1:0]
+      new_coop_done_id_o,
   output logic [shire_esr_pkg::NumNeigh-1:0][shire_esr_pkg::NumNeigh-2:0] new_coop_done_valid_o
 );
 
@@ -356,6 +380,9 @@ module cosim_shire_channel_tb
   localparam int unsigned SysSlaveRBits = $bits(axi_pkg::sys_slave_r_t);
   localparam int unsigned IcacheRespBits = icache_geom_pkg::IcacheSramDataWidth;
   localparam int unsigned L2hpfReqBits = $bits(shirecache_pkg::neigh_l2hpf_req_t);
+  localparam int unsigned EsrAndOrTreeL0Bits = $bits(esr_pkg::esr_and_or_tree_l0_t);
+  localparam int unsigned BpamRcTboxAckBits = $bits(neigh_hv_logic_pkg::bpam_rc_tbox_ack_t);
+  localparam int unsigned DllDlyEstStsBits = $bits(esr_pkg::esr_dll_dly_est_sts_t);
 
   // Original CORE-ET port signals. The retained cache, ICache, uncached,
   // ESR/reset, RBOX, APB, AXI, and run-control paths remain live and are
@@ -611,7 +638,7 @@ module cosim_shire_channel_tb
     noc_reset = !rst_ni | !rst_noc_ext_ni;
 
     debug_axi_port_ctl = '0;
-    debug_and_or_tree_L2_in = '0;
+    debug_and_or_tree_L2_in = esr_and_or_tree_L2_t'(debug_and_or_tree_l2_stim_i);
     bpam_run_control = '0;
     bpam_run_control.gpio.ndmreset = dft_scanmode_i;
     bpam_run_control.gpio.halt_req = dft_ram_rei_i;
@@ -621,10 +648,13 @@ module cosim_shire_channel_tb
 
     shire_phy_id = shire_phy_id_i;
     shire_id_reset_val = shire_id_reset_val_i;
-    esr_icache_prefetch_done = '0;
+    esr_icache_prefetch_done = esr_icache_prefetch_done_stim_i;
     neigh_sc_err_detected = neigh_sc_err_detected_i;
     neigh_sc_err_logged = neigh_sc_err_logged_i;
-    esr_and_or_tree_L0 = '{default: '0};
+    for (int unsigned neigh_idx = 0; neigh_idx < NUM_NEIGH; neigh_idx++) begin
+      esr_and_or_tree_L0[neigh_idx] = esr_and_or_tree_L0_t'(
+          esr_and_or_tree_l0_flat_stim_i[neigh_idx*EsrAndOrTreeL0Bits +: EsrAndOrTreeL0Bits]);
+    end
     esr_noc_interrupt_status_ip = {{`NOC_DBG_INT_NUM{1'b0}}, noc_err_int_srcs_i};
 
     neigh_sc_req_valid = '0;
@@ -641,7 +671,10 @@ module cosim_shire_channel_tb
     status_monitor_gpio = '0;
     etlink_rbox_sm_enabled = 1'b0;
     rbox_sm_gpio = '0;
-    bpam_rc_tbox_ack = '{default: '0};
+    for (int unsigned neigh_idx = 0; neigh_idx < NUM_NEIGH; neigh_idx++) begin
+      bpam_rc_tbox_ack[neigh_idx] = bpam_rc_tbox_ack_t'(
+          bpam_rc_tbox_ack_flat_stim_i[neigh_idx*BpamRcTboxAckBits +: BpamRcTboxAckBits]);
+    end
 
     APB_ESR_req = '{default: '0};
     if (apb_sel_i < APB_SLAVES[2:0]) begin
@@ -652,20 +685,24 @@ module cosim_shire_channel_tb
       APB_ESR_req[apb_sel_i].apb_pwdata = apb_pwdata_i;
     end
 
-    esr_pwr_ctrl_glb_nsleepout_ip = '0;
-    esr_pwr_ctrl_neigh_nsleepout_ip = '0;
-    esr_pll_busy_ip = 1'b0;
-    esr_pll_rdata_ip = '0;
-    esr_pll_rrdy_ip = 1'b0;
-    esr_pll_lock_ip = 1'b0;
-    esr_dll_dly_est_sts_0_ip = '0;
-    esr_dll_dly_est_sts_1_ip = '0;
-    esr_dll_dly_est_sts_2_ip = '0;
-    esr_dll_dly_est_sts_3_ip = '0;
-    esr_dll_busy_ip = 1'b0;
-    esr_dll_rdata_ip = '0;
-    esr_dll_rrdy_ip = 1'b0;
-    esr_dll_lock_ip = 1'b0;
+    esr_pwr_ctrl_glb_nsleepout_ip = esr_pwr_ctrl_glb_nsleepout_stim_i;
+    esr_pwr_ctrl_neigh_nsleepout_ip = esr_pwr_ctrl_neigh_nsleepout_stim_i;
+    esr_pll_busy_ip = esr_pll_busy_stim_i;
+    esr_pll_rdata_ip = esr_pll_rdata_stim_i;
+    esr_pll_rrdy_ip = esr_pll_rrdy_stim_i;
+    esr_pll_lock_ip = esr_pll_lock_stim_i;
+    esr_dll_dly_est_sts_0_ip = esr_dll_dly_est_sts_t'(
+        esr_dll_dly_est_sts_flat_stim_i[0*DllDlyEstStsBits +: DllDlyEstStsBits]);
+    esr_dll_dly_est_sts_1_ip = esr_dll_dly_est_sts_t'(
+        esr_dll_dly_est_sts_flat_stim_i[1*DllDlyEstStsBits +: DllDlyEstStsBits]);
+    esr_dll_dly_est_sts_2_ip = esr_dll_dly_est_sts_t'(
+        esr_dll_dly_est_sts_flat_stim_i[2*DllDlyEstStsBits +: DllDlyEstStsBits]);
+    esr_dll_dly_est_sts_3_ip = esr_dll_dly_est_sts_t'(
+        esr_dll_dly_est_sts_flat_stim_i[3*DllDlyEstStsBits +: DllDlyEstStsBits]);
+    esr_dll_busy_ip = esr_dll_busy_stim_i;
+    esr_dll_rdata_ip = esr_dll_rdata_stim_i;
+    esr_dll_rrdy_ip = esr_dll_rrdy_stim_i;
+    esr_dll_lock_ip = esr_dll_lock_stim_i;
 
     to_l3_mesh_master_axi_ARREADY = to_l3_axi_ar_ready_stim_i;
     to_l3_mesh_master_axi_AWREADY = to_l3_axi_aw_ready_stim_i;
@@ -885,6 +922,22 @@ module cosim_shire_channel_tb
     .coop_slv_valid_i,
     .coop_done_id_i,
     .coop_done_valid_i,
+    .esr_icache_prefetch_done_stim_i,
+    .esr_and_or_tree_l0_flat_stim_i,
+    .debug_and_or_tree_l2_stim_i,
+    .bpam_rc_tbox_ack_flat_stim_i,
+    .esr_pwr_ctrl_glb_nsleepout_stim_i,
+    .esr_pwr_ctrl_neigh_nsleepout_stim_i,
+    .esr_pll_busy_stim_i,
+    .esr_pll_rdata_stim_i,
+    .esr_pll_rrdy_stim_i,
+    .esr_pll_lock_stim_i,
+    .esr_dll_dly_est_sts_flat_stim_i,
+    .esr_dll_busy_stim_i,
+    .esr_dll_rdata_stim_i,
+    .esr_dll_rrdy_stim_i,
+    .esr_dll_lock_stim_i,
+    .status_monitor_bank_sel_i,
     .neigh_sc_rsp_ready_stim_i,
     .to_l3_axi_ar_ready_stim_i,
     .to_l3_axi_aw_ready_stim_i,
@@ -967,6 +1020,7 @@ module cosim_shire_channel_tb
     .clk_gate_ctrl_flat_o(new_clk_gate_ctrl_flat_o),
     .debug_clk_gate_ctrl_o(new_debug_clk_gate_ctrl_o),
     .coop_slv_valid_o(new_coop_slv_valid_o),
+    .coop_done_id_o(new_coop_done_id_o),
     .coop_done_valid_o(new_coop_done_valid_o),
     .sbm_enable_read_o(new_sbm_enable_read_o),
     .sbm_enable_write_o(new_sbm_enable_write_o)
