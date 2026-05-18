@@ -454,6 +454,26 @@ row below.
 | `tlb_pkg` | TLB-local cache-entry + FSM types from `soc.vh` | — | — | Done |
 | `minion_tlb` | `tlb_top` | 123 checks | 517,146 comparisons | Done |
 
+## Shire Uncached (`hw/ip/shire_uncached/`)
+
+| Module | Original | Test | Cosim | Status |
+|--------|----------|------|-------|--------|
+| `shire_uncached_pkg` | `uc_defines.vh` / `uc_types.vh` | Parsed by `shire_uncached` DV | — | Initial translation |
+| `uncacheable_fcc` | `uncacheable_fcc` | 9 checks | 4,096 comparisons | Done |
+| `uncacheable_flb` | `uncacheable_flb` | Parsed by top lint | 41,650 comparisons | Done |
+| `noc_etlink_to_axi` | `noc_etlink_to_axi` | Parsed by top lint | 233,472 comparisons | Done |
+| `uncacheable_noc_slv_handler` | `uncacheable_noc_slv_handler` | Parsed by top lint | 94,208 comparisons | Done |
+| `uncacheable_noc_tol3_handler` | `uncacheable_noc_tol3_handler` | Parsed by top lint | 172,032 comparisons | Done |
+| `uncacheable_noc_tosys_handler` | `uncacheable_noc_tosys_handler` | Parsed by top lint | 184,320 comparisons | Done |
+| `uncacheable_noc_rsp` | `uncacheable_noc_rsp` | Parsed by top lint | 270,369 comparisons | Done |
+| `uncacheable_noc` | `uncacheable_noc` | Parsed by top lint | 1,044,565 comparisons | Done |
+| `uncached_arb_lru_grant` | `arb_lru_grant` | Parsed by top lint | 8,192 comparisons | Done |
+| `uncached_hi_voltage_cross_lv_logic` | `uncached_hi_voltage_cross_lv_logic` | Parsed by top lint | 8,192 comparisons | Done |
+| `uncached_hi_voltage_cross` | `uncached_hi_voltage_cross` | Parsed by top lint | 73,489 comparisons | Done |
+| `uncached_lo_voltage_cross_lv_logic` | `uncached_lo_voltage_cross_lv_logic` | Parsed by top lint | 4,096 comparisons | Done |
+| `uncached_lo_voltage_cross` | `uncached_lo_voltage_cross` | Parsed by top lint | 67,216 comparisons | Done |
+| `uncacheable` | `uncacheable` | Parsed by top lint | 69,666 comparisons | Done |
+
 ## Totals
 
 Structural discovery counts were refreshed from tracked Makefiles on
@@ -463,10 +483,10 @@ backfilled.
 
 | Metric | Count |
 |--------|-------|
-| Unit-test Makefiles | 81 |
-| Test suites discovered by `make test` | 242 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 283 |
+| Unit-test Makefiles | 82 |
+| Test suites discovered by `make test` | 243 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 284 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 241 unit suites + 283 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run |
+| Targeted update runs | 82 unit suites + 14 uncached-path cosims + full lint + root unit test suite |
 | Targeted update failures | 0 |
