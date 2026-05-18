@@ -12,6 +12,8 @@ module cosim_shire_channel_tb
   import dft_pkg::*;
   import etlink_pkg::*;
   import icache_pkg::*;
+  import minion_pkg::*;
+  import neigh_voltage_cross_pkg::*;
   import ram_cfg_pkg::*;
   import shire_channel_leaves_pkg::*;
   import shire_esr_pkg::*;
@@ -73,18 +75,28 @@ module cosim_shire_channel_tb
   output logic [shire_esr_pkg::NumNeigh-1:0] new_rst_w_shire_no_o,
   output logic [shire_esr_pkg::NumNeigh-1:0] orig_rst_d_shire_no_o,
   output logic [shire_esr_pkg::NumNeigh-1:0] new_rst_d_shire_no_o,
+  output logic [shire_esr_pkg::NumNeigh-1:0] orig_rst_c_shire_scs_no_o,
+  output logic [shire_esr_pkg::NumNeigh-1:0] new_rst_c_shire_scs_no_o,
   output logic orig_rst_sc_no_o,
   output logic new_rst_sc_no_o,
   output logic orig_rst_rbox_no_o,
   output logic new_rst_rbox_no_o,
   output logic [shire_esr_pkg::NumNeigh-1:0][shire_esr_pkg::NumShireIdsBits-1:0] orig_shire_id_o,
   output logic [shire_esr_pkg::NumNeigh-1:0][shire_esr_pkg::NumShireIdsBits-1:0] new_shire_id_o,
+  output logic [shire_esr_pkg::TboxPerShire-1:0][1:0] orig_tbox_id_o,
+  output logic [shire_esr_pkg::TboxPerShire-1:0][1:0] new_tbox_id_o,
   output logic [shire_esr_pkg::TboxPerShire-1:0] orig_tbox_en_o,
   output logic [shire_esr_pkg::TboxPerShire-1:0] new_tbox_en_o,
   output logic [shire_esr_pkg::ThreadsPerShire-1:0] orig_esr_thread0_enable_o,
   output logic [shire_esr_pkg::ThreadsPerShire-1:0] new_esr_thread0_enable_o,
   output logic [shire_esr_pkg::ThreadsPerShire-1:0] orig_esr_thread1_enable_o,
   output logic [shire_esr_pkg::ThreadsPerShire-1:0] new_esr_thread1_enable_o,
+  output logic [$bits(minion_pkg::esr_minion_features_t)-1:0] orig_esr_minion_features_o [shire_esr_pkg::NumNeigh],
+  output logic [$bits(minion_pkg::esr_minion_features_t)-1:0] new_esr_minion_features_o [shire_esr_pkg::NumNeigh],
+  output logic [$bits(icache_pkg::icache_prefetch_conf_t)-1:0] orig_icache_prefetch_conf_o [shire_esr_pkg::NumNeigh],
+  output logic [$bits(icache_pkg::icache_prefetch_conf_t)-1:0] new_icache_prefetch_conf_o [shire_esr_pkg::NumNeigh],
+  output logic [shire_esr_pkg::IcachePerShire-1:0] orig_icache_prefetch_start_o,
+  output logic [shire_esr_pkg::IcachePerShire-1:0] new_icache_prefetch_start_o,
   output logic [shire_esr_pkg::ThreadsPerShire-1:0] orig_esr_ipi_trigger_o,
   output logic [shire_esr_pkg::ThreadsPerShire-1:0] new_esr_ipi_trigger_o,
   output logic [shire_esr_pkg::ThreadsPerShire-1:0] orig_esr_ipi_redirect_trigger_o,
@@ -93,6 +105,10 @@ module cosim_shire_channel_tb
   output logic [shire_esr_pkg::ThreadsPerShire-1:0] new_esr_mtime_local_target_o,
   output logic [shire_esr_pkg::NumNeigh-1:0] orig_esr_shire_coop_mode_o,
   output logic [shire_esr_pkg::NumNeigh-1:0] new_esr_shire_coop_mode_o,
+  output logic [$bits(shire_channel_leaves_pkg::esr_and_or_tree_l2_t)-1:0] orig_debug_and_or_tree_l2_o,
+  output logic [$bits(shire_channel_leaves_pkg::esr_and_or_tree_l2_t)-1:0] new_debug_and_or_tree_l2_o,
+  output logic [$bits(neigh_voltage_cross_pkg::bpam_run_control_neigh_t)-1:0] orig_bpam_run_control_neigh_o [shire_esr_pkg::NumNeigh],
+  output logic [$bits(neigh_voltage_cross_pkg::bpam_run_control_neigh_t)-1:0] new_bpam_run_control_neigh_o [shire_esr_pkg::NumNeigh],
   output logic orig_ioshire_log_err_int_o,
   output logic new_ioshire_log_err_int_o,
   output logic [shire_esr_pkg::NumNeigh-1:0][shire_uncached_pkg::MinPerNeigh-1:0] orig_uc_to_neigh_fcc_o,
@@ -113,13 +129,166 @@ module cosim_shire_channel_tb
   output logic new_sbm_enable_read_o,
   output logic orig_sbm_enable_write_o,
   output logic new_sbm_enable_write_o,
+  output logic [shire_esr_pkg::NumNeigh-1:0][shirecache_pkg::Banks:0] orig_neigh_sc_req_ready_o,
+  output logic [shire_esr_pkg::NumNeigh-1:0][shirecache_pkg::Banks:0] new_neigh_sc_req_ready_o,
+  output logic [shire_esr_pkg::NumNeigh-1:0] orig_neigh_sc_rsp_valid_o,
+  output logic [shire_esr_pkg::NumNeigh-1:0] new_neigh_sc_rsp_valid_o,
+  output logic [shire_esr_pkg::NumNeigh-1:0] orig_icache_req_ready_o,
   output logic [shire_esr_pkg::NumNeigh-1:0] new_icache_req_ready_o,
+  output logic [shire_esr_pkg::NumNeigh-1:0] orig_icache_resp_valid_o,
   output logic [shire_esr_pkg::NumNeigh-1:0] new_icache_resp_valid_o,
   output logic [shire_channel_leaves_pkg::NocIntNum-1:0] new_noc_all_err_int_srcs_o,
   output logic new_ioshire_noc_err_int_o,
+  output logic [shirecache_pkg::Banks-1:0] orig_l2hpf_req_valid_o,
+  output logic [shirecache_pkg::Banks-1:0] new_l2hpf_req_valid_o,
+  output logic orig_sc_trace_valid_o,
+  output logic new_sc_trace_valid_o,
   output logic [$bits(ram_cfg_pkg::ram_cfg_t)-1:0] new_ram_cfg_flat_o,
+  output logic [$bits(shire_esr_pkg::esr_clk_gate_ctrl_t)-1:0] orig_clk_gate_ctrl_flat_o,
   output logic [$bits(shire_esr_pkg::esr_clk_gate_ctrl_t)-1:0] new_clk_gate_ctrl_flat_o,
+  output logic orig_debug_clk_gate_ctrl_o,
   output logic new_debug_clk_gate_ctrl_o,
+  output logic [shire_esr_pkg::NumNeigh*$bits(etlink_pkg::rsp_t)-1:0] orig_neigh_sc_rsp_info_flat_o,
+  output logic [shire_esr_pkg::NumNeigh*$bits(etlink_pkg::rsp_t)-1:0] new_neigh_sc_rsp_info_flat_o,
+  output logic [shirecache_pkg::Banks+shirecache_pkg::RboxPerShire+2-1:0] orig_apb_pready_all_o,
+  output logic [shirecache_pkg::Banks+shirecache_pkg::RboxPerShire+2-1:0] new_apb_pready_all_o,
+  output logic [shirecache_pkg::Banks+shirecache_pkg::RboxPerShire+2-1:0] orig_apb_pslverr_all_o,
+  output logic [shirecache_pkg::Banks+shirecache_pkg::RboxPerShire+2-1:0] new_apb_pslverr_all_o,
+  output logic [(shirecache_pkg::Banks+shirecache_pkg::RboxPerShire+2)*shire_sbm_pkg::ApbDataWidth-1:0] orig_apb_prdata_all_flat_o,
+  output logic [(shirecache_pkg::Banks+shirecache_pkg::RboxPerShire+2)*shire_sbm_pkg::ApbDataWidth-1:0] new_apb_prdata_all_flat_o,
+  output logic [shire_esr_pkg::NumNeigh-1:0] orig_pwr_ctrl_glb_nsleepin_o,
+  output logic [shire_esr_pkg::NumNeigh-1:0] new_pwr_ctrl_glb_nsleepin_o,
+  output logic [shire_esr_pkg::NumNeigh-1:0] orig_pwr_ctrl_glb_iso_o,
+  output logic [shire_esr_pkg::NumNeigh-1:0] new_pwr_ctrl_glb_iso_o,
+  output logic [shire_esr_pkg::NumNeigh*shire_esr_pkg::MinPerNeigh-1:0] orig_pwr_ctrl_neigh_nsleepin_o,
+  output logic [shire_esr_pkg::NumNeigh*shire_esr_pkg::MinPerNeigh-1:0] new_pwr_ctrl_neigh_nsleepin_o,
+  output logic [shire_esr_pkg::NumNeigh*shire_esr_pkg::MinPerNeigh-1:0] orig_pwr_ctrl_neigh_iso_o,
+  output logic [shire_esr_pkg::NumNeigh*shire_esr_pkg::MinPerNeigh-1:0] new_pwr_ctrl_neigh_iso_o,
+  output logic [$bits(shire_esr_pkg::esr_pll_auto_config_t)-1:0] orig_pll_ctrl_flat_o,
+  output logic [$bits(shire_esr_pkg::esr_pll_auto_config_t)-1:0] new_pll_ctrl_flat_o,
+  output logic [shire_esr_pkg::ShirePllConfBits-1:0] orig_pll_conf_o,
+  output logic [shire_esr_pkg::ShirePllConfBits-1:0] new_pll_conf_o,
+  output logic [$bits(shire_esr_pkg::esr_clk_dly_ctl_t)-1:0] orig_clk_dly_ctl_flat_o,
+  output logic [$bits(shire_esr_pkg::esr_clk_dly_ctl_t)-1:0] new_clk_dly_ctl_flat_o,
+  output logic [$bits(esr_pkg::esr_dll_dly_est_ctl_t)-1:0] orig_dll_dly_est_ctl_flat_o,
+  output logic [$bits(esr_pkg::esr_dll_dly_est_ctl_t)-1:0] new_dll_dly_est_ctl_flat_o,
+  output logic [$bits(shire_esr_pkg::esr_clkmux_ctl_t)-1:0] orig_shire_ctrl_clockmux_flat_o,
+  output logic [$bits(shire_esr_pkg::esr_clkmux_ctl_t)-1:0] new_shire_ctrl_clockmux_flat_o,
+  output logic [$bits(shire_esr_pkg::esr_dll_auto_config_t)-1:0] orig_dll_ctrl_flat_o,
+  output logic [$bits(shire_esr_pkg::esr_dll_auto_config_t)-1:0] new_dll_ctrl_flat_o,
+  output logic [shire_esr_pkg::ShireDllConfBits-1:0] orig_dll_conf_o,
+  output logic [shire_esr_pkg::ShireDllConfBits-1:0] new_dll_conf_o,
+  output logic [$bits(ram_cfg_pkg::ram_cfg_t)-1:0] orig_ram_cfg_flat_o,
+  output logic [shirecache_pkg::L3MasterPorts*$bits(axi_pkg::sc_master_ar_t)-1:0] orig_to_l3_axi_ar_flat_o,
+  output logic [shirecache_pkg::L3MasterPorts*$bits(axi_pkg::sc_master_ar_t)-1:0] new_to_l3_axi_ar_flat_o,
+  output logic [shirecache_pkg::L3MasterPorts-1:0] orig_to_l3_axi_ar_valid_o,
+  output logic [shirecache_pkg::L3MasterPorts-1:0] new_to_l3_axi_ar_valid_o,
+  output logic [shirecache_pkg::L3MasterPorts*$bits(axi_pkg::sc_master_aw_t)-1:0] orig_to_l3_axi_aw_flat_o,
+  output logic [shirecache_pkg::L3MasterPorts*$bits(axi_pkg::sc_master_aw_t)-1:0] new_to_l3_axi_aw_flat_o,
+  output logic [shirecache_pkg::L3MasterPorts-1:0] orig_to_l3_axi_aw_valid_o,
+  output logic [shirecache_pkg::L3MasterPorts-1:0] new_to_l3_axi_aw_valid_o,
+  output logic [shirecache_pkg::L3MasterPorts*$bits(axi_pkg::sc_master_w_t)-1:0] orig_to_l3_axi_w_flat_o,
+  output logic [shirecache_pkg::L3MasterPorts*$bits(axi_pkg::sc_master_w_t)-1:0] new_to_l3_axi_w_flat_o,
+  output logic [shirecache_pkg::L3MasterPorts-1:0] orig_to_l3_axi_w_valid_o,
+  output logic [shirecache_pkg::L3MasterPorts-1:0] new_to_l3_axi_w_valid_o,
+  output logic [shirecache_pkg::L3MasterPorts-1:0] orig_to_l3_axi_b_ready_o,
+  output logic [shirecache_pkg::L3MasterPorts-1:0] new_to_l3_axi_b_ready_o,
+  output logic [shirecache_pkg::L3MasterPorts-1:0] orig_to_l3_axi_r_ready_o,
+  output logic [shirecache_pkg::L3MasterPorts-1:0] new_to_l3_axi_r_ready_o,
+  output logic [shirecache_pkg::SysPorts*$bits(axi_pkg::sc_master_ar_t)-1:0] orig_to_sys_axi_ar_flat_o,
+  output logic [shirecache_pkg::SysPorts*$bits(axi_pkg::sc_master_ar_t)-1:0] new_to_sys_axi_ar_flat_o,
+  output logic [shirecache_pkg::SysPorts-1:0] orig_to_sys_axi_ar_valid_o,
+  output logic [shirecache_pkg::SysPorts-1:0] new_to_sys_axi_ar_valid_o,
+  output logic [shirecache_pkg::SysPorts*$bits(axi_pkg::sc_master_aw_t)-1:0] orig_to_sys_axi_aw_flat_o,
+  output logic [shirecache_pkg::SysPorts*$bits(axi_pkg::sc_master_aw_t)-1:0] new_to_sys_axi_aw_flat_o,
+  output logic [shirecache_pkg::SysPorts-1:0] orig_to_sys_axi_aw_valid_o,
+  output logic [shirecache_pkg::SysPorts-1:0] new_to_sys_axi_aw_valid_o,
+  output logic [shirecache_pkg::SysPorts*$bits(axi_pkg::sc_master_w_t)-1:0] orig_to_sys_axi_w_flat_o,
+  output logic [shirecache_pkg::SysPorts*$bits(axi_pkg::sc_master_w_t)-1:0] new_to_sys_axi_w_flat_o,
+  output logic [shirecache_pkg::SysPorts-1:0] orig_to_sys_axi_w_valid_o,
+  output logic [shirecache_pkg::SysPorts-1:0] new_to_sys_axi_w_valid_o,
+  output logic [shirecache_pkg::SysPorts-1:0] orig_to_sys_axi_b_ready_o,
+  output logic [shirecache_pkg::SysPorts-1:0] new_to_sys_axi_b_ready_o,
+  output logic [shirecache_pkg::SysPorts-1:0] orig_to_sys_axi_r_ready_o,
+  output logic [shirecache_pkg::SysPorts-1:0] new_to_sys_axi_r_ready_o,
+  output logic [shirecache_pkg::L3SlavePorts-1:0] orig_l3_axi_ar_ready_o,
+  output logic [shirecache_pkg::L3SlavePorts-1:0] new_l3_axi_ar_ready_o,
+  output logic [shirecache_pkg::L3SlavePorts-1:0] orig_l3_axi_aw_ready_o,
+  output logic [shirecache_pkg::L3SlavePorts-1:0] new_l3_axi_aw_ready_o,
+  output logic [shirecache_pkg::L3SlavePorts-1:0] orig_l3_axi_w_ready_o,
+  output logic [shirecache_pkg::L3SlavePorts-1:0] new_l3_axi_w_ready_o,
+  output logic [shirecache_pkg::L3SlavePorts*$bits(axi_pkg::sc_slave_b_t)-1:0] orig_l3_axi_b_flat_o,
+  output logic [shirecache_pkg::L3SlavePorts*$bits(axi_pkg::sc_slave_b_t)-1:0] new_l3_axi_b_flat_o,
+  output logic [shirecache_pkg::L3SlavePorts-1:0] orig_l3_axi_b_valid_o,
+  output logic [shirecache_pkg::L3SlavePorts-1:0] new_l3_axi_b_valid_o,
+  output logic [shirecache_pkg::L3SlavePorts*$bits(axi_pkg::sc_slave_r_t)-1:0] orig_l3_axi_r_flat_o,
+  output logic [shirecache_pkg::L3SlavePorts*$bits(axi_pkg::sc_slave_r_t)-1:0] new_l3_axi_r_flat_o,
+  output logic [shirecache_pkg::L3SlavePorts-1:0] orig_l3_axi_r_valid_o,
+  output logic [shirecache_pkg::L3SlavePorts-1:0] new_l3_axi_r_valid_o,
+  output logic [$bits(axi_pkg::sc_master_ar_t)-1:0] orig_uc_to_l3_axi_ar_flat_o,
+  output logic [$bits(axi_pkg::sc_master_ar_t)-1:0] new_uc_to_l3_axi_ar_flat_o,
+  output logic orig_uc_to_l3_axi_ar_valid_o,
+  output logic new_uc_to_l3_axi_ar_valid_o,
+  output logic [$bits(axi_pkg::sc_master_aw_t)-1:0] orig_uc_to_l3_axi_aw_flat_o,
+  output logic [$bits(axi_pkg::sc_master_aw_t)-1:0] new_uc_to_l3_axi_aw_flat_o,
+  output logic orig_uc_to_l3_axi_aw_valid_o,
+  output logic new_uc_to_l3_axi_aw_valid_o,
+  output logic [$bits(axi_pkg::sc_master_w_t)-1:0] orig_uc_to_l3_axi_w_flat_o,
+  output logic [$bits(axi_pkg::sc_master_w_t)-1:0] new_uc_to_l3_axi_w_flat_o,
+  output logic orig_uc_to_l3_axi_w_valid_o,
+  output logic new_uc_to_l3_axi_w_valid_o,
+  output logic orig_uc_to_l3_axi_b_ready_o,
+  output logic new_uc_to_l3_axi_b_ready_o,
+  output logic orig_uc_to_l3_axi_r_ready_o,
+  output logic new_uc_to_l3_axi_r_ready_o,
+  output logic [$bits(axi_pkg::sc_master_ar_t)-1:0] orig_uc_to_sys_axi_ar_flat_o,
+  output logic [$bits(axi_pkg::sc_master_ar_t)-1:0] new_uc_to_sys_axi_ar_flat_o,
+  output logic orig_uc_to_sys_axi_ar_valid_o,
+  output logic new_uc_to_sys_axi_ar_valid_o,
+  output logic [$bits(axi_pkg::sc_master_aw_t)-1:0] orig_uc_to_sys_axi_aw_flat_o,
+  output logic [$bits(axi_pkg::sc_master_aw_t)-1:0] new_uc_to_sys_axi_aw_flat_o,
+  output logic orig_uc_to_sys_axi_aw_valid_o,
+  output logic new_uc_to_sys_axi_aw_valid_o,
+  output logic [$bits(axi_pkg::sc_master_w_t)-1:0] orig_uc_to_sys_axi_w_flat_o,
+  output logic [$bits(axi_pkg::sc_master_w_t)-1:0] new_uc_to_sys_axi_w_flat_o,
+  output logic orig_uc_to_sys_axi_w_valid_o,
+  output logic new_uc_to_sys_axi_w_valid_o,
+  output logic orig_uc_to_sys_axi_b_ready_o,
+  output logic new_uc_to_sys_axi_b_ready_o,
+  output logic orig_uc_to_sys_axi_r_ready_o,
+  output logic new_uc_to_sys_axi_r_ready_o,
+  output logic orig_sys_axi_ar_ready_o,
+  output logic new_sys_axi_ar_ready_o,
+  output logic orig_sys_axi_aw_ready_o,
+  output logic new_sys_axi_aw_ready_o,
+  output logic orig_sys_axi_w_ready_o,
+  output logic new_sys_axi_w_ready_o,
+  output logic [$bits(axi_pkg::sys_slave_b_t)-1:0] orig_sys_axi_b_flat_o,
+  output logic [$bits(axi_pkg::sys_slave_b_t)-1:0] new_sys_axi_b_flat_o,
+  output logic orig_sys_axi_b_valid_o,
+  output logic new_sys_axi_b_valid_o,
+  output logic [$bits(axi_pkg::sys_slave_r_t)-1:0] orig_sys_axi_r_flat_o,
+  output logic [$bits(axi_pkg::sys_slave_r_t)-1:0] new_sys_axi_r_flat_o,
+  output logic orig_sys_axi_r_valid_o,
+  output logic new_sys_axi_r_valid_o,
+  output logic [1:0] orig_sys_axi_aw_credit_o,
+  output logic [1:0] new_sys_axi_aw_credit_o,
+  output logic [$bits(axi_pkg::sys_slave_ar_t)-1:0] orig_sbm_sys_axi_ar_flat_o,
+  output logic [$bits(axi_pkg::sys_slave_ar_t)-1:0] new_sbm_sys_axi_ar_flat_o,
+  output logic [$bits(axi_pkg::sys_slave_aw_t)-1:0] orig_sbm_sys_axi_aw_flat_o,
+  output logic [$bits(axi_pkg::sys_slave_aw_t)-1:0] new_sbm_sys_axi_aw_flat_o,
+  output logic [$bits(axi_pkg::sys_slave_w_t)-1:0] orig_sbm_sys_axi_w_flat_o,
+  output logic [$bits(axi_pkg::sys_slave_w_t)-1:0] new_sbm_sys_axi_w_flat_o,
+  output logic orig_sbm_sys_axi_b_ready_o,
+  output logic new_sbm_sys_axi_b_ready_o,
+  output logic orig_sbm_sys_axi_r_ready_o,
+  output logic new_sbm_sys_axi_r_ready_o,
+  output logic [shire_esr_pkg::NumNeigh*icache_geom_pkg::IcacheSramDataWidth-1:0] orig_icache_resp_dout_flat_o,
+  output logic [shire_esr_pkg::NumNeigh*icache_geom_pkg::IcacheSramDataWidth-1:0] new_icache_resp_dout_flat_o,
+  output logic [shirecache_pkg::Banks*$bits(shirecache_pkg::neigh_l2hpf_req_t)-1:0] orig_l2hpf_req_info_flat_o,
+  output logic [shirecache_pkg::Banks*$bits(shirecache_pkg::neigh_l2hpf_req_t)-1:0] new_l2hpf_req_info_flat_o,
+  output logic [$bits(shirecache_pkg::trace_packet_t)-1:0] orig_sc_trace_data_flat_o,
+  output logic [$bits(shirecache_pkg::trace_packet_t)-1:0] new_sc_trace_data_flat_o,
   output logic [shire_esr_pkg::NumNeigh-1:0][shire_esr_pkg::NumNeigh-2:0] new_coop_slv_valid_o,
   output logic [shire_esr_pkg::NumNeigh-1:0][shire_esr_pkg::NumNeigh-2:0] new_coop_done_valid_o
 );
@@ -130,11 +299,26 @@ module cosim_shire_channel_tb
   localparam int unsigned NUM_UC = 1;
   localparam int unsigned NUM_L3_MASTER_PORTS = shirecache_pkg::L3MasterPorts;
   localparam int unsigned NUM_L3_SLAVE_PORTS = shirecache_pkg::L3SlavePorts;
-  localparam int unsigned APB_SLAVES = NUM_BANKS + NUM_RBOX + 1;
+  localparam int unsigned NUM_SYS_PORTS = shirecache_pkg::SysPorts;
+  localparam int unsigned APB_SLAVES = NUM_BANKS + NUM_RBOX + 2;
+  localparam int unsigned EtRspBits = $bits(etlink_pkg::rsp_t);
+  localparam int unsigned ApbDataBits = shire_sbm_pkg::ApbDataWidth;
+  localparam int unsigned ScMasterArBits = $bits(axi_pkg::sc_master_ar_t);
+  localparam int unsigned ScMasterAwBits = $bits(axi_pkg::sc_master_aw_t);
+  localparam int unsigned ScMasterWBits = $bits(axi_pkg::sc_master_w_t);
+  localparam int unsigned ScSlaveBBits = $bits(axi_pkg::sc_slave_b_t);
+  localparam int unsigned ScSlaveRBits = $bits(axi_pkg::sc_slave_r_t);
+  localparam int unsigned SysSlaveArBits = $bits(axi_pkg::sys_slave_ar_t);
+  localparam int unsigned SysSlaveAwBits = $bits(axi_pkg::sys_slave_aw_t);
+  localparam int unsigned SysSlaveWBits = $bits(axi_pkg::sys_slave_w_t);
+  localparam int unsigned SysSlaveBBits = $bits(axi_pkg::sys_slave_b_t);
+  localparam int unsigned SysSlaveRBits = $bits(axi_pkg::sys_slave_r_t);
+  localparam int unsigned IcacheRespBits = icache_geom_pkg::IcacheSramDataWidth;
+  localparam int unsigned L2hpfReqBits = $bits(shirecache_pkg::neigh_l2hpf_req_t);
 
-  // Original CORE-ET port signals. The original ICache and cache hierarchy are
-  // disabled in this container cosim (their translated blocks have standalone
-  // cosims); retained ESR/reset/uncached/run-control glue remains live.
+  // Original CORE-ET port signals. The retained cache, ICache, uncached,
+  // ESR/reset, RBOX, APB, AXI, and run-control paths remain live and are
+  // compared against the project-native implementation below.
    logic                                                 clock;
    logic                                                 reset_c;
    logic                                                 reset_w;
@@ -526,12 +710,12 @@ module cosim_shire_channel_tb
   end
 
   shire_channel_orig #(
-    .DV_SC_STUB              (1'b1),
+    .DV_SC_STUB              (1'b0),
     .NUM_RBOX                (NUM_RBOX),
     .NUM_BANKS               (NUM_BANKS),
     .NUM_L3_MASTER_PORTS     (NUM_L3_MASTER_PORTS),
     .NUM_L3_SLAVE_PORTS      (NUM_L3_SLAVE_PORTS),
-    .ICACHE_MEMS_IMPLEMENTED (0),
+    .ICACHE_MEMS_IMPLEMENTED (1),
     .L2HPF_IMPLEMENTED       (0),
     .APB_SLAVES              (APB_SLAVES)
   ) u_orig (.*);
@@ -583,16 +767,23 @@ module cosim_shire_channel_tb
     .rst_c_shire_no_o(new_rst_c_shire_no_o),
     .rst_w_shire_no_o(new_rst_w_shire_no_o),
     .rst_d_shire_no_o(new_rst_d_shire_no_o),
+    .rst_c_shire_scs_no_o(new_rst_c_shire_scs_no_o),
     .rst_sc_no_o(new_rst_sc_no_o),
     .rst_rbox_no_o(new_rst_rbox_no_o),
     .shire_id_o(new_shire_id_o),
+    .tbox_id_flat_o(new_tbox_id_o),
     .tbox_en_o(new_tbox_en_o),
     .esr_thread0_enable_o(new_esr_thread0_enable_o),
     .esr_thread1_enable_o(new_esr_thread1_enable_o),
+    .esr_minion_features_flat_o(new_esr_minion_features_o),
+    .esr_icache_prefetch_conf_flat_o(new_icache_prefetch_conf_o),
+    .esr_icache_prefetch_start_flat_o(new_icache_prefetch_start_o),
     .esr_ipi_trigger_o(new_esr_ipi_trigger_o),
     .esr_ipi_redirect_trigger_o(new_esr_ipi_redirect_trigger_o),
     .esr_mtime_local_target_o(new_esr_mtime_local_target_o),
     .esr_shire_coop_mode_o(new_esr_shire_coop_mode_o),
+    .debug_and_or_tree_l2_flat_o(new_debug_and_or_tree_l2_o),
+    .bpam_run_control_neigh_flat_o(new_bpam_run_control_neigh_o),
     .ioshire_log_err_int_o(new_ioshire_log_err_int_o),
     .ioshire_noc_err_int_o(new_ioshire_noc_err_int_o),
     .noc_all_err_int_srcs_o(new_noc_all_err_int_srcs_o),
@@ -600,10 +791,17 @@ module cosim_shire_channel_tb
     .uc_to_neigh_fcc_target_o(new_uc_to_neigh_fcc_target_o),
     .flb_l2_neigh_resp_valid_o(new_flb_l2_neigh_resp_valid_o),
     .flb_l2_neigh_resp_data_o(new_flb_l2_neigh_resp_data_o),
-    .neigh_sc_req_ready_o(),
-    .neigh_sc_rsp_valid_o(),
+    .neigh_sc_req_ready_o(new_neigh_sc_req_ready_o),
+    .neigh_sc_rsp_valid_o(new_neigh_sc_rsp_valid_o),
     .icache_req_ready_o(new_icache_req_ready_o),
     .icache_resp_valid_o(new_icache_resp_valid_o),
+    .sc_neigh_l2hpf_req_valid_flat_o(new_l2hpf_req_valid_o),
+    .sc_trace_valid_flat_o(new_sc_trace_valid_o),
+    .dft_hv_flat_o(),
+    .pwr_ctrl_glb_nsleepin_o(),
+    .pwr_ctrl_glb_iso_o(),
+    .pwr_ctrl_neigh_nsleepin_o(),
+    .pwr_ctrl_neigh_iso_o(),
     .ram_cfg_flat_o(new_ram_cfg_flat_o),
     .clk_gate_ctrl_flat_o(new_clk_gate_ctrl_flat_o),
     .debug_clk_gate_ctrl_o(new_debug_clk_gate_ctrl_o),
@@ -616,16 +814,20 @@ module cosim_shire_channel_tb
   assign orig_rst_c_shire_no_o = ~reset_c_shire;
   assign orig_rst_w_shire_no_o = ~reset_w_shire;
   assign orig_rst_d_shire_no_o = ~reset_d_shire;
+  assign orig_rst_c_shire_scs_no_o = ~reset_c_shire_scs;
   assign orig_rst_sc_no_o = ~reset_sc;
   assign orig_rst_rbox_no_o = ~reset_rbox;
   assign orig_shire_id_o = shire_id;
+  assign orig_tbox_id_o = tbox_id;
   assign orig_tbox_en_o = tbox_en;
   assign orig_esr_thread0_enable_o = esr_thread0_enable;
   assign orig_esr_thread1_enable_o = esr_thread1_enable;
+  assign orig_icache_prefetch_start_o = esr_icache_prefetch_start;
   assign orig_esr_ipi_trigger_o = esr_ipi_trigger;
   assign orig_esr_ipi_redirect_trigger_o = esr_ipi_redirect_trigger;
   assign orig_esr_mtime_local_target_o = esr_mtime_local_target_op;
   assign orig_esr_shire_coop_mode_o = esr_shire_coop_mode;
+  assign orig_debug_and_or_tree_l2_o = debug_and_or_tree_L2_out;
   assign orig_ioshire_log_err_int_o = ioshire_log_err_int;
   assign orig_uc_to_neigh_fcc_o = uc_to_neigh_fcc;
   assign orig_uc_to_neigh_fcc_target_o = uc_to_neigh_fcc_target;
@@ -636,6 +838,229 @@ module cosim_shire_channel_tb
   assign orig_apb_pslverr_o = APB_ESR_rsp[apb_sel_q].apb_pslverr;
   assign orig_sbm_enable_read_o = sbm_enable_read;
   assign orig_sbm_enable_write_o = sbm_enable_write;
+  assign orig_neigh_sc_req_ready_o = neigh_sc_req_ready;
+  assign orig_neigh_sc_rsp_valid_o = neigh_sc_rsp_valid;
+  assign orig_icache_req_ready_o = icache_f2_sram_req_ready;
+  assign orig_icache_resp_valid_o = icache_f0_sram_resp_valid;
+  assign orig_l2hpf_req_valid_o = sc_neigh_l2hpf_req_valid;
+  assign orig_sc_trace_valid_o = sc_trace_valid;
+  assign orig_clk_gate_ctrl_flat_o = esr_clk_gate_ctrl_op;
+  assign orig_debug_clk_gate_ctrl_o = esr_debug_clk_gate_ctrl_op;
+
+  for (genvar out_idx = 0; out_idx < NUM_NEIGH; out_idx++) begin : gen_orig_flat_outputs
+    assign orig_esr_minion_features_o[out_idx] = esr_minion_features[out_idx];
+    assign orig_icache_prefetch_conf_o[out_idx] = esr_icache_prefetch_conf[out_idx];
+    assign orig_bpam_run_control_neigh_o[out_idx] = bpam_run_control_neigh_op[out_idx];
+    assign orig_neigh_sc_rsp_info_flat_o[out_idx*EtRspBits +: EtRspBits] =
+        neigh_sc_rsp_info[out_idx];
+    assign new_neigh_sc_rsp_info_flat_o[out_idx*EtRspBits +: EtRspBits] =
+        u_new.neigh_sc_rsp_info_o[out_idx];
+    assign orig_icache_resp_dout_flat_o[out_idx*IcacheRespBits +: IcacheRespBits] =
+        icache_f0_sram_resp_dout[out_idx];
+    assign new_icache_resp_dout_flat_o[out_idx*IcacheRespBits +: IcacheRespBits] =
+        u_new.icache_resp_dout_o[out_idx];
+  end
+
+  for (genvar apb_out_idx = 0; apb_out_idx < APB_SLAVES; apb_out_idx++) begin : gen_apb_outputs
+    assign orig_apb_pready_all_o[apb_out_idx] = APB_ESR_rsp[apb_out_idx].apb_pready;
+    assign new_apb_pready_all_o[apb_out_idx] = u_new.apb_rsp_o[apb_out_idx].pready;
+    assign orig_apb_pslverr_all_o[apb_out_idx] = APB_ESR_rsp[apb_out_idx].apb_pslverr;
+    assign new_apb_pslverr_all_o[apb_out_idx] = u_new.apb_rsp_o[apb_out_idx].pslverr;
+    assign orig_apb_prdata_all_flat_o[apb_out_idx*ApbDataBits +: ApbDataBits] =
+        APB_ESR_rsp[apb_out_idx].apb_prdata;
+    assign new_apb_prdata_all_flat_o[apb_out_idx*ApbDataBits +: ApbDataBits] =
+        u_new.apb_rsp_o[apb_out_idx].prdata;
+  end
+
+  assign orig_pwr_ctrl_glb_nsleepin_o = esr_pwr_ctrl_glb_nsleepin_op;
+  assign new_pwr_ctrl_glb_nsleepin_o = u_new.esr_pwr_ctrl_glb_nsleepin_o;
+  assign orig_pwr_ctrl_glb_iso_o = esr_pwr_ctrl_glb_iso_op;
+  assign new_pwr_ctrl_glb_iso_o = u_new.esr_pwr_ctrl_glb_iso_o;
+  assign orig_pwr_ctrl_neigh_nsleepin_o = esr_pwr_ctrl_neigh_nsleepin_op;
+  assign new_pwr_ctrl_neigh_nsleepin_o = u_new.esr_pwr_ctrl_neigh_nsleepin_o;
+  assign orig_pwr_ctrl_neigh_iso_o = esr_pwr_ctrl_neigh_iso_op;
+  assign new_pwr_ctrl_neigh_iso_o = u_new.esr_pwr_ctrl_neigh_iso_o;
+
+  assign orig_pll_ctrl_flat_o = esr_pll_ctrl_op;
+  assign new_pll_ctrl_flat_o = u_new.esr_pll_ctrl_o;
+  assign orig_pll_conf_o = esp_pll_conf_op;
+  assign new_pll_conf_o = u_new.esr_pll_conf_o;
+  assign orig_clk_dly_ctl_flat_o = esr_clk_dly_ctl_op;
+  assign new_clk_dly_ctl_flat_o = u_new.esr_clk_dly_ctl_o;
+  assign orig_dll_dly_est_ctl_flat_o = esr_dll_dly_est_ctl_op;
+  assign new_dll_dly_est_ctl_flat_o = u_new.esr_dll_dly_est_ctl_o;
+  assign orig_shire_ctrl_clockmux_flat_o = esr_shire_ctrl_clockmux_op;
+  assign new_shire_ctrl_clockmux_flat_o = u_new.esr_shire_ctrl_clockmux_o;
+  assign orig_dll_ctrl_flat_o = esr_dll_ctrl_op;
+  assign new_dll_ctrl_flat_o = u_new.esr_dll_ctrl_o;
+  assign orig_dll_conf_o = esp_dll_conf_op;
+  assign new_dll_conf_o = u_new.esr_dll_conf_o;
+
+  ram_cfg_pkg::ram_cfg_t orig_ram_cfg;
+  always_comb begin
+    orig_ram_cfg = '0;
+    orig_ram_cfg.test_en = u_orig.esr_shire_cache_ram_cfg.cfg2.sc_mbd_test1 |
+                           u_orig.esr_shire_cache_ram_cfg.cfg2.sc_mbd_test_rnm;
+    orig_ram_cfg.rm = u_orig.esr_shire_cache_ram_cfg.cfg2.sc_mbd_rm;
+    orig_ram_cfg.rme = u_orig.esr_shire_cache_ram_cfg.cfg2.sc_mbd_rme;
+    orig_ram_cfg.ra = u_orig.esr_shire_cache_ram_cfg.cfg2.sc_mbd_ra;
+    orig_ram_cfg.wa = u_orig.esr_shire_cache_ram_cfg.cfg2.sc_mbd_wa[1:0];
+    orig_ram_cfg.wpulse = u_orig.esr_shire_cache_ram_cfg.cfg2.sc_mbd_wpulse;
+  end
+  assign orig_ram_cfg_flat_o = orig_ram_cfg;
+
+  for (genvar axi_m_idx = 0; axi_m_idx < NUM_L3_MASTER_PORTS; axi_m_idx++) begin : gen_l3_master_outputs
+    assign orig_to_l3_axi_ar_flat_o[axi_m_idx*ScMasterArBits +: ScMasterArBits] =
+        to_l3_mesh_master_axi_AR[axi_m_idx];
+    assign new_to_l3_axi_ar_flat_o[axi_m_idx*ScMasterArBits +: ScMasterArBits] =
+        u_new.to_l3_axi_ar_o[axi_m_idx];
+    assign orig_to_l3_axi_ar_valid_o[axi_m_idx] = to_l3_mesh_master_axi_ARVALID[axi_m_idx];
+    assign new_to_l3_axi_ar_valid_o[axi_m_idx] = u_new.to_l3_axi_ar_valid_o[axi_m_idx];
+    assign orig_to_l3_axi_aw_flat_o[axi_m_idx*ScMasterAwBits +: ScMasterAwBits] =
+        to_l3_mesh_master_axi_AW[axi_m_idx];
+    assign new_to_l3_axi_aw_flat_o[axi_m_idx*ScMasterAwBits +: ScMasterAwBits] =
+        u_new.to_l3_axi_aw_o[axi_m_idx];
+    assign orig_to_l3_axi_aw_valid_o[axi_m_idx] = to_l3_mesh_master_axi_AWVALID[axi_m_idx];
+    assign new_to_l3_axi_aw_valid_o[axi_m_idx] = u_new.to_l3_axi_aw_valid_o[axi_m_idx];
+    assign orig_to_l3_axi_w_flat_o[axi_m_idx*ScMasterWBits +: ScMasterWBits] =
+        to_l3_mesh_master_axi_W[axi_m_idx];
+    assign new_to_l3_axi_w_flat_o[axi_m_idx*ScMasterWBits +: ScMasterWBits] =
+        u_new.to_l3_axi_w_o[axi_m_idx];
+    assign orig_to_l3_axi_w_valid_o[axi_m_idx] = to_l3_mesh_master_axi_WVALID[axi_m_idx];
+    assign new_to_l3_axi_w_valid_o[axi_m_idx] = u_new.to_l3_axi_w_valid_o[axi_m_idx];
+    assign orig_to_l3_axi_b_ready_o[axi_m_idx] = to_l3_mesh_master_axi_BREADY[axi_m_idx];
+    assign new_to_l3_axi_b_ready_o[axi_m_idx] = u_new.to_l3_axi_b_ready_o[axi_m_idx];
+    assign orig_to_l3_axi_r_ready_o[axi_m_idx] = to_l3_mesh_master_axi_RREADY[axi_m_idx];
+    assign new_to_l3_axi_r_ready_o[axi_m_idx] = u_new.to_l3_axi_r_ready_o[axi_m_idx];
+  end
+
+  for (genvar axi_sys_idx = 0; axi_sys_idx < NUM_SYS_PORTS; axi_sys_idx++) begin : gen_sys_master_outputs
+    if (axi_sys_idx == 0) begin : gen_orig_sys_master
+      assign orig_to_sys_axi_ar_flat_o[axi_sys_idx*ScMasterArBits +: ScMasterArBits] =
+          to_sys_mesh_master_axi_AR;
+      assign orig_to_sys_axi_ar_valid_o[axi_sys_idx] = to_sys_mesh_master_axi_ARVALID;
+      assign orig_to_sys_axi_aw_flat_o[axi_sys_idx*ScMasterAwBits +: ScMasterAwBits] =
+          to_sys_mesh_master_axi_AW;
+      assign orig_to_sys_axi_aw_valid_o[axi_sys_idx] = to_sys_mesh_master_axi_AWVALID;
+      assign orig_to_sys_axi_w_flat_o[axi_sys_idx*ScMasterWBits +: ScMasterWBits] =
+          to_sys_mesh_master_axi_W;
+      assign orig_to_sys_axi_w_valid_o[axi_sys_idx] = to_sys_mesh_master_axi_WVALID;
+      assign orig_to_sys_axi_b_ready_o[axi_sys_idx] = to_sys_mesh_master_axi_BREADY;
+      assign orig_to_sys_axi_r_ready_o[axi_sys_idx] = to_sys_mesh_master_axi_RREADY;
+    end else begin : gen_unused_orig_sys_master
+      assign orig_to_sys_axi_ar_flat_o[axi_sys_idx*ScMasterArBits +: ScMasterArBits] = '0;
+      assign orig_to_sys_axi_ar_valid_o[axi_sys_idx] = 1'b0;
+      assign orig_to_sys_axi_aw_flat_o[axi_sys_idx*ScMasterAwBits +: ScMasterAwBits] = '0;
+      assign orig_to_sys_axi_aw_valid_o[axi_sys_idx] = 1'b0;
+      assign orig_to_sys_axi_w_flat_o[axi_sys_idx*ScMasterWBits +: ScMasterWBits] = '0;
+      assign orig_to_sys_axi_w_valid_o[axi_sys_idx] = 1'b0;
+      assign orig_to_sys_axi_b_ready_o[axi_sys_idx] = 1'b0;
+      assign orig_to_sys_axi_r_ready_o[axi_sys_idx] = 1'b0;
+    end
+    assign new_to_sys_axi_ar_flat_o[axi_sys_idx*ScMasterArBits +: ScMasterArBits] =
+        u_new.to_sys_axi_ar_o[axi_sys_idx];
+    assign new_to_sys_axi_ar_valid_o[axi_sys_idx] = u_new.to_sys_axi_ar_valid_o[axi_sys_idx];
+    assign new_to_sys_axi_aw_flat_o[axi_sys_idx*ScMasterAwBits +: ScMasterAwBits] =
+        u_new.to_sys_axi_aw_o[axi_sys_idx];
+    assign new_to_sys_axi_aw_valid_o[axi_sys_idx] = u_new.to_sys_axi_aw_valid_o[axi_sys_idx];
+    assign new_to_sys_axi_w_flat_o[axi_sys_idx*ScMasterWBits +: ScMasterWBits] =
+        u_new.to_sys_axi_w_o[axi_sys_idx];
+    assign new_to_sys_axi_w_valid_o[axi_sys_idx] = u_new.to_sys_axi_w_valid_o[axi_sys_idx];
+    assign new_to_sys_axi_b_ready_o[axi_sys_idx] = u_new.to_sys_axi_b_ready_o[axi_sys_idx];
+    assign new_to_sys_axi_r_ready_o[axi_sys_idx] = u_new.to_sys_axi_r_ready_o[axi_sys_idx];
+  end
+
+  for (genvar axi_s_idx = 0; axi_s_idx < NUM_L3_SLAVE_PORTS; axi_s_idx++) begin : gen_l3_slave_outputs
+    assign orig_l3_axi_ar_ready_o[axi_s_idx] = l3_mesh_slave_axi_ARREADY[axi_s_idx];
+    assign new_l3_axi_ar_ready_o[axi_s_idx] = u_new.l3_axi_ar_ready_o[axi_s_idx];
+    assign orig_l3_axi_aw_ready_o[axi_s_idx] = l3_mesh_slave_axi_AWREADY[axi_s_idx];
+    assign new_l3_axi_aw_ready_o[axi_s_idx] = u_new.l3_axi_aw_ready_o[axi_s_idx];
+    assign orig_l3_axi_w_ready_o[axi_s_idx] = l3_mesh_slave_axi_WREADY[axi_s_idx];
+    assign new_l3_axi_w_ready_o[axi_s_idx] = u_new.l3_axi_w_ready_o[axi_s_idx];
+    assign orig_l3_axi_b_flat_o[axi_s_idx*ScSlaveBBits +: ScSlaveBBits] =
+        l3_mesh_slave_axi_B[axi_s_idx];
+    assign new_l3_axi_b_flat_o[axi_s_idx*ScSlaveBBits +: ScSlaveBBits] =
+        u_new.l3_axi_b_o[axi_s_idx];
+    assign orig_l3_axi_b_valid_o[axi_s_idx] = l3_mesh_slave_axi_BVALID[axi_s_idx];
+    assign new_l3_axi_b_valid_o[axi_s_idx] = u_new.l3_axi_b_valid_o[axi_s_idx];
+    assign orig_l3_axi_r_flat_o[axi_s_idx*ScSlaveRBits +: ScSlaveRBits] =
+        l3_mesh_slave_axi_R[axi_s_idx];
+    assign new_l3_axi_r_flat_o[axi_s_idx*ScSlaveRBits +: ScSlaveRBits] =
+        u_new.l3_axi_r_o[axi_s_idx];
+    assign orig_l3_axi_r_valid_o[axi_s_idx] = l3_mesh_slave_axi_RVALID[axi_s_idx];
+    assign new_l3_axi_r_valid_o[axi_s_idx] = u_new.l3_axi_r_valid_o[axi_s_idx];
+  end
+
+  assign orig_uc_to_l3_axi_ar_flat_o = uc_to_l3_mesh_master_axi_AR;
+  assign new_uc_to_l3_axi_ar_flat_o = u_new.uc_to_l3_axi_ar_o;
+  assign orig_uc_to_l3_axi_ar_valid_o = uc_to_l3_mesh_master_axi_ARVALID;
+  assign new_uc_to_l3_axi_ar_valid_o = u_new.uc_to_l3_axi_ar_valid_o;
+  assign orig_uc_to_l3_axi_aw_flat_o = uc_to_l3_mesh_master_axi_AW;
+  assign new_uc_to_l3_axi_aw_flat_o = u_new.uc_to_l3_axi_aw_o;
+  assign orig_uc_to_l3_axi_aw_valid_o = uc_to_l3_mesh_master_axi_AWVALID;
+  assign new_uc_to_l3_axi_aw_valid_o = u_new.uc_to_l3_axi_aw_valid_o;
+  assign orig_uc_to_l3_axi_w_flat_o = uc_to_l3_mesh_master_axi_W;
+  assign new_uc_to_l3_axi_w_flat_o = u_new.uc_to_l3_axi_w_o;
+  assign orig_uc_to_l3_axi_w_valid_o = uc_to_l3_mesh_master_axi_WVALID;
+  assign new_uc_to_l3_axi_w_valid_o = u_new.uc_to_l3_axi_w_valid_o;
+  assign orig_uc_to_l3_axi_b_ready_o = uc_to_l3_mesh_master_axi_BREADY;
+  assign new_uc_to_l3_axi_b_ready_o = u_new.uc_to_l3_axi_b_ready_o;
+  assign orig_uc_to_l3_axi_r_ready_o = uc_to_l3_mesh_master_axi_RREADY;
+  assign new_uc_to_l3_axi_r_ready_o = u_new.uc_to_l3_axi_r_ready_o;
+
+  assign orig_uc_to_sys_axi_ar_flat_o = uc_to_sys_mesh_master_axi_AR;
+  assign new_uc_to_sys_axi_ar_flat_o = u_new.uc_to_sys_axi_ar_o;
+  assign orig_uc_to_sys_axi_ar_valid_o = uc_to_sys_mesh_master_axi_ARVALID;
+  assign new_uc_to_sys_axi_ar_valid_o = u_new.uc_to_sys_axi_ar_valid_o;
+  assign orig_uc_to_sys_axi_aw_flat_o = uc_to_sys_mesh_master_axi_AW;
+  assign new_uc_to_sys_axi_aw_flat_o = u_new.uc_to_sys_axi_aw_o;
+  assign orig_uc_to_sys_axi_aw_valid_o = uc_to_sys_mesh_master_axi_AWVALID;
+  assign new_uc_to_sys_axi_aw_valid_o = u_new.uc_to_sys_axi_aw_valid_o;
+  assign orig_uc_to_sys_axi_w_flat_o = uc_to_sys_mesh_master_axi_W;
+  assign new_uc_to_sys_axi_w_flat_o = u_new.uc_to_sys_axi_w_o;
+  assign orig_uc_to_sys_axi_w_valid_o = uc_to_sys_mesh_master_axi_WVALID;
+  assign new_uc_to_sys_axi_w_valid_o = u_new.uc_to_sys_axi_w_valid_o;
+  assign orig_uc_to_sys_axi_b_ready_o = uc_to_sys_mesh_master_axi_BREADY;
+  assign new_uc_to_sys_axi_b_ready_o = u_new.uc_to_sys_axi_b_ready_o;
+  assign orig_uc_to_sys_axi_r_ready_o = uc_to_sys_mesh_master_axi_RREADY;
+  assign new_uc_to_sys_axi_r_ready_o = u_new.uc_to_sys_axi_r_ready_o;
+
+  assign orig_sys_axi_ar_ready_o = sys_mesh_slave_axi_ARREADY;
+  assign new_sys_axi_ar_ready_o = u_new.sys_axi_ar_ready_o;
+  assign orig_sys_axi_aw_ready_o = sys_mesh_slave_axi_AWREADY;
+  assign new_sys_axi_aw_ready_o = u_new.sys_axi_aw_ready_o;
+  assign orig_sys_axi_w_ready_o = sys_mesh_slave_axi_WREADY;
+  assign new_sys_axi_w_ready_o = u_new.sys_axi_w_ready_o;
+  assign orig_sys_axi_b_flat_o = sys_mesh_slave_axi_B;
+  assign new_sys_axi_b_flat_o = u_new.sys_axi_b_o;
+  assign orig_sys_axi_b_valid_o = sys_mesh_slave_axi_BVALID;
+  assign new_sys_axi_b_valid_o = u_new.sys_axi_b_valid_o;
+  assign orig_sys_axi_r_flat_o = sys_mesh_slave_axi_R;
+  assign new_sys_axi_r_flat_o = u_new.sys_axi_r_o;
+  assign orig_sys_axi_r_valid_o = sys_mesh_slave_axi_RVALID;
+  assign new_sys_axi_r_valid_o = u_new.sys_axi_r_valid_o;
+  assign orig_sys_axi_aw_credit_o = sys_mesh_slave_axi_AWcredit;
+  assign new_sys_axi_aw_credit_o = u_new.sys_axi_aw_credit_o;
+
+  assign orig_sbm_sys_axi_ar_flat_o = sbm_sys_mesh_slave_axi_AR;
+  assign new_sbm_sys_axi_ar_flat_o = u_new.sbm_sys_axi_ar_o;
+  assign orig_sbm_sys_axi_aw_flat_o = sbm_sys_mesh_slave_axi_AW;
+  assign new_sbm_sys_axi_aw_flat_o = u_new.sbm_sys_axi_aw_o;
+  assign orig_sbm_sys_axi_w_flat_o = sbm_sys_mesh_slave_axi_W;
+  assign new_sbm_sys_axi_w_flat_o = u_new.sbm_sys_axi_w_o;
+  assign orig_sbm_sys_axi_b_ready_o = sbm_sys_mesh_slave_axi_BREADY;
+  assign new_sbm_sys_axi_b_ready_o = u_new.sbm_sys_axi_b_ready_o;
+  assign orig_sbm_sys_axi_r_ready_o = sbm_sys_mesh_slave_axi_RREADY;
+  assign new_sbm_sys_axi_r_ready_o = u_new.sbm_sys_axi_r_ready_o;
+
+  for (genvar l2hpf_idx = 0; l2hpf_idx < NUM_BANKS; l2hpf_idx++) begin : gen_l2hpf_outputs
+    assign orig_l2hpf_req_info_flat_o[l2hpf_idx*L2hpfReqBits +: L2hpfReqBits] =
+        sc_neigh_l2hpf_req_info[l2hpf_idx];
+    assign new_l2hpf_req_info_flat_o[l2hpf_idx*L2hpfReqBits +: L2hpfReqBits] =
+        u_new.sc_neigh_l2hpf_req_info_o[l2hpf_idx];
+  end
+  assign orig_sc_trace_data_flat_o = sc_trace_data;
+  assign new_sc_trace_data_flat_o = u_new.sc_trace_data_o;
 
 endmodule
 /* verilator lint_on PINCONNECTEMPTY */

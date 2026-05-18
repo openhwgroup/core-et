@@ -134,8 +134,7 @@ NEW_RTL := \
   $(LEAVES)/icache_mems.sv \
   $(IP)/icache_data_ram_wrap/rtl/icache_data_ram_wrap.sv \
   $(REPO_ROOT)/hw/ip/shire_channel/rtl/shire_channel.sv \
-  $(REPO_ROOT)/hw/ip/shire_channel/dv/shire_channel_tb.sv \
-  $(CURDIR)/icache_mems_orig_stub.sv
+  $(REPO_ROOT)/hw/ip/shire_channel/dv/shire_channel_tb.sv
 
 ORIG_RTL := \
   $(ORIG_ROOT)/rtl/shire/shire_channel/orig/shire_channel.v \
@@ -143,6 +142,11 @@ ORIG_RTL := \
   $(ORIG_ROOT)/rtl/shire/shire_channel/shire_bpam_run_control.v \
   $(ORIG_ROOT)/rtl/shire/shire_channel/shire_and_or_tree_daisychain.v \
   $(ORIG_ROOT)/rtl/shire/esr/esr_shire_other.v \
+  $(ORIG_ROOT)/rtl/shire/esr/esr_cache_bank.v \
+  $(ORIG_ROOT)/rtl/shire/shire_cache/shire_cache.v \
+  $(ORIG_ROOT)/rtl/shire/shire_cache/orig/shire_cache_bank.v \
+  $(ORIG_ROOT)/rtl/shire/shire_channel/icache/icache_mems.v \
+  $(ORIG_ROOT)/rtl/shire/shire_channel/icache/icache_data_ram_wrap.v \
   $(ORIG_ROOT)/rtl/shire/uncached/uncacheable_fcc.v \
   $(ORIG_ROOT)/rtl/shire/uncached/uncacheable_flb.v \
   $(ORIG_ROOT)/rtl/shire/uncached/noc_etlink_to_axi.v \
@@ -161,7 +165,11 @@ ORIG_LIBDIRS := $(ORIG_ROOT)/rtl/libs/mems_and_fifos \
                 $(ORIG_ROOT)/rtl/libs/rf_latches \
                 $(ORIG_ROOT)/rtl/libs/arbiters \
                 $(ORIG_ROOT)/rtl/libs/registers \
-                $(ORIG_ROOT)/rtl/shire/esr
+                $(ORIG_ROOT)/rtl/libs/ecc \
+                $(ORIG_ROOT)/rtl/shire/esr \
+                $(ORIG_ROOT)/rtl/shire/shire_cache \
+                $(ORIG_ROOT)/rtl/shire/shire_cache/orig \
+                $(ORIG_ROOT)/rtl/shire/rbox
 
 ORIG_RENAME := uncacheable_noc_tol3_handler \
                uncacheable_noc_tosys_handler \
@@ -172,6 +180,10 @@ ORIG_RENAME := uncacheable_noc_tol3_handler \
                uncached_lo_voltage_cross \
                shire_and_or_tree_daisychain \
                shire_bpam_run_control \
+               shire_cache_bank \
+               esr_cache_bank \
+               shire_cache \
+               icache_data_ram_wrap \
                noc_etlink_to_axi \
                icache_mems \
                uncacheable_noc_rsp \

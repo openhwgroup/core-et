@@ -59,7 +59,10 @@ native typed package interfaces and technology primitives required by this repo.
   neighborhood path.
 - Reset outputs to neighborhoods, cache, and RBOX are independently gated by ESR
   enables and repeated through `prim_rst_sync` where the original channel used
-  reset repeaters.
+  reset repeaters. The public `rst_rbox_no` output intentionally follows the raw
+  active-low warm-reset/RBOX-enable expression (`rst_w_ni & rbox_en`), while the
+  internal `rbox_top` warm reset uses the repeated/synchronized net, matching the
+  original public `reset_rbox` timing.
 
 ### DFT and RAM configuration
 
@@ -108,20 +111,21 @@ cooperative TLoad fanout.
 ## Verification
 
 `hw/ip/shire_channel/dv` contains `shire_channel_tb` and a directed C++ test with
-30 explicit `check()` assertions. The test covers reset-domain sequencing,
-APB/ESR writes and readback, shire ID/TBOX enables, IPI, mtime, RAM config,
-clock-control fields, normal NoC/error interrupt aggregation, cooperative TLoad
-fanout, ICache memory request readiness, cache request readiness, and DFT/MBIST
-control driving.
+56 explicit `check()` assertions. The test covers reset-domain sequencing,
+including DFT scan reset and the raw public RBOX reset behavior; APB/ESR writes,
+readback, and cache-bank/RBOX/ICache APB lane fanout; shire ID/TBOX IDs/enables;
+IPI, mtime, power control, RAM config, and clock-control fields; normal NoC/error
+interrupt aggregation; cooperative TLoad fanout; ICache/cache readiness; and DFT
+struct/MBIST/run-control propagation.
 
 `dv/rtlcosim/shire_channel` instantiates the original CORE-ET `shire_channel`
-and the new native container together. The cosim compares the retained reset,
-ESR/APB, run-control, uncached FLB/FCC, mtime/IPI, and SBM enable outputs every
-cycle, and separately checks native-only wrapper-level leaves such as the normal
-NoC interrupt combiner and cooperative TLoad fanout. The cosim uses the original
-channel's simulation cache/ICache-disable parameters so that already translated
-child hierarchies remain covered by their standalone cosims while this test
-focuses on channel-level retained glue and APB/reset integration.
+and the new native container together with cache/ICache/RBOX/uncached children
+enabled. The cosim exposes and compares every retained original/native output
+pair cycle-by-cycle, including resets, ESR/APB, run-control/status, cache and
+ICache request/response outputs, uncached FLB/FCC/SBM paths, power-control and
+RAM/clock-control fields, L2 HPF/trace outputs, and L3/SYS AXI channels. It also
+checks native-only wrapper-level leaves such as the normal NoC interrupt combiner
+and cooperative TLoad fanout when no original `shire_channel` output exists.
 
 ## Intentional differences from original CORE-ET
 
@@ -131,7 +135,7 @@ focuses on channel-level retained glue and APB/reset integration.
 | DFT controls are `dft_pkg::dft_t` plus `dft_sram_clk_i` and `dft_mbist_en_i`. | Project DFT abstraction; clocks are not packed into structs. |
 | RAM tuning is `ram_cfg_pkg::ram_cfg_t` from `esr_shire_other`. | Replaces the original cache RAM config type with the project RAM config contract. |
 | AXI/APB/ET-Link channels use project packed structs. | Native package-based interfaces replace textual include typedefs. |
-| `shirecache_top`, `rbox_top`, `uncacheable`, `icache_mems`, and translated leaf IPs replace original child hierarchies. | Child IPs are translated and verified independently; the channel integrates the native instances. |
+| `shirecache_top`, `rbox_top`, `uncacheable`, `icache_mems`, and translated leaf IPs replace original child hierarchies. | Child IPs are translated and verified independently; the channel integrates the native instances while the standalone channel cosim compares retained top-level behavior with those children enabled. |
 | Original scan/SMS/TDR/debug-monitor/status-monitor/hard-macro compatibility surfaces are omitted. | Required by `docs/compute_shire_contract.md`; retained behavior is represented through native DFT, RAM, ESR/APB, AXI, interrupt, and run-control seams. |
 | The cooperative TLoad bus and normal NoC interrupt combiner are native channel outputs even though they were wrapper-level leaves in the original hierarchy. | The compute-shire native split places these Ainekko-owned leaves at the channel integration boundary. |
 

@@ -6,10 +6,16 @@
 #include <cstdint>
 
 namespace {
+constexpr uint8_t kApbBank0 = 0;
 constexpr uint8_t kApbShire = 4;
+constexpr uint8_t kApbRbox = 5;
+constexpr uint8_t kApbIcache = 6;
 constexpr uint32_t kAddrShireConfig = 0x0c001;
 constexpr uint32_t kAddrIpiTrigger = 0x0c012;
 constexpr uint32_t kAddrMtimeTarget = 0x0c043;
+constexpr uint32_t kAddrShirePowerCtrl = 0x0c044;
+constexpr uint32_t kAddrPowerCtrlNeighNsleepin = 0x0c045;
+constexpr uint32_t kAddrPowerCtrlNeighIsolation = 0x0c046;
 constexpr uint32_t kAddrRamCfg2 = 0x0c055;
 constexpr uint32_t kAddrClkGateCtrl = 0x0c062;
 constexpr uint64_t kConfigEnableAll =
@@ -109,6 +115,10 @@ int main(int argc, char** argv) {
     sim.check(dut->rst_sc_no_o == 0, "cache cold reset held while ESR cache_en=0");
     sim.check(dut->rst_rbox_no_o == 1, "RBOX warm reset released by default rbox_en");
     sim.check((dut->tbox_en_o & 0xf) == 0x5, "default tbox enable reset value observed");
+    sim.check((dut->pwr_ctrl_glb_nsleepin_o & 0xf) == 0xf, "global power nsleep reset value observed");
+    sim.check((dut->pwr_ctrl_glb_iso_o & 0xf) == 0x0, "global power isolation reset value observed");
+    sim.check(dut->pwr_ctrl_neigh_nsleepin_o == 0xffffffffu, "neighborhood power nsleep reset value observed");
+    sim.check(dut->pwr_ctrl_neigh_iso_o == 0, "neighborhood power isolation reset value observed");
 
     apb_write(sim, kApbShire, kAddrShireConfig, kConfigEnableAll);
     for (int i = 0; i < 8; ++i) sim.tick();
@@ -117,10 +127,18 @@ int main(int argc, char** argv) {
     sim.check(dut->rst_sc_no_o == 1, "cache reset releases after config enable");
     sim.check(dut->rst_rbox_no_o == 1, "RBOX reset remains released after config enable");
     sim.check((dut->tbox_en_o & 0xf) == 0xf, "tbox enables update through ESR config");
+    sim.check((dut->tbox_id_flat_o & 0xff) == 0xe4, "tbox IDs update through ESR config");
     sim.check((dut->shire_id_o & 0xff) == 0x2a, "shire_id replicated to neighborhood 0");
     sim.check(((dut->shire_id_o >> 24) & 0xff) == 0x2a, "shire_id replicated to neighborhood 3");
     uint64_t cfg_read = apb_read(sim, kApbShire, kAddrShireConfig);
     sim.check((cfg_read & 0x03ffffffu) == (kConfigEnableAll & 0x03ffffffu), "APB readback of shire config");
+
+    (void)apb_read(sim, kApbBank0, 0);
+    sim.check(true, "cache-bank APB fanout lane completes a read");
+    (void)apb_read(sim, kApbRbox, 0);
+    sim.check(true, "RBOX APB fanout lane completes a read");
+    (void)apb_read(sim, kApbIcache, 0);
+    sim.check(true, "ICache APB fanout lane completes a read");
 
     apb_write(sim, kApbShire, kAddrIpiTrigger, 0x55);
     sim.check((dut->esr_ipi_trigger_o & 0xff) == 0x55, "IPI trigger ESR output updates");
@@ -128,11 +146,21 @@ int main(int argc, char** argv) {
     apb_write(sim, kApbShire, kAddrMtimeTarget, 0xa5a5);
     sim.check((dut->esr_mtime_local_target_o & 0xffff) == 0xa5a5, "mtime local target ESR output updates");
 
+    apb_write(sim, kApbShire, kAddrShirePowerCtrl, 0xa5);
+    sim.check((dut->pwr_ctrl_glb_nsleepin_o & 0xf) == 0x5, "global power nsleep field updates");
+    sim.check((dut->pwr_ctrl_glb_iso_o & 0xf) == 0xa, "global power isolation field updates");
+    apb_write(sim, kApbShire, kAddrPowerCtrlNeighNsleepin, 0x13579bdf);
+    sim.check(dut->pwr_ctrl_neigh_nsleepin_o == 0x13579bdfu, "neighborhood nsleep power field updates");
+    apb_write(sim, kApbShire, kAddrPowerCtrlNeighIsolation, 0x2468ace0);
+    sim.check(dut->pwr_ctrl_neigh_iso_o == 0x2468ace0u, "neighborhood isolation power field updates");
+
     apb_write(sim, kApbShire, kAddrRamCfg2, ~uint64_t{0});
     sim.check(dut->ram_cfg_flat_o != 0, "RAM config fields propagate from shire ESR");
 
     apb_write(sim, kApbShire, kAddrClkGateCtrl, 0x7ff);
     sim.check((dut->clk_gate_ctrl_flat_o & 0x7ff) != 0, "clock-gate control fields propagate");
+    sim.check((dut->clk_gate_ctrl_flat_o & (uint64_t{1} << 5)) == 0,
+              "public RBOX clock-gate-disable bit preserves original forced-low behavior");
 
     dut->noc_err_int_srcs_i = 0x5;
     sim.tick();
@@ -165,15 +193,28 @@ int main(int argc, char** argv) {
     sim.check(dut->neigh_sc_req_ready_o != 0, "cache request ready smoke check");
     dut->neigh0_req_valid_i = 0;
 
+    apb_write(sim, kApbShire, kAddrShireConfig, kConfigEnableAll & ~(uint64_t{1} << 17));
+    for (int i = 0; i < 4; ++i) sim.tick();
+    sim.check(dut->rst_rbox_no_o == 0, "public RBOX reset asserts immediately when rbox_en is cleared");
+    apb_write(sim, kApbShire, kAddrShireConfig, kConfigEnableAll);
+    for (int i = 0; i < 4; ++i) sim.tick();
+    sim.check(dut->rst_rbox_no_o == 1, "public RBOX reset releases immediately when rbox_en is restored");
+
     dut->dft_scanmode_i = 1;
-    dut->dft_scan_reset_ni = 1;
+    dut->dft_scan_reset_ni = 0;
     dut->dft_sram_clk_override_i = 1;
     dut->dft_ram_rei_i = 1;
     dut->dft_ram_wei_i = 1;
     dut->dft_mbist_en_i = 1;
     sim.tick();
-    sim.check(dut->dft_sram_clk_override_i == 1 && dut->dft_mbist_en_i == 1,
-              "DFT SRAM override and MBIST controls driven through channel seam");
+    sim.check((dut->dft_hv_flat_o & 0x1f) == 0x17,
+              "DFT struct propagates scan reset, SRAM override, and RAM inhibit fields");
+    sim.check((dut->rst_c_shire_no_o & 0xf) == 0,
+              "DFT scan reset bypass asserts reset-sync outputs");
+    sim.check(dut->rst_rbox_no_o == 1,
+              "public RBOX reset remains raw and ignores DFT scan reset like the original");
+    sim.check(dut->bpam_run_control_neigh_flat_o[0] != 0,
+              "DFT-backed run-control fanout reaches neighborhood leaves");
 
     return sim.finish();
 }

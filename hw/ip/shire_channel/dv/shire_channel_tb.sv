@@ -71,16 +71,23 @@ module shire_channel_tb
   output logic [shire_esr_pkg::NumNeigh-1:0] rst_c_shire_no_o,
   output logic [shire_esr_pkg::NumNeigh-1:0] rst_w_shire_no_o,
   output logic [shire_esr_pkg::NumNeigh-1:0] rst_d_shire_no_o,
+  output logic [shire_esr_pkg::NumNeigh-1:0] rst_c_shire_scs_no_o,
   output logic rst_sc_no_o,
   output logic rst_rbox_no_o,
   output logic [shire_esr_pkg::NumNeigh-1:0][shire_esr_pkg::NumShireIdsBits-1:0] shire_id_o,
+  output logic [shire_esr_pkg::TboxPerShire-1:0][1:0] tbox_id_flat_o,
   output logic [shire_esr_pkg::TboxPerShire-1:0] tbox_en_o,
   output logic [shire_esr_pkg::ThreadsPerShire-1:0] esr_thread0_enable_o,
   output logic [shire_esr_pkg::ThreadsPerShire-1:0] esr_thread1_enable_o,
+  output logic [$bits(minion_pkg::esr_minion_features_t)-1:0] esr_minion_features_flat_o [shire_esr_pkg::NumNeigh],
+  output logic [$bits(icache_pkg::icache_prefetch_conf_t)-1:0] esr_icache_prefetch_conf_flat_o [shire_esr_pkg::NumNeigh],
+  output logic [shire_esr_pkg::IcachePerShire-1:0] esr_icache_prefetch_start_flat_o,
   output logic [shire_esr_pkg::ThreadsPerShire-1:0] esr_ipi_trigger_o,
   output logic [shire_esr_pkg::ThreadsPerShire-1:0] esr_ipi_redirect_trigger_o,
   output logic [shire_esr_pkg::ThreadsPerShire-1:0] esr_mtime_local_target_o,
   output logic [shire_esr_pkg::NumNeigh-1:0] esr_shire_coop_mode_o,
+  output logic [$bits(shire_channel_leaves_pkg::esr_and_or_tree_l2_t)-1:0] debug_and_or_tree_l2_flat_o,
+  output logic [$bits(neigh_voltage_cross_pkg::bpam_run_control_neigh_t)-1:0] bpam_run_control_neigh_flat_o [shire_esr_pkg::NumNeigh],
   output logic ioshire_log_err_int_o,
   output logic ioshire_noc_err_int_o,
   output logic [shire_channel_leaves_pkg::NocIntNum-1:0] noc_all_err_int_srcs_o,
@@ -92,6 +99,13 @@ module shire_channel_tb
   output logic [shire_esr_pkg::NumNeigh-1:0] neigh_sc_rsp_valid_o,
   output logic [shire_esr_pkg::NumNeigh-1:0] icache_req_ready_o,
   output logic [shire_esr_pkg::NumNeigh-1:0] icache_resp_valid_o,
+  output logic [shirecache_pkg::Banks-1:0] sc_neigh_l2hpf_req_valid_flat_o,
+  output logic sc_trace_valid_flat_o,
+  output logic [$bits(dft_pkg::dft_t)-1:0] dft_hv_flat_o,
+  output logic [shire_esr_pkg::NumNeigh-1:0] pwr_ctrl_glb_nsleepin_o,
+  output logic [shire_esr_pkg::NumNeigh-1:0] pwr_ctrl_glb_iso_o,
+  output logic [shire_esr_pkg::NumNeigh*shire_esr_pkg::MinPerNeigh-1:0] pwr_ctrl_neigh_nsleepin_o,
+  output logic [shire_esr_pkg::NumNeigh*shire_esr_pkg::MinPerNeigh-1:0] pwr_ctrl_neigh_iso_o,
   output logic [$bits(ram_cfg_pkg::ram_cfg_t)-1:0] ram_cfg_flat_o,
   output logic [$bits(shire_esr_pkg::esr_clk_gate_ctrl_t)-1:0] clk_gate_ctrl_flat_o,
   output logic debug_clk_gate_ctrl_o,
@@ -441,11 +455,29 @@ module shire_channel_tb
   assign rst_c_shire_no_o = rst_c_shire_no;
   assign rst_w_shire_no_o = rst_w_shire_no;
   assign rst_d_shire_no_o = rst_d_shire_no;
+  assign rst_c_shire_scs_no_o = rst_c_shire_scs_no;
   assign rst_sc_no_o = rst_sc_no;
   assign rst_rbox_no_o = rst_rbox_no;
+  assign tbox_id_flat_o = tbox_id_o;
+  assign esr_icache_prefetch_start_flat_o = esr_icache_prefetch_start_o;
+  assign debug_and_or_tree_l2_flat_o = debug_and_or_tree_l2_o;
+  assign sc_neigh_l2hpf_req_valid_flat_o = sc_neigh_l2hpf_req_valid_o;
+  assign sc_trace_valid_flat_o = sc_trace_valid_o;
+  assign dft_hv_flat_o = dft_hv_i;
+  assign pwr_ctrl_glb_nsleepin_o = esr_pwr_ctrl_glb_nsleepin_o;
+  assign pwr_ctrl_glb_iso_o = esr_pwr_ctrl_glb_iso_o;
+  assign pwr_ctrl_neigh_nsleepin_o = esr_pwr_ctrl_neigh_nsleepin_o;
+  assign pwr_ctrl_neigh_iso_o = esr_pwr_ctrl_neigh_iso_o;
   assign ram_cfg_flat_o = ram_cfg_o;
   assign clk_gate_ctrl_flat_o = esr_clk_gate_ctrl_o;
   assign debug_clk_gate_ctrl_o = esr_debug_clk_gate_ctrl_o;
+
+  for (genvar flat_idx = 0; flat_idx < NumNeigh; flat_idx++) begin : gen_flat_outputs
+    assign esr_minion_features_flat_o[flat_idx] = esr_minion_features_o[flat_idx];
+    assign esr_icache_prefetch_conf_flat_o[flat_idx] = esr_icache_prefetch_conf_o[flat_idx];
+    assign bpam_run_control_neigh_flat_o[flat_idx] = bpam_run_control_neigh_o[flat_idx];
+  end
+
   assign coop_slv_valid_o = coop_tload_slv_rdy_in_valid_o;
   assign coop_done_valid_o = coop_tload_mst_done_in_valid_o;
 

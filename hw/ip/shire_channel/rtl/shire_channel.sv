@@ -392,6 +392,7 @@ module shire_channel
   logic                                             esr_sc_remote_l3_enable;
   logic                                             esr_sc_remote_scp_enable;
   shire_esr_pkg::esr_uc_config_t                    esr_uc_config;
+  shire_esr_pkg::esr_clk_gate_ctrl_t                esr_clk_gate_ctrl_raw;
 
   logic [NumPorts-1:0][NumBanks+NumUc-1:0]          cache_req_ready;
   logic [NumPorts-1:0][NumBanks+NumUc-1:0]          cache_req_valid;
@@ -415,6 +416,7 @@ module shire_channel
   logic                rst_d_rbox_raw_ni;
   logic                rst_w_rbox_raw_ni;
   logic                rst_d_rbox_no;
+  logic                rst_w_rbox_no;
   logic [NumNeigh-1:0] rst_w_icache_sync_no;
   logic [NumNeigh-1:0] rst_icache_no;
 
@@ -538,11 +540,13 @@ module shire_channel
     .rst_no (rst_d_rbox_no)
   );
 
+  assign rst_rbox_no = rst_w_rbox_raw_ni;
+
   prim_rst_sync u_rst_w_rbox (
     .clk_i  (clk_i),
     .rst_ni (rst_w_rbox_raw_ni),
     .dft_i  (dft_hv_i),
-    .rst_no (rst_rbox_no)
+    .rst_no (rst_w_rbox_no)
   );
 
   always_ff @(posedge clk_i or negedge rst_c_sc_no) begin
@@ -610,7 +614,7 @@ module shire_channel
     .esr_shire_coop_mode_o                (esr_shire_coop_mode),
     .esr_shire_noc_interrupt_status_i     (noc_all_err_int_srcs_o),
     .esr_uc_config_o                      (esr_uc_config),
-    .esr_clk_gate_ctrl_o                  (esr_clk_gate_ctrl_o),
+    .esr_clk_gate_ctrl_o                  (esr_clk_gate_ctrl_raw),
     .esr_debug_clk_gate_ctrl_o            (esr_debug_clk_gate_ctrl_o),
     .esr_shire_channel_eco_ctl_o          (shire_eco_unused),
     .esr_clk_dly_ctl_o                    (esr_clk_dly_ctl_o),
@@ -661,6 +665,13 @@ module shire_channel
     .apb_pslverr_o                        (shire_apb_pslverr)
   );
 
+  always_comb begin
+    esr_clk_gate_ctrl_o = esr_clk_gate_ctrl_raw;
+    // Original shire_channel reserves the public RBox clock-gate-disable bit
+    // and forces it low even though esr_shire_other stores the raw field.
+    esr_clk_gate_ctrl_o.rbox_clock_gate_disable = 1'b0;
+  end
+
   assign tbox_single_step = debug_rc_ss_tbox_rbox[shire_esr_pkg::TboxPerShire-1:0];
   assign rbox_single_step = debug_rc_ss_tbox_rbox[shire_esr_pkg::TboxPerShire];
 
@@ -700,7 +711,7 @@ module shire_channel
     rbox_top u_rbox_top (
       .clk_i                 (clk_i),
       .rst_d_ni              (rst_d_rbox_no),
-      .rst_w_ni              (rst_rbox_no),
+      .rst_w_ni              (rst_w_rbox_no),
       .shire_id_i            (esr_shire_config.shire_id),
       .rbox_sc_req_o         (rbox_sc_req_info[rbox_idx]),
       .rbox_sc_req_valid_o   (rbox_sc_req_valid[rbox_idx]),
@@ -832,6 +843,11 @@ module shire_channel
   shirecache_pkg::xbar_rsp_t uc_rsp_info;
   assign neigh_uc_rsp_info = uc_rsp_info;
 
+  axi_pkg::sc_master_ar_t uc_to_sys_axi_ar_raw;
+  axi_pkg::sc_master_aw_t uc_to_sys_axi_aw_raw;
+  axi_pkg::sc_master_w_t uc_to_sys_axi_w_raw;
+  logic [1:0] sys_axi_aw_credit_raw;
+
   uncacheable #(
     .NumNeighP (NumNeigh),
     .NumPortsP (NumPorts)
@@ -890,7 +906,7 @@ module shire_channel
     .sys_axi_r_valid_o             (sys_axi_r_valid_o),
     .sys_axi_r_ready_i             (sys_axi_r_ready_i),
     .sys_axi_aw_vcvalid_i          (sys_axi_aw_vcvalid_i),
-    .sys_axi_aw_credit_o           (sys_axi_aw_credit_o),
+    .sys_axi_aw_credit_o           (sys_axi_aw_credit_raw),
     .sys_axi_w_vcvalid_i           (sys_axi_w_vcvalid_i),
     .to_l3_ar_o                    (uc_to_l3_axi_ar_o),
     .to_l3_ar_valid_o              (uc_to_l3_axi_ar_valid_o),
@@ -907,13 +923,13 @@ module shire_channel
     .to_l3_r_i                     (uc_to_l3_axi_r_i),
     .to_l3_r_valid_i               (uc_to_l3_axi_r_valid_i),
     .to_l3_r_ready_o               (uc_to_l3_axi_r_ready_o),
-    .to_sys_ar_o                   (uc_to_sys_axi_ar_o),
+    .to_sys_ar_o                   (uc_to_sys_axi_ar_raw),
     .to_sys_ar_valid_o             (uc_to_sys_axi_ar_valid_o),
     .to_sys_ar_ready_i             (uc_to_sys_axi_ar_ready_i),
-    .to_sys_aw_o                   (uc_to_sys_axi_aw_o),
+    .to_sys_aw_o                   (uc_to_sys_axi_aw_raw),
     .to_sys_aw_valid_o             (uc_to_sys_axi_aw_valid_o),
     .to_sys_aw_ready_i             (uc_to_sys_axi_aw_ready_i),
-    .to_sys_w_o                    (uc_to_sys_axi_w_o),
+    .to_sys_w_o                    (uc_to_sys_axi_w_raw),
     .to_sys_w_valid_o              (uc_to_sys_axi_w_valid_o),
     .to_sys_w_ready_i              (uc_to_sys_axi_w_ready_i),
     .to_sys_b_i                    (uc_to_sys_axi_b_i),
@@ -925,6 +941,31 @@ module shire_channel
     .dft_hv_i                      (dft_hv_i),
     .dft_lv_i                      (dft_lv_i)
   );
+
+  always_comb begin
+    uc_to_sys_axi_ar_o = uc_to_sys_axi_ar_raw;
+    if (!uc_to_sys_axi_ar_valid_o) begin
+      uc_to_sys_axi_ar_o = '0;
+      uc_to_sys_axi_ar_o.prot = axi_pkg::ScMasterAxProt;
+      uc_to_sys_axi_ar_o.qos = '1;
+    end
+
+    uc_to_sys_axi_aw_o = uc_to_sys_axi_aw_raw;
+    if (!uc_to_sys_axi_aw_valid_o) begin
+      uc_to_sys_axi_aw_o = '0;
+      uc_to_sys_axi_aw_o.prot = axi_pkg::ScMasterAxProt;
+      uc_to_sys_axi_aw_o.qos = 4'h3;
+    end
+
+    uc_to_sys_axi_w_o = uc_to_sys_axi_w_raw;
+    if (!uc_to_sys_axi_w_valid_o) begin
+      uc_to_sys_axi_w_o = '0;
+      uc_to_sys_axi_w_o.strb = {{(axi_pkg::ScMasterStrbSize-1){1'b0}}, 1'b1};
+      uc_to_sys_axi_w_o.last = 1'b1;
+    end
+  end
+
+  assign sys_axi_aw_credit_o = (sys_axi_aw_vcvalid_i == '0) ? '0 : sys_axi_aw_credit_raw;
 
   for (genvar fcc_target_idx = 1; fcc_target_idx < NumNeigh; fcc_target_idx++) begin : gen_fcc_target_rep
     assign uc_to_neigh_fcc_target_o[fcc_target_idx] = uc_to_neigh_fcc_target_o[0];
