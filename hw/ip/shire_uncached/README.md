@@ -58,6 +58,19 @@ for the high- and low-voltage domains.
 - SYS slave write VC bit 0 routes to the uncached path and bit 1 routes to SBM,
   matching the original `UC_SYS_SLAVE_VSI_ID` / `SBM_SYS_SLAVE_VSI_ID` split.
 
+## Verification
+
+`hw/ip/shire_uncached/dv` builds `shire_uncached_unit_tb`, a directed unit test
+suite with 88 explicit `check()` assertions.  It covers FLB/FCC helper behavior,
+ET-Link-to-AXI conversion, response handlers and response arbitration, voltage
+crossing ready/valid/credit transfer plus DFT reset bypass, reset behavior,
+`uncached_arb_lru_grant` stall-visible grants, directed `uncacheable_noc`
+unicast/broadcast/error paths, and a top-level `uncacheable` smoke check.
+
+Standalone RTL cosims live under `dv/rtlcosim/` for every module listed above.
+The voltage-crossing and top-level cosims compare payload outputs every cycle;
+only unused padding bits outside the packed signal widths are masked.
+
 ## Intentional differences from original CORE-ET
 
 | Difference | Rationale |

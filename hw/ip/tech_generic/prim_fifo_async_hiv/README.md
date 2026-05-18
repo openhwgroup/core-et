@@ -16,9 +16,10 @@ and domain-specific test handling.
 
 - `push_i`, `wdata_i`, and `ready_o` are synchronous to `clk_wr_i`.
 - `pop_i`, `valid_o`, and `rdata_o` are synchronous to `clk_rd_i`.
-- `Depth` is the usable FIFO capacity. Internal pointer storage may round up to
-  a power-of-two array, but the externally visible full/empty behavior is still
-  based on `Depth`.
+- `Depth` is the usable FIFO capacity. Internal Gray counters use a
+  power-of-two modulo width, while data addresses wrap at exactly `Depth`, so
+  non-power-of-two depths keep the original full/empty and payload order
+  behavior.
 - `rdata_o` is show-ahead: when `valid_o=1`, it reflects the current head
   entry before `pop_i`.
 - `dft_hv_i` controls reset bypass on the write/HV side and `dft_lv_i`

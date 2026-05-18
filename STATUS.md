@@ -459,20 +459,20 @@ row below.
 | Module | Original | Test | Cosim | Status |
 |--------|----------|------|-------|--------|
 | `shire_uncached_pkg` | `uc_defines.vh` / `uc_types.vh` | Parsed by `shire_uncached` DV | — | Initial translation |
-| `uncacheable_fcc` | `uncacheable_fcc` | 9 checks | 4,096 comparisons | Done |
-| `uncacheable_flb` | `uncacheable_flb` | Parsed by top lint | 41,650 comparisons | Done |
-| `noc_etlink_to_axi` | `noc_etlink_to_axi` | Parsed by top lint | 233,472 comparisons | Done |
-| `uncacheable_noc_slv_handler` | `uncacheable_noc_slv_handler` | Parsed by top lint | 94,208 comparisons | Done |
-| `uncacheable_noc_tol3_handler` | `uncacheable_noc_tol3_handler` | Parsed by top lint | 172,032 comparisons | Done |
-| `uncacheable_noc_tosys_handler` | `uncacheable_noc_tosys_handler` | Parsed by top lint | 184,320 comparisons | Done |
-| `uncacheable_noc_rsp` | `uncacheable_noc_rsp` | Parsed by top lint | 270,369 comparisons | Done |
-| `uncacheable_noc` | `uncacheable_noc` | Parsed by top lint | 1,044,565 comparisons | Done |
-| `uncached_arb_lru_grant` | `arb_lru_grant` | Parsed by top lint | 8,192 comparisons | Done |
-| `uncached_hi_voltage_cross_lv_logic` | `uncached_hi_voltage_cross_lv_logic` | Parsed by top lint | 8,192 comparisons | Done |
-| `uncached_hi_voltage_cross` | `uncached_hi_voltage_cross` | Parsed by top lint | 73,489 comparisons | Done |
-| `uncached_lo_voltage_cross_lv_logic` | `uncached_lo_voltage_cross_lv_logic` | Parsed by top lint | 4,096 comparisons | Done |
-| `uncached_lo_voltage_cross` | `uncached_lo_voltage_cross` | Parsed by top lint | 67,216 comparisons | Done |
-| `uncacheable` | `uncacheable` | Parsed by top lint | 69,666 comparisons | Done |
+| `uncacheable_fcc` | `uncacheable_fcc` | 5 directed checks | 4,096 comparisons | Done |
+| `uncacheable_flb` | `uncacheable_flb` | 6 directed checks | 41,650 comparisons | Done |
+| `noc_etlink_to_axi` | `noc_etlink_to_axi` | 16 directed checks | 233,472 comparisons | Done |
+| `uncacheable_noc_slv_handler` | `uncacheable_noc_slv_handler` | 7 directed checks | 94,208 comparisons | Done |
+| `uncacheable_noc_tol3_handler` | `uncacheable_noc_tol3_handler` | 6 directed checks | 172,032 comparisons | Done |
+| `uncacheable_noc_tosys_handler` | `uncacheable_noc_tosys_handler` | 6 directed checks | 184,320 comparisons | Done |
+| `uncacheable_noc_rsp` | `uncacheable_noc_rsp` | 2 directed checks | 270,369 comparisons | Done |
+| `uncacheable_noc` | `uncacheable_noc` | 8 directed checks | 1,044,565 comparisons | Done |
+| `uncached_arb_lru_grant` | `arb_lru_grant` | 4 directed checks | 8,192 comparisons | Done |
+| `uncached_hi_voltage_cross_lv_logic` | `uncached_hi_voltage_cross_lv_logic` | 6 directed checks | 8,192 comparisons | Done |
+| `uncached_hi_voltage_cross` | `uncached_hi_voltage_cross` | 7 directed checks | 315,777 comparisons | Done |
+| `uncached_lo_voltage_cross_lv_logic` | `uncached_lo_voltage_cross_lv_logic` | 6 directed checks | 4,096 comparisons | Done |
+| `uncached_lo_voltage_cross` | `uncached_lo_voltage_cross` | 6 directed checks | 332,181 comparisons | Done |
+| `uncacheable` | `uncacheable` | 3 directed checks | 264,837 comparisons | Done |
 
 ## Totals
 

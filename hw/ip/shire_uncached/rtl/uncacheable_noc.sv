@@ -100,7 +100,9 @@ module uncacheable_noc
   uc_decode_rsp_t error_decode_rsp_info_pop;
   logic [ReqqSize:0] error_decode_rsp_fifo_level_unused;
 
+  /* verilator lint_off UNOPTFLAT */  // Broadcast send/count equations mirror the original combinational dependency; state flops break the cycle architecturally.
   logic broadcast_new_send;
+  /* verilator lint_on UNOPTFLAT */
   logic broadcast_new_ack;
   logic [BcastSendsSize-1:0] broadcast_sends_q;
   logic [BcastSendsSize-1:0] broadcast_sends_d;

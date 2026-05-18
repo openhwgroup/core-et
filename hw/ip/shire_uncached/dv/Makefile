@@ -5,7 +5,7 @@ REPO_ROOT := $(shell git rev-parse --show-toplevel)
 TECH ?= generic
 include $(REPO_ROOT)/mk/prim.mk
 
-TB_TOP := shire_uncached_fcc_tb
+TB_TOP := shire_uncached_unit_tb
 
 RTL_SRCS := \
   $(REPO_ROOT)/hw/ip/dft/rtl/dft_pkg.sv \
@@ -36,8 +36,8 @@ RTL_SRCS := \
   $(REPO_ROOT)/hw/ip/shire_uncached/rtl/uncached_lo_voltage_cross_lv_logic.sv \
   $(REPO_ROOT)/hw/ip/shire_uncached/rtl/uncached_lo_voltage_cross.sv \
   $(REPO_ROOT)/hw/ip/shire_uncached/rtl/uncacheable.sv \
-  $(REPO_ROOT)/hw/ip/shire_uncached/dv/shire_uncached_fcc_tb.sv
+  $(REPO_ROOT)/hw/ip/shire_uncached/dv/shire_uncached_unit_tb.sv
 
-CC_SRCS := $(REPO_ROOT)/hw/ip/shire_uncached/dv/shire_uncached_fcc_test.cc
+CC_SRCS := $(REPO_ROOT)/hw/ip/shire_uncached/dv/shire_uncached_unit_test.cc
 
 include $(REPO_ROOT)/mk/verilator.mk

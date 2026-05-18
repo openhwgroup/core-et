@@ -35,16 +35,6 @@ static void compare_words(SimT &sim, const char *name, const W &orig, const W &n
     }
 }
 
-template <typename SimT, typename W>
-static void compare_words_when(SimT &sim, const char *name, const W &orig, const W &newv, int valid_bits, bool valid) {
-    if (valid) compare_words(sim, name, orig, newv, valid_bits);
-}
-
-template <typename SimT>
-static void compare_scalar_when(SimT &sim, const char *name, uint64_t orig, uint64_t newv, uint64_t mask, bool valid) {
-    if (valid) sim.compare(name, orig & mask, newv & mask);
-}
-
 static void init_inputs(Vcosim_uncacheable_tb *d) {
     d->dft_hv_scanmode_i = 0;
     d->dft_hv_scan_reset_ni = 1;
@@ -95,6 +85,91 @@ static void init_inputs(Vcosim_uncacheable_tb *d) {
     d->to_sys_r_valid_i = 0;
 }
 
+static void clear_valids(Vcosim_uncacheable_tb *d) {
+    d->flb_neigh_l2_req_valid_i = 0;
+    d->neigh_uc_req_valid_i = 0;
+    d->sys_axi_ar_valid_i = 0;
+    d->sys_axi_aw_valid_i = 0;
+    d->sys_axi_w_valid_i = 0;
+    d->to_l3_b_valid_i = 0;
+    d->to_l3_r_valid_i = 0;
+    d->to_sys_b_valid_i = 0;
+    d->to_sys_r_valid_i = 0;
+    d->sbm_sys_axi_b_valid_i = 0;
+    d->sbm_sys_axi_r_valid_i = 0;
+    d->sbm_write_credit_return_i = 0;
+}
+
+static void set_neigh_req(Vcosim_uncacheable_tb *d, bool write, bool ddr, bool use_l3) {
+    clear_words(d->neigh_uc_req_info_i);
+    // Packed xbar_req_t LSB order is subopcode/qwen/size/data/address/opcode/wdata/...
+    // Address[39] is word 17 bit 21, opcode is word 17 bits 26:22,
+    // and wdata is word 17 bit 27 for the translated package widths.
+    if (ddr) d->neigh_uc_req_info_i[17] |= (1u << 21);
+    const uint32_t opcode = write ? 0u : 1u;  // ReqWrite / ReqRead
+    d->neigh_uc_req_info_i[17] |= (opcode & 0x1fu) << 22;
+    if (write) d->neigh_uc_req_info_i[17] |= (1u << 27);
+    d->l3_enabled_i = use_l3 ? 1 : 0;
+    d->remote_scp_enabled_i = 1;
+    d->neigh_uc_req_valid_i = 1;
+}
+
+template <typename SimT>
+static void prime_payload_state(SimT &sim) {
+    auto *d = sim.dut.get();
+    init_inputs(d);
+    for (int i = 0; i < 4; ++i) {
+        clear_valids(d);
+        const bool write = (i & 1) != 0;
+        const bool l3 = (i & 2) != 0;
+        set_neigh_req(d, write, l3, l3);
+        sim.tick();
+        clear_valids(d);
+        for (int j = 0; j < 8; ++j) sim.tick();
+    }
+
+    clear_valids(d);
+    clear_words(d->sys_axi_ar_i);
+    clear_words(d->sys_axi_aw_i);
+    clear_words(d->sys_axi_w_i);
+    d->sys_axi_aw_vcvalid_i = 1;
+    d->sys_axi_w_vcvalid_i = 1;
+    d->sys_axi_ar_valid_i = 1;
+    sim.tick();
+    clear_valids(d);
+    d->sys_axi_aw_valid_i = 1;
+    d->sys_axi_w_valid_i = 1;
+    sim.tick();
+    clear_valids(d);
+    d->sys_axi_aw_vcvalid_i = 2;
+    d->sys_axi_w_vcvalid_i = 2;
+    d->sys_axi_aw_valid_i = 1;
+    d->sys_axi_w_valid_i = 1;
+    sim.tick();
+
+    clear_valids(d);
+    d->to_l3_b_i = 0;
+    clear_words(d->to_l3_r_i);
+    d->to_sys_b_i = 0;
+    clear_words(d->to_sys_r_i);
+    d->to_l3_b_valid_i = 1;
+    d->to_l3_r_valid_i = 1;
+    d->to_sys_b_valid_i = 1;
+    d->to_sys_r_valid_i = 1;
+    sim.tick();
+
+    clear_valids(d);
+    d->sbm_sys_axi_b_i = 0x2;
+    clear_words(d->sbm_sys_axi_r_i);
+    d->sbm_sys_axi_b_valid_i = 1;
+    d->sbm_sys_axi_r_valid_i = 1;
+    d->sbm_write_credit_return_i = 1;
+    sim.tick();
+
+    clear_valids(d);
+    for (int i = 0; i < 32; ++i) sim.tick();
+}
+
 template <typename SimT>
 static void compare_all(SimT &sim) {
     auto *d = sim.dut.get();
@@ -105,14 +180,13 @@ static void compare_all(SimT &sim) {
     sim.compare("fcc_target", d->orig_fcc_target_o, d->new_fcc_target_o);
     sim.compare("neigh_ready", d->orig_neigh_ready_o, d->new_neigh_ready_o);
     sim.compare("neigh_rsp_valid", d->orig_neigh_rsp_valid_o, d->new_neigh_rsp_valid_o);
-    compare_words_when(sim, "neigh_rsp", d->orig_neigh_rsp_info_o, d->new_neigh_rsp_info_o, 550,
-                       (d->orig_neigh_rsp_valid_o & d->new_neigh_rsp_valid_o) != 0);
+    compare_words(sim, "neigh_rsp", d->orig_neigh_rsp_info_o, d->new_neigh_rsp_info_o, 550);
 
     sim.compare("sbm_enable_read", d->orig_sbm_enable_read_o, d->new_sbm_enable_read_o);
     sim.compare("sbm_enable_write", d->orig_sbm_enable_write_o, d->new_sbm_enable_write_o);
-    compare_words_when(sim, "sbm_ar", d->orig_sbm_ar_o, d->new_sbm_ar_o, 85, d->orig_sbm_enable_read_o && d->new_sbm_enable_read_o);
-    compare_words_when(sim, "sbm_aw", d->orig_sbm_aw_o, d->new_sbm_aw_o, 89, d->orig_sbm_enable_write_o && d->new_sbm_enable_write_o);
-    compare_words_when(sim, "sbm_w", d->orig_sbm_w_o, d->new_sbm_w_o, 289, d->orig_sbm_enable_write_o && d->new_sbm_enable_write_o);
+    compare_words(sim, "sbm_ar", d->orig_sbm_ar_o, d->new_sbm_ar_o, 85);
+    compare_words(sim, "sbm_aw", d->orig_sbm_aw_o, d->new_sbm_aw_o, 89);
+    compare_words(sim, "sbm_w", d->orig_sbm_w_o, d->new_sbm_w_o, 289);
     sim.compare("sbm_b_ready", d->orig_sbm_b_ready_o, d->new_sbm_b_ready_o);
     sim.compare("sbm_r_ready", d->orig_sbm_r_ready_o, d->new_sbm_r_ready_o);
 
@@ -120,26 +194,26 @@ static void compare_all(SimT &sim) {
     sim.compare("sys_aw_ready", d->orig_sys_aw_ready_o, d->new_sys_aw_ready_o);
     sim.compare("sys_w_ready", d->orig_sys_w_ready_o, d->new_sys_w_ready_o);
     sim.compare("sys_b_valid", d->orig_sys_b_valid_o, d->new_sys_b_valid_o);
-    compare_scalar_when(sim, "sys_b", d->orig_sys_b_o, d->new_sys_b_o, 0x1fffffu, d->orig_sys_b_valid_o && d->new_sys_b_valid_o);
+    sim.compare("sys_b", d->orig_sys_b_o & 0x1fffffu, d->new_sys_b_o & 0x1fffffu);
     sim.compare("sys_r_valid", d->orig_sys_r_valid_o, d->new_sys_r_valid_o);
-    compare_words_when(sim, "sys_r", d->orig_sys_r_o, d->new_sys_r_o, 278, d->orig_sys_r_valid_o && d->new_sys_r_valid_o);
+    compare_words(sim, "sys_r", d->orig_sys_r_o, d->new_sys_r_o, 278);
     sim.compare("sys_aw_credit", d->orig_sys_aw_credit_o, d->new_sys_aw_credit_o);
 
     sim.compare("to_l3_ar_valid", d->orig_to_l3_ar_valid_o, d->new_to_l3_ar_valid_o);
-    compare_words_when(sim, "to_l3_ar", d->orig_to_l3_ar_o, d->new_to_l3_ar_o, 75, d->orig_to_l3_ar_valid_o && d->new_to_l3_ar_valid_o);
+    compare_words(sim, "to_l3_ar", d->orig_to_l3_ar_o, d->new_to_l3_ar_o, 75);
     sim.compare("to_l3_aw_valid", d->orig_to_l3_aw_valid_o, d->new_to_l3_aw_valid_o);
-    compare_words_when(sim, "to_l3_aw", d->orig_to_l3_aw_o, d->new_to_l3_aw_o, 79, d->orig_to_l3_aw_valid_o && d->new_to_l3_aw_valid_o);
+    compare_words(sim, "to_l3_aw", d->orig_to_l3_aw_o, d->new_to_l3_aw_o, 79);
     sim.compare("to_l3_w_valid", d->orig_to_l3_w_valid_o, d->new_to_l3_w_valid_o);
-    compare_words_when(sim, "to_l3_w", d->orig_to_l3_w_o, d->new_to_l3_w_o, 577, d->orig_to_l3_w_valid_o && d->new_to_l3_w_valid_o);
+    compare_words(sim, "to_l3_w", d->orig_to_l3_w_o, d->new_to_l3_w_o, 577);
     sim.compare("to_l3_b_ready", d->orig_to_l3_b_ready_o, d->new_to_l3_b_ready_o);
     sim.compare("to_l3_r_ready", d->orig_to_l3_r_ready_o, d->new_to_l3_r_ready_o);
 
     sim.compare("to_sys_ar_valid", d->orig_to_sys_ar_valid_o, d->new_to_sys_ar_valid_o);
-    compare_words_when(sim, "to_sys_ar", d->orig_to_sys_ar_o, d->new_to_sys_ar_o, 75, d->orig_to_sys_ar_valid_o && d->new_to_sys_ar_valid_o);
+    compare_words(sim, "to_sys_ar", d->orig_to_sys_ar_o, d->new_to_sys_ar_o, 75);
     sim.compare("to_sys_aw_valid", d->orig_to_sys_aw_valid_o, d->new_to_sys_aw_valid_o);
-    compare_words_when(sim, "to_sys_aw", d->orig_to_sys_aw_o, d->new_to_sys_aw_o, 79, d->orig_to_sys_aw_valid_o && d->new_to_sys_aw_valid_o);
+    compare_words(sim, "to_sys_aw", d->orig_to_sys_aw_o, d->new_to_sys_aw_o, 79);
     sim.compare("to_sys_w_valid", d->orig_to_sys_w_valid_o, d->new_to_sys_w_valid_o);
-    compare_words_when(sim, "to_sys_w", d->orig_to_sys_w_o, d->new_to_sys_w_o, 577, d->orig_to_sys_w_valid_o && d->new_to_sys_w_valid_o);
+    compare_words(sim, "to_sys_w", d->orig_to_sys_w_o, d->new_to_sys_w_o, 577);
     sim.compare("to_sys_b_ready", d->orig_to_sys_b_ready_o, d->new_to_sys_b_ready_o);
     sim.compare("to_sys_r_ready", d->orig_to_sys_r_ready_o, d->new_to_sys_r_ready_o);
 }
@@ -149,26 +223,28 @@ int main(int argc, char **argv) {
     std::printf("──── cosim uncacheable ────\n");
     init_inputs(sim.dut.get());
     sim.reset();
+    prime_payload_state(sim);
+
+    for (int i = 0; i < 4; ++i) {
+        sim.dut->dft_hv_scanmode_i = 1;
+        sim.dut->dft_lv_scanmode_i = 1;
+        sim.dut->dft_hv_scan_reset_ni = 0;
+        sim.dut->dft_lv_scan_reset_ni = 0;
+        sim.tick();
+        compare_all(sim);
+    }
+    sim.dut->dft_hv_scanmode_i = 0;
+    sim.dut->dft_lv_scanmode_i = 0;
+    sim.dut->dft_hv_scan_reset_ni = 1;
+    sim.dut->dft_lv_scan_reset_ni = 1;
     for (int i = 0; i < 24; ++i) sim.tick();
     compare_all(sim);
 
     uint32_t seed = 0x1234abcd;
     for (int i = 0; i < 2048; ++i) {
         auto *d = sim.dut.get();
+        clear_valids(d);
         d->esr_enables_i = 0;
-        d->flb_neigh_l2_req_valid_i = 0;
-        d->neigh_uc_req_valid_i = 0;
-        d->sys_axi_ar_valid_i = 0;
-        d->sys_axi_aw_valid_i = 0;
-        d->sys_axi_w_valid_i = 0;
-        d->to_l3_b_valid_i = 0;
-        d->to_l3_r_valid_i = 0;
-        d->to_sys_b_valid_i = 0;
-        d->to_sys_r_valid_i = 0;
-        d->sbm_sys_axi_b_valid_i = 0;
-        d->sbm_sys_axi_r_valid_i = 0;
-        d->sbm_write_credit_return_i = ((i & 0x7f) == 0x40);
-
         if (i == 4) { d->esr_enables_i = 1; d->esr_wdata_i = 0xa5; }
         if (i == 8) { d->esr_enables_i = (1ull << 4); d->esr_wdata_i = 7; }
         if (i == 16) { d->flb_neigh_l2_req_valid_i = 1; d->flb_neigh_l2_req_data_i = (1u << 5); }
@@ -183,6 +259,8 @@ int main(int argc, char **argv) {
         d->to_l3_b_i = xorshift32(seed) & 0x7ffu;
         d->to_sys_b_i = xorshift32(seed) & 0x7ffu;
         d->sbm_sys_axi_b_i = xorshift32(seed) & 0x1fffffu;
+        d->sys_axi_aw_vcvalid_i = ((i & 0x100) != 0) ? 2 : 1;
+        d->sys_axi_w_vcvalid_i = ((i & 0x100) != 0) ? 2 : 1;
         d->neigh_uc_min_rsp_ready_i = ((i & 0x20) ? 0x5 : 0x7);
         d->sys_axi_b_ready_i = ((i & 0x3f) != 0x11);
         d->sys_axi_r_ready_i = ((i & 0x3f) != 0x12);
@@ -197,8 +275,8 @@ int main(int argc, char **argv) {
         d->sbm_sys_axi_w_ready_i = ((i & 0x3f) != 0x1b);
         d->l3_enabled_i = ((i & 0x100) == 0);
         d->remote_scp_enabled_i = ((i & 0x80) == 0);
-        d->dft_hv_scanmode_i = (i == 512);
-        d->dft_lv_scanmode_i = (i == 1024);
+        d->dft_hv_scanmode_i = 0;
+        d->dft_lv_scanmode_i = 0;
         d->dft_hv_scan_reset_ni = 1;
         d->dft_lv_scan_reset_ni = 1;
 
