@@ -208,6 +208,99 @@ int main(int argc, char** argv) {
     sim.check((dut->shire_id_o & 0xffu) == kShireId, "shire ID reset value reaches native channel");
     sim.check((dut->pwr_ctrl_glb_nsleepin_o & 0xf) == 0xf, "global power nsleepin follows reset/default mask");
     sim.check((dut->pwr_ctrl_glb_iso_o & 0xf) == 0, "global isolation released after cold reset");
+    sim.check((dut->rst_warm_to_neigh_no_o & 0xf) == 0xf, "warm reset fanout released by default");
+    sim.check((dut->plic_meip_obs_o & 0xf) == 0xf, "MEIP interrupt fans out to all neighborhoods");
+    sim.check((dut->plic_seip_obs_o & 0xf) == 0x0, "SEIP interrupt low fans out to all neighborhoods");
+
+    dut->rst_c_ext_ni = 0;
+    for (int i = 0; i < 3; ++i) sim.tick();
+    sim.check((dut->rst_c_shire_no_o & 0xf) == 0x0, "cold reset asserts cold shire resets");
+    sim.check((dut->rst_warm_to_neigh_no_o & 0xf) == 0xf,
+              "cold reset does not alter raw warm-reset neighborhood fanout");
+    dut->rst_c_ext_ni = 1;
+    for (int i = 0; i < 40; ++i) sim.tick();
+
+    dut->dft_ram_rei_i = 1;
+    dut->dft_ram_wei_i = 1;
+    for (int i = 0; i < 40; ++i) sim.tick();
+    sim.check((dut->rst_warm_to_neigh_no_o & 0xf) == 0xf,
+              "dmactive/ndmreset do not alter raw warm-reset neighborhood fanout");
+    dut->dft_ram_rei_i = 0;
+    dut->dft_ram_wei_i = 0;
+    for (int i = 0; i < 4; ++i) sim.tick();
+    sim.check((dut->dmctrl_to_neigh_flat_o & 0x3u) == 0x0,
+              "neighborhood DM control clears after dmactive/ndmreset deassert");
+
+    dut->rst_w_ext_ni = 0;
+    for (int i = 0; i < 3; ++i) sim.tick();
+    sim.check((dut->rst_warm_to_neigh_no_o & 0xf) == 0x0,
+              "external warm reset drives raw neighborhood fanout low");
+    dut->rst_w_ext_ni = 1;
+    for (int i = 0; i < 40; ++i) sim.tick();
+    sim.check((dut->rst_warm_to_neigh_no_o & 0xf) == 0xf,
+              "raw neighborhood warm-reset fanout releases after external warm reset");
+
+    dut->dft_scanmode_i = 1;
+    dut->dft_scan_reset_ni = 1;
+    dut->dft_sram_clk_override_i = 1;
+    dut->dft_ram_rei_i = 0;
+    dut->dft_ram_wei_i = 1;
+    sim.tick();
+    sim.check((dut->dft_hv_flat_o & 0x1fu) == 0x1du,
+              "DFT struct fields propagate to retained high-voltage DFT seam");
+    dut->dft_scanmode_i = 0;
+    dut->dft_sram_clk_override_i = 0;
+    dut->dft_ram_wei_i = 0;
+    sim.tick();
+
+    sim.check((dut->dft_hv_flat_o & 0x1fu) == 0x08u,
+              "DFT struct returns to normal scan-reset-high value after test controls clear");
+
+    dut->noc_err_int_srcs_i = 0x155;
+    dut->neigh_sc_err_detected_i = 0xa;
+    dut->neigh_sc_err_logged_i = 0x5;
+    dut->coop_slv_valid_i = 0x5;
+    dut->coop_done_valid_i = 0xa;
+    dut->coop_done_id_i = 0x12345;
+    dut->flb_neigh_l2_req_valid_i = 0xf;
+    dut->flb_neigh_l2_req_data_i = 0x1111222233334444ull;
+    dut->icache_req_valid_i = 0xf;
+    dut->icache_req_write_i = 0x5;
+    dut->icache_req_addr_i = 0x1234;
+    dut->icache_resp_ready_i = 0xf;
+    for (int i = 0; i < 8; ++i) sim.tick();
+    sim.check((dut->noc_all_err_int_srcs_o & 0x3ffu) == 0x155u, "NOC error sources fan out to status combiner");
+    sim.check(dut->ioshire_noc_err_int_o == 1, "NOC error interrupt asserts from nonzero sources");
+    sim.check(dut->coop_slv_valid_o != 0, "cooperative TLoad slave-valid fanout toggles");
+    sim.check(dut->coop_done_valid_o != 0, "cooperative TLoad done-valid fanout toggles");
+    sim.check(dut->flb_l2_neigh_resp_valid_o != 0, "FLB neighborhood response seam toggles under requests");
+    sim.check(dut->icache_req_ready_o != 0, "Icache request ready seam is observable");
+
+    dut->sys_id_stim_i = 3;
+    dut->sys_addr_stim_i = make_addr_id(0, 3, 2, 0, 0x001);
+    set_wdata(dut, kConfigEnableAll);
+    dut->sys_axi_aw_vcvalid_stim_i = 2;
+    dut->sys_axi_w_vcvalid_stim_i = 2;
+    dut->sys_axi_aw_valid_stim_i = 1;
+    dut->sys_axi_w_valid_stim_i = 1;
+    sim.check(dut->sys_axi_aw_ready_obs_o == 1, "SYS AXI write-address ready is exposed");
+    sim.check(dut->sys_axi_w_ready_obs_o == 1, "SYS AXI write-data ready is exposed");
+    sim.tick();
+    dut->sys_axi_aw_valid_stim_i = 0;
+    dut->sys_axi_w_valid_stim_i = 0;
+    dut->sys_axi_aw_vcvalid_stim_i = 0;
+    dut->sys_axi_w_vcvalid_stim_i = 0;
+    sim.check(wait_for_bvalid(sim, 120), "SYS-to-SBM configuration write produces response");
+    sim.check(dut->sys_axi_b_valid_obs_o == 1, "SYS-to-SBM configuration write response is visible");
+
+    dut->noc_err_int_srcs_i = 0;
+    dut->coop_slv_valid_i = 0;
+    dut->coop_done_valid_i = 0;
+    dut->flb_neigh_l2_req_valid_i = 0;
+    dut->icache_req_valid_i = 0;
+    for (int i = 0; i < 8; ++i) sim.tick();
+    sim.check((dut->noc_all_err_int_srcs_o & 0x3ffu) == 0, "NOC error sources clear when inputs clear");
+    sim.check(dut->ioshire_noc_err_int_o == 0, "NOC error interrupt clears when sources clear");
 
     return sim.finish();
 }

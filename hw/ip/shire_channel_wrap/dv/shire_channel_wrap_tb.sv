@@ -143,6 +143,10 @@ module shire_channel_wrap_tb
   output logic [shire_esr_pkg::NumNeigh-1:0] rst_c_shire_scs_no_o,
   output logic rst_sc_no_o,
   output logic rst_rbox_no_o,
+  output logic [shire_esr_pkg::NumNeigh-1:0] rst_warm_to_neigh_no_o,
+  output logic [shire_esr_pkg::NumNeigh*$bits(esr_pkg::esr_ms_dmctrl_t)-1:0] dmctrl_to_neigh_flat_o,
+  output logic [shire_esr_pkg::NumNeigh-1:0] plic_meip_obs_o,
+  output logic [shire_esr_pkg::NumNeigh-1:0] plic_seip_obs_o,
   output logic [shire_esr_pkg::NumNeigh-1:0][shire_esr_pkg::NumShireIdsBits-1:0] shire_id_o,
   output logic [shire_esr_pkg::TboxPerShire-1:0][1:0] tbox_id_flat_o,
   output logic [shire_esr_pkg::TboxPerShire-1:0] tbox_en_o,
@@ -217,6 +221,7 @@ module shire_channel_wrap_tb
   localparam int unsigned EsrAndOrTreeL0Bits = $bits(esr_pkg::esr_and_or_tree_l0_t);
   localparam int unsigned BpamRcTboxAckBits = $bits(neigh_hv_logic_pkg::bpam_rc_tbox_ack_t);
   localparam int unsigned DllDlyEstStsBits = $bits(esr_pkg::esr_dll_dly_est_sts_t);
+  localparam int unsigned DmctrlBits = $bits(esr_pkg::esr_ms_dmctrl_t);
   localparam logic [2:0] ApbSlavesSelLimit = ApbSlaves[2:0];
 
   logic rst_c_ni;
@@ -247,10 +252,10 @@ module shire_channel_wrap_tb
   neigh_voltage_cross_pkg::bpam_run_control_neigh_t bpam_run_control_neigh_o [NumNeigh-1:0];
   always_comb begin
     bpam_run_control_i = '0;
-    bpam_run_control_i.gpio.ndmreset = dft_sram_clk_override_i;
+    bpam_run_control_i.gpio.ndmreset = dft_scanmode_i;
     bpam_run_control_i.gpio.halt_req = dft_ram_rei_i;
     bpam_run_control_i.gpio.resume_req = dft_ram_wei_i;
-    bpam_run_control_i.events.halt_req = dft_scanmode_i;
+    bpam_run_control_i.events.halt_req = dft_sram_clk_override_i;
     bpam_run_control_i.events.resume_req = dft_mbist_en_i;
   end
 
@@ -888,6 +893,9 @@ module shire_channel_wrap_tb
   assign rst_c_shire_scs_no_o = rst_c_shire_scs_no;
   assign rst_sc_no_o = rst_sc_no;
   assign rst_rbox_no_o = rst_rbox_no;
+  assign rst_warm_to_neigh_no_o = rst_warm_to_neigh_no;
+  assign plic_meip_obs_o = plic_meip_to_neigh_o;
+  assign plic_seip_obs_o = plic_seip_to_neigh_o;
   assign tbox_id_flat_o = tbox_id_o;
   assign esr_icache_prefetch_start_flat_o = esr_icache_prefetch_start_o;
   assign debug_and_or_tree_l2_flat_o = debug_and_or_tree_l2_o;
@@ -908,7 +916,9 @@ module shire_channel_wrap_tb
     pwr_ctrl_neigh_iso_o = '0;
     apb_neigh_psel_o = '0;
     apb_neigh_pwrite_o = '0;
+    dmctrl_to_neigh_flat_o = '0;
     for (int unsigned neigh_idx = 0; neigh_idx < NumNeigh; neigh_idx++) begin
+      dmctrl_to_neigh_flat_o[neigh_idx*DmctrlBits +: DmctrlBits] = dmctrl_to_neigh_o[neigh_idx];
       apb_neigh_psel_o[neigh_idx] = apb_esr_req_neigh_o[neigh_idx].apb_psel;
       apb_neigh_pwrite_o[neigh_idx] = apb_esr_req_neigh_o[neigh_idx].apb_pwrite;
       for (int unsigned min_idx = 0; min_idx < shire_esr_pkg::MinPerNeigh; min_idx++) begin

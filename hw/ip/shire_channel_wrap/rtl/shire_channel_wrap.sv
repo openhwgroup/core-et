@@ -502,7 +502,7 @@ module shire_channel_wrap
   always_comb begin
     for (int unsigned neigh = 0; neigh < NumNeigh; neigh++) begin
       clk_shire_to_neigh_o[neigh] = clk_shire_o;
-      rst_warm_to_neigh_no[neigh] = rst_w_ni;
+      rst_warm_to_neigh_no[neigh] = rst_warm_ni;
       dmctrl_to_neigh_o[neigh] = dmctrl_sync;
       plic_meip_to_neigh_o[neigh] = plic_meip_i;
       plic_seip_to_neigh_o[neigh] = plic_seip_i;

@@ -197,7 +197,7 @@ Build order: 12→13→14→15→16→17→18
 | Module | Original | Test | Cosim | Status |
 |--------|----------|------|-------|--------|
 | `shire_channel` | `shire_channel` | 59 directed integration checks | 1,445,146 comparisons | Done — native container integrates shirecache, RBOX, uncached, shire ESR/APB, ICache memories, run-control/status leaves, DFT/RAM config, reset-domain fanout, full retained-output cosim, exposed retained AXI/SYS/SBM/APB/reset/status/power/clock-control input coverage, cooperative done-ID fanout, and raw public RBOX reset behavior |
-| `shire_channel_wrap` | `shire_channel_wrap` retained Ainekko-owned shell behavior | 7 directed wrapper checks | 16,000 comparisons | Done — native shell wraps `shire_channel`, retained reset/clock/DFT/SBM/APB/power/status seams, and intentionally omits removed debug/sensor/hard-macro surfaces |
+| `shire_channel_wrap` | `shire_channel_wrap` retained Ainekko-owned shell behavior | 30 directed wrapper checks | 128,200 comparisons vs original retained wrapper slice | Done — native shell wraps `shire_channel`, retained reset/clock/DFT/SBM/APB/power/status seams, real original-vs-new wrapper cosim, and intentionally omits removed debug/sensor/hard-macro surfaces |
 
 ## Minion Frontend (`hw/ip/minion/frontend/`)
 
@@ -518,5 +518,5 @@ backfilled.
 | RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 310 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 245 unit suites + 295 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run + 14 uncached-path cosims + shire_channel lint/unit/cosim/coverage update + shire_channel input-coverage cosim update + shire_channel retained-status input cosim update + shire_channel_leaves/shire_esr/shire_sbm/shire_uncached tests + shire_channel_wrap lint/unit/cosim + full lint + root unit test suite |
+| Targeted update runs | 245 unit suites + 295 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run + 14 uncached-path cosims + shire_channel lint/unit/cosim/coverage update + shire_channel input-coverage cosim update + shire_channel retained-status input cosim update + shire_channel_leaves/shire_esr/shire_sbm/shire_uncached tests + shire_channel_wrap lint/unit/cosim/coverage refresh (30 checks, 128,200 comparisons) + full lint + root unit test suite |
 | Targeted update failures | 0 |

@@ -46,9 +46,30 @@ The wrapper exposes native project seams:
 - `prim_rst_sync` is used for the low-voltage NOC reset repeat stage. The
   high-voltage reset manager keeps the original two-stage sync style before
   deriving cold/warm/debug reset domains.
+- `rst_warm_to_neigh_no` preserves the original `reset_warm_to_neigh =
+  {NUM_NEIGH{reset_warm}}` fanout. It follows only the raw external warm-reset
+  seed (converted to active-low polarity) and is intentionally independent of
+  the derived cold/warm/debug/gpio/ndmreset reset domains.
 - Global and minion power-control outputs preserve the reset mask behavior:
   `nsleepin` is forced asserted during cold reset and isolation is masked off
   during cold reset.
+
+## Verification
+
+- Unit test: `hw/ip/shire_channel_wrap/dv/shire_channel_wrap_test.cc` performs
+  30 directed checks covering NOC reset bypass, raw warm-reset fanout, DFT
+  struct propagation, SYS/SBM write response visibility, interrupt/status
+  fanout, cooperative TLoad fanout, FLB/I-cache seams, and power/reset defaults.
+- RTL cosim: `dv/rtlcosim/shire_channel_wrap/` instantiates an original
+  retained-behavior wrapper slice from `/home/glguida/ainekko/et-soc` alongside
+  the native wrapper. It compares 128,200 cycles/checkpoints of retained
+  wrapper-shell behavior: resets, raw warm-reset fanout, APB/SBM enable and
+  SYS AXI handshakes, run-control, interrupts, cooperative TLoad, ESR/control
+  fanout, clock-gate/power outputs, and selected valid-response payloads.
+- The cosim intentionally compares wrapper-shell retained behavior. Standalone
+  child cosims remain responsible for full `shire_channel`, cache, uncached, and
+  RBOX datapath equivalence; removed third-party/debug/sensor/hard-macro
+  surfaces are not reinstated or compared.
 
 ## Intentional differences from original CORE-ET wrapper
 
@@ -59,6 +80,7 @@ The wrapper exposes native project seams:
 | Project PLL/DLL clock abstraction | Replaces hard-macro pins with `shire_pll_wrapper` clock-selection behavior. |
 | Removed debug/sensor/proprietary/hard-macro/generated surfaces | These surfaces are outside the retained Ainekko-owned native shell contract. |
 | Native APB/SBM packages | Uses `shire_sbm_pkg` and `neigh_ch_apb_mux_pkg` typed buses instead of original include-defined buses. |
+| RAM configuration surface | Native wrapper exposes standardized `ram_cfg_pkg::ram_cfg_t`; the original `esr_shire_cache_ram_cfg_t` bit surface is not compared directly in wrapper cosim because it is covered by the project RAM-config abstraction. |
 
 The implementation intentionally does not recreate removed compatibility pins or
 placeholder modules for omitted third-party/debug/sensor infrastructure.
