@@ -174,14 +174,14 @@ Build order: 12→13→14→15→16→17→18
 | Module | Original | Test | Cosim | Status |
 |--------|----------|------|-------|--------|
 | `shire_channel_leaves_pkg` | Shared shire-channel leaf constants | — | — | Done |
-| `shire_dmctrl` | `shire_dmctrl` | 32 grouped shire-channel leaf checks | 2,200 comparisons | Done |
-| `shire_bpam_run_control` | `shire_bpam_run_control` | 32 grouped shire-channel leaf checks | 4,096 comparisons | Done |
-| `shire_and_or_tree_daisychain` | `shire_and_or_tree_daisychain` | 32 grouped shire-channel leaf checks | 8,192 comparisons | Done |
-| `shire_coop_tload_bus` | `shire_coop_tload_bus` | 32 grouped shire-channel leaf checks | 12,288 comparisons | Done |
-| `shire_ioshire_noc_ints` | `shire_ioshire_noc_ints` | 32 grouped shire-channel leaf checks | 4,096 comparisons | Done — retained normal NoC interrupt subset only |
-| `shire_xll_control` | `shire_xll_control` | 32 grouped shire-channel leaf checks | 31,460 comparisons | Done |
-| `shire_pll_wrapper` | `shire_pll_wrapper` | 32 grouped shire-channel leaf checks | 43,560 comparisons | Done — native clock/lock seam omits third-party PLL/DLL/debug hard-macro surfaces |
-| `icache_mems` | `icache_mems` | 32 grouped shire-channel leaf checks | 181,056 comparisons | Done |
+| `shire_dmctrl` | `shire_dmctrl` | 36 grouped shire-channel leaf checks | 2,200 comparisons | Done |
+| `shire_bpam_run_control` | `shire_bpam_run_control` | 36 grouped shire-channel leaf checks | 4,096 comparisons | Done |
+| `shire_and_or_tree_daisychain` | `shire_and_or_tree_daisychain` | 36 grouped shire-channel leaf checks | 8,192 comparisons | Done |
+| `shire_coop_tload_bus` | `shire_coop_tload_bus` | 36 grouped shire-channel leaf checks | 12,288 comparisons | Done |
+| `shire_ioshire_noc_ints` | `shire_ioshire_noc_ints` | 36 grouped shire-channel leaf checks | 4,096 comparisons | Done — retained normal NoC interrupt subset only |
+| `shire_xll_control` | `shire_xll_control` | 36 grouped shire-channel leaf checks | 31,460 comparisons | Done |
+| `shire_pll_wrapper` | `shire_pll_wrapper` | 36 grouped shire-channel leaf checks | 43,560 comparisons | Done — native clock/lock/DFT reset seam omits third-party PLL/DLL/debug hard-macro surfaces |
+| `icache_mems` | `icache_mems` | 36 grouped shire-channel leaf checks | 181,056 comparisons | Done |
 
 ## Minion Frontend (`hw/ip/minion/frontend/`)
 

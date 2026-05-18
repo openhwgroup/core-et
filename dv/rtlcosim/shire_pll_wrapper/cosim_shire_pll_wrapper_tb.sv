@@ -61,6 +61,10 @@ module cosim_shire_pll_wrapper_tb (
   assign orig_tdr_cntl = '{trstn: 1'b1, default: '0};
   assign orig_tdr_clk_cntl = '0;
 
+  // The native DFT struct is intentionally held inactive in this cosim: the
+  // project-native wrapper omits the original scan/OCC/TDR compatibility pins,
+  // while its scan-reset and clock-gate force-on behavior is covered by the
+  // shire_channel_leaves unit test.
   assign new_dft = '0;
   assign new_pll_cfg = pll_cfg_bits_i;
   assign new_dll_cfg = dll_cfg_bits_i;

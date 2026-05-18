@@ -40,8 +40,10 @@ module shire_pll_wrapper #(
 );
 
   logic [1:0] rst_sync_q;
+  logic       rst_ctrl_int_ni;
   logic       rst_ctrl_ni;
   logic [1:0] rst_ref_sync_q;
+  logic       rst_ref_int_ni;
   logic       rst_ref_ni;
   logic [1:0] pll_lock_sync_q;
   logic [1:0] dll_lock_sync_q;
@@ -56,6 +58,12 @@ module shire_pll_wrapper #(
   logic       clk_ref_step;
   logic       clk_neigh_pre;
 
+  logic [1:0]               rst_neigh_sync_q;
+  logic                     rst_neigh_int_ni;
+  logic                     rst_neigh_ni;
+  logic [1:0]               rst_shire_sync_q;
+  logic                     rst_shire_int_ni;
+  logic                     rst_shire_ni;
   logic [1:0][NumNeigh-1:0] clk_gate_neigh_disable_sync_q;
   logic [1:0]               clk_gate_debug_disable_sync_q;
 
@@ -79,8 +87,10 @@ module shire_pll_wrapper #(
   logic unused_xll_apb;
   /* verilator lint_on UNUSEDSIGNAL */
 
-  always_ff @(posedge clk_i or negedge rst_ni) begin
-    if (!rst_ni) begin
+  assign rst_ctrl_int_ni = dft_i.scanmode ? dft_i.scan_reset_n : rst_ni;
+
+  always_ff @(posedge clk_i or negedge rst_ctrl_int_ni) begin
+    if (!rst_ctrl_int_ni) begin
       rst_sync_q <= '0;
     end else begin
       rst_sync_q <= {rst_sync_q[0], 1'b1};
@@ -89,8 +99,10 @@ module shire_pll_wrapper #(
 
   assign rst_ctrl_ni = dft_i.scanmode ? dft_i.scan_reset_n : rst_sync_q[1];
 
-  always_ff @(posedge clk_ref_i or negedge rst_ni) begin
-    if (!rst_ni) begin
+  assign rst_ref_int_ni = dft_i.scanmode ? dft_i.scan_reset_n : rst_ni;
+
+  always_ff @(posedge clk_ref_i or negedge rst_ref_int_ni) begin
+    if (!rst_ref_int_ni) begin
       rst_ref_sync_q <= '0;
     end else begin
       rst_ref_sync_q <= {rst_ref_sync_q[0], 1'b1};
@@ -244,8 +256,20 @@ module shire_pll_wrapper #(
     .clk_o  (clk_neigh_pre)
   );
 
-  always_ff @(posedge clk_neigh_pre or negedge rst_ni) begin
-    if (!rst_ni) begin
+  assign rst_neigh_int_ni = dft_i.scanmode ? dft_i.scan_reset_n : rst_ni;
+
+  always_ff @(posedge clk_neigh_pre or negedge rst_neigh_int_ni) begin
+    if (!rst_neigh_int_ni) begin
+      rst_neigh_sync_q <= '0;
+    end else begin
+      rst_neigh_sync_q <= {rst_neigh_sync_q[0], 1'b1};
+    end
+  end
+
+  assign rst_neigh_ni = dft_i.scanmode ? dft_i.scan_reset_n : rst_neigh_sync_q[1];
+
+  always_ff @(posedge clk_neigh_pre or negedge rst_neigh_ni) begin
+    if (!rst_neigh_ni) begin
       clk_gate_neigh_disable_sync_q <= '0;
     end else begin
       clk_gate_neigh_disable_sync_q[0] <= clk_gate_neigh_disable_i;
@@ -262,8 +286,20 @@ module shire_pll_wrapper #(
     );
   end
 
-  always_ff @(posedge clk_shire_o or negedge rst_ni) begin
-    if (!rst_ni) begin
+  assign rst_shire_int_ni = dft_i.scanmode ? dft_i.scan_reset_n : rst_ni;
+
+  always_ff @(posedge clk_shire_o or negedge rst_shire_int_ni) begin
+    if (!rst_shire_int_ni) begin
+      rst_shire_sync_q <= '0;
+    end else begin
+      rst_shire_sync_q <= {rst_shire_sync_q[0], 1'b1};
+    end
+  end
+
+  assign rst_shire_ni = dft_i.scanmode ? dft_i.scan_reset_n : rst_shire_sync_q[1];
+
+  always_ff @(posedge clk_shire_o or negedge rst_shire_ni) begin
+    if (!rst_shire_ni) begin
       clk_gate_debug_disable_sync_q <= '0;
     end else begin
       clk_gate_debug_disable_sync_q <= {clk_gate_debug_disable_sync_q[0],

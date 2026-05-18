@@ -93,6 +93,14 @@ uint32_t dll_cfg_bits(bool dll_enable, uint32_t pclk_sel, bool lock_reset_disabl
            (uint32_t(run) << 2) | (uint32_t(enable) << 1) | uint32_t(reset);
 }
 
+uint32_t dft_bits(bool scanmode, bool scan_reset_n,
+                  bool sram_clk_override = false, bool ram_rei = false,
+                  bool ram_wei = false) {
+    return (uint32_t(scanmode) << 4) | (uint32_t(scan_reset_n) << 3) |
+           (uint32_t(sram_clk_override) << 2) | (uint32_t(ram_rei) << 1) |
+           uint32_t(ram_wei);
+}
+
 void clear_inputs(Vshire_channel_leaves_tb* d) {
     d->dmctrl_bits_i = 0;
     d->bpam_bits_i = 0;
@@ -268,6 +276,23 @@ int main(int argc, char** argv) {
     sim.check(d->pll_lock_detect_o == 1, "pll lock synchronized to system clock");
     sim.check(d->dll_lock_detect_o == 1, "dll lock synchronized to system clock");
     sim.check(d->pll_busy_o == 0 && d->dll_busy_o == 0, "pll wrapper control idle without run pulse");
+
+    d->pll_gate_disable_i = 0xf;
+    d->pll_debug_gate_disable_i = 1;
+    for (int i = 0; i < 8; ++i) sim.tick();
+    sim.check((d->pll_clk_neigh_o & 0xfu) == 0 && d->pll_clk_debug_o == 0,
+              "pll clock gates observe synchronized disable controls");
+    d->dft_bits_i = dft_bits(true, false);
+    sim.tick();
+    sim.check((d->pll_clk_neigh_o & 0xfu) == 0xfu && d->pll_clk_debug_o == 1,
+              "pll clock gates force on in scan mode despite disable controls");
+    d->dft_bits_i = 0;
+    sim.tick();
+    sim.check((d->pll_clk_neigh_o & 0xfu) == 0xfu && d->pll_clk_debug_o == 1,
+              "pll gate-control synchronizers stay reset during scan-reset release");
+    for (int i = 0; i < 6; ++i) sim.tick();
+    sim.check((d->pll_clk_neigh_o & 0xfu) == 0 && d->pll_clk_debug_o == 0,
+              "pll gate-control synchronizers recapture disables after local reset release");
 
     sim.check(d->icache_apb_pready_o == 0, "icache_mems APB idle ready is low");
     sim.check(d->icache_apb_pslverr_o == 0, "icache_mems APB idle error is low");

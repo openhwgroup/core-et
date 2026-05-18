@@ -75,7 +75,9 @@ Detailed exclusion evidence is in `doc/exclusions.md`.
 
 ## Verification
 
-- Unit test: `make -C hw/ip/shire_channel_leaves/dv test` — 32 checks.
+- Unit test: `make -C hw/ip/shire_channel_leaves/dv test` — 36 checks,
+  including native `shire_pll_wrapper` scan-reset bypass and `prim_clk_gate`
+  scanmode force-on coverage.
 - Standalone cosims:
   - `shire_dmctrl`: 2,200 comparisons
   - `shire_bpam_run_control`: 4,096 comparisons
@@ -83,5 +85,9 @@ Detailed exclusion evidence is in `doc/exclusions.md`.
   - `shire_coop_tload_bus`: 12,288 comparisons
   - `shire_ioshire_noc_ints`: 4,096 comparisons over retained normal NoC outputs
   - `shire_xll_control`: 31,460 comparisons
-  - `shire_pll_wrapper`: 43,560 comparisons over retained/native-equivalent outputs
+  - `shire_pll_wrapper`: 43,560 comparisons over retained/native-equivalent
+    normal-mode outputs. The cosim adapter keeps native `dft_i` inactive
+    because the native wrapper intentionally omits the original scan/OCC/TDR
+    compatibility surfaces; scan-reset/clock-gate DFT behavior is covered by
+    the unit test.
   - `icache_mems`: 181,056 comparisons
