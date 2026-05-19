@@ -7,6 +7,18 @@
 
 namespace {
 constexpr uint8_t kShireId = 0x2a;
+constexpr uint32_t kNumBanks = 4;
+constexpr uint32_t kApbShireIdx = kNumBanks;
+constexpr uint32_t kApbRboxIdx = kApbShireIdx + 1;
+constexpr uint32_t kApbIcacheIdx = kApbRboxIdx + 1;
+constexpr uint32_t kRegShireConfig = 0x001;
+constexpr uint32_t kRegPwrNeighNsleepin = 0x045;
+constexpr uint32_t kRegPwrNeighIso = 0x046;
+constexpr uint32_t kRegRamCfg2 = 0x055;
+constexpr uint32_t kRegPllAuto = 0x04a;
+constexpr uint32_t kRegDllAuto = 0x059;
+constexpr uint32_t kRegClockmux = 0x053;
+constexpr uint32_t kRegClkGate = 0x062;
 constexpr uint64_t kConfigEnableAll =
     (uint64_t(3) << 24) | (uint64_t(2) << 22) | (uint64_t(1) << 20) |
     (uint64_t(1) << 17) | (uint64_t(0xf) << 13) | (uint64_t(0xf) << 9) |
@@ -37,10 +49,15 @@ uint64_t make_addr(uint32_t cls, uint32_t block, uint32_t bank_or_neigh,
     return make_addr_id(kShireId, cls, block, bank_or_neigh, reg, pp);
 }
 
-void set_wdata(Vshire_channel_wrap_tb* dut, uint64_t lo) {
+uint64_t shire_reg_addr(uint32_t reg) {
+    return make_addr(3, 2, 0, reg);
+}
+
+void set_wdata(Vshire_channel_wrap_tb* dut, uint64_t lo, uint64_t addr = 0) {
+    const int lane = static_cast<int>((addr >> 3) & 0x3u);
     for (int i = 0; i < 8; ++i) dut->sys_wdata_stim_i[i] = 0;
-    dut->sys_wdata_stim_i[0] = static_cast<uint32_t>(lo);
-    dut->sys_wdata_stim_i[1] = static_cast<uint32_t>(lo >> 32);
+    dut->sys_wdata_stim_i[2 * lane] = static_cast<uint32_t>(lo);
+    dut->sys_wdata_stim_i[2 * lane + 1] = static_cast<uint32_t>(lo >> 32);
 }
 
 void clear_inputs(Vshire_channel_wrap_tb* dut) {
@@ -155,19 +172,56 @@ bool wait_for_bvalid(SimCtrl<Vshire_channel_wrap_tb>& sim, int max_cycles = 200)
 
 bool wait_for_neigh_psel(SimCtrl<Vshire_channel_wrap_tb>& sim, uint32_t mask, int max_cycles = 200) {
     for (int i = 0; i < max_cycles; ++i) {
-        sim.tick();
         if ((sim.dut->apb_neigh_psel_o & mask) == mask) return true;
+        sim.tick();
     }
     return false;
 }
 
+struct LaneWaitResult {
+    bool saw_psel;
+    bool saw_bvalid;
+};
+
+LaneWaitResult wait_for_channel_lane(SimCtrl<Vshire_channel_wrap_tb>& sim, uint32_t mask,
+                                     int max_cycles = 240) {
+    LaneWaitResult result{false, false};
+    for (int i = 0; i < max_cycles; ++i) {
+        result.saw_psel = result.saw_psel || ((sim.dut->apb_channel_psel_o & mask) == mask);
+        result.saw_bvalid = result.saw_bvalid || (sim.dut->sys_axi_b_valid_obs_o != 0);
+        if (result.saw_psel && result.saw_bvalid) return result;
+        sim.tick();
+    }
+    return result;
+}
+
+LaneWaitResult wait_for_neigh_lane(SimCtrl<Vshire_channel_wrap_tb>& sim, uint32_t mask,
+                                   int max_cycles = 240) {
+    LaneWaitResult result{false, false};
+    for (int i = 0; i < max_cycles; ++i) {
+        result.saw_psel = result.saw_psel || ((sim.dut->apb_neigh_psel_o & mask) == mask);
+        result.saw_bvalid = result.saw_bvalid || (sim.dut->sys_axi_b_valid_obs_o != 0);
+        if (result.saw_psel && result.saw_bvalid) return result;
+        sim.tick();
+    }
+    return result;
+}
+
+void wait_bvalid_low(SimCtrl<Vshire_channel_wrap_tb>& sim, int max_cycles = 80) {
+    for (int i = 0; i < max_cycles; ++i) {
+        if (!sim.dut->sys_axi_b_valid_obs_o) return;
+        sim.tick();
+    }
+}
+
 void issue_write(SimCtrl<Vshire_channel_wrap_tb>& sim, uint64_t addr, uint64_t data, uint32_t id) {
     auto* dut = sim.dut.get();
+    wait_bvalid_low(sim);
     dut->sys_id_stim_i = id;
     dut->sys_addr_stim_i = addr;
     dut->sys_len_stim_i = 0;
     dut->sys_size_stim_i = 3;
-    set_wdata(dut, data);
+    set_wdata(dut, data, addr);
     dut->sys_axi_aw_vcvalid_stim_i = 2;
     dut->sys_axi_w_vcvalid_stim_i = 2;
     dut->sys_axi_aw_valid_stim_i = 1;
@@ -180,6 +234,44 @@ void issue_write(SimCtrl<Vshire_channel_wrap_tb>& sim, uint64_t addr, uint64_t d
     dut->sys_axi_w_valid_stim_i = 0;
     dut->sys_axi_aw_vcvalid_stim_i = 0;
     dut->sys_axi_w_vcvalid_stim_i = 0;
+}
+
+LaneWaitResult issue_write_track_lane(SimCtrl<Vshire_channel_wrap_tb>& sim, uint64_t addr,
+                                      uint64_t data, uint32_t id, uint32_t mask,
+                                      bool channel_lane) {
+    auto* dut = sim.dut.get();
+    wait_bvalid_low(sim);
+    dut->sys_id_stim_i = id;
+    dut->sys_addr_stim_i = addr;
+    dut->sys_len_stim_i = 0;
+    dut->sys_size_stim_i = 3;
+    set_wdata(dut, data, addr);
+    dut->sys_axi_aw_vcvalid_stim_i = 2;
+    dut->sys_axi_w_vcvalid_stim_i = 2;
+    dut->sys_axi_aw_valid_stim_i = 1;
+    dut->sys_axi_w_valid_stim_i = 1;
+
+    LaneWaitResult result{false, false};
+    bool accepted = false;
+    for (int i = 0; i < 320; ++i) {
+        sim.tick();
+        const uint32_t psel = channel_lane ? dut->apb_channel_psel_o : dut->apb_neigh_psel_o;
+        result.saw_psel = result.saw_psel || ((psel & mask) == mask);
+        result.saw_bvalid = result.saw_bvalid || (dut->sys_axi_b_valid_obs_o != 0);
+        if (!accepted && dut->sys_axi_aw_ready_obs_o && dut->sys_axi_w_ready_obs_o) {
+            accepted = true;
+            dut->sys_axi_aw_valid_stim_i = 0;
+            dut->sys_axi_w_valid_stim_i = 0;
+            dut->sys_axi_aw_vcvalid_stim_i = 0;
+            dut->sys_axi_w_vcvalid_stim_i = 0;
+        }
+        if (accepted && result.saw_psel && result.saw_bvalid) break;
+    }
+    dut->sys_axi_aw_valid_stim_i = 0;
+    dut->sys_axi_w_valid_stim_i = 0;
+    dut->sys_axi_aw_vcvalid_stim_i = 0;
+    dut->sys_axi_w_vcvalid_stim_i = 0;
+    return result;
 }
 }  // namespace
 
@@ -215,6 +307,10 @@ int main(int argc, char** argv) {
     dut->rst_c_ext_ni = 0;
     for (int i = 0; i < 3; ++i) sim.tick();
     sim.check((dut->rst_c_shire_no_o & 0xf) == 0x0, "cold reset asserts cold shire resets");
+    sim.check(dut->pwr_ctrl_neigh_nsleepin_o == 0xffffffffu,
+              "cold reset forces minion power nsleepin mask high");
+    sim.check(dut->pwr_ctrl_neigh_iso_o == 0x0u,
+              "cold reset masks minion power isolation low");
     sim.check((dut->rst_warm_to_neigh_no_o & 0xf) == 0xf,
               "cold reset does not alter raw warm-reset neighborhood fanout");
     dut->rst_c_ext_ni = 1;
@@ -277,8 +373,8 @@ int main(int argc, char** argv) {
     sim.check(dut->icache_req_ready_o != 0, "Icache request ready seam is observable");
 
     dut->sys_id_stim_i = 3;
-    dut->sys_addr_stim_i = make_addr_id(0, 3, 2, 0, 0x001);
-    set_wdata(dut, kConfigEnableAll);
+    dut->sys_addr_stim_i = shire_reg_addr(kRegShireConfig);
+    set_wdata(dut, kConfigEnableAll, shire_reg_addr(kRegShireConfig));
     dut->sys_axi_aw_vcvalid_stim_i = 2;
     dut->sys_axi_w_vcvalid_stim_i = 2;
     dut->sys_axi_aw_valid_stim_i = 1;
@@ -292,6 +388,72 @@ int main(int argc, char** argv) {
     dut->sys_axi_w_vcvalid_stim_i = 0;
     sim.check(wait_for_bvalid(sim, 120), "SYS-to-SBM configuration write produces response");
     sim.check(dut->sys_axi_b_valid_obs_o == 1, "SYS-to-SBM configuration write response is visible");
+    for (int i = 0; i < 8; ++i) sim.tick();
+
+    LaneWaitResult neigh_lane = issue_write_track_lane(
+        sim, make_addr(1, 0, 2, 0x010), 0x1111222233334444ull, 4, 1u << 2, false);
+    sim.check(neigh_lane.saw_psel, "SYS write selects neighborhood APB lane 2");
+    sim.check(neigh_lane.saw_bvalid, "neighborhood APB lane write returns a SYS response");
+
+    LaneWaitResult bank_lane = issue_write_track_lane(
+        sim, make_addr(3, 0, 1, 0x020), 0x2222333344445555ull, 5, 1u << 1, true);
+    sim.check(bank_lane.saw_psel, "SYS write selects cache-bank APB lane 1");
+    sim.check(bank_lane.saw_bvalid, "cache-bank APB lane write returns a SYS response");
+
+    LaneWaitResult shire_lane = issue_write_track_lane(
+        sim, shire_reg_addr(kRegShireConfig), kConfigEnableAll, 6, 1u << kApbShireIdx, true);
+    sim.check(shire_lane.saw_psel, "SYS write selects shire ESR APB lane");
+    sim.check(shire_lane.saw_bvalid, "shire ESR APB lane write returns a SYS response");
+
+    LaneWaitResult rbox_lane = issue_write_track_lane(
+        sim, make_addr(3, 1, 0, 0x020), 0x3333444455556666ull, 7, 1u << kApbRboxIdx, true);
+    sim.check(rbox_lane.saw_psel, "SYS write selects RBOX APB lane");
+    sim.check(rbox_lane.saw_bvalid, "RBOX APB lane write returns a SYS response");
+
+    sim.check((dut->apb_channel_psel_o & (1u << kApbIcacheIdx)) == 0,
+              "ICache APB lane is idle without the removed BPAM/debug source");
+    sim.check((dut->apb_channel_pready_all_o & (1u << kApbIcacheIdx)) == 0,
+              "ICache APB response lane remains idle when unselected");
+
+    const uint64_t ram_cfg2 = (1ull << 13) | (5ull << 10) | (3ull << 7) |
+                              (2ull << 5) | (0xaull << 1) | 1ull;
+    issue_write(sim, shire_reg_addr(kRegRamCfg2), ram_cfg2, 8);
+    sim.check(wait_for_bvalid(sim, 120), "RAM config write returns a SYS response");
+    for (int i = 0; i < 8; ++i) sim.tick();
+    sim.check(((dut->ram_cfg_flat_o >> 14) & 1u) == 1,
+              "RAM cfg test_en propagates through wrapper");
+    sim.check(((dut->ram_cfg_flat_o >> 10) & 0xfu) == 0xa,
+              "RAM cfg read-margin propagates through wrapper");
+    sim.check(((dut->ram_cfg_flat_o >> 2) & 0x7u) == 5,
+              "RAM cfg write-pulse propagates through wrapper");
+
+    issue_write(sim, shire_reg_addr(kRegPwrNeighNsleepin), 0x11223344u, 9);
+    sim.check(wait_for_bvalid(sim, 120), "neighborhood nsleepin write returns a SYS response");
+    issue_write(sim, shire_reg_addr(kRegPwrNeighIso), 0x55667788u, 10);
+    sim.check(wait_for_bvalid(sim, 120), "neighborhood isolation write returns a SYS response");
+    for (int i = 0; i < 8; ++i) sim.tick();
+    sim.check(dut->pwr_ctrl_neigh_nsleepin_o == 0x11223344u,
+              "neighborhood/minion nsleepin control fans out");
+    sim.check(dut->pwr_ctrl_neigh_iso_o == 0x55667788u,
+              "neighborhood/minion isolation control fans out");
+
+    issue_write(sim, shire_reg_addr(kRegPllAuto), 0x7ffu, 11);
+    sim.check(wait_for_bvalid(sim, 120), "PLL auto-control write returns a SYS response");
+    issue_write(sim, shire_reg_addr(kRegDllAuto), 0x3ffu, 12);
+    sim.check(wait_for_bvalid(sim, 120), "DLL auto-control write returns a SYS response");
+    issue_write(sim, shire_reg_addr(kRegClockmux), 0xbu, 13);
+    sim.check(wait_for_bvalid(sim, 120), "clockmux write returns a SYS response");
+    issue_write(sim, shire_reg_addr(kRegClkGate), 0x3abu, 14);
+    sim.check(wait_for_bvalid(sim, 120), "clock-gate control write returns a SYS response");
+    for (int i = 0; i < 8; ++i) sim.tick();
+    sim.check((dut->pll_ctrl_flat_o & 0x7ffu) == 0x7ffu,
+              "PLL control fanout follows shire ESR write");
+    sim.check((dut->dll_ctrl_flat_o & 0x3ffu) == 0x3ffu,
+              "DLL control fanout follows shire ESR write");
+    sim.check((dut->shire_ctrl_clockmux_flat_o & 0xfu) == 0xbu,
+              "clockmux control fanout follows shire ESR write");
+    sim.check((dut->clk_gate_ctrl_flat_o & 0x7ffu) == (0x3abu & ~(1u << 5)),
+              "clock-gate control fanout follows shire ESR write with RBox bit reserved low");
 
     dut->noc_err_int_srcs_i = 0;
     dut->coop_slv_valid_i = 0;

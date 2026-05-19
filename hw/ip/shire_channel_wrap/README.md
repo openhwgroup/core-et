@@ -42,7 +42,9 @@ The wrapper exposes native project seams:
 - The wrapper instantiates `shire_channel`, `sbm_top`, `shire_dmctrl`, and
   `shire_pll_wrapper` only through project-native RTL and technology primitives.
 - APB lanes from `sbm_top` are mapped to neighborhood ports, shire-cache bank
-  ports, the shire ESR port, RBOX, and the retained I-cache APB lane.
+  ports, the shire ESR port, and RBOX. The retained I-cache APB lane remains at
+  the channel boundary for compatibility but is idle in this wrapper because the
+  original BPAM/debug source that drove it is outside the retained native scope.
 - `prim_rst_sync` is used for the low-voltage NOC reset repeat stage. The
   high-voltage reset manager keeps the original two-stage sync style before
   deriving cold/warm/debug reset domains.
@@ -57,19 +59,25 @@ The wrapper exposes native project seams:
 ## Verification
 
 - Unit test: `hw/ip/shire_channel_wrap/dv/shire_channel_wrap_test.cc` performs
-  30 directed checks covering NOC reset bypass, raw warm-reset fanout, DFT
-  struct propagation, SYS/SBM write response visibility, interrupt/status
-  fanout, cooperative TLoad fanout, FLB/I-cache seams, and power/reset defaults.
+  58 directed checks covering NOC reset bypass, raw warm-reset fanout, DFT
+  struct propagation, SYS/SBM/APB lane responses plus the idle retained I-cache
+  APB lane, RAM-config writes, retained PLL/DLL/clock-control fanout,
+  interrupt/status fanout, cooperative TLoad fanout, FLB/I-cache seams, and
+  neighborhood/minion power reset masking.
 - RTL cosim: `dv/rtlcosim/shire_channel_wrap/` instantiates an original
   retained-behavior wrapper slice from `/home/glguida/ainekko/et-soc` alongside
-  the native wrapper. It compares 128,200 cycles/checkpoints of retained
-  wrapper-shell behavior: resets, raw warm-reset fanout, APB/SBM enable and
-  SYS AXI handshakes, run-control, interrupts, cooperative TLoad, ESR/control
-  fanout, clock-gate/power outputs, and selected valid-response payloads.
-- The cosim intentionally compares wrapper-shell retained behavior. Standalone
-  child cosims remain responsible for full `shire_channel`, cache, uncached, and
-  RBOX datapath equivalence; removed third-party/debug/sensor/hard-macro
-  surfaces are not reinstated or compared.
+  the native wrapper. It records explicit input-toggle coverage for every
+  retained cosim input port and compares 294,161 retained wrapper observations:
+  resets, clocks, raw warm-reset fanout, APB/SBM enable and response vectors,
+  SYS AXI handshakes, retained AXI/cache/uncached valid/ready controls and
+  valid payloads, run-control, interrupts, cooperative TLoad, ESR/control fanout,
+  RAM configuration, and clock-gate/power outputs.
+- The cosim intentionally compares wrapper-shell retained behavior. Reset-release
+  drain windows cover known original reset-repeat vs native synchronizer latency;
+  all retained observations are compared on every non-drain comparison cycle.
+  Standalone child cosims remain responsible for deeper `shire_channel`, cache,
+  uncached, and RBOX datapath scenarios; removed third-party/debug/sensor/
+  hard-macro surfaces are not reinstated or compared.
 
 ## Intentional differences from original CORE-ET wrapper
 
@@ -80,7 +88,7 @@ The wrapper exposes native project seams:
 | Project PLL/DLL clock abstraction | Replaces hard-macro pins with `shire_pll_wrapper` clock-selection behavior. |
 | Removed debug/sensor/proprietary/hard-macro/generated surfaces | These surfaces are outside the retained Ainekko-owned native shell contract. |
 | Native APB/SBM packages | Uses `shire_sbm_pkg` and `neigh_ch_apb_mux_pkg` typed buses instead of original include-defined buses. |
-| RAM configuration surface | Native wrapper exposes standardized `ram_cfg_pkg::ram_cfg_t`; the original `esr_shire_cache_ram_cfg_t` bit surface is not compared directly in wrapper cosim because it is covered by the project RAM-config abstraction. |
+| RAM configuration surface | Native wrapper exposes standardized `ram_cfg_pkg::ram_cfg_t`; wrapper DV writes the original ESR RAM-config fields and compares the retained packed configuration bits through the native abstraction. |
 
 The implementation intentionally does not recreate removed compatibility pins or
 placeholder modules for omitted third-party/debug/sensor infrastructure.

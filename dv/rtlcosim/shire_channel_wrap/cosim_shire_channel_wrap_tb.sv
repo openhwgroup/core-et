@@ -1307,13 +1307,13 @@ module cosim_shire_channel_wrap_tb
   end
 
   assign orig_pwr_ctrl_glb_nsleepin_o = esr_pwr_ctrl_glb_nsleepin_op;
-  assign new_pwr_ctrl_glb_nsleepin_o = u_new.esr_pwr_ctrl_glb_nsleepin_o;
+  assign new_pwr_ctrl_glb_nsleepin_o = u_new.pwr_ctrl_glb_nsleepin_o;
   assign orig_pwr_ctrl_glb_iso_o = esr_pwr_ctrl_glb_iso_op;
-  assign new_pwr_ctrl_glb_iso_o = u_new.esr_pwr_ctrl_glb_iso_o;
+  assign new_pwr_ctrl_glb_iso_o = u_new.pwr_ctrl_glb_iso_o;
   assign orig_pwr_ctrl_neigh_nsleepin_o = esr_pwr_ctrl_neigh_nsleepin_op;
-  assign new_pwr_ctrl_neigh_nsleepin_o = u_new.esr_pwr_ctrl_neigh_nsleepin_o;
+  assign new_pwr_ctrl_neigh_nsleepin_o = u_new.pwr_ctrl_neigh_nsleepin_o;
   assign orig_pwr_ctrl_neigh_iso_o = esr_pwr_ctrl_neigh_iso_op;
-  assign new_pwr_ctrl_neigh_iso_o = u_new.esr_pwr_ctrl_neigh_iso_o;
+  assign new_pwr_ctrl_neigh_iso_o = u_new.pwr_ctrl_neigh_iso_o;
 
   assign orig_pll_ctrl_flat_o = esr_pll_ctrl_op;
   assign new_pll_ctrl_flat_o = u_new.esr_pll_ctrl_o;

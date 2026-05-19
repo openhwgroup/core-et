@@ -192,6 +192,17 @@ module shire_channel_wrap_tb
   output logic [shire_esr_pkg::NumNeigh-1:0] apb_neigh_pwrite_o,
   output logic [neigh_ch_apb_mux_pkg::NeighDmApbAddrWidth-1:0] apb_neigh0_paddr_o,
   output logic [shire_sbm_pkg::ApbDataWidth-1:0] apb_neigh0_pwdata_o,
+  output logic [shirecache_pkg::Banks+shirecache_pkg::RboxPerShire+2-1:0] apb_channel_psel_o,
+  output logic [shirecache_pkg::Banks+shirecache_pkg::RboxPerShire+2-1:0] apb_channel_pwrite_o,
+  output logic [shirecache_pkg::Banks+shirecache_pkg::RboxPerShire+2-1:0] apb_channel_pready_all_o,
+  output logic [shirecache_pkg::Banks+shirecache_pkg::RboxPerShire+2-1:0] apb_channel_pslverr_all_o,
+  output logic [(shirecache_pkg::Banks+shirecache_pkg::RboxPerShire+2)*shire_sbm_pkg::ApbDataWidth-1:0] apb_channel_prdata_all_flat_o,
+  output logic [$bits(shire_esr_pkg::esr_pll_auto_config_t)-1:0] pll_ctrl_flat_o,
+  output logic [shire_esr_pkg::ShirePllConfBits-1:0] pll_conf_o,
+  output logic [$bits(shire_esr_pkg::esr_dll_auto_config_t)-1:0] dll_ctrl_flat_o,
+  output logic [shire_esr_pkg::ShireDllConfBits-1:0] dll_conf_o,
+  output logic [$bits(shire_esr_pkg::esr_clkmux_ctl_t)-1:0] shire_ctrl_clockmux_flat_o,
+  output logic [shire_esr_pkg::NumNeigh*$bits(esr_pkg::esr_dll_dly_est_ctl_t)-1:0] dll_dly_est_ctl_flat_o,
   output logic sys_axi_ar_ready_obs_o,
   output logic sys_axi_aw_ready_obs_o,
   output logic sys_axi_w_ready_obs_o,
@@ -221,6 +232,7 @@ module shire_channel_wrap_tb
   localparam int unsigned EsrAndOrTreeL0Bits = $bits(esr_pkg::esr_and_or_tree_l0_t);
   localparam int unsigned BpamRcTboxAckBits = $bits(neigh_hv_logic_pkg::bpam_rc_tbox_ack_t);
   localparam int unsigned DllDlyEstStsBits = $bits(esr_pkg::esr_dll_dly_est_sts_t);
+  localparam int unsigned DllDlyEstCtlBits = $bits(esr_pkg::esr_dll_dly_est_ctl_t);
   localparam int unsigned DmctrlBits = $bits(esr_pkg::esr_ms_dmctrl_t);
   localparam logic [2:0] ApbSlavesSelLimit = ApbSlaves[2:0];
 
@@ -470,15 +482,8 @@ module shire_channel_wrap_tb
   end
 
   always_comb begin
-    apb_req_i = '0;
-    apb_rsp_o = '{default: '0};
-    if (apb_sel_i < ApbSlavesSelLimit) begin
-      apb_req_i[apb_sel_i].paddr = apb_paddr_i;
-      apb_req_i[apb_sel_i].pwrite = apb_pwrite_i;
-      apb_req_i[apb_sel_i].psel = apb_psel_i;
-      apb_req_i[apb_sel_i].penable = apb_penable_i;
-      apb_req_i[apb_sel_i].pwdata = apb_pwdata_i;
-    end
+    apb_req_i = u_dut.channel_apb_req;
+    apb_rsp_o = u_dut.channel_apb_rsp;
     apb_pready_o = apb_rsp_o[apb_sel_q].pready;
     apb_prdata_o = apb_rsp_o[apb_sel_q].prdata;
     apb_pslverr_o = apb_rsp_o[apb_sel_q].pslverr;
@@ -958,10 +963,41 @@ module shire_channel_wrap_tb
   assign rst_system_debug_lv_no_o = rst_system_debug_lv_no;
   assign clk_neigh_obs_o = clk_neigh_o;
   assign clk_shire_obs_o = clk_shire_o;
-  assign sbm_enable_read_o = sys_axi_ar_valid_i & sys_axi_ar_ready_o;
-  assign sbm_enable_write_o = sys_axi_aw_valid_i & sys_axi_aw_ready_o;
+  assign sbm_enable_read_o = u_dut.sbm_enable_read;
+  assign sbm_enable_write_o = u_dut.sbm_enable_write;
+  assign sbm_sys_axi_ar_o = u_dut.sbm_sys_axi_ar;
+  assign sbm_sys_axi_aw_o = u_dut.sbm_sys_axi_aw;
+  assign sbm_sys_axi_w_o = u_dut.sbm_sys_axi_w;
+  assign sbm_sys_axi_b_ready_o = u_dut.sbm_sys_axi_b_ready;
+  assign sbm_sys_axi_r_ready_o = u_dut.sbm_sys_axi_r_ready;
   assign clk_gate_ctrl_flat_o = esr_clk_gate_ctrl_o;
   assign debug_clk_gate_ctrl_o = esr_debug_clk_gate_ctrl_o;
+  assign pll_ctrl_flat_o = esr_pll_ctrl_o;
+  assign pll_conf_o = esr_pll_conf_o;
+  assign dll_ctrl_flat_o = esr_dll_ctrl_o;
+  assign dll_conf_o = esr_dll_conf_o;
+  assign shire_ctrl_clockmux_flat_o = esr_shire_ctrl_clockmux_o;
+
+  always_comb begin
+    apb_channel_psel_o = '0;
+    apb_channel_pwrite_o = '0;
+    apb_channel_pready_all_o = '0;
+    apb_channel_pslverr_all_o = '0;
+    apb_channel_prdata_all_flat_o = '0;
+    dll_dly_est_ctl_flat_o = '0;
+    for (int unsigned apb_idx = 0; apb_idx < ApbSlaves; apb_idx++) begin
+      apb_channel_psel_o[apb_idx] = apb_req_i[apb_idx].psel;
+      apb_channel_pwrite_o[apb_idx] = apb_req_i[apb_idx].pwrite;
+      apb_channel_pready_all_o[apb_idx] = apb_rsp_o[apb_idx].pready;
+      apb_channel_pslverr_all_o[apb_idx] = apb_rsp_o[apb_idx].pslverr;
+      apb_channel_prdata_all_flat_o[apb_idx*shire_sbm_pkg::ApbDataWidth +: shire_sbm_pkg::ApbDataWidth] =
+          apb_rsp_o[apb_idx].prdata;
+    end
+    for (int unsigned dll_idx = 0; dll_idx < NumNeigh; dll_idx++) begin
+      dll_dly_est_ctl_flat_o[dll_idx*DllDlyEstCtlBits +: DllDlyEstCtlBits] =
+          esr_dll_dly_est_ctl_o[dll_idx];
+    end
+  end
 
   for (genvar flat_idx = 0; flat_idx < NumNeigh; flat_idx++) begin : gen_flat_outputs
     assign esr_minion_features_flat_o[flat_idx] = esr_minion_features_o[flat_idx];
