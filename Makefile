@@ -1,10 +1,18 @@
 # Top-level Makefile
 # Run `make test` to build and run all tests with Verilator.
 
-IP_DIRS    := $(sort $(dir $(wildcard hw/ip/*/dv/Makefile) $(wildcard hw/ip/*/*/dv/Makefile)))
-COSIM_DIRS := $(sort $(dir $(wildcard dv/rtlcosim/*/Makefile)))
+IP_MAKEFILES := $(wildcard hw/ip/*/dv/Makefile) $(wildcard hw/ip/*/*/dv/Makefile)
+# Keep top-level test order identical to the CI matrix helper's shell-sorted output.
+IP_DIRS      := $(shell printf '%s\n' $(patsubst %/,%,$(dir $(IP_MAKEFILES))) | sort)
+COSIM_DIRS   := $(sort $(dir $(wildcard dv/rtlcosim/*/Makefile)))
 
-.PHONY: test test-xrand cosim-test coverage-report coverage-html update-cosim-coverage lint clean help
+.PHONY: ci-unit-test-dirs ci-unit-test-matrix test test-xrand cosim-test coverage-report coverage-html update-cosim-coverage lint clean help
+
+ci-unit-test-dirs:
+	@for d in $(IP_DIRS); do printf '%s\n' "$${d%/}"; done
+
+ci-unit-test-matrix:
+	@python3 -c 'import json,re,sys; print(json.dumps({"include":[{"dv_dir":d,"artifact":"unit-coverage-"+re.sub(r"[^A-Za-z0-9_.-]+","-",d).strip("-")} for d in sys.argv[1:]]},separators=(",",":")))' $(patsubst %/,%,$(IP_DIRS))
 
 test:
 	@pass=0; fail=0; \
@@ -158,9 +166,11 @@ clean:
 
 help:
 	@echo "Targets:"
-	@echo "  test            - Build and run all IP unit tests"
-	@echo "  test-xrand      - Build and run all IP unit tests with randomized startup"
-	@echo "  cosim-test      - Build and run all RTL co-simulation tests"
+	@echo "  ci-unit-test-dirs    - List auto-discovered IP unit-test DV directories"
+	@echo "  ci-unit-test-matrix  - Print GitHub Actions matrix JSON for unit tests"
+	@echo "  test                 - Build and run all IP unit tests"
+	@echo "  test-xrand           - Build and run all IP unit tests with randomized startup"
+	@echo "  cosim-test           - Build and run all RTL co-simulation tests"
 	@echo "  coverage-report        - Generate LCOV .info files (line/branch/toggle)"
 	@echo "  coverage-html          - Generate interactive coverage dashboard"
 	@echo "  update-cosim-coverage  - Regenerate checked-in cosim .info files"

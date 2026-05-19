@@ -50,6 +50,12 @@ RTL and its testbench live together under each IP block. Do not create separate 
 4. Create `hw/ip/<name>/dv/<name>_test.cc` using `sim_ctrl.h` from `dv/common/`
 5. The top-level `make test` auto-discovers all IP blocks with a `dv/Makefile`
 
+Unit-test CI uses the same top-level discovery through `make ci-unit-test-dirs`
+and `make ci-unit-test-matrix`. New unit-test frameworks must live under
+`hw/ip/*/dv/Makefile` or `hw/ip/*/*/dv/Makefile` so they run as independent CI
+matrix entries. If a test must use a different layout, update the top-level
+Makefile discovery and CI helper in the same change.
+
 Every IP block **must** have a `README.md` at its root (`hw/ip/<name>/README.md`) that describes:
 - What the module does
 - Parameters and their meaning
@@ -515,7 +521,7 @@ Follow the existing table format. Keep the same section grouping (Packages, Prim
 - `mk/yosys.mk` — shared Yosys FPGA synthesis rules using the slang SystemVerilog frontend, included by project synthesis heads
 - `mk/prim.mk` — technology-specific primitive selection. Set `TECH` (generic, ice40, xilinx) before including; provides `PRIM_*` variables pointing to the correct source files
 - Per-IP Makefiles set: `TB_TOP`, `RTL_SRCS`, `CC_SRCS`, optionally `INCDIRS` and `SIM_ARGS`
-- Top-level `Makefile` auto-discovers all `hw/ip/*/dv/Makefile` and `hw/ip/*/*/dv/Makefile` targets
+- Top-level `Makefile` auto-discovers all `hw/ip/*/dv/Makefile` and `hw/ip/*/*/dv/Makefile` targets. CI consumes this discovery via `ci-unit-test-dirs` and `ci-unit-test-matrix`, so keep new unit tests in those layouts or update the helper and workflow together.
 - `dv/rtlcosim/Makefile` — runs all cosim tests
 
 ## Projects
