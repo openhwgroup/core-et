@@ -33,15 +33,16 @@ clock, power, and status behavior remains owned by `shire_channel_wrap`,
 | `IcacheMemsImplemented` | `1` | Enables shared ICache SRAM wrapper path. |
 | `L2hpfImplemented` | `0` | Enables L2 HPF path when implemented. |
 | `EnableGfx` | `0` | Graphics/TBOX neighborhood mode.  Default native top keeps TBOX external surfaces omitted. |
-| `DisableMinions` | all `1` | Per-neighborhood minion disable mask; useful for DV bring-up. |
-| `StubMinions` | all `1` | Per-neighborhood minion stub mask; useful for top-level smoke DV. |
+| `DisableMinions` | all `0` | Per-neighborhood minion disable mask; production default keeps neighborhoods/minions live. |
+| `StubMinions` | all `0` | Per-neighborhood minion stub mask; production default keeps neighborhoods/minions live. |
 | `ChannelApbSlaves` | package expression | `shire_channel_wrap` APB fanout count. |
 | `SbmApbSlaves` | `ShireApbInterfaces` | SBM/APB lane count. |
 | `DebugResetPulseCycles` | `32` | Debug reset pulse width in wrapper reset logic. |
 
 ## Interface groups
 
-- **Clocks/resets:** control/reference/step/PLL/DLL/NoC clocks plus separate
+- **Clocks/resets:** contracted functional clocks `clk_shire_i`,
+  `clk_debug_i`, per-neighborhood `clk_neigh_i`, `clk_noc_i`, plus separate
   cold, warm, system, and system-debug active-low resets.  The top preserves the
   child reset-domain split and returns `rst_system_lv_no` and
   `rst_system_debug_lv_no`.
@@ -65,10 +66,12 @@ UltraSoc, sensor, hard PLL/DLL analog/debug/TDR/OCC, or debug message mesh
 compatibility pins at this level.  Child pins that remain in `neigh_top` only to
 preserve a translated superset are tied off or left internal here.
 
-The default `DisableMinions='1` and `StubMinions='1` configuration is intended
-for project-native top smoke testing while lower-level neighborhood and minion
-work continues.  Integrations that require live minions should override those
-parameters consistently with the neighborhood configuration.
+Production defaults keep `DisableMinions='0` and `StubMinions='0`, matching
+Gen1/current child-package behavior so an SoC integration instantiates live
+neighborhoods and minions unless it explicitly overrides the masks.  The unit
+and cosim smoke wrappers override both masks to all ones to keep top-level DV
+focused on retained shell wiring while lower-level neighborhood/minion behavior
+remains covered by their standalone tests.
 
 ## Design constraints and assumptions
 
@@ -90,7 +93,7 @@ parameters consistently with the neighborhood configuration.
 | DFT controls are consolidated into `dft_pkg::dft_t` plus explicit SRAM clock/MBIST inputs. | Project DFT abstraction. |
 | Third-party UltraSoc/debug-message/sensor/hard PLL/DLL analog/TDR/OCC/scan-hub public pins are omitted. | Out of scope for Ainekko-owned native top; child-only preserved pins are tied off internally. |
 | RAM configuration uses `ram_cfg_pkg::ram_cfg_t`. | Replaces original foundry-specific SRAM config struct. |
-| Default DV parameters disable/stub minions. | Keeps this top-level integration smoke independent of incomplete downstream minion/TBOX bring-up. |
+| DV wrappers override `DisableMinions`/`StubMinions` to all ones, but the public RTL defaults are all zeros. | Keeps top-level smoke tests independent of downstream minion/TBOX activity without changing production integration defaults. |
 
 ## Verification
 
@@ -99,9 +102,10 @@ parameters consistently with the neighborhood configuration.
   interrupts/status, ET-Link/uncached/ICache/FLB/cooperative seams).
 - Lint: `make -C hw/ip/shire_top/dv lint`.
 - RTL cosim: `ORIG_ROOT=/home/glguida/ainekko/et-soc make -C dv/rtlcosim/shire_top test`.
-  The cosim runs 607,200 retained-output comparisons with zero mismatches. It
-  uses a retained original-wiring slice because the full original public top
-  depends on removed third-party/generated surfaces; the slice is documented in
-  the cosim sources and compares retained native observations against the new
-  `shire_top`. The neighborhood-generated ICache warm-reset return is covered by
-  the standalone `neigh_top` cosim and observed at this top integration boundary.
+  The cosim runs 566,632 retained-output comparisons with zero mismatches. It
+  uses original CORE-ET sources from `ORIG_ROOT` through the retained
+  `shire_channel_wrap` reference plus explicit original top stub-neighborhood
+  feedthroughs because the full original public top depends on removed
+  third-party/generated surfaces. The cosim sources document the retained slice
+  and compare independent original-side observations against the new
+  `shire_top`.

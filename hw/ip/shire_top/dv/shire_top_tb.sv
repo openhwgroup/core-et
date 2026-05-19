@@ -38,6 +38,7 @@ module shire_top_tb
   input  logic plic_meip_i,
   input  logic plic_seip_i,
   input  logic [shire_channel_leaves_pkg::NocIntNum-1:0] noc_err_int_srcs_i,
+  input  logic [shirecache_pkg::BankIdSize-1:0] status_monitor_bank_sel_stim_i,
   input  logic [$bits(shire_channel_leaves_pkg::esr_and_or_tree_l2_t)-1:0]
       debug_and_or_tree_l2_stim_i,
 
@@ -187,12 +188,13 @@ module shire_top_tb
     sys_axi_w.last = 1'b1;
   end
 
-  shire_top u_dut (
-    .clk_ctrl_i                  (clk_i),
-    .clk_ref_i                   (clk_i),
-    .clk_step_i                  (clk_i),
-    .clk_pll_i                   ({4{clk_i}}),
-    .clk_dll_i                   (clk_i),
+  shire_top #(
+    .DisableMinions              ('1),
+    .StubMinions                 ('1)
+  ) u_dut (
+    .clk_shire_i                 (clk_i),
+    .clk_debug_i                 (clk_i),
+    .clk_neigh_i                 ({NumNeigh{clk_i}}),
     .clk_noc_i                   (clk_i),
     .rst_cold_ni                 (rst_ni & rst_cold_ext_ni),
     .rst_warm_ni                 (rst_ni & rst_warm_ext_ni),
@@ -217,7 +219,7 @@ module shire_top_tb
     .ioshire_noc_err_int_o,
     .noc_err_int_srcs_i,
     .noc_all_err_int_srcs_o,
-    .status_monitor_bank_sel_i   ('0),
+    .status_monitor_bank_sel_i   (status_monitor_bank_sel_stim_i),
     .to_l3_axi_ar_o              (),
     .to_l3_axi_ar_valid_o        (),
     .to_l3_axi_ar_ready_i        ('1),

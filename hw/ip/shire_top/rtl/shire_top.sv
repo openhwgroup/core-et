@@ -35,18 +35,16 @@ module shire_top
   parameter bit          IcacheMemsImplemented = 1'b1,
   parameter bit          L2hpfImplemented      = 1'b0,
   parameter bit          EnableGfx             = 1'b0,
-  parameter logic [NumNeigh-1:0][neigh_pkg::MinPerN-1:0] DisableMinions = '1,
-  parameter logic [NumNeigh-1:0][neigh_pkg::MinPerN-1:0] StubMinions    = '1,
+  parameter logic [NumNeigh-1:0][neigh_pkg::MinPerN-1:0] DisableMinions = '0,
+  parameter logic [NumNeigh-1:0][neigh_pkg::MinPerN-1:0] StubMinions    = '0,
   parameter int unsigned ChannelApbSlaves      = NumBanks + NumRbox +
                                                  (IcacheMemsImplemented ? 1 : 0) + 1,
   parameter int unsigned SbmApbSlaves          = shire_sbm_pkg::ShireApbInterfaces,
   parameter int unsigned DebugResetPulseCycles = 32
 ) (
-  input  logic                                                clk_ctrl_i,
-  input  logic                                                clk_ref_i,
-  input  logic                                                clk_step_i,
-  input  logic [3:0]                                          clk_pll_i,
-  input  logic                                                clk_dll_i,
+  input  logic                                                clk_shire_i,
+  input  logic                                                clk_debug_i,
+  input  logic [NumNeigh-1:0]                                clk_neigh_i,
   input  logic                                                clk_noc_i,
 
   input  logic                                                rst_cold_ni,
@@ -198,6 +196,19 @@ module shire_top
   logic [NumNeigh-1:0] clk_shire_to_neigh;
   logic clk_shire;
   logic clk_shire_debug;
+  logic [NumNeigh-1:0] wrap_clk_neigh;
+  logic [NumNeigh-1:0] wrap_clk_shire_to_neigh;
+  logic wrap_clk_shire;
+  logic wrap_clk_shire_debug;
+
+  // Per the native compute-shire contract, the public top receives already
+  // generated functional clocks.  The translated wrapper's clock-control leaf
+  // remains instantiated for ESR/status behavior, but neighborhood clocks at
+  // this boundary come directly from `clk_neigh_i` and `clk_shire_i`.
+  assign clk_neigh = clk_neigh_i;
+  assign clk_shire_to_neigh = {NumNeigh{clk_shire_i}};
+  assign clk_shire = clk_shire_i;
+  assign clk_shire_debug = clk_debug_i;
 
   logic [NumNeigh-1:0] rst_c_shire_n;
   logic [NumNeigh-1:0] rst_d_shire_n;
@@ -304,11 +315,11 @@ module shire_top
     .SbmApbSlaves         (SbmApbSlaves),
     .DebugResetPulseCycles(DebugResetPulseCycles)
   ) u_channel_wrap (
-    .clk_ctrl_i,
-    .clk_ref_i,
-    .clk_step_i,
-    .clk_pll_i,
-    .clk_dll_i,
+    .clk_ctrl_i                 (clk_shire_i),
+    .clk_ref_i                  (clk_shire_i),
+    .clk_step_i                 (clk_shire_i),
+    .clk_pll_i                  ({4{clk_shire_i}}),
+    .clk_dll_i                  (clk_shire_i),
     .clk_noc_i,
     .rst_cold_ni,
     .rst_warm_ni,
@@ -316,10 +327,10 @@ module shire_top
     .rst_system_debug_ni,
     .rst_system_lv_no,
     .rst_system_debug_lv_no,
-    .clk_neigh_o                 (clk_neigh),
-    .clk_shire_to_neigh_o        (clk_shire_to_neigh),
-    .clk_shire_o                 (clk_shire),
-    .clk_shire_debug_o           (clk_shire_debug),
+    .clk_neigh_o                 (wrap_clk_neigh),
+    .clk_shire_to_neigh_o        (wrap_clk_shire_to_neigh),
+    .clk_shire_o                 (wrap_clk_shire),
+    .clk_shire_debug_o           (wrap_clk_shire_debug),
     .rst_c_shire_no              (rst_c_shire_n),
     .rst_d_shire_no              (rst_d_shire_n),
     .rst_w_shire_no              (rst_w_shire_n),

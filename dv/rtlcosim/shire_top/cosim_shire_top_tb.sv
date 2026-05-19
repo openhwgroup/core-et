@@ -3,9 +3,10 @@
 
 // Native shire_top cosim wrapper.  The new side instantiates the project
 // shire_top through the same observation wrapper used by unit smoke DV.  The
-// original side instantiates a retained original-wiring slice documented in
-// orig_shire_top_retained_slice.sv; the full original public top includes
-// removed third-party/generated surfaces and is intentionally not recreated.
+// original side instantiates a retained original-source top-wiring adapter
+// documented in orig_shire_top_retained_slice.sv; the full original public top
+// includes removed third-party/generated surfaces and is intentionally not
+// recreated.
 
 /* verilator lint_off UNUSEDSIGNAL */  // Cosim intentionally observes a directed retained native subset.
 module cosim_shire_top_tb
@@ -40,6 +41,7 @@ module cosim_shire_top_tb
   input  logic plic_meip_i,
   input  logic plic_seip_i,
   input  logic [shire_channel_leaves_pkg::NocIntNum-1:0] noc_err_int_srcs_i,
+  input  logic [shirecache_pkg::BankIdSize-1:0] status_monitor_bank_sel_stim_i,
   input  logic [$bits(shire_channel_leaves_pkg::esr_and_or_tree_l2_t)-1:0]
       debug_and_or_tree_l2_stim_i,
 
@@ -172,15 +174,6 @@ module cosim_shire_top_tb
   output logic [1:0] new_sys_axi_aw_credit_obs_o
 );
 
-  // The retained original top slice stubs the neighborhood instances to avoid
-  // reinstating the generated/debug/third-party public top surface.  The
-  // ICache warm-reset return is produced only by the neighborhood shell, so the
-  // slice has no independent original signal for that return path.  Compare the
-  // native top's connected return path directly while the standalone
-  // `neigh_top` cosim owns original-vs-new coverage for that neighborhood
-  // output.
-  assign orig_rst_w_icache_no_o = new_rst_w_icache_no_o;
-
   shire_top_tb u_new (
     .clk_i,
     .rst_ni,
@@ -201,6 +194,7 @@ module cosim_shire_top_tb
     .plic_meip_i,
     .plic_seip_i,
     .noc_err_int_srcs_i,
+    .status_monitor_bank_sel_stim_i,
     .debug_and_or_tree_l2_stim_i,
     .sys_axi_ar_valid_stim_i,
     .sys_axi_aw_valid_stim_i,
@@ -286,6 +280,7 @@ module cosim_shire_top_tb
     .plic_meip_i,
     .plic_seip_i,
     .noc_err_int_srcs_i,
+    .status_monitor_bank_sel_stim_i,
     .debug_and_or_tree_l2_stim_i,
     .sys_axi_ar_valid_stim_i,
     .sys_axi_aw_valid_stim_i,
@@ -303,7 +298,7 @@ module cosim_shire_top_tb
     .rst_w_shire_no_o            (orig_rst_w_shire_no_o),
     .rst_d_shire_no_o            (orig_rst_d_shire_no_o),
     .rst_warm_to_neigh_no_o      (orig_rst_warm_to_neigh_no_o),
-    .rst_w_icache_no_o           (),
+    .rst_w_icache_no_o           (orig_rst_w_icache_no_o),
     .rst_system_lv_no_o          (orig_rst_system_lv_no_o),
     .rst_system_debug_lv_no_o    (orig_rst_system_debug_lv_no_o),
     .clk_neigh_obs_o             (orig_clk_neigh_obs_o),

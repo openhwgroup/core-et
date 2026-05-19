@@ -180,13 +180,107 @@ TOP_SRCS := $(TOP)/shire_top.sv
 COSIM_NAME := shire_top
 ORIG_ROOT ?= /home/glguida/ainekko/et-soc
 
+ADAPTER_SRCS := $(IP)/shire_channel_wrap/dv/shire_channel_wrap_tb.sv \
+                $(REPO_ROOT)/dv/rtlcosim/shire_channel_wrap/cosim_shire_channel_wrap_tb.sv \
+                $(CURDIR)/orig_shire_top_retained_slice.sv \
+                $(IP)/shire_top/dv/shire_top_tb.sv
+
 NEW_RTL := $(PKG_SRCS) $(PRIM_SRCS) $(SC_SRCS) $(RB_SRCS) $(UC_SRCS) $(ESR_SRCS) \
            $(LEAF_SRCS) $(SBM_SRCS) $(CHANNEL_SRCS) $(WRAP_SRCS) $(NEIGH_SRCS) \
            $(NEIGH_CHANNEL_SRCS) $(IP)/neigh_top/rtl/neigh_top_pwrstub.sv \
-           $(IP)/neigh_top/rtl/neigh_top.sv $(TOP_SRCS) \
-           $(IP)/shire_top/dv/shire_top_tb.sv
+           $(IP)/neigh_top/rtl/neigh_top.sv $(TOP_SRCS) $(ADAPTER_SRCS)
 
-ORIG_RTL := $(CURDIR)/orig_shire_top_retained_slice.sv
-EXTRA_FLAGS := -Wno-MULTITOP -Wno-SYNCASYNCNET -Wno-UNOPTFLAT -Wno-IMPORTSTAR
+ORIG_RTL := \
+  $(ORIG_ROOT)/rtl/shire/shire_channel/orig/shire_channel.v \
+  $(ORIG_ROOT)/rtl/shire/shire_channel/apb_esr_ff.v \
+  $(ORIG_ROOT)/rtl/shire/shire_channel/shire_bpam_run_control.v \
+  $(ORIG_ROOT)/rtl/shire/shire_channel/shire_and_or_tree_daisychain.v \
+  $(ORIG_ROOT)/rtl/shire/shire_channel/shire_coop_tload_bus.v \
+  $(ORIG_ROOT)/rtl/shire/shire_channel/shire_ioshire_noc_ints.v \
+  $(ORIG_ROOT)/rtl/shire/esr/esr_shire_other.v \
+  $(ORIG_ROOT)/rtl/shire/esr/esr_cache_bank.v \
+  $(ORIG_ROOT)/rtl/shire/shire_cache/shire_cache.v \
+  $(ORIG_ROOT)/rtl/shire/shire_cache/orig/shire_cache_bank.v \
+  $(ORIG_ROOT)/rtl/shire/shire_channel/icache/icache_mems.v \
+  $(ORIG_ROOT)/rtl/shire/shire_channel/icache/icache_data_ram_wrap.v \
+  $(ORIG_ROOT)/rtl/shire/uncached/uncacheable_fcc.v \
+  $(ORIG_ROOT)/rtl/shire/uncached/uncacheable_flb.v \
+  $(ORIG_ROOT)/rtl/shire/uncached/noc_etlink_to_axi.v \
+  $(ORIG_ROOT)/rtl/shire/uncached/uncacheable_noc_slv_handler.v \
+  $(ORIG_ROOT)/rtl/shire/uncached/uncacheable_noc_tol3_handler.v \
+  $(ORIG_ROOT)/rtl/shire/uncached/uncacheable_noc_tosys_handler.v \
+  $(ORIG_ROOT)/rtl/shire/uncached/uncacheable_noc_rsp.v \
+  $(ORIG_ROOT)/rtl/shire/uncached/uncacheable_noc.v \
+  $(ORIG_ROOT)/rtl/shire/uncached/uncached_hi_voltage_cross_lv_logic.v \
+  $(ORIG_ROOT)/rtl/shire/uncached/uncached_hi_voltage_cross.v \
+  $(ORIG_ROOT)/rtl/shire/uncached/uncached_lo_voltage_cross_lv_logic.v \
+  $(ORIG_ROOT)/rtl/shire/uncached/uncached_lo_voltage_cross.v \
+  $(ORIG_ROOT)/rtl/shire/uncached/uncacheable.v \
+  $(ORIG_ROOT)/rtl/shire/shire_bus_master/sbm_top.v \
+  $(ORIG_ROOT)/rtl/shire/shire_bus_master/shire_bus_master.v \
+  $(ORIG_ROOT)/rtl/shire/shire_bus_master/mshire_axi_to_apb.v \
+  $(ORIG_ROOT)/rtl/shire/ultrasoc_debug/ms_bpam_decoder.v \
+  $(ORIG_ROOT)/rtl/shire/ultrasoc_debug/arb_apb_ust.v \
+  $(ORIG_ROOT)/rtl/libs/rf_latches/apb_ff.v \
+  $(ORIG_ROOT)/rtl/libs/rf_latches/sys_gasket_reset.v \
+  $(ORIG_ROOT)/rtl/libs/rf_latches/sys_gasket_noc_reset.v \
+  $(ORIG_ROOT)/rtl/libs/rf_latches/sys_gasket_noc_reset_sync.v \
+  $(ORIG_ROOT)/rtl/libs/mems_and_fifos/gen_fifo_reg.v \
+  $(ORIG_ROOT)/rtl/libs/mems_and_fifos/sync_rst.v \
+  $(ORIG_ROOT)/rtl/libs/mems_and_fifos/sync_rstn.v \
+  $(ORIG_ROOT)/rtl/libs/mems_and_fifos/rst_repeat.v \
+  $(ORIG_ROOT)/rtl/libs/registers/en_ff_gated_struct.v \
+  $(ORIG_ROOT)/rtl/libs/arbiters/arb_rr_data.v \
+  $(ORIG_ROOT)/rtl/libs/arbiters/arb_rr_base.v \
+  $(ORIG_ROOT)/rtl/libs/arbiters/onehot_mux.v \
+  $(ORIG_ROOT)/rtl/libs/rf_latches/et_clk_mux2.v
+
+ORIG_LIBDIRS := $(ORIG_ROOT)/rtl/libs/mems_and_fifos \
+                $(ORIG_ROOT)/rtl/libs/rf_latches \
+                $(ORIG_ROOT)/rtl/libs/arbiters \
+                $(ORIG_ROOT)/rtl/libs/registers \
+                $(ORIG_ROOT)/rtl/libs/ecc \
+                $(ORIG_ROOT)/rtl/shire/esr \
+                $(ORIG_ROOT)/rtl/shire/shire_cache \
+                $(ORIG_ROOT)/rtl/shire/shire_cache/orig \
+                $(ORIG_ROOT)/rtl/shire/rbox
+
+ORIG_RENAME := uncacheable_noc_tol3_handler \
+               uncacheable_noc_tosys_handler \
+               uncacheable_noc_slv_handler \
+               uncached_hi_voltage_cross_lv_logic \
+               uncached_lo_voltage_cross_lv_logic \
+               uncached_hi_voltage_cross \
+               uncached_lo_voltage_cross \
+               shire_and_or_tree_daisychain \
+               shire_coop_tload_bus \
+               shire_ioshire_noc_ints \
+               shire_bpam_run_control \
+               shire_bus_master \
+               mshire_axi_to_apb \
+               shire_cache_bank \
+               esr_cache_bank \
+               shire_cache \
+               icache_data_ram_wrap \
+               noc_etlink_to_axi \
+               icache_mems \
+               uncacheable_noc_rsp \
+               uncacheable_noc \
+               esr_shire_other \
+               uncacheable_fcc \
+               uncacheable_flb \
+               apb_esr_ff \
+               uncacheable \
+               shire_channel \
+               sbm_top
+
+
+# -fno-dfg avoids a Verilator 5.046 internal error on the reused wrapper
+# reference adapter's unpacked arrays of packed ESR structs; it does not
+# change simulated behavior.
+EXTRA_FLAGS := -DET_ASSERT_OFF -fno-dfg -Wno-WIDTHTRUNC -Wno-WIDTHEXPAND -Wno-SYMRSVDWORD \
+               -Wno-SYNCASYNCNET -Wno-UNOPTFLAT -Wno-MULTITOP -Wno-IMPORTSTAR \
+               +incdir+$(ORIG_ROOT)/rtl/shire/esr
+SIM_ARGS := +verilator+noassert
 
 include $(REPO_ROOT)/mk/rtlcosim.mk

@@ -70,6 +70,7 @@ void clear_inputs(Vshire_top_tb* dut) {
     dut->plic_meip_i = 1;
     dut->plic_seip_i = 0;
     dut->noc_err_int_srcs_i = 0;
+    dut->status_monitor_bank_sel_stim_i = 0;
     dut->debug_and_or_tree_l2_stim_i = 0;
     dut->sys_axi_ar_valid_stim_i = 0;
     dut->sys_axi_aw_valid_stim_i = 0;
@@ -173,13 +174,11 @@ int main(int argc, char** argv) {
     sim.check((dut->rst_w_icache_no_o & 0xf) == 0x0,
               "neighborhood ICache warm reset return path is connected in all-stub smoke");
     sim.check((dut->clk_neigh_obs_o & 0xf) == (dut->clk_shire_obs_o ? 0xf : 0x0),
-              "wrapper-generated neighborhood clocks fan out uniformly in default mode");
+              "contracted neighborhood clocks fan out uniformly in DV smoke mode");
     sim.check((dut->shire_id_o & 0xffu) == kShireId,
               "shire ID reset value reaches neighborhood ID fanout");
     sim.check((dut->tbox_id_o & 0xffu) == 0xe4u,
               "TBOX IDs fan out to neighborhoods");
-    sim.check((dut->tbox_en_o & 0xf) == (dut->tbox_en_o & 0xf),
-              "TBOX enable fanout is observable at the native top");
     sim.check((dut->plic_meip_to_neigh_o & 0xf) == 0xf,
               "MEIP interrupt fans out to all neighborhoods");
     sim.check((dut->plic_seip_to_neigh_o & 0xf) == 0x0,
@@ -239,6 +238,8 @@ int main(int argc, char** argv) {
     issue_write(sim, shire_reg_addr(kRegShireConfig), kConfigEnableAll, 3);
     sim.check(wait_for_bvalid(sim, 160), "SYS AXI write to shire ESR returns B response");
     sim.check(dut->sys_axi_b_valid_obs_o == 1, "SYS AXI B response remains visible after wait");
+    sim.check((dut->tbox_en_o & 0xf) == 0xf,
+              "TBOX enable fanout follows shire config write");
 
     sim.check(issue_write_saw_psel(sim, make_addr(1, 0, 2, 0x010),
                                    0x1111222233334444ull, 4, 1u << 2, false),
