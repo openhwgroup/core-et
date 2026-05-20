@@ -43,9 +43,10 @@ clock, power, and status behavior remains owned by `shire_channel_wrap`,
 
 - **Clocks/resets:** contracted functional clocks `clk_shire_i`,
   `clk_debug_i`, per-neighborhood `clk_neigh_i`, `clk_noc_i`, plus separate
-  cold, warm, system, and system-debug active-low resets.  The top preserves the
-  child reset-domain split and returns `rst_system_lv_no` and
-  `rst_system_debug_lv_no`.
+  cold, warm, system, system-debug, and native NOC active-low resets.  The top
+  preserves the child reset-domain split, returns `rst_system_lv_no` and
+  `rst_system_debug_lv_no`, and keeps the NOC low-voltage path seeded by
+  `rst_noc_ni` inside the wrapper/channel boundary.
 - **DFT/RAM:** high-voltage and low-voltage `dft_pkg::dft_t`, DFT SRAM clock,
   MBIST enable, and `ram_cfg_pkg::ram_cfg_t` output from shire ESR.
 - **Native AXI:** typed AXI ports for `to_l3`, `to_sys`, `l3_axi`,
@@ -90,6 +91,7 @@ remains covered by their standalone tests.
 |------------|-----------|
 | Native typed AXI ports replace generated mesh-stop compatibility ports. | Project-native public contract from `docs/compute_shire_contract.md`. |
 | Active-low reset naming/style (`*_ni`, `*_no`) replaces original active-high/reset macro naming. | Project reset convention. |
+| Separate native `rst_noc_ni` input is preserved through the NOC/low-voltage path instead of being sourced from `rst_system_ni`. | Project-native reset-domain contract requires the AXI/NOC domain to remain distinct from system reset. |
 | DFT controls are consolidated into `dft_pkg::dft_t` plus explicit SRAM clock/MBIST inputs. | Project DFT abstraction. |
 | Third-party UltraSoc/debug-message/sensor/hard PLL/DLL analog/TDR/OCC/scan-hub public pins are omitted. | Out of scope for Ainekko-owned native top; child-only preserved pins are tied off internally. |
 | RAM configuration uses `ram_cfg_pkg::ram_cfg_t`. | Replaces original foundry-specific SRAM config struct. |
@@ -97,12 +99,13 @@ remains covered by their standalone tests.
 
 ## Verification
 
-- Unit/integration smoke: `make -C hw/ip/shire_top/dv test` (46 directed
-  checks for reset fanout, DFT/RAM config, APB/SYS path, power-control,
+- Unit/integration smoke: `make -C hw/ip/shire_top/dv test` (53 directed
+  checks for reset fanout and system/NOC reset independence, DFT/RAM config,
+  APB/SYS path, power-control,
   interrupts/status, ET-Link/uncached/ICache/FLB/cooperative seams).
 - Lint: `make -C hw/ip/shire_top/dv lint`.
 - RTL cosim: `ORIG_ROOT=/home/glguida/ainekko/et-soc make -C dv/rtlcosim/shire_top test`.
-  The cosim runs 566,632 retained-output comparisons with zero mismatches. It
+  The cosim runs 578,688 retained-output comparisons with zero mismatches. It
   uses original CORE-ET sources from `ORIG_ROOT` through the retained
   `shire_channel_wrap` reference plus explicit original top stub-neighborhood
   feedthroughs because the full original public top depends on removed

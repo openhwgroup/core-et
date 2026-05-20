@@ -22,6 +22,7 @@ module shire_channel_wrap_tb
   input  logic rst_c_ext_ni,
   input  logic rst_w_ext_ni,
   input  logic rst_d_ext_ni,
+  input  logic rst_system_ext_ni,
   input  logic rst_noc_ext_ni,
   input  logic [shire_esr_pkg::NumNeigh-1:0] rst_w_icache_ext_ni,
 
@@ -215,6 +216,7 @@ module shire_channel_wrap_tb
   output logic [63:0] sys_axi_r_data_lo_obs_o,
   output logic rst_system_lv_no_o,
   output logic rst_system_debug_lv_no_o,
+  output logic rst_noc_lv_no_o,
   output logic [shire_esr_pkg::NumNeigh-1:0] clk_neigh_obs_o,
   output logic clk_shire_obs_o
 );
@@ -239,12 +241,14 @@ module shire_channel_wrap_tb
   logic rst_c_ni;
   logic rst_w_ni;
   logic rst_d_ni;
+  logic rst_system_ni;
   logic [NumNeigh-1:0] rst_w_icache_ni;
   logic noc_rst_ni;
   logic noc_clk_i;
   assign rst_c_ni = rst_ni & rst_c_ext_ni;
   assign rst_w_ni = rst_ni & rst_w_ext_ni;
   assign rst_d_ni = rst_ni & rst_d_ext_ni;
+  assign rst_system_ni = rst_ni & rst_system_ext_ni;
   assign rst_w_icache_ni = rst_w_icache_ext_ni;
   assign noc_rst_ni = rst_ni & rst_noc_ext_ni;
   assign noc_clk_i = clk_i;
@@ -293,6 +297,7 @@ module shire_channel_wrap_tb
   logic clk_shire_debug_o;
   logic rst_system_lv_no;
   logic rst_system_debug_lv_no;
+  logic rst_noc_lv_no;
   logic [NumNeigh-1:0] rst_warm_to_neigh_no;
   esr_pkg::esr_ms_dmctrl_t dmctrl_i;
   esr_pkg::esr_ms_dmctrl_t dmctrl_to_neigh_o [NumNeigh-1:0];
@@ -691,10 +696,12 @@ module shire_channel_wrap_tb
     .clk_noc_i                          (noc_clk_i),
     .rst_cold_ni                        (rst_c_ni),
     .rst_warm_ni                        (rst_w_ni),
-    .rst_system_ni                      (noc_rst_ni),
+    .rst_system_ni                      (rst_system_ni),
     .rst_system_debug_ni                (rst_d_ni),
+    .rst_noc_ni                         (noc_rst_ni),
     .rst_system_lv_no                   (rst_system_lv_no),
     .rst_system_debug_lv_no             (rst_system_debug_lv_no),
+    .rst_noc_lv_no                      (rst_noc_lv_no),
     .clk_neigh_o                        (clk_neigh_o),
     .clk_shire_to_neigh_o               (clk_shire_to_neigh_o),
     .clk_shire_o                        (clk_shire_o),
@@ -961,6 +968,7 @@ module shire_channel_wrap_tb
   assign sys_axi_r_data_lo_obs_o = sys_axi_r_o.data[63:0];
   assign rst_system_lv_no_o = rst_system_lv_no;
   assign rst_system_debug_lv_no_o = rst_system_debug_lv_no;
+  assign rst_noc_lv_no_o = rst_noc_lv_no;
   assign clk_neigh_obs_o = clk_neigh_o;
   assign clk_shire_obs_o = clk_shire_o;
   assign sbm_enable_read_o = u_dut.sbm_enable_read;

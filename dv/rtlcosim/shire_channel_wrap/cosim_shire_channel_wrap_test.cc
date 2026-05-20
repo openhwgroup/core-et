@@ -13,6 +13,7 @@ void clear_inputs(Vcosim_shire_channel_wrap_tb* dut) {
     dut->rst_c_ext_ni = 1;
     dut->rst_w_ext_ni = 1;
     dut->rst_d_ext_ni = 1;
+    dut->rst_system_ext_ni = 1;
     dut->rst_noc_ext_ni = 1;
     dut->rst_w_icache_ext_ni = 0xf;
     dut->dft_scanmode_i = 0;
@@ -181,6 +182,7 @@ void compare_wrapper(CosimCtrl<Vcosim_shire_channel_wrap_tb>& sim) {
     sim.compare("rst_rbox_no", d->orig_rst_rbox_no_o, d->new_rst_rbox_no_o);
     sim.compare("rst_system_lv_no", d->orig_rst_system_lv_no_o, d->new_rst_system_lv_no_o);
     sim.compare("rst_system_debug_lv_no", d->orig_rst_system_debug_lv_no_o, d->new_rst_system_debug_lv_no_o);
+    sim.compare("rst_noc_lv_no", d->orig_rst_noc_lv_no_o, d->new_rst_noc_lv_no_o);
     sim.compare("rst_warm_to_neigh_no", d->orig_rst_warm_to_neigh_no_o, d->new_rst_warm_to_neigh_no_o);
 
     sim.compare("clk_neigh", d->orig_clk_neigh_o, d->new_clk_neigh_o);
@@ -424,6 +426,7 @@ struct InputCoverage {
         mark("rst_c_ext_ni", nonzero(d->rst_c_ext_ni));
         mark("rst_w_ext_ni", nonzero(d->rst_w_ext_ni));
         mark("rst_d_ext_ni", nonzero(d->rst_d_ext_ni));
+        mark("rst_system_ext_ni", nonzero(d->rst_system_ext_ni));
         mark("rst_noc_ext_ni", nonzero(d->rst_noc_ext_ni));
         mark("rst_w_icache_ext_ni", nonzero(d->rst_w_icache_ext_ni));
         mark("dft_scanmode_i", nonzero(d->dft_scanmode_i));
@@ -534,6 +537,7 @@ void drive_zero_sample_inputs(Vcosim_shire_channel_wrap_tb* d, InputCoverage& co
     d->rst_c_ext_ni = 0;
     d->rst_w_ext_ni = 0;
     d->rst_d_ext_ni = 0;
+    d->rst_system_ext_ni = 0;
     d->rst_noc_ext_ni = 0;
     d->rst_w_icache_ext_ni = 0;
     d->dft_scanmode_i = 0;
@@ -607,6 +611,7 @@ void drive_one_sample_inputs(Vcosim_shire_channel_wrap_tb* d, InputCoverage& cov
     d->rst_c_ext_ni = 1;
     d->rst_w_ext_ni = 1;
     d->rst_d_ext_ni = 1;
+    d->rst_system_ext_ni = 1;
     d->rst_noc_ext_ni = 1;
     d->rst_w_icache_ext_ni = 0xf;
     d->dft_scanmode_i = 1;
@@ -760,12 +765,14 @@ void pulse_all_external_resets(CosimCtrl<Vcosim_shire_channel_wrap_tb>& sim, int
     d->rst_c_ext_ni = 0;
     d->rst_w_ext_ni = 0;
     d->rst_d_ext_ni = 0;
+    d->rst_system_ext_ni = 0;
     d->rst_noc_ext_ni = 0;
     d->rst_w_icache_ext_ni = 0;
     drain(sim, asserted_cycles, false);
     d->rst_c_ext_ni = 1;
     d->rst_w_ext_ni = 1;
     d->rst_d_ext_ni = 1;
+    d->rst_system_ext_ni = 1;
     d->rst_noc_ext_ni = 1;
     d->rst_w_icache_ext_ni = 0xf;
     drain(sim, release_cycles, false);
@@ -811,11 +818,13 @@ int main(int argc, char** argv) {
     d->dft_scan_reset_ni = 0;
     input_cov.sample(d);
     drain(sim, 3, true);
-    sim.check(d->new_rst_system_lv_no_o == 0, "DFT scan reset bypass drives LV reset low");
+    sim.check(d->new_rst_system_lv_no_o == 0, "DFT scan reset bypass drives system LV reset low");
+    sim.check(d->new_rst_noc_lv_no_o == 0, "DFT scan reset bypass drives NOC LV reset low");
     d->dft_scan_reset_ni = 1;
     input_cov.sample(d);
     drain(sim, 3, true);
-    sim.check(d->new_rst_system_lv_no_o == 1, "DFT scan reset bypass releases LV reset");
+    sim.check(d->new_rst_system_lv_no_o == 1, "DFT scan reset bypass releases system LV reset");
+    sim.check(d->new_rst_noc_lv_no_o == 1, "DFT scan reset bypass releases NOC LV reset");
     d->dft_scanmode_i = 0;
     input_cov.sample(d);
     // Original synchronous reset-repeat wrappers and native reset synchronizers

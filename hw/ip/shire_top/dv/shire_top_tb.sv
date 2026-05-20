@@ -23,6 +23,7 @@ module shire_top_tb
   input  logic rst_warm_ext_ni,
   input  logic rst_system_ext_ni,
   input  logic rst_system_debug_ext_ni,
+  input  logic rst_noc_ext_ni,
 
   input  logic dft_scanmode_i,
   input  logic dft_scan_reset_ni,
@@ -62,6 +63,7 @@ module shire_top_tb
   output logic [shire_esr_pkg::NumNeigh-1:0] rst_w_icache_no_o,
   output logic rst_system_lv_no_o,
   output logic rst_system_debug_lv_no_o,
+  output logic rst_noc_lv_no_o,
   output logic [shire_esr_pkg::NumNeigh-1:0] clk_neigh_obs_o,
   output logic clk_shire_obs_o,
   output logic [shire_esr_pkg::NumNeigh-1:0][shire_esr_pkg::NumShireIdsBits-1:0] shire_id_o,
@@ -200,6 +202,7 @@ module shire_top_tb
     .rst_warm_ni                 (rst_ni & rst_warm_ext_ni),
     .rst_system_ni               (rst_ni & rst_system_ext_ni),
     .rst_system_debug_ni         (rst_ni & rst_system_debug_ext_ni),
+    .rst_noc_ni                  (rst_ni & rst_noc_ext_ni),
     .rst_system_lv_no            (rst_system_lv_no_o),
     .rst_system_debug_lv_no      (rst_system_debug_lv_no_o),
     .dft_hv_i                    (dft_hv),
@@ -332,6 +335,7 @@ module shire_top_tb
   assign rst_d_shire_no_o = u_dut.rst_d_shire_n;
   assign rst_warm_to_neigh_no_o = u_dut.rst_warm_to_neigh_n;
   assign rst_w_icache_no_o = u_dut.rst_w_icache_n;
+  assign rst_noc_lv_no_o = u_dut.rst_noc_lv_n;
   assign clk_neigh_obs_o = u_dut.clk_neigh;
   assign clk_shire_obs_o = u_dut.clk_shire;
   assign shire_id_o = u_dut.shire_id;

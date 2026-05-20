@@ -51,8 +51,10 @@ module shire_channel_wrap
   input  logic                                                rst_warm_ni,
   input  logic                                                rst_system_ni,
   input  logic                                                rst_system_debug_ni,
+  input  logic                                                rst_noc_ni,
   output logic                                                rst_system_lv_no,
   output logic                                                rst_system_debug_lv_no,
+  output logic                                                rst_noc_lv_no,
 
   output logic [NumNeigh-1:0]                                clk_neigh_o,
   output logic [NumNeigh-1:0]                                clk_shire_to_neigh_o,
@@ -387,14 +389,20 @@ module shire_channel_wrap
 
   logic [1:0] rst_system_sync_q;
   logic [1:0] rst_system_debug_sync_q;
+  logic [1:0] rst_noc_sync_q;
   logic rst_system_sync_int_ni;
   logic rst_system_debug_sync_int_ni;
+  logic rst_noc_sync_int_ni;
   logic rst_system_sync_ni;
   logic rst_system_debug_sync_ni;
+  logic rst_noc_sync_ni;
 
-  assign rst_system_sync_int_ni = dft_reset_hv.scanmode ? dft_reset_hv.scan_reset_n : rst_system_ni;
+  assign rst_system_sync_int_ni = dft_reset_hv.scanmode ? dft_reset_hv.scan_reset_n :
+                                  rst_system_ni;
   assign rst_system_debug_sync_int_ni = dft_reset_hv.scanmode ? dft_reset_hv.scan_reset_n :
                                         rst_system_debug_ni;
+  assign rst_noc_sync_int_ni = dft_reset_hv.scanmode ? dft_reset_hv.scan_reset_n :
+                               rst_noc_ni;
 
   always_ff @(negedge clk_noc_i or negedge rst_system_sync_int_ni) begin
     if (!rst_system_sync_int_ni) rst_system_sync_q <= '0;
@@ -404,11 +412,17 @@ module shire_channel_wrap
     if (!rst_system_debug_sync_int_ni) rst_system_debug_sync_q <= '0;
     else rst_system_debug_sync_q <= {rst_system_debug_sync_q[0], 1'b1};
   end
+  always_ff @(negedge clk_noc_i or negedge rst_noc_sync_int_ni) begin
+    if (!rst_noc_sync_int_ni) rst_noc_sync_q <= '0;
+    else rst_noc_sync_q <= {rst_noc_sync_q[0], 1'b1};
+  end
 
   assign rst_system_sync_ni = dft_reset_hv.scanmode ? dft_reset_hv.scan_reset_n :
                               rst_system_sync_q[1];
   assign rst_system_debug_sync_ni = dft_reset_hv.scanmode ? dft_reset_hv.scan_reset_n :
                                     rst_system_debug_sync_q[1];
+  assign rst_noc_sync_ni = dft_reset_hv.scanmode ? dft_reset_hv.scan_reset_n :
+                           rst_noc_sync_q[1];
 
   prim_rst_sync u_rst_system_lv (
     .clk_i    (clk_noc_i),
@@ -422,6 +436,13 @@ module shire_channel_wrap
     .rst_ni   (rst_system_debug_sync_ni),
     .dft_i    (dft_reset_lv),
     .rst_no   (rst_system_debug_lv_no)
+  );
+
+  prim_rst_sync u_rst_noc_lv (
+    .clk_i    (clk_noc_i),
+    .rst_ni   (rst_noc_sync_ni),
+    .dft_i    (dft_reset_lv),
+    .rst_no   (rst_noc_lv_no)
   );
 
   shire_esr_pkg::esr_clk_gate_ctrl_t channel_clk_gate_ctrl;
@@ -688,7 +709,7 @@ module shire_channel_wrap
     .rst_d_ni,
     .rst_w_icache_ni,
     .noc_clk_i              (clk_noc_i),
-    .noc_rst_ni             (rst_system_lv_no),
+    .noc_rst_ni             (rst_noc_lv_no),
     .dft_hv_i               (dft_hv_i),
     .dft_lv_i               (dft_lv_i),
     .dft_sram_clk_i,

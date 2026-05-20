@@ -57,6 +57,7 @@ void clear_inputs(Vshire_top_tb* dut) {
     dut->rst_warm_ext_ni = 1;
     dut->rst_system_ext_ni = 1;
     dut->rst_system_debug_ext_ni = 1;
+    dut->rst_noc_ext_ni = 1;
     dut->dft_scanmode_i = 0;
     dut->dft_scan_reset_ni = 1;
     dut->dft_sram_clk_i = 0;
@@ -169,6 +170,7 @@ int main(int argc, char** argv) {
 
     sim.check(dut->rst_system_lv_no_o == 1, "low-voltage system reset releases");
     sim.check(dut->rst_system_debug_lv_no_o == 1, "low-voltage debug reset releases");
+    sim.check(dut->rst_noc_lv_no_o == 1, "low-voltage NOC reset releases");
     sim.check((dut->rst_warm_to_neigh_no_o & 0xf) == 0xf,
               "raw warm-reset fanout to neighborhoods releases");
     sim.check((dut->rst_w_icache_no_o & 0xf) == 0x0,
@@ -208,10 +210,26 @@ int main(int argc, char** argv) {
     sim.check((dut->rst_warm_to_neigh_no_o & 0xf) == 0xf,
               "warm reset fanout releases after warm reset deasserts");
 
+    dut->rst_noc_ext_ni = 0;
+    sim.tick();
+    sim.check(dut->rst_noc_lv_no_o == 0, "native NOC reset asserts NOC low-voltage path");
+    sim.check(dut->rst_system_lv_no_o == 1, "native NOC reset does not collapse into system reset");
+    dut->rst_noc_ext_ni = 1;
+    for (int i = 0; i < 48; ++i) sim.tick();
+    sim.check(dut->rst_noc_lv_no_o == 1, "native NOC reset path releases independently");
+
+    dut->rst_system_ext_ni = 0;
+    sim.tick();
+    sim.check(dut->rst_system_lv_no_o == 0, "system reset asserts system low-voltage path");
+    sim.check(dut->rst_noc_lv_no_o == 1, "system reset does not collapse into NOC reset");
+    dut->rst_system_ext_ni = 1;
+    for (int i = 0; i < 48; ++i) sim.tick();
+
     dut->dft_scanmode_i = 1;
     dut->dft_scan_reset_ni = 0;
     sim.tick();
-    sim.check(dut->rst_system_lv_no_o == 0, "DFT scan reset bypass asserts LV reset");
+    sim.check(dut->rst_system_lv_no_o == 0, "DFT scan reset bypass asserts system LV reset");
+    sim.check(dut->rst_noc_lv_no_o == 0, "DFT scan reset bypass asserts NOC LV reset");
     dut->dft_scan_reset_ni = 1;
     dut->dft_sram_clk_override_i = 1;
     dut->dft_ram_wei_i = 1;

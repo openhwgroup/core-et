@@ -26,6 +26,7 @@ module cosim_shire_channel_wrap_tb
   input  logic rst_c_ext_ni,
   input  logic rst_w_ext_ni,
   input  logic rst_d_ext_ni,
+  input  logic rst_system_ext_ni,
   input  logic rst_noc_ext_ni,
   input  logic [shire_esr_pkg::NumNeigh-1:0] rst_w_icache_ext_ni,
 
@@ -153,6 +154,8 @@ module cosim_shire_channel_wrap_tb
   output logic new_rst_system_lv_no_o,
   output logic orig_rst_system_debug_lv_no_o,
   output logic new_rst_system_debug_lv_no_o,
+  output logic orig_rst_noc_lv_no_o,
+  output logic new_rst_noc_lv_no_o,
   output logic [shire_esr_pkg::NumNeigh-1:0] orig_rst_warm_to_neigh_no_o,
   output logic [shire_esr_pkg::NumNeigh-1:0] new_rst_warm_to_neigh_no_o,
   output logic [shire_esr_pkg::NumNeigh-1:0] orig_clk_neigh_o,
@@ -890,15 +893,20 @@ module cosim_shire_channel_wrap_tb
   logic reset_warm_seed;
   logic reset_system_seed_ni;
   logic reset_system_debug_seed_ni;
+  logic reset_noc_seed_ni;
   logic orig_rst_system_lv_no;
   logic orig_rst_system_debug_lv_no;
+  logic orig_rst_noc_lv_no;
+  logic orig_reset_system_lv;
+  logic orig_reset_system_debug_lv;
   logic orig_reset_noc_lv;
   logic orig_reset_noc_debug_lv;
 
   assign reset_cold_seed = !rst_ni | !rst_c_ext_ni;
   assign reset_warm_seed = !rst_ni | !rst_w_ext_ni;
-  assign reset_system_seed_ni = rst_ni & rst_noc_ext_ni;
+  assign reset_system_seed_ni = rst_ni & rst_system_ext_ni;
   assign reset_system_debug_seed_ni = rst_ni & rst_d_ext_ni;
+  assign reset_noc_seed_ni = rst_ni & rst_noc_ext_ni;
 
   esr_pkg::esr_ms_dmctrl_t orig_dmctrl_in;
   esr_pkg::esr_ms_dmctrl_t orig_dmctrl_q;
@@ -931,7 +939,7 @@ module cosim_shire_channel_wrap_tb
 
   logic reset_n_system_sync;
   logic reset_n_system_debug_sync;
-  sys_gasket_noc_reset_sync u_orig_noc_reset_sync (
+  sys_gasket_noc_reset_sync u_orig_system_reset_sync (
     .noc_clock                 (noc_clock),
     .reset_n_system            (reset_system_seed_ni),
     .reset_n_system_debug      (reset_system_debug_seed_ni),
@@ -941,7 +949,7 @@ module cosim_shire_channel_wrap_tb
     .reset_n_system_debug_sync (reset_n_system_debug_sync)
   );
 
-  sys_gasket_noc_reset u_orig_noc_reset (
+  sys_gasket_noc_reset u_orig_system_reset (
     .clock                (noc_clock),
     .reset_n_system       (reset_n_system_sync),
     .reset_n_system_debug (reset_n_system_debug_sync),
@@ -949,6 +957,30 @@ module cosim_shire_channel_wrap_tb
     .dft__reset           (dft__reset_lv),
     .reset_n_noc          (orig_rst_system_lv_no),
     .reset_n_noc_debug    (orig_rst_system_debug_lv_no),
+    .reset_noc            (orig_reset_system_lv),
+    .reset_noc_debug      (orig_reset_system_debug_lv)
+  );
+
+  logic reset_noc_sync;
+  logic reset_noc_debug_sync;
+  sys_gasket_noc_reset_sync u_orig_noc_reset_sync (
+    .noc_clock                 (noc_clock),
+    .reset_n_system            (reset_noc_seed_ni),
+    .reset_n_system_debug      (reset_system_debug_seed_ni),
+    .dft__reset_byp            (dft__reset_byp_hv),
+    .dft__reset                (dft__reset_hv),
+    .reset_n_system_sync       (reset_noc_sync),
+    .reset_n_system_debug_sync (reset_noc_debug_sync)
+  );
+
+  sys_gasket_noc_reset u_orig_noc_reset (
+    .clock                (noc_clock),
+    .reset_n_system       (reset_noc_sync),
+    .reset_n_system_debug (reset_noc_debug_sync),
+    .dft__reset_byp       (dft__reset_byp_lv),
+    .dft__reset           (dft__reset_lv),
+    .reset_n_noc          (orig_rst_noc_lv_no),
+    .reset_n_noc_debug    (),
     .reset_noc            (orig_reset_noc_lv),
     .reset_noc_debug      (orig_reset_noc_debug_lv)
   );
@@ -1024,7 +1056,7 @@ module cosim_shire_channel_wrap_tb
 
   shire_ioshire_noc_ints_orig u_orig_ioshire_noc_ints (
     .noc_clock               (clk_i),
-    .reset_noc               (~orig_rst_system_lv_no),
+    .reset_noc               (orig_reset_noc_lv),
     .noc_err_int_srcs_lo     (noc_err_int_srcs_i[`NOC_INT_NUM-1:0]),
     .noc_dbg_err_int_srcs_lo ('0),
     .noc_all_err_int_srcs_lo (orig_noc_all_err_int_srcs_o),
@@ -1064,6 +1096,7 @@ module cosim_shire_channel_wrap_tb
     .rst_c_ext_ni,
     .rst_w_ext_ni,
     .rst_d_ext_ni,
+    .rst_system_ext_ni,
     .rst_noc_ext_ni,
     .rst_w_icache_ext_ni,
     .dft_scanmode_i,
@@ -1226,6 +1259,8 @@ module cosim_shire_channel_wrap_tb
   assign new_rst_system_lv_no_o = u_new.rst_system_lv_no_o;
   assign orig_rst_system_debug_lv_no_o = orig_rst_system_debug_lv_no;
   assign new_rst_system_debug_lv_no_o = u_new.rst_system_debug_lv_no_o;
+  assign orig_rst_noc_lv_no_o = orig_rst_noc_lv_no;
+  assign new_rst_noc_lv_no_o = u_new.rst_noc_lv_no_o;
   assign orig_rst_warm_to_neigh_no_o = {NUM_NEIGH{~reset_warm_seed}};
   assign orig_clk_neigh_o = u_new.clk_neigh_o;
   assign new_clk_neigh_o = u_new.clk_neigh_o;

@@ -19,6 +19,7 @@ enum toggle_port_e : int {
     TpRstWarm,
     TpRstSystem,
     TpRstSystemDebug,
+    TpRstNoc,
     TpDftScanmode,
     TpDftScanReset,
     TpDftSramClk,
@@ -54,6 +55,7 @@ const char* const kToggleNames[TpCount] = {
     "rst_warm_ext_ni",
     "rst_system_ext_ni",
     "rst_system_debug_ext_ni",
+    "rst_noc_ext_ni",
     "dft_scanmode_i",
     "dft_scan_reset_ni",
     "dft_sram_clk_i",
@@ -130,6 +132,7 @@ void clear_inputs(Vcosim_shire_top_tb* d) {
     d->rst_warm_ext_ni = 1;
     d->rst_system_ext_ni = 1;
     d->rst_system_debug_ext_ni = 1;
+    d->rst_noc_ext_ni = 1;
     d->dft_scanmode_i = 0;
     d->dft_scan_reset_ni = 1;
     d->dft_sram_clk_i = 0;
@@ -174,6 +177,7 @@ struct ToggleCoverage {
         mark(TpRstWarm, d->rst_warm_ext_ni != 0);
         mark(TpRstSystem, d->rst_system_ext_ni != 0);
         mark(TpRstSystemDebug, d->rst_system_debug_ext_ni != 0);
+        mark(TpRstNoc, d->rst_noc_ext_ni != 0);
         mark(TpDftScanmode, d->dft_scanmode_i != 0);
         mark(TpDftScanReset, d->dft_scan_reset_ni != 0);
         mark(TpDftSramClk, d->dft_sram_clk_i != 0);
@@ -229,6 +233,7 @@ void compare_top(CosimCtrl<Vcosim_shire_top_tb>& sim) {
     sim.compare("rst_system_lv_no", d->orig_rst_system_lv_no_o, d->new_rst_system_lv_no_o);
     sim.compare("rst_system_debug_lv_no", d->orig_rst_system_debug_lv_no_o,
                 d->new_rst_system_debug_lv_no_o);
+    sim.compare("rst_noc_lv_no", d->orig_rst_noc_lv_no_o, d->new_rst_noc_lv_no_o);
     sim.compare("clk_neigh_obs", d->orig_clk_neigh_obs_o, d->new_clk_neigh_obs_o);
     sim.compare("clk_shire_obs", d->orig_clk_shire_obs_o, d->new_clk_shire_obs_o);
     sim.compare("shire_id", d->orig_shire_id_o, d->new_shire_id_o);
@@ -417,6 +422,7 @@ int main(int argc, char** argv) {
     d->rst_warm_ext_ni = 0;
     d->rst_system_ext_ni = 0;
     d->rst_system_debug_ext_ni = 0;
+    d->rst_noc_ext_ni = 0;
     d->dft_scanmode_i = 0;
     d->dft_scan_reset_ni = 0;
     d->dft_sram_clk_i = 0;
@@ -451,6 +457,7 @@ int main(int argc, char** argv) {
     d->rst_warm_ext_ni = 1;
     d->rst_system_ext_ni = 1;
     d->rst_system_debug_ext_ni = 1;
+    d->rst_noc_ext_ni = 1;
     d->dft_scanmode_i = 1;
     d->dft_scan_reset_ni = 1;
     d->dft_sram_clk_i = 1;
@@ -524,6 +531,7 @@ int main(int argc, char** argv) {
         d->rst_warm_ext_ni = 1;
         d->rst_system_ext_ni = 1;
         d->rst_system_debug_ext_ni = 1;
+        d->rst_noc_ext_ni = 1;
         d->dft_scanmode_i = 0;
         d->dft_scan_reset_ni = 1;
         d->dft_sram_clk_i = (r >> 0) & 1u;

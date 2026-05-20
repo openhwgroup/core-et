@@ -64,6 +64,7 @@ void clear_inputs(Vshire_channel_wrap_tb* dut) {
     dut->rst_c_ext_ni = 1;
     dut->rst_w_ext_ni = 1;
     dut->rst_d_ext_ni = 1;
+    dut->rst_system_ext_ni = 1;
     dut->rst_noc_ext_ni = 1;
     dut->rst_w_icache_ext_ni = 0xf;
     dut->dft_scanmode_i = 0;
@@ -283,16 +284,34 @@ int main(int argc, char** argv) {
     clear_inputs(dut);
     for (int i = 0; i < 40; ++i) sim.tick();
 
-    sim.check(dut->rst_system_lv_no_o == 1, "NOC reset synchronizer releases");
-    sim.check(dut->rst_system_debug_lv_no_o == 1, "debug NOC reset synchronizer releases");
+    sim.check(dut->rst_system_lv_no_o == 1, "system low-voltage reset synchronizer releases");
+    sim.check(dut->rst_system_debug_lv_no_o == 1, "debug low-voltage reset synchronizer releases");
+    sim.check(dut->rst_noc_lv_no_o == 1, "NOC low-voltage reset synchronizer releases");
+
+    dut->rst_noc_ext_ni = 0;
+    sim.tick();
+    sim.check(dut->rst_noc_lv_no_o == 0, "NOC reset input asserts NOC low-voltage reset");
+    sim.check(dut->rst_system_lv_no_o == 1, "NOC reset input does not collapse into system reset");
+    dut->rst_noc_ext_ni = 1;
+    for (int i = 0; i < 40; ++i) sim.tick();
+    sim.check(dut->rst_noc_lv_no_o == 1, "NOC low-voltage reset releases after NOC reset deasserts");
+
+    dut->rst_system_ext_ni = 0;
+    sim.tick();
+    sim.check(dut->rst_system_lv_no_o == 0, "system reset input asserts system low-voltage reset");
+    sim.check(dut->rst_noc_lv_no_o == 1, "system reset input does not collapse into NOC reset");
+    dut->rst_system_ext_ni = 1;
+    for (int i = 0; i < 40; ++i) sim.tick();
 
     dut->dft_scanmode_i = 1;
     dut->dft_scan_reset_ni = 0;
     sim.tick();
-    sim.check(dut->rst_system_lv_no_o == 0, "DFT scan reset drives low-voltage reset low");
+    sim.check(dut->rst_system_lv_no_o == 0, "DFT scan reset drives system low-voltage reset low");
+    sim.check(dut->rst_noc_lv_no_o == 0, "DFT scan reset drives NOC low-voltage reset low");
     dut->dft_scan_reset_ni = 1;
     sim.tick();
-    sim.check(dut->rst_system_lv_no_o == 1, "DFT scan reset bypass releases low-voltage reset");
+    sim.check(dut->rst_system_lv_no_o == 1, "DFT scan reset bypass releases system low-voltage reset");
+    sim.check(dut->rst_noc_lv_no_o == 1, "DFT scan reset bypass releases NOC low-voltage reset");
     dut->dft_scanmode_i = 0;
     dut->dft_scan_reset_ni = 1;
     sim.tick();

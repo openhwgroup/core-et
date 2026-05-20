@@ -51,6 +51,7 @@ module shire_top
   input  logic                                                rst_warm_ni,
   input  logic                                                rst_system_ni,
   input  logic                                                rst_system_debug_ni,
+  input  logic                                                rst_noc_ni,
   output logic                                                rst_system_lv_no,
   output logic                                                rst_system_debug_lv_no,
 
@@ -216,6 +217,7 @@ module shire_top
   logic [NumNeigh-1:0] rst_c_shire_scs_n;
   logic [NumNeigh-1:0] rst_warm_to_neigh_n;
   logic [NumNeigh-1:0] rst_w_icache_n;
+  logic rst_noc_lv_n;
   logic rst_sc_n;
   logic rst_rbox_n;
 
@@ -325,8 +327,10 @@ module shire_top
     .rst_warm_ni,
     .rst_system_ni,
     .rst_system_debug_ni,
+    .rst_noc_ni,
     .rst_system_lv_no,
     .rst_system_debug_lv_no,
+    .rst_noc_lv_no              (rst_noc_lv_n),
     .clk_neigh_o                 (wrap_clk_neigh),
     .clk_shire_to_neigh_o        (wrap_clk_shire_to_neigh),
     .clk_shire_o                 (wrap_clk_shire),

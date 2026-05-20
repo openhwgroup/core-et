@@ -26,8 +26,9 @@ cache/RBOX/uncached/ESR container.
 
 The wrapper exposes native project seams:
 
-- high-voltage clocks/resets: reference/step/PLL/DLL/NOC clocks, cold/warm/debug
-  reset inputs, generated shire/neighborhood clocks, and active-low reset fanout;
+- high-voltage clocks/resets: reference/step/PLL/DLL/NOC clocks, separate
+  cold/warm/system/system-debug/NOC reset inputs, generated shire/neighborhood
+  clocks, and active-low reset fanout;
 - `dft_pkg::dft_t` high- and low-voltage DFT controls plus SRAM clock and MBIST
   controls;
 - SYS AXI slave ingress, L3/SYS AXI master/slave seams, uncached AXI seams, and
@@ -45,9 +46,10 @@ The wrapper exposes native project seams:
   ports, the shire ESR port, and RBOX. The retained I-cache APB lane remains at
   the channel boundary for compatibility but is idle in this wrapper because the
   original BPAM/debug source that drove it is outside the retained native scope.
-- `prim_rst_sync` is used for the low-voltage NOC reset repeat stage. The
-  high-voltage reset manager keeps the original two-stage sync style before
-  deriving cold/warm/debug reset domains.
+- `prim_rst_sync` is used for the low-voltage system, debug, and NOC reset
+  repeat stages. The NOC reset stage is seeded by `rst_noc_ni`, not collapsed
+  into `rst_system_ni`; the high-voltage reset manager keeps the original
+  two-stage sync style before deriving cold/warm/debug reset domains.
 - `rst_warm_to_neigh_no` preserves the original `reset_warm_to_neigh =
   {NUM_NEIGH{reset_warm}}` fanout. It follows only the raw external warm-reset
   seed (converted to active-low polarity) and is intentionally independent of
@@ -59,7 +61,8 @@ The wrapper exposes native project seams:
 ## Verification
 
 - Unit test: `hw/ip/shire_channel_wrap/dv/shire_channel_wrap_test.cc` performs
-  58 directed checks covering NOC reset bypass, raw warm-reset fanout, DFT
+  66 directed checks covering system/NOC reset independence, NOC reset bypass,
+  raw warm-reset fanout, DFT
   struct propagation, SYS/SBM/APB lane responses plus the idle retained I-cache
   APB lane, RAM-config writes, retained PLL/DLL/clock-control fanout,
   interrupt/status fanout, cooperative TLoad fanout, FLB/I-cache seams, and
@@ -67,7 +70,7 @@ The wrapper exposes native project seams:
 - RTL cosim: `dv/rtlcosim/shire_channel_wrap/` instantiates an original
   retained-behavior wrapper slice from `/home/glguida/ainekko/et-soc` alongside
   the native wrapper. It records explicit input-toggle coverage for every
-  retained cosim input port and compares 294,161 retained wrapper observations:
+  retained cosim input port and compares 296,731 retained wrapper observations:
   resets, clocks, raw warm-reset fanout, APB/SBM enable and response vectors,
   SYS AXI handshakes, retained AXI/cache/uncached valid/ready controls and
   valid payloads, run-control, interrupts, cooperative TLoad, ESR/control fanout,
@@ -88,6 +91,7 @@ The wrapper exposes native project seams:
 | Project PLL/DLL clock abstraction | Replaces hard-macro pins with `shire_pll_wrapper` clock-selection behavior. |
 | Removed debug/sensor/proprietary/hard-macro/generated surfaces | These surfaces are outside the retained Ainekko-owned native shell contract. |
 | Native APB/SBM packages | Uses `shire_sbm_pkg` and `neigh_ch_apb_mux_pkg` typed buses instead of original include-defined buses. |
+| Separate native `rst_noc_ni` input | The project-native top contract keeps the AXI/NOC reset domain distinct from `rst_system_ni`; the retained original reset cells are reused in DV with separate native seeds. |
 | RAM configuration surface | Native wrapper exposes standardized `ram_cfg_pkg::ram_cfg_t`; wrapper DV writes the original ESR RAM-config fields and compares the retained packed configuration bits through the native abstraction. |
 
 The implementation intentionally does not recreate removed compatibility pins or
