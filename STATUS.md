@@ -508,8 +508,8 @@ row below.
 ## Totals
 
 Structural discovery counts were refreshed from tracked Makefiles on
-2026-05-16. Repo-wide check/comparison totals are not carried as exact sums
-until every unit test and cosim is rerun and all legacy approximate rows are
+2026-05-20 during final compute-shire integration. Repo-wide check/comparison
+totals are not carried as exact sums until all legacy approximate rows are
 backfilled.
 
 | Metric | Count |
@@ -519,5 +519,5 @@ backfilled.
 | RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 311 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 245 unit suites + 295 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run + 14 uncached-path cosims + shire_channel lint/unit/cosim/coverage update + shire_channel input-coverage cosim update + shire_channel retained-status input cosim update + shire_channel_leaves/shire_esr/shire_sbm/shire_uncached tests + shire_channel_wrap lint/unit/cosim/coverage refresh (58 checks, 294,161 comparisons) + shire_top lint/unit/cosim/coverage refresh (46 checks, 566,632 comparisons) + shire_channel_wrap/shire_top NOC reset-domain fix lint/unit/cosim/coverage refresh (66/53 checks, 296,731/578,688 comparisons) + full lint + root unit test suite |
+| Targeted update runs | 245 unit suites + 295 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run + 14 uncached-path cosims + shire_channel lint/unit/cosim/coverage update + shire_channel input-coverage cosim update + shire_channel retained-status input cosim update + shire_channel_leaves/shire_esr/shire_sbm/shire_uncached tests + shire_channel_wrap lint/unit/cosim/coverage refresh (58 checks, 294,161 comparisons) + shire_top lint/unit/cosim/coverage refresh (46 checks, 566,632 comparisons) + shire_channel_wrap/shire_top NOC reset-domain fix lint/unit/cosim/coverage refresh (66/53 checks, 296,731/578,688 comparisons) + final full lint (87/0), root unit test suite (87/0), full RTL cosim (311/0), cosim coverage refresh, and coverage-report |
 | Targeted update failures | 0 |
