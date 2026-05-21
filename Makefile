@@ -58,7 +58,7 @@ coverage-report:
 	@rm -f build/coverage/coverage_*.info
 	@unit_dats=$$(find hw/ip -path '*/build/obj*/coverage.dat' ); \
 	cosim_dats=$$(find dv/rtlcosim -path '*/build/obj/coverage.dat' ); \
-	if [ -z "$$unit_dats" ] && [ -z "$$cosim_dats" ] && ! ls dv/rtlcosim/coverage/coverage_*_cosim.info >/dev/null 2>&1; then \
+	if [ -z "$$unit_dats" ] && [ -z "$$cosim_dats" ] && ! ls dv/rtlcosim/coverage/coverage_*_cosim.info.gz >/dev/null 2>&1; then \
 	  echo "no coverage data (run 'make test' and/or 'make -C dv/rtlcosim test' first)"; \
 	  exit 1; \
 	fi; \
@@ -92,8 +92,8 @@ coverage-report:
 	        build/coverage/coverage_$${type}_cosim.info; \
 	      rm -f build/coverage/coverage_$${type}_cosim.info.bak; \
 	    fi; \
-	  elif [ -f dv/rtlcosim/coverage/coverage_$${type}_cosim.info ]; then \
-	    cp dv/rtlcosim/coverage/coverage_$${type}_cosim.info build/coverage/; \
+	  elif [ -f dv/rtlcosim/coverage/coverage_$${type}_cosim.info.gz ]; then \
+	    gzip -cd dv/rtlcosim/coverage/coverage_$${type}_cosim.info.gz > build/coverage/coverage_$${type}_cosim.info; \
 	  fi; \
 	done; \
 	tmp=$$(mktemp -d); \
@@ -114,8 +114,8 @@ coverage-report:
 	      | sed 's/^Total coverage //' | head -1; \
 	    rm -rf $$tmp/*; \
 	  done; \
-	elif ls dv/rtlcosim/coverage/coverage_*_cosim.info >/dev/null 2>&1; then \
-	  echo "  using checked-in cosim coverage from dv/rtlcosim/coverage/"; \
+	elif ls dv/rtlcosim/coverage/coverage_*_cosim.info.gz >/dev/null 2>&1; then \
+	  echo "  using checked-in compressed cosim coverage from dv/rtlcosim/coverage/*.info.gz"; \
 	  echo "  line:       branch:     toggle:"; \
 	fi; \
 	rm -rf $$tmp; \
@@ -127,12 +127,16 @@ coverage-html: coverage-report
 	@cp dv/coverview/index.html build/coverview/dist/index.html
 	@rm -f build/coverview/dist/index.html.bak
 	@cp dv/coverview/config.json build/coverview/
-	@cp build/coverage/coverage_*_unit.info build/coverview/ ; true
+	@if ls build/coverage/coverage_*_unit.info >/dev/null 2>&1; then \
+	  cp build/coverage/coverage_*_unit.info build/coverview/; \
+	fi
 	@if ls build/coverage/coverage_*_cosim.info >/dev/null 2>&1; then \
 	  cp build/coverage/coverage_*_cosim.info build/coverview/; \
-	elif ls dv/rtlcosim/coverage/coverage_*_cosim.info >/dev/null 2>&1; then \
-	  echo "using checked-in cosim coverage from dv/rtlcosim/coverage/"; \
-	  cp dv/rtlcosim/coverage/coverage_*_cosim.info build/coverview/; \
+	elif ls dv/rtlcosim/coverage/coverage_*_cosim.info.gz >/dev/null 2>&1; then \
+	  echo "using checked-in compressed cosim coverage from dv/rtlcosim/coverage/*.info.gz"; \
+	  for f in dv/rtlcosim/coverage/coverage_*_cosim.info.gz; do \
+	    gzip -cd "$$f" > "build/coverview/$$(basename "$$f" .gz)"; \
+	  done; \
 	fi
 	@cd build/coverview && python3 ../../dv/coverview/embed.py --inject-data .
 	@mv build/coverview/dist/index.html build/coverview/index.html
@@ -141,8 +145,13 @@ coverage-html: coverage-report
 update-cosim-coverage:
 	@$(MAKE) --no-print-directory -C dv/rtlcosim coverage-report
 	@mkdir -p dv/rtlcosim/coverage
-	@cp dv/rtlcosim/build/coverage/coverage_*.info dv/rtlcosim/coverage/
-	@echo "updated dv/rtlcosim/coverage/ — commit these files"
+	@rm -f dv/rtlcosim/coverage/coverage_*_cosim.info \
+	       dv/rtlcosim/coverage/coverage_*_cosim.info.gz
+	@set -e; \
+	for f in dv/rtlcosim/build/coverage/coverage_*_cosim.info; do \
+	  gzip -9n -c "$$f" > "dv/rtlcosim/coverage/$$(basename "$$f").gz"; \
+	done
+	@echo "updated dv/rtlcosim/coverage/*.info.gz — commit these compressed files"
 
 lint:
 	@pass=0; fail=0; \
@@ -171,9 +180,9 @@ help:
 	@echo "  test                 - Build and run all IP unit tests"
 	@echo "  test-xrand           - Build and run all IP unit tests with randomized startup"
 	@echo "  cosim-test           - Build and run all RTL co-simulation tests"
-	@echo "  coverage-report        - Generate LCOV .info files (line/branch/toggle)"
+	@echo "  coverage-report        - Generate LCOV .info files (decompresses checked-in cosim .info.gz)"
 	@echo "  coverage-html          - Generate interactive coverage dashboard"
-	@echo "  update-cosim-coverage  - Regenerate checked-in cosim .info files"
+	@echo "  update-cosim-coverage  - Regenerate checked-in compressed cosim .info.gz files"
 	@echo "  lint            - Lint all RTL (Verilator --lint-only)"
 	@echo "  clean           - Remove all build artifacts"
 	@echo ""

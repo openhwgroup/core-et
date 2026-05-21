@@ -359,24 +359,25 @@ Coverage is always collected for both unit tests and cosim. View coverage:
 Coverage file policy:
 - `build/coverage/*.info` and `build/coverview/index.html` are generated outputs. Do not commit anything under `build/`.
 - Unit-test coverage is consumed locally or in CI from generated `build/coverage/*.info`. Do not check in unit-test coverage snapshots.
-- Cosim coverage snapshots are checked in at `dv/rtlcosim/coverage/*.info`. These are the only committed coverage data files.
+- Cosim coverage snapshots are checked in at `dv/rtlcosim/coverage/*.info.gz` using deterministic `gzip -9n`. These compressed snapshots are the only committed coverage data files.
+- Raw cosim `.info` files are generated artifacts under `build/coverage/` or `dv/rtlcosim/build/coverage/`; do not commit them.
 - `dv/coverview/index.html` is the checked-in Coverview frontend/template asset, not a run-specific generated report. Keep it tracked.
 
 ### Cosim coverage in CI
 
-CI does not run cosim tests (they require a local original CORE-ET RTL checkout). Instead, cosim LCOV `.info` files are checked in at `dv/rtlcosim/coverage/` and used by CI to build the combined coverage dashboard.
+CI does not run cosim tests (they require a local original CORE-ET RTL checkout). Instead, compressed cosim LCOV snapshots (`*.info.gz`) are checked in at `dv/rtlcosim/coverage/` and decompressed by the Makefile to build the combined coverage dashboard.
 CI generates the final dashboard artifact from:
 - current unit-test coverage in `build/coverage/*.info`
-- checked-in cosim coverage in `dv/rtlcosim/coverage/*.info`
+- checked-in compressed cosim coverage in `dv/rtlcosim/coverage/*.info.gz`
 - the checked-in Coverview assets in `dv/coverview/`
 
 The CI-uploaded dashboard is `build/coverview/index.html`. That generated file must not be committed.
 
-When cosim tests change (new modules, updated tests), regenerate and commit the checked-in `.info` files:
+When cosim tests change (new modules, updated tests), regenerate and commit the checked-in `.info.gz` files:
 
 ```bash
 make -C dv/rtlcosim test                  # run all cosims
-make update-cosim-coverage                # regenerate dv/rtlcosim/coverage/*.info
+make update-cosim-coverage                # regenerate dv/rtlcosim/coverage/*.info.gz with gzip -9n
 git add dv/rtlcosim/coverage/
 git commit -m "Update cosim coverage data"
 ```
@@ -384,13 +385,14 @@ git commit -m "Update cosim coverage data"
 For scoped jobs that intentionally run only new or changed cosims, do **not**
 commit direct `make update-cosim-coverage` output after a clean plus targeted
 run if it replaces the global checked-in snapshots with targeted-only records.
-Instead, preserve the checked-in `dv/rtlcosim/coverage/*.info` baseline, save the
+Instead, preserve the checked-in `dv/rtlcosim/coverage/*.info.gz` baseline, save the
 targeted `dv/rtlcosim/build/coverage/coverage_*_cosim.info` output, then merge or
-append only the targeted module records into the checked-in files. Before review,
-verify `git diff -- dv/rtlcosim/coverage/` is scoped to the targeted cosims
-(insertion-only for newly added cosims). If a safe targeted merge cannot be
-produced and audited, run the full flow above. Generated `build/` outputs remain
-untracked and must not be committed.
+append only the targeted module records into decompressed working copies and
+recompress the final snapshots with `gzip -9n`. Before review, verify the
+raw decompressed diff is scoped to the targeted cosims (insertion-only for newly
+added cosims); the checked-in `*.info.gz` files themselves are binary. If a safe
+targeted merge cannot be produced and audited, run the full flow above.
+Generated `build/` outputs remain untracked and must not be committed.
 
 ### Writing a new cosim test
 
@@ -471,10 +473,10 @@ make test
 # 3. Run all cosim tests
 make -C dv/rtlcosim test
 
-# 4. Update the checked-in cosim coverage data
+# 4. Update the checked-in compressed cosim coverage data
 make update-cosim-coverage
 
-# 5. Commit everything together (including dv/rtlcosim/coverage/, but not build/)
+# 5. Commit everything together (including dv/rtlcosim/coverage/*.info.gz, but not build/)
 git add -A
 git commit
 ```
@@ -501,7 +503,7 @@ changes just to make a whitespace check see new files. If generated or unrelated
 paths are present, scope the `git add -N`, `git add`, and diff-check commands to
 the approved artifact paths only.
 
-Do not commit or close out work with failing lint or tests. Do not commit without updating the cosim coverage `.info` files when cosim behavior changes — CI uses these for the coverage dashboard. Do not commit generated `build/coverage/*` or `build/coverview/index.html`.
+Do not commit or close out work with failing lint or tests. Do not commit without updating the cosim coverage `.info.gz` files when cosim behavior changes — CI uses these for the coverage dashboard. Do not commit raw generated `build/coverage/*`, `dv/rtlcosim/build/coverage/*`, or `build/coverview/index.html`.
 
 ## STATUS.md
 

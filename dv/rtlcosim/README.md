@@ -39,8 +39,11 @@ make -C dv/rtlcosim/prim_fifo_sram test-trace
 
 ## Checked-in coverage updates
 
-CI uses checked-in LCOV snapshots under `dv/rtlcosim/coverage/`; generated
-`build/` outputs are local artifacts and must not be committed.
+CI uses checked-in compressed LCOV snapshots under `dv/rtlcosim/coverage/*.info.gz`.
+The top-level Makefile decompresses them into raw `.info` files under
+`build/coverage/` for reports and dashboard generation. Generated `build/`
+outputs and raw cosim `.info` snapshots are local artifacts and must not be
+committed.
 
 For a full refresh, run every cosim before copying coverage snapshots:
 
@@ -49,15 +52,20 @@ make -C dv/rtlcosim test
 make update-cosim-coverage
 ```
 
+`make update-cosim-coverage` writes deterministic gzip files with `gzip -9n` and
+removes raw `dv/rtlcosim/coverage/coverage_*_cosim.info` snapshots.
+
 For a task-scoped targeted update, running `make update-cosim-coverage` after
 `make -C dv/rtlcosim clean` plus only selected cosims can create targeted-only
-`.info` files. Do not commit those files as replacements for the global checked-in
-coverage snapshots. Preserve the baseline `dv/rtlcosim/coverage/*.info`, save the
-targeted `dv/rtlcosim/build/coverage/coverage_*_cosim.info` output, and merge or
-append only the targeted module records into the checked-in files. The final
-`git diff -- dv/rtlcosim/coverage/` must be scoped to the targeted cosims
-(insertion-only for new cosims). If that safe merge cannot be produced or
-audited, run the full refresh flow instead.
+snapshots. Do not commit those files as replacements for the global checked-in
+coverage snapshots. Preserve the compressed baseline
+`dv/rtlcosim/coverage/*.info.gz`, save the targeted
+`dv/rtlcosim/build/coverage/coverage_*_cosim.info` output, merge or append only
+the targeted module records into decompressed working copies, then recompress the
+final snapshots with `gzip -9n`. The final raw decompressed diff must be scoped
+to the targeted cosims (insertion-only for new cosims); the checked-in
+`*.info.gz` files are binary. If that safe merge cannot be produced or audited,
+run the full refresh flow instead.
 
 ## Adding a new co-simulation
 
@@ -66,12 +74,13 @@ audited, run the full refresh flow instead.
 3. Write a `*_cosim_test.cc` that drives stimulus and uses `CosimCtrl<>` from `dv/rtlcosim/common/cosim_ctrl.h` with `sim.compare()` to compare outputs
 4. Create a `Makefile` following the pattern in existing cosim tests
 5. If the cosim adds new untracked files, remember that plain `git diff --check`
-   will not inspect them. Before review, run a whitespace check that includes the
-   new cosim and any approved coverage snapshot paths, for example:
+   will not inspect them. Binary gzip snapshots do not have whitespace to check,
+   but mark approved coverage snapshot paths as intent-to-add for status, and run
+   a whitespace check on the new text files, for example:
 
    ```bash
-   git add -N dv/rtlcosim/<module> dv/rtlcosim/coverage/<approved-files>.info
-   git diff --check -- dv/rtlcosim/<module> dv/rtlcosim/coverage/<approved-files>.info
+   git add -N dv/rtlcosim/<module> dv/rtlcosim/coverage/<approved-files>.info.gz
+   git diff --check -- dv/rtlcosim/<module>
    ```
 
    Alternatively, stage only the approved cosim/coverage paths, run
