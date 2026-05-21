@@ -481,7 +481,7 @@ module minion_top_exec
     .DebugApbEn(1'b1),
     .DebugMonEn(1'b1),
     .TraceEn(1'b1),
-    .VpuEn  (1'b1)
+    .VpuEn  (1'b0)
   ) u_minion (
     .clk_i,
     .rst_c_ni                   (rst_ni),

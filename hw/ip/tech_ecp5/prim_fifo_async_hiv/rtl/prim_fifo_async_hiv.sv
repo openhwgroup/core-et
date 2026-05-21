@@ -13,11 +13,12 @@ module prim_fifo_async_hiv
   parameter int unsigned Width      = 32,
   parameter int unsigned Depth      = 8,
   parameter int unsigned SyncStages = 2,
-  localparam int unsigned PtrW      = $clog2(Depth),
-  localparam int unsigned MemDepth  = 2**PtrW,
-  localparam int unsigned GrayW     = PtrW + 1,
-  localparam logic [GrayW-1:0] PtrIncr = {{GrayW-1{1'b0}}, 1'b1},
-  localparam logic [GrayW-1:0] DepthGrayW = Depth
+  localparam int unsigned PtrW      = (Depth <= 1) ? 1 : $clog2(Depth),
+  localparam int unsigned CntW      = $clog2(Depth + 1),
+  localparam logic [PtrW-1:0] AddrOne    = {{(PtrW-1){1'b0}}, 1'b1},
+  localparam logic [PtrW-1:0] LastAddr   = Depth[PtrW-1:0] - AddrOne,
+  localparam logic [CntW-1:0] CountIncr  = 1,
+  localparam logic [CntW-1:0] DepthCntW  = Depth[CntW-1:0]
 ) (
   input  logic              clk_wr_i,
   input  logic              rst_wr_ni,
@@ -38,97 +39,116 @@ module prim_fifo_async_hiv
   assign rst_wr_n = dft_hv_i.scanmode ? dft_hv_i.scan_reset_n : rst_wr_ni;
   assign rst_rd_n = dft_lv_i.scanmode ? dft_lv_i.scan_reset_n : rst_rd_ni;
 
-  function automatic logic [GrayW-1:0] bin2gray(input logic [GrayW-1:0] bin);
+  function automatic logic [CntW-1:0] bin2gray(input logic [CntW-1:0] bin);
     return bin ^ (bin >> 1);
   endfunction
 
-  function automatic logic [GrayW-1:0] gray2bin(input logic [GrayW-1:0] gray);
-    logic [GrayW-1:0] bin;
-    bin[GrayW-1] = gray[GrayW-1];
-    for (int i = GrayW-2; i >= 0; i--) begin
+  function automatic logic [CntW-1:0] gray2bin(input logic [CntW-1:0] gray);
+    logic [CntW-1:0] bin;
+    bin[CntW-1] = gray[CntW-1];
+    for (int i = CntW-2; i >= 0; i--) begin
       bin[i] = bin[i+1] ^ gray[i];
     end
     return bin;
   endfunction
 
-  logic [Width-1:0] mem [MemDepth];
+  logic [Width-1:0] mem [Depth];
 
-  logic [GrayW-1:0] wptr_bin_q;
-  logic [GrayW-1:0] wptr_gray_q;
-  logic [GrayW-1:0] rptr_gray_sync;
+  // The original vcfifo uses separate modulo-Depth memory addresses and
+  // modulo-2^CntW Gray counters.  Keep that split for non-power-of-two depths.
+  logic [PtrW-1:0] waddr_q;
+  logic [CntW-1:0] wcnt_bin_q;
+  logic [CntW-1:0] wcnt_gray_q;
+  logic [CntW-1:0] rcnt_gray_sync;
   logic             full;
 
   always_ff @(posedge clk_wr_i or negedge rst_wr_n) begin
     if (!rst_wr_n) begin
-      wptr_bin_q  <= '0;
-      wptr_gray_q <= '0;
+      waddr_q     <= '0;
+      wcnt_bin_q  <= '0;
+      wcnt_gray_q <= '0;
     end else if (push_i & ~full) begin
-      wptr_bin_q  <= wptr_bin_q + PtrIncr;
-      wptr_gray_q <= bin2gray(wptr_bin_q + PtrIncr);
+      waddr_q     <= (waddr_q == LastAddr) ? '0 : (waddr_q + AddrOne);
+      wcnt_bin_q  <= wcnt_bin_q + CountIncr;
+      wcnt_gray_q <= bin2gray(wcnt_bin_q + CountIncr);
     end
   end
 
   always_ff @(posedge clk_wr_i) begin
     if (push_i & ~full) begin
-      mem[wptr_bin_q[PtrW-1:0]] <= wdata_i;
+      mem[waddr_q] <= wdata_i;
     end
   end
 
-  logic [GrayW-1:0] rptr_bin_sync;
-  logic [GrayW-1:0] occupancy_wr;
-  assign rptr_bin_sync = gray2bin(rptr_gray_sync);
-  assign occupancy_wr  = wptr_bin_q - rptr_bin_sync;
-  assign full          = (occupancy_wr >= DepthGrayW);
-  assign ready_o       = ~full;
+  logic [CntW-1:0] rcnt_bin_sync;
+  logic [CntW-1:0] occupancy_wr;
+  assign rcnt_bin_sync = gray2bin(rcnt_gray_sync);
+  assign occupancy_wr  = wcnt_bin_q - rcnt_bin_sync;
+  assign full          = (occupancy_wr == DepthCntW);
+  assign ready_o       = rst_wr_n & ~full;
 
-  logic [GrayW-1:0] rptr_bin_q;
-  logic [GrayW-1:0] rptr_gray_q;
-  logic [GrayW-1:0] wptr_gray_sync;
+  logic [PtrW-1:0] raddr_q;
+  logic [CntW-1:0] rcnt_bin_q;
+  logic [CntW-1:0] rcnt_gray_q;
+  logic [CntW-1:0] wcnt_gray_sync;
   logic             empty;
 
   always_ff @(posedge clk_rd_i or negedge rst_rd_n) begin
     if (!rst_rd_n) begin
-      rptr_bin_q  <= '0;
-      rptr_gray_q <= '0;
+      raddr_q     <= '0;
+      rcnt_bin_q  <= '0;
+      rcnt_gray_q <= '0;
     end else if (pop_i & ~empty) begin
-      rptr_bin_q  <= rptr_bin_q + PtrIncr;
-      rptr_gray_q <= bin2gray(rptr_bin_q + PtrIncr);
+      raddr_q     <= (raddr_q == LastAddr) ? '0 : (raddr_q + AddrOne);
+      rcnt_bin_q  <= rcnt_bin_q + CountIncr;
+      rcnt_gray_q <= bin2gray(rcnt_bin_q + CountIncr);
     end
   end
 
-  assign rdata_o = mem[rptr_bin_q[PtrW-1:0]];
-  assign empty   = (rptr_gray_q == wptr_gray_sync);
-  assign valid_o = ~empty;
+  assign rdata_o = mem[raddr_q];
+  assign empty   = (rcnt_gray_q == wcnt_gray_sync);
+  assign valid_o = rst_rd_n & ~empty;
 
-  (* async_reg = "true" *) logic [GrayW-1:0] wptr_sync [SyncStages];
-  always_ff @(posedge clk_rd_i or negedge rst_rd_n) begin
+  // Match the original WR_HIV phase relationship: write-count CDC stages are
+  // sampled on the inverted read clock and then registered once on the read
+  // clock; read-count CDC stages are sampled on the write clock directly.
+  (* async_reg = "true" *) logic [CntW-1:0] wcnt_sync [SyncStages];
+  logic [CntW-1:0] wcnt_gray_sync_q;
+  always_ff @(negedge clk_rd_i or negedge rst_rd_n) begin
     if (!rst_rd_n) begin
       for (int i = 0; i < SyncStages; i++) begin
-        wptr_sync[i] <= '0;
+        wcnt_sync[i] <= '0;
       end
     end else begin
-      wptr_sync[0] <= wptr_gray_q;
+      wcnt_sync[0] <= wcnt_gray_q;
       for (int i = 1; i < SyncStages; i++) begin
-        wptr_sync[i] <= wptr_sync[i-1];
+        wcnt_sync[i] <= wcnt_sync[i-1];
       end
     end
   end
-  assign wptr_gray_sync = wptr_sync[SyncStages-1];
+  always_ff @(posedge clk_rd_i or negedge rst_rd_n) begin
+    if (!rst_rd_n) begin
+      wcnt_gray_sync_q <= '0;
+    end else begin
+      wcnt_gray_sync_q <= wcnt_sync[SyncStages-1];
+    end
+  end
+  assign wcnt_gray_sync = wcnt_gray_sync_q;
 
-  (* async_reg = "true" *) logic [GrayW-1:0] rptr_sync [SyncStages];
+  (* async_reg = "true" *) logic [CntW-1:0] rcnt_sync [SyncStages];
   always_ff @(posedge clk_wr_i or negedge rst_wr_n) begin
     if (!rst_wr_n) begin
       for (int i = 0; i < SyncStages; i++) begin
-        rptr_sync[i] <= '0;
+        rcnt_sync[i] <= '0;
       end
     end else begin
-      rptr_sync[0] <= rptr_gray_q;
+      rcnt_sync[0] <= rcnt_gray_q;
       for (int i = 1; i < SyncStages; i++) begin
-        rptr_sync[i] <= rptr_sync[i-1];
+        rcnt_sync[i] <= rcnt_sync[i-1];
       end
     end
   end
-  assign rptr_gray_sync = rptr_sync[SyncStages-1];
+  assign rcnt_gray_sync = rcnt_sync[SyncStages-1];
 
   /* verilator lint_off UNUSEDSIGNAL */
   logic unused_dft;

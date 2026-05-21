@@ -52,6 +52,9 @@ logic ea_one14_10;
 logic eb_one14_10;
 logic ec_one14_10;
 logic sin_rom_op;
+/* verilator lint_off UNUSEDSIGNAL */  // Special detection only reads exponent fields; keep the full original operand ports.
+logic unused_operand_bits;
+/* verilator lint_on UNUSEDSIGNAL */
 
 
 assign ea_hi_zero30_27 = !(|opa[30:27]);
@@ -79,6 +82,9 @@ assign eb_one14_10 = &opb[14:10];
 assign ec_one14_10 = &opc[14:10];
 
 assign sin_rom_op = ((cmd==VPU_TRANS_SIN_P1) & !trans_taylor) | ((cmd==VPU_TRANS_SIN_P2) & !trans_taylor);
+assign unused_operand_bits = ^{opa[31], opa[22:15], opa[9:0],
+                               opb[31], opb[22:15], opb[9:0],
+                               opc[31], opc[22:15], opc[4:0]};
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -108,8 +114,8 @@ always_comb begin
 
   case (op_dtype)
     VPU_DTYPE_F16 : begin
-      ec_zero  = ~(|opc[14:10]);
-      ec_all_one  = &opc[14:10];
+      ec_zero     = ec_zero14_10;
+      ec_all_one  = ec_one14_10;
     end
     VPU_DTYPE_F16_F32 : begin
       ea_hi_zero    = ea_hi_zero30_27 & !opa[26];
@@ -130,6 +136,9 @@ always_comb begin
     VPU_DTYPE_F10 : begin
       ec_zero    = ~(|opc[9:5]);
       ec_all_one = &opc[9:5];
+    end
+    default: begin
+      // Preserve original no-op behavior for unused dtype encodings.
     end
   endcase
 

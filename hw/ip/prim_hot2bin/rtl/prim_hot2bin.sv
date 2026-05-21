@@ -21,7 +21,7 @@ module prim_hot2bin #(
   always_comb begin
     bin_o = '0;
     for (int i = 0; i < HotW; i++) begin
-      bin_o = bin_o | ({BinW{hot_i[i]}} & BinW'(i));
+      bin_o = bin_o | ({BinW{hot_i[i]}} & i[BinW-1:0]);
     end
   end
 

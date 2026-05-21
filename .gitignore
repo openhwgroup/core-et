@@ -1,4 +1,6 @@
 build/
+# Raw cosim LCOV snapshots are generated; checked-in snapshots use .info.gz.
+dv/rtlcosim/coverage/coverage_*_cosim.info
 # Editor backup files
 \#*#
 *~

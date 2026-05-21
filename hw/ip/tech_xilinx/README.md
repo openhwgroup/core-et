@@ -63,6 +63,11 @@ Vivado-specific library interface. In this repository the real technology seam
 for those blocks is still logical CDC plus future ASIC level-shifter insertion,
 not Xilinx-specific FIFO macros.
 
+`prim_fifo_semisync_hiv` and `prim_fifo_semisync_lov` likewise stay on the
+generic fallback. They are for CORE-ET neighborhood `_ss` crossings with 1:1
+phase-controlled clocks, not arbitrary CDC; no Xilinx-specific FIFO macro or
+level-shifter mapping is currently validated for that contract.
+
 ## Usage
 
 Reference only. `TECH := xilinx` may select these files through `mk/prim.mk`,

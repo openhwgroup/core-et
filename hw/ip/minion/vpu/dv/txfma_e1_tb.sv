@@ -1,0 +1,60 @@
+// Copyright (c) 2026 Ainekko
+// SPDX-License-Identifier: Apache-2.0
+
+module txfma_e1_tb
+  import vpu_defs_pkg::*;
+(
+  input  logic [VPU_DTYPE_SZ-1:0]                op_dtype_i,
+  input  logic [TXFMA_SIGS_SZ-1:0]               sigs_i,
+  input  logic [VPU_FCMD_SZ-1:0]                 cmd_i,
+  input  logic [TXFMA_EXP_PS_SZ-1:0]             ea_hi_i,
+  input  logic [TXFMA_EXP_PS_SZ-1:0]             eb_hi_i,
+  input  logic [TXFMA_EXP_PH_SZ-1:0]             ea_lo_i,
+  input  logic [TXFMA_EXP_PH_SZ-1:0]             eb_lo_i,
+  input  logic [TXFMA_EXP_PS_SZ-1:0]             ec_i,
+  input  logic                                    ec_zero_i,
+  input  logic                                    ec_all1_i,
+  input  logic                                    ea_hi_zero_i,
+  input  logic [3:0]                              etrz_fa_hi_ph_i,
+  input  logic [4:0]                              etrz_fa_lo_ps_i,
+  input  logic [3:0]                              etrz_fb_hi_ph_i,
+  input  logic [4:0]                              etrz_fb_lo_ps_i,
+  input  logic                                    fc_zero30_8_i,
+  output logic [TXFMA_ETRZ_PROD_PH_SZ-1:0]        etrz_prod_hi_ph_o,
+  output logic [TXFMA_ETRZ_PROD_PS_SZ-1:0]        etrz_prod_lo_ps_o,
+  output logic [TXFMA_EXP_SEXT_PS_SZ-1:0]         ediff_ec_eph_o,
+  output logic [TXFMA_EXP_SEXT_PS_SZ-1:0]         ediff_ec_epl_o,
+  output logic [TXFMA_EXP_SEXT_PS_SZ-1:0]         ediff_eph_epl_o,
+  output logic [TXFMA_EXP_SEXT_PS_SZ-1:0]         eprod_hi_o,
+  output logic [TXFMA_EXP_SEXT_PS_SZ-1:0]         eprod_lo_o,
+  output logic [TXFMA_EXP_PS_SZ-1:0]              ec_out_o
+);
+
+  txfma_e1 u_dut (
+    .op_dtype_f1a_h        (op_dtype_i),
+    .sigs_f1a_h            (sigs_i),
+    .cmd_f1a_h             (cmd_i),
+    .ea_hi_f1a_h           (ea_hi_i),
+    .eb_hi_f1a_h           (eb_hi_i),
+    .ea_lo_f1a_h           (ea_lo_i),
+    .eb_lo_f1a_h           (eb_lo_i),
+    .ec_f1a_h              (ec_i),
+    .ec_zero_f1a_h         (ec_zero_i),
+    .ec_all1_f1a_h         (ec_all1_i),
+    .ea_hi_zero_f1a_h      (ea_hi_zero_i),
+    .etrz_fa_hi_ph_f1a_h   (etrz_fa_hi_ph_i),
+    .etrz_fa_lo_ps_f1a_h   (etrz_fa_lo_ps_i),
+    .etrz_fb_hi_ph_f1a_h   (etrz_fb_hi_ph_i),
+    .etrz_fb_lo_ps_f1a_h   (etrz_fb_lo_ps_i),
+    .fc_zero30_8_f1a_h     (fc_zero30_8_i),
+    .etrz_prod_hi_ph_f1a_h (etrz_prod_hi_ph_o),
+    .etrz_prod_lo_ps_f1a_h (etrz_prod_lo_ps_o),
+    .ediff_ec_eph_f1a_h    (ediff_ec_eph_o),
+    .ediff_ec_epl_f1a_h    (ediff_ec_epl_o),
+    .ediff_eph_epl_f1a_h   (ediff_eph_epl_o),
+    .eprod_hi_f1a_h        (eprod_hi_o),
+    .eprod_lo_f1a_h        (eprod_lo_o),
+    .ec_out_f1a_h          (ec_out_o)
+  );
+
+endmodule : txfma_e1_tb

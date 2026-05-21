@@ -13,22 +13,43 @@ env:
   OSS_CAD_SUITE_CACHE_KEY: oss-cad-suite-2026-04-12-slang-linux-x64
 
 jobs:
-  verilator:
+  discover_unit_tests:
+    name: Discover unit tests
     runs-on: ubuntu-24.04
     permissions:
       contents: read
+    outputs:
+      matrix: ${{ steps.unit_tests.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
 
+      - name: Generate unit-test matrix
+        id: unit_tests
+        run: |
+          matrix=$(make ci-unit-test-matrix)
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+          echo "$matrix" | python3 -m json.tool
+          echo ""
+          echo "Unit-test directories:"
+          make ci-unit-test-dirs
+
+  verilator_cache:
+    name: Prepare Verilator cache
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      cache_hit: ${{ steps.cache_verilator.outputs.cache-hit }}
+    steps:
       - name: Restore Verilator cache
-        id: cache-verilator
+        id: cache_verilator
         uses: actions/cache/restore@v4
         with:
           path: ${{ env.VERILATOR_PREFIX }}
           key: ${{ env.VERILATOR_CACHE_KEY }}
 
       - name: Build Verilator (cache miss only)
-        if: steps.cache-verilator.outputs.cache-hit != 'true'
+        if: steps.cache_verilator.outputs.cache-hit != 'true'
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
@@ -43,11 +64,53 @@ jobs:
           make install
 
       - name: Save Verilator cache
-        if: steps.cache-verilator.outputs.cache-hit != 'true'
+        if: steps.cache_verilator.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
           path: ${{ env.VERILATOR_PREFIX }}
           key: ${{ env.VERILATOR_CACHE_KEY }}
+
+      - name: Pack Verilator install artifact (cache miss only)
+        if: steps.cache_verilator.outputs.cache-hit != 'true'
+        run: tar -C "$VERILATOR_PREFIX" -czf "$RUNNER_TEMP/verilator-install.tgz" .
+
+      - name: Upload Verilator install artifact (cache miss only)
+        if: steps.cache_verilator.outputs.cache-hit != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: verilator-install
+          path: ${{ runner.temp }}/verilator-install.tgz
+          if-no-files-found: error
+          retention-days: 1
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-24.04
+    needs: verilator_cache
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore Verilator cache
+        id: cache_verilator
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.VERILATOR_PREFIX }}
+          key: ${{ env.VERILATOR_CACHE_KEY }}
+
+      - name: Download Verilator install artifact (cache fill fallback)
+        if: steps.cache_verilator.outputs.cache-hit != 'true' && needs.verilator_cache.outputs.cache_hit != 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: verilator-install
+          path: ${{ runner.temp }}/verilator-install
+
+      - name: Extract Verilator install artifact (cache fill fallback)
+        if: steps.cache_verilator.outputs.cache-hit != 'true' && needs.verilator_cache.outputs.cache_hit != 'true'
+        run: |
+          mkdir -p "$VERILATOR_PREFIX"
+          tar -xzf "${{ runner.temp }}/verilator-install/verilator-install.tgz" -C "$VERILATOR_PREFIX"
 
       - name: Install build deps
         run: |
@@ -66,8 +129,142 @@ jobs:
       - name: Lint
         run: make lint
 
-      - name: Tests
-        run: make test
+  unit_tests:
+    name: Unit test — ${{ matrix.dv_dir }}
+    runs-on: ubuntu-24.04
+    needs: [verilator_cache, discover_unit_tests]
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.discover_unit_tests.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore Verilator cache
+        id: cache_verilator
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.VERILATOR_PREFIX }}
+          key: ${{ env.VERILATOR_CACHE_KEY }}
+
+      - name: Download Verilator install artifact (cache fill fallback)
+        if: steps.cache_verilator.outputs.cache-hit != 'true' && needs.verilator_cache.outputs.cache_hit != 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: verilator-install
+          path: ${{ runner.temp }}/verilator-install
+
+      - name: Extract Verilator install artifact (cache fill fallback)
+        if: steps.cache_verilator.outputs.cache-hit != 'true' && needs.verilator_cache.outputs.cache_hit != 'true'
+        run: |
+          mkdir -p "$VERILATOR_PREFIX"
+          tar -xzf "${{ runner.temp }}/verilator-install/verilator-install.tgz" -C "$VERILATOR_PREFIX"
+
+      - name: Install build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential make libfl2 libfl-dev zlib1g-dev
+
+      - name: Tool versions
+        run: |
+          $VERILATOR_PREFIX/bin/verilator --version
+          g++ --version
+
+      - name: Add Verilator to PATH
+        run: echo "$VERILATOR_PREFIX/bin" >> $GITHUB_PATH
+
+      - name: Run unit test — ${{ matrix.dv_dir }}
+        env:
+          DV_DIR: ${{ matrix.dv_dir }}
+        run: make -C "$DV_DIR" test
+
+      - name: Archive unit coverage — ${{ matrix.dv_dir }}
+        if: always()
+        env:
+          DV_DIR: ${{ matrix.dv_dir }}
+          COVERAGE_ARCHIVE: ${{ runner.temp }}/${{ matrix.artifact }}.tgz
+        run: |
+          if [ -d "$DV_DIR/build" ]; then
+            tar -czf "$COVERAGE_ARCHIVE" "$DV_DIR/build"
+          else
+            tar -czf "$COVERAGE_ARCHIVE" --files-from /dev/null
+          fi
+          ls -l "$COVERAGE_ARCHIVE"
+
+      - name: Upload unit coverage artifact — ${{ matrix.dv_dir }}
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ runner.temp }}/${{ matrix.artifact }}.tgz
+          if-no-files-found: error
+          retention-days: 7
+
+  coverage:
+    name: Coverage dashboard
+    runs-on: ubuntu-24.04
+    needs: [verilator_cache, unit_tests]
+    if: ${{ always() && needs.verilator_cache.result == 'success' }}
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore Verilator cache
+        id: cache_verilator
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.VERILATOR_PREFIX }}
+          key: ${{ env.VERILATOR_CACHE_KEY }}
+
+      - name: Download Verilator install artifact (cache fill fallback)
+        if: steps.cache_verilator.outputs.cache-hit != 'true' && needs.verilator_cache.outputs.cache_hit != 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: verilator-install
+          path: ${{ runner.temp }}/verilator-install
+
+      - name: Extract Verilator install artifact (cache fill fallback)
+        if: steps.cache_verilator.outputs.cache-hit != 'true' && needs.verilator_cache.outputs.cache_hit != 'true'
+        run: |
+          mkdir -p "$VERILATOR_PREFIX"
+          tar -xzf "${{ runner.temp }}/verilator-install/verilator-install.tgz" -C "$VERILATOR_PREFIX"
+
+      - name: Install build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential make libfl2 libfl-dev zlib1g-dev
+
+      - name: Tool versions
+        run: |
+          $VERILATOR_PREFIX/bin/verilator --version
+          g++ --version
+
+      - name: Add Verilator to PATH
+        run: echo "$VERILATOR_PREFIX/bin" >> $GITHUB_PATH
+
+      - name: Download unit coverage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: unit-coverage-*
+          path: ${{ runner.temp }}/unit-coverage
+          merge-multiple: true
+
+      - name: Extract unit coverage artifacts
+        run: |
+          shopt -s nullglob
+          archives=("${{ runner.temp }}"/unit-coverage/*.tgz)
+          if [ ${#archives[@]} -eq 0 ]; then
+            echo "No unit-test coverage archives found."
+          else
+            for archive in "${archives[@]}"; do
+              echo "Extracting $archive"
+              tar -xzf "$archive" -C "$GITHUB_WORKSPACE"
+            done
+          fi
 
       - name: Generate LCOV info files
         run: make coverage-report

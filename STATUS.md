@@ -6,16 +6,22 @@
 |---------|-------------|--------|
 | `dft_pkg` | DFT control struct (`dft_t`: scanmode, scan_reset_n, sram_clk_override, ram_rei, ram_wei) | Done |
 | `ram_cfg_pkg` | SRAM config struct (`ram_cfg_t`: timing margins, deep_sleep, shut_down) | Done |
-| `etlink_pkg` | ET-Link bus protocol types and opcodes | Done |
+| `etlink_pkg` | ET-Link bus protocol types, opcodes, and WriteAround subopcodes | Done |
 | `apb_pkg` | APB3 request/response structs for ESR register blocks | Done |
-| `esr_pkg` | Shared ESR structs and SPIO address constants | Done |
+| `esr_pkg` | Shared ESR structs plus SPIO/neighborhood address constants | Done |
 | `icache_geom_pkg` | Shared standalone-Icache geometry and SRAM-layout constants | Done |
 | `icache_pkg` | Standalone-Icache constants, enums, TLB/error structs, and LRU helpers | Done |
 | `minion_frontend_pkg` | Frontend fetch-buffer, ICache response, issue, and thread-buffer types | Done |
-| `neigh_pkg` | Neighborhood shell types and response-agent constants | Done |
+| `neigh_pkg` | Neighborhood shell/channel types, response-agent constants, FLB/local/TBOX/tensor-store constants and debug payloads | Done |
+| `neigh_ch_apb_mux_pkg` | Neighborhood channel APB mux request/response structs and address-decode constants | Done |
+| `neigh_hv_logic_pkg` | Neighborhood HV/LV support-leaf APB/BPAM types and sizing constants | Done |
+| `neigh_voltage_cross_pkg` | Neighborhood voltage-crossing wrapper local types and geometry constants | Done |
+| `neigh_ch_dbg_pkg` | Neighborhood channel debug TBOX run-control struct and resume-FSM enum | Done |
 | `shirecache_pkg` | Cache constants, enums, L3 swizzle struct, pipeline/cbuf/atomic types, perfmon types | Done |
 | `axi_pkg` | AXI4 channel types (AR, AW, W, R, B) | Done |
 | `rbox_pkg` | RBOX constants, packet/control structs, APB/ET-Link helper types, and utility functions | Done |
+| `shire_esr_pkg` | Shire ESR/APB address constants and packed control/status structs for compute-shire ESR blocks | Done |
+| `shire_sbm_pkg` | Compute-shire SBM/APB lane constants, APB structs, and native SBM AXI helper structs | Done |
 
 ## Primitives
 
@@ -46,13 +52,15 @@
 | `prim_fifo_sram` | 44 checks (Ports=1+2) | 3549 comparisons vs `rbox_fifo` | Done |
 | `prim_fifo_reg` | 24 checks | 2091 comparisons vs `gen_fifo_reg` | Done |
 | `prim_fifo` | 100 checks | 7122 comparisons vs `gen_fifo` | Done |
-| `prim_fifo_async_hiv` | 30 checks | — (no tracked standalone cosim) | Unit done; standalone cosim pending |
-| `prim_fifo_async_lov` | — | — (no tracked standalone unit/cosim) | Implemented; standalone DV pending |
+| `prim_fifo_async_hiv` | 30 checks | 18,921 comparisons vs `vcfifo_wr_hiv_gcd` | Done |
+| `prim_fifo_async_lov` | 63 checks | 18,921 comparisons vs `vcfifo_wr_lov_gcd` | Done |
+| `prim_fifo_semisync_hiv` | 50 checks | 7,668 comparisons vs `vcfifo_wr_hiv_ss` | Done |
+| `prim_fifo_semisync_lov` | 50 checks | 7,668 comparisons vs `vcfifo_wr_lov_ss` | Done |
 | `prim_arb_lru` | — (tested via cbuf) | — (tested via cbuf cosim) | Done |
 | `prim_arb_lru_2bid` | 30 checks | 2264 comparisons vs `arb_lru_2_bid` | Done |
 | `prim_arb_rr` | 29 checks | 1150 comparisons vs `arb_rr_data` | Done |
 | `prim_arb_prio` | 24 checks | 1068 comparisons vs `arb_prio_data_held` | Done |
-| `prim_hot2bin` | — | — | Implemented; standalone DV pending |
+| `prim_hot2bin` | 311 checks | 12,168 comparisons vs `hot2bin` + `onehot_mux` | Done |
 | `prim_rf_1r1w` | 26 checks | 2122 comparisons vs `rf_latch_1r_1w` | Done |
 | `prim_rf_1r1w_dec` | 12 checks | 2517 comparisons vs `rf_latch_1r_1w_dec` | Done |
 | `prim_rf_1r1w_reg` | 13 checks | 2265 comparisons vs `rf_latch_1r_1w_reg` | Done |
@@ -89,14 +97,14 @@
 
 ### RAM wrappers
 
-Cosim blocked: originals use hierarchical refs (`pipe.sub_bank.*`) — will cosim at `sub_bank` level.
+Standalone cosims are enabled with `-DET_ASSERT_OFF`; the original wrappers' hierarchical references (`pipe.sub_bank.*` / `mem.*`) are assertion-only.
 
 | Module | Original | Test | Cosim | Status |
 |--------|----------|------|-------|--------|
-| `shirecache_pipe_tag_ram_wrap` | `shire_cache_pipe_tag_ram_wrap` | 12 checks | blocked | Done — has dft_sram_clk_i, ram_delay_i, dft_i.ram_rei/wei, ram_cfg_i.deep_sleep/shut_down |
-| `shirecache_pipe_tag_state_ram_wrap` | `shire_cache_pipe_tag_state_ram_wrap` | 12 checks | blocked | Done |
-| `shirecache_pipe_data_ram_wrap` | `shire_cache_pipe_data_ram_wrap` | 8 checks | blocked | Done |
-| `shirecache_pipe_sub_bank_mem` | `shire_cache_pipe_sub_bank_mem` | 11 checks | blocked | Done — variable read-delay pipeline (2/3/4 cycles) |
+| `shirecache_pipe_tag_ram_wrap` | `shire_cache_pipe_tag_ram_wrap` | 12 checks | 11,240 comparisons | Done — has dft_sram_clk_i, ram_delay_i, dft_i.ram_rei/wei, ram_cfg_i.deep_sleep/shut_down |
+| `shirecache_pipe_tag_state_ram_wrap` | `shire_cache_pipe_tag_state_ram_wrap` | 12 checks | 2,837 comparisons | Done |
+| `shirecache_pipe_data_ram_wrap` | `shire_cache_pipe_data_ram_wrap` | 8 checks | 51,858 comparisons | Done |
+| `shirecache_pipe_sub_bank_mem` | `shire_cache_pipe_sub_bank_mem` | 7 checks | 90,912 comparisons | Done — variable read-delay pipeline (2/3/4 cycles) |
 
 ### Pipeline Build Order
 
@@ -137,7 +145,7 @@ Build order: 12→13→14→15→16→17→18
 | 17 | `shirecache_mesh_slave` + `shirecache_mesh_slave_axi_port` | `shire_cache_mesh_slave` + `_axi_port` | prim_fifo_async_hiv/lov, prim_fifo_reg, prim_arb_rr, axi_pkg, l3_swizzle_get | Done — 21 unit checks, 6272 cosim comparisons |
 | 18 | `shirecache_l3_to_sys_bridge` | `shire_cache_l3_to_sys_bridge` | prim_fifo_async_hiv/lov, prim_arb_rr, prim_hot2bin | Done — 41 unit checks, 14697 cosim comparisons |
 | 19 | `shirecache_bank` | `shire_cache_bank` | pipe, reqq, dataq, rspmux, mesh, l3_slave, perfmon, err_logger, l2hpf, trace, bist_wrapper | Done — 5535 cosim comparisons (full hierarchy) |
-| 20 | `shirecache_top` | `shire_cache` | bank (×4), xbar (×2), mesh_master, mesh_slave, rst_sync | Done — 10134 cosim comparisons (full hierarchy, all 4 banks) |
+| 20 | `shirecache_top` | `shire_cache` | bank (×4), xbar (×2), mesh_master, mesh_slave, rst_sync | Done — 7 free-clock smoke checks, 10 MBIST propagation checks; 46102 cosim comparisons (full hierarchy, all 4 banks, DFT SRAM clock override, DFT MBIST enable propagation) |
 
 ### Monitoring
 
@@ -152,13 +160,53 @@ Build order: 12→13→14→15→16→17→18
 | 25 | `shirecache_bist_mbx` | `shire_cache_bist_mbx` | 27 checks | 1890 comparisons | Done — BIST mailbox with back-to-back blocking |
 | 25b | `shirecache_bist_wrapper` | `shire_cache_bist_wrapper` | 40 checks | 9064 comparisons | Done — BIST wrapper (4x mbx: MBS/MBT/MBD/MBI) |
 
+
+## Shire ESR/APB (`hw/ip/shire_esr/`)
+
+| Module | Original | Test | Cosim | Status |
+|--------|----------|------|-------|--------|
+| `apb_esr_ff` | `apb_esr_ff` + `apb_ff` | 19 checks | 48,016 comparisons | Done |
+| `esr_cache_bank` | `esr_cache_bank` | 55 checks | 39,828 comparisons | Done |
+| `esr_shire_other` | `esr_shire_other` | 97 checks | 338,832 comparisons | Done |
+| RBOX ESR/APB compatibility audit | `esr_rbox`, `rbox_top`, `shire_channel` APB routing | documented in `hw/ip/shire_esr/doc/rbox_esr_compat.md` | covered by existing RBOX cosims plus this audit | Done |
+
+## Shire SBM/APB (`hw/ip/shire_sbm/`)
+
+| Module | Original | Test | Cosim | Status |
+|--------|----------|------|-------|--------|
+| `mshire_axi_to_apb` | `mshire_axi_to_apb` | covered by 51-check `shire_sbm` top-level unit test | 111,452 comparisons | Done |
+| `shire_bus_master` | `shire_bus_master` | 51 checks via `sbm_top`/`shire_sbm_tb` | 467,514 comparisons | Done |
+| `sbm_top` | `sbm_top` | 51 checks | 492,120 comparisons (BPAM/UltraSoc path held idle per native seam) | Done |
+
+## Shire Channel Leaves (`hw/ip/shire_channel_leaves/`)
+
+| Module | Original | Test | Cosim | Status |
+|--------|----------|------|-------|--------|
+| `shire_channel_leaves_pkg` | Shared shire-channel leaf constants | — | — | Done |
+| `shire_dmctrl` | `shire_dmctrl` | 36 grouped shire-channel leaf checks | 2,200 comparisons | Done |
+| `shire_bpam_run_control` | `shire_bpam_run_control` | 36 grouped shire-channel leaf checks | 4,096 comparisons | Done |
+| `shire_and_or_tree_daisychain` | `shire_and_or_tree_daisychain` | 36 grouped shire-channel leaf checks | 8,192 comparisons | Done |
+| `shire_coop_tload_bus` | `shire_coop_tload_bus` | 36 grouped shire-channel leaf checks | 12,288 comparisons | Done |
+| `shire_ioshire_noc_ints` | `shire_ioshire_noc_ints` | 36 grouped shire-channel leaf checks | 4,096 comparisons | Done — retained normal NoC interrupt subset only |
+| `shire_xll_control` | `shire_xll_control` | 36 grouped shire-channel leaf checks | 31,460 comparisons | Done |
+| `shire_pll_wrapper` | `shire_pll_wrapper` | 36 grouped shire-channel leaf checks | 43,560 comparisons | Done — native clock/lock/DFT reset seam omits third-party PLL/DLL/debug hard-macro surfaces |
+| `icache_mems` | `icache_mems` | 36 grouped shire-channel leaf checks | 181,056 comparisons | Done |
+
+## Shire Channel (`hw/ip/shire_channel/`)
+
+| Module | Original | Test | Cosim | Status |
+|--------|----------|------|-------|--------|
+| `shire_channel` | `shire_channel` | 59 directed integration checks | 1,445,146 comparisons | Done — native container integrates shirecache, RBOX, uncached, shire ESR/APB, ICache memories, run-control/status leaves, DFT/RAM config, reset-domain fanout, full retained-output cosim, exposed retained AXI/SYS/SBM/APB/reset/status/power/clock-control input coverage, cooperative done-ID fanout, and raw public RBOX reset behavior |
+| `shire_channel_wrap` | `shire_channel_wrap` retained Ainekko-owned shell behavior | 66 directed wrapper checks | 296,731 comparisons vs original retained wrapper slice | Done — native shell wraps `shire_channel`, retains separate system/debug/NOC low-voltage reset paths plus clock/DFT/SBM/APB/AXI/cache/uncached/power/status/control/RAM-config seams, real original-vs-new wrapper cosim with explicit retained-input toggle coverage, and intentionally omits removed debug/sensor/hard-macro surfaces |
+| `shire_top` | `shire_top` public native compute-shire wrapper | 53 directed integration checks | 578,688 comparisons vs retained top-wiring slice | Done — instantiates one `shire_channel_wrap` plus `NumNeigh` `neigh_top` instances, exposes native AXI/reset/DFT/interrupt/status/control boundary including distinct `rst_noc_ni`, and covers reset fanout/independence, SYS/APB, DFT/RAM, neighborhood/cache/uncached/ICache/FLB/cooperative/power seams with removed third-party/generated surfaces omitted per contract |
+
 ## Minion Frontend (`hw/ip/minion/frontend/`)
 
 | Module | Original | Test | Cosim | Status |
 |--------|----------|------|-------|--------|
 | `minion_frontend_rvc_expander` | `frontend_rvc_expander` | 30 checks | 53,260 comparisons | Done |
 | `minion_frontend_thread_sched` | `frontend_thread_sched` | — | 5,540 comparisons | Done |
-| `minion_frontend_thread_buffer` | `frontend_thread_buffer` | — | 1,427,157 comparisons | Done |
+| `minion_frontend_thread_buffer` | `frontend_thread_buffer` | — | 1,524,292 comparisons | Done |
 | `intpipe_decode` | `intpipe_decode` | 6 checks (`EnableExtraTrans=0`) + 6 checks (`EnableExtraTrans=1`) | 2,000,069 comparisons (`EnableExtraTrans=0`) + 2,000,069 comparisons (`EnableExtraTrans=1`) | Done |
 | `vpu_decoder` | `vpu_decoder` | 6 checks (`EnableExtraTrans=0`) + 6 checks (`EnableExtraTrans=1`) | 4,000,110 comparisons (`EnableExtraTrans=0`) + 4,000,110 comparisons (`EnableExtraTrans=1`) | Done |
 | `minion_frontend` | `frontend_top` | — | 1,169,262 comparisons | Done |
@@ -174,34 +222,34 @@ Build order: 12→13→14→15→16→17→18
 
 ### Phase 1-3: Leaf modules
 
-| Module | Original | Cosim | Status |
-|--------|----------|-------|--------|
-| `intpipe_alu` | `intpipe_alu` | ~2M comparisons | Done |
-| `intpipe_imm` | `intpipe_imm` | ~500K comparisons | Done |
-| `intpipe_inst_bits_stage` | `intpipe_inst_bits_stage` | ~100K comparisons | Done |
-| `intpipe_rf` | `intpipe_rf` | 80,270 comparisons | Done |
-| `intpipe_int_scoreboard` | `intpipe_int_scoreboard` | ~1M comparisons | Done |
-| `intpipe_fp_scoreboard` | `intpipe_fp_scoreboard` | ~1M comparisons | Done |
-| `intpipe_mask_scoreboard` | `intpipe_mask_scoreboard` | ~1M comparisons | Done |
-| `debug_breakpoint` | `debug_breakpoint` | ~1M comparisons | Done |
-| `intpipe_mul_div_dp` | `intpipe_mul_div_dp` | ~16M comparisons | Done |
-| `intpipe_mul_div_ctl` | `intpipe_mul_div_ctl` | ~16M comparisons | Done |
-| `intpipe_mul_div_top` | `intpipe_mul_div_top` | ~16M comparisons | Done |
-| `prim_rf_2r1w` | `rf_latch_2r_1w` | 224,876 comparisons | Done |
-| `prim_cmp_32` | `r32cmp` | — (tested via mul_div_dp cosim) | Done |
-| `prim_cmp_42` | `r42cmp` | — (tested via mul_div_dp cosim) | Done |
-| `prim_clk_gate_n` | `et_clk_gate_n` | — (tested via mul_div_dp cosim) | Done |
+| Module | Original | Test | Cosim | Status |
+|--------|----------|------|-------|--------|
+| `intpipe_alu` | `intpipe_alu` | 44 checks | ~2M comparisons | Done |
+| `intpipe_imm` | `intpipe_imm` | — | ~500K comparisons | Done |
+| `intpipe_inst_bits_stage` | `intpipe_inst_bits_stage` | — | ~100K comparisons | Done |
+| `intpipe_rf` | `intpipe_rf` | — | 80,270 comparisons | Done |
+| `intpipe_int_scoreboard` | `intpipe_int_scoreboard` | 27 checks | ~1M comparisons | Done |
+| `intpipe_fp_scoreboard` | `intpipe_fp_scoreboard` | 14 checks | ~1M comparisons | Done |
+| `intpipe_mask_scoreboard` | `intpipe_mask_scoreboard` | 12 checks | ~1M comparisons | Done |
+| `debug_breakpoint` | `debug_breakpoint` | 112 checks | ~1M comparisons | Done |
+| `intpipe_mul_div_dp` | `intpipe_mul_div_dp` | — | ~16M comparisons | Done |
+| `intpipe_mul_div_ctl` | `intpipe_mul_div_ctl` | — | ~16M comparisons | Done |
+| `intpipe_mul_div_top` | `intpipe_mul_div_top` | — | ~16M comparisons | Done |
+| `prim_rf_2r1w` | `rf_latch_2r_1w` | — | 224,876 comparisons | Done |
+| `prim_cmp_32` | `r32cmp` | — | — (tested via mul_div_dp cosim) | Done |
+| `prim_cmp_42` | `r42cmp` | — | — (tested via mul_div_dp cosim) | Done |
+| `prim_clk_gate_n` | `et_clk_gate_n` | — | — (tested via mul_div_dp cosim) | Done |
 
 ### Phase 4: CSR subsystem
 
-| Module | Original | Cosim | Status |
-|--------|----------|-------|--------|
-| `intpipe_csr_file_fl_barrier` | `intpipe_csr_file_fl_barrier` | 62,808 comparisons | Done |
-| `intpipe_csr_file_conv` | `intpipe_csr_file_conv` | 22,440 comparisons | Done |
-| `intpipe_csr_pmu_read_interface` | `intpipe_csr_pmu_read_interface` | 21,356 comparisons | Done |
-| `intpipe_csr_replay` | `intpipe_csr_replay` | 10,466 comparisons | Done |
-| `intpipe_csr_msgs` | `intpipe_csr_msgs` | 33,770 comparisons | Done |
-| `intpipe_csr_file` | `intpipe_csr_file` | 187,040 comparisons | Done |
+| Module | Original | Test | Cosim | Status |
+|--------|----------|------|-------|--------|
+| `intpipe_csr_file_fl_barrier` | `intpipe_csr_file_fl_barrier` | — | 62,808 comparisons | Done |
+| `intpipe_csr_file_conv` | `intpipe_csr_file_conv` | — | 22,440 comparisons | Done |
+| `intpipe_csr_pmu_read_interface` | `intpipe_csr_pmu_read_interface` | — | 21,356 comparisons | Done |
+| `intpipe_csr_replay` | `intpipe_csr_replay` | 122 checks (`VpuEn=1`) + 122 checks (`VpuEn=0`) | 10,466 comparisons | Done |
+| `intpipe_csr_msgs` | `intpipe_csr_msgs` | 36 checks | 33,770 comparisons | Done |
+| `intpipe_csr_file` | `intpipe_csr_file` | — | 187,040 comparisons | Done |
 
 ### Phase 5: Top integration
 
@@ -213,7 +261,7 @@ Build order: 12→13→14→15→16→17→18
 
 | Module | Original | Test | Cosim | Status |
 |--------|----------|------|-------|--------|
-| `minion_debug_apb_slv` | `minion_debug_apb_slv` | Covered by `core_top` smoke test (9 checks) | Covered by `core_top` cosim (1,539,072 comparisons) | RTL translated and exercised through minion-level integration; standalone block-level DV/cosim still pending |
+| `minion_debug_apb_slv` | `minion_debug_apb_slv` | 246 standalone checks + covered by `core_top` smoke test (9 checks) | 91,251 standalone comparisons + covered by `core_top` cosim (1,539,072 comparisons) | Done (standalone block-level DV/cosim plus minion-level integration coverage) |
 | `core_top` | `core_top` | 9 smoke checks + 12 debug-APB-off checks | 1,539,072 comparisons | Done |
 | `minion_top` | `minion_top` | 17 smoke checks + 5 VpuEn=0 checks + 17 debug-APB-off checks + 15 debug-off checks + 9 execution checks | 235,284 comparisons | Done (default `VpuEn=1` instantiates translated real `vpu_top`; cosim checks every practical functional input bit sees both 0 and 1, with DFT scan/OCC/test pins documented as constrained; intentional integer-only `VpuEn=0` path keeps `null_vpu`) |
 | `null_vpu` | — | 55 checks | — | Done (new integer-only bring-up helper; intentionally non-faithful and not part of the CORE-ET translation set) |
@@ -236,29 +284,29 @@ Build order: 12→13→14→15→16→17→18
 | `txfma_booth_ppg_32r4` | `txfma_booth_ppg_32r4` | 9,842 checks | 155,762 comparisons | Done |
 | `txfma_wallace1` | `txfma_wallace1` | 8,216 checks | 25,288 comparisons | Done |
 | `txfma_wallace2` | `txfma_wallace2` | 8,200 checks | 25,074 comparisons | Done |
-| `txfma_c0` | `txfma_c0` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_c1` | `txfma_c1` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_c2` | `txfma_c2` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_c3` | `txfma_c3` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_c4` | `txfma_c4` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_c5` | `txfma_c5` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_c6` | `txfma_c6` | — | covered by `txfma_top`/`txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_e1` | `txfma_e1` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_e2` | `txfma_e2` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_e4` | `txfma_e4` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_e5` | `txfma_e5` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_e6` | `txfma_e6` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_ediff_opdorder_logic` | `txfma_ediff_opdorder_logic` | — | covered by `txfmaexp_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_exp_special_detect` | `txfma_exp_special_detect` | — | — | RTL present, standalone DV/cosim pending |
-| `txfma_f0` | `txfma_f0` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_f1` | `txfma_f1` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_f2` | `txfma_f2` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_f3` | `txfma_f3` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_f4` | `txfma_f4` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_f5` | `txfma_f5` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_f6` | `txfma_f6` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_frac_zero_detect` | `txfma_frac_zero_detect` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
-| `txfma_rnd_adder` | `txfma_rnd_adder` | — | covered by `txfma_top` cosim | RTL present, standalone DV/cosim pending |
+| `txfma_c0` | `txfma_c0` | 903 checks | 9,101,638 comparisons | Done |
+| `txfma_c1` | `txfma_c1` | 295 checks | 65,648 comparisons | Done |
+| `txfma_c2` | `txfma_c2` | 312 checks | 192,888 comparisons | Done |
+| `txfma_c3` | `txfma_c3` | 351 checks | 61,545 comparisons | Done |
+| `txfma_c4` | `txfma_c4` | 283 checks | 32,824 comparisons | Done |
+| `txfma_c5` | `txfma_c5` | 301 checks | 90,266 comparisons | Done |
+| `txfma_c6` | `txfma_c6` | 386 checks | 188,784 comparisons | Done |
+| `txfma_e1` | `txfma_e1` | 4,224 checks | 40,088 comparisons | Done |
+| `txfma_e2` | `txfma_e2` | 16,614 checks | 80,192 comparisons | Done |
+| `txfma_e4` | `txfma_e4` | 8 checks | 2,048 comparisons | Done |
+| `txfma_e5` | `txfma_e5` | 3,157 checks | 15,027 comparisons | Done |
+| `txfma_e6` | `txfma_e6` | 10,382 checks | 50,130 comparisons | Done |
+| `txfma_ediff_opdorder_logic` | `txfma_ediff_opdorder_logic` | 14,534 checks | 70,182 comparisons | Done |
+| `txfma_exp_special_detect` | `txfma_exp_special_detect` | 10,416 checks | 50,160 comparisons | Done |
+| `txfma_f0` | `txfma_f0` | 27 checks | 50,985 comparisons | Done |
+| `txfma_f1` | `txfma_f1` | 13 checks | 25,260 comparisons | Done |
+| `txfma_f2` | `txfma_f2` | 9 checks | 25,053 comparisons | Done |
+| `txfma_f3` | `txfma_f3` | 12 checks | 50,106 comparisons | Done |
+| `txfma_f4` | `txfma_f4` | 10 checks | 25,090 comparisons | Done |
+| `txfma_f5` | `txfma_f5` | 16 checks | 50,310 comparisons | Done |
+| `txfma_f6` | `txfma_f6` | 5 checks | 50,036 comparisons | Done |
+| `txfma_frac_zero_detect` | `txfma_frac_zero_detect` | 4,101 checks | 2,502 comparisons | Done |
+| `txfma_rnd_adder` | `txfma_rnd_adder` | 4,166 checks | 2,502 comparisons | Done |
 | `txfmactl_top` | `txfmactl_top` | 79 checks | 996,194 comparisons | Done |
 | `txfmaexp_top` | `txfmaexp_top` | 31 checks | 508,152 comparisons | Done |
 | `txfmafrac_top` | `txfmafrac_top` | 43 checks | 390,468 comparisons | Done |
@@ -320,10 +368,44 @@ Build order: 12→13→14→15→16→17→18
 | `icache_data_ram_wrap` | `icache_data_ram_wrap` | 26 checks | 85,918 comparisons | Done |
 | `icache_tlb_array` | `icache_tlb_array` | 18 checks | 44,066 comparisons | Done |
 | `icache_top` | `icache_top` | 29 checks | 1,261,827 comparisons | Done |
+| `neigh_shared_icache` | `neigh_shared_icache` | 30 checks | 295,735 comparisons | Done |
 | `ptw_top` | `ptw_top` | 32 checks | 72,288 comparisons | Done |
 | `neigh_shared_ptw` | `neigh_shared_ptw` | 18 checks | 45,090 comparisons | Done |
 | `pseudo_lru` | `pseudo_lru` | 266 checks | 5,000 comparisons | Done |
 | `esr_spio` | `esr_spio` | 13 checks | 29,955 comparisons | Done |
+| `esr_neigh` | `esr_neigh` | 129 checks | 98,096 comparisons | Done |
+| `neigh_hv_logic_apb_req` | `neigh_hv_logic_apb_req` | 57 grouped support-leaf checks | 4,096 comparisons | Done |
+| `neigh_hv_logic_apb_rsp` | `neigh_hv_logic_apb_rsp` | 57 grouped support-leaf checks | 6,144 comparisons | Done |
+| `neigh_hv_logic_bpam` | `neigh_hv_logic_bpam` | 57 grouped support-leaf checks | 4,096 comparisons | Done |
+| `neigh_hv_logic_bpam_rc_tbox_ack` | `neigh_hv_logic_bpam_rc_tbox_ack` | 57 grouped support-leaf checks | 8,192 comparisons | Done |
+| `neigh_hv_logic_clock_feedback` | `neigh_hv_logic_clock_feedback` | 57 grouped support-leaf checks | 4,096 comparisons | Done |
+| `neigh_hv_logic_constants` | `neigh_hv_logic_constants` | 57 grouped support-leaf checks | 2,048 comparisons | Done |
+| `neigh_hv_logic_icache_err` | `neigh_hv_logic_icache_err` | 57 grouped support-leaf checks | 4,096 comparisons | Done |
+| `neigh_hv_logic_ipi` | `neigh_hv_logic_ipi` | 57 grouped support-leaf checks | 2,048 comparisons | Done |
+| `neigh_hv_logic_l2_bank` | `neigh_hv_logic_l2_bank` | 57 grouped support-leaf checks | 155,648 comparisons | Done |
+| `neigh_hv_logic_neigh_sc` | `neigh_hv_logic_neigh_sc` | 57 grouped support-leaf checks | 163,840 comparisons | Done |
+| `neigh_hv_logic_pwr_ctrl_tdr_isolate` | `neigh_hv_logic_pwr_ctrl_tdr_isolate` | 57 grouped support-leaf checks | 2,048 comparisons | Done |
+| `neigh_hv_logic_uc_fcc` | `neigh_hv_logic_uc_fcc` | 57 grouped support-leaf checks | 2,048 comparisons | Done |
+| `neigh_hv_logic_fcc` | `neigh_hv_logic_fcc` | — | — | Excluded — no instantiation in audited `neigh_top`/`neigh_channel` hierarchy; live path uses `neigh_hv_logic_uc_fcc` |
+| `neigh_hi_voltage_cross` | `neigh_hi_voltage_cross` | 41 grouped crossing-wrapper checks | 144,496 comparisons | Done |
+| `neigh_lo_voltage_cross` | `neigh_lo_voltage_cross` | 41 grouped crossing-wrapper checks | 59,744 comparisons | Done |
+| `neigh_fl_barrier` | `neigh_fl_barrier` | 33 grouped channel-routing checks | 12,068 comparisons | Done |
+| `neigh_local_message_network` | `neigh_local_message_network` | 33 grouped channel-routing checks | 385,077 comparisons | Done |
+| `neigh_pmu` | `neigh_pmu` | 33 grouped channel-routing checks | 160,032 comparisons | Done |
+| `neigh_tbox_router` | `neigh_tbox_router` | 33 grouped channel-routing checks | 176,260 comparisons | Done — preserves original stale-route behavior documented in `hw/ip/neigh_channel_routing/BUGS.md` |
+| `dll_dly_est_core` | `dll_dly_est_core` | 26 grouped estimator checks | 13,716 comparisons | Done |
+| `dll_dly_est` | `dll_dly_est` | 26 grouped estimator checks | 6,166 default-width comparisons + 6,166 Width=4 wrapper-parameter comparisons | Done |
+| `bpam2minions` | `bpam2minions` | 189 checks | 9,960 comparisons | Done |
+| `neigh_ch_apb_mux` | `neigh_ch_apb_mux` | 73 checks | 23,759 comparisons | Done |
+| `neigh_ch_dbg` | `neigh_ch_dbg` | 50 checks | 132,288 comparisons | Done — preserves original resume-status indexing behavior documented in `hw/ip/neigh_ch_dbg/BUGS.md` |
+| `neigh_coop_tload_tag_table` | `neigh_coop_tload_tag_table` | 37 grouped cooperative TLoad checks | 12,002 comparisons | Done |
+| `neigh_coop_tload_ports` | `neigh_coop_tload_ports` | 37 grouped cooperative TLoad checks | 32,776 comparisons | Done |
+| `neigh_coop_tload` | `neigh_coop_tload` | 37 grouped cooperative TLoad checks | 220,352 comparisons | Done |
+| `neigh_tensor_store_buffer_block` | `neigh_tensor_store_buffer_block` | 34 grouped tensor-store checks | 260,988 comparisons | Done |
+| `neigh_tensor_store_buffer` | `neigh_tensor_store_buffer` | 34 grouped tensor-store checks | 505,512 comparisons | Done |
+| `neigh_channel` | `neigh_channel` | 21 smoke checks | 2,560,000 comparisons | Done |
+| `neigh_top_pwrstub` | `neigh_top_pwrstub` | 62 checks | 32,768 comparisons | Done |
+| `neigh_top` | `neigh_top` | 31 checks | 524,288 comparisons | Done — non-GFX all-stub full top-shell cosim |
 | `standalone_minion` | `standalone_minion` | 19 checks | 1,765,940 comparisons | Done |
 
 ## RBOX (`hw/ip/rbox/`)
@@ -403,19 +485,39 @@ row below.
 | `tlb_pkg` | TLB-local cache-entry + FSM types from `soc.vh` | — | — | Done |
 | `minion_tlb` | `tlb_top` | 123 checks | 517,146 comparisons | Done |
 
+## Shire Uncached (`hw/ip/shire_uncached/`)
+
+| Module | Original | Test | Cosim | Status |
+|--------|----------|------|-------|--------|
+| `shire_uncached_pkg` | `uc_defines.vh` / `uc_types.vh` | Parsed by `shire_uncached` DV | — | Initial translation |
+| `uncacheable_fcc` | `uncacheable_fcc` | 5 directed checks | 4,096 comparisons | Done |
+| `uncacheable_flb` | `uncacheable_flb` | 6 directed checks | 41,650 comparisons | Done |
+| `noc_etlink_to_axi` | `noc_etlink_to_axi` | 16 directed checks | 233,472 comparisons | Done |
+| `uncacheable_noc_slv_handler` | `uncacheable_noc_slv_handler` | 7 directed checks | 94,208 comparisons | Done |
+| `uncacheable_noc_tol3_handler` | `uncacheable_noc_tol3_handler` | 6 directed checks | 172,032 comparisons | Done |
+| `uncacheable_noc_tosys_handler` | `uncacheable_noc_tosys_handler` | 6 directed checks | 184,320 comparisons | Done |
+| `uncacheable_noc_rsp` | `uncacheable_noc_rsp` | 2 directed checks | 270,369 comparisons | Done |
+| `uncacheable_noc` | `uncacheable_noc` | 8 directed checks | 1,044,565 comparisons | Done |
+| `uncached_arb_lru_grant` | `arb_lru_grant` | 4 directed checks | 8,192 comparisons | Done |
+| `uncached_hi_voltage_cross_lv_logic` | `uncached_hi_voltage_cross_lv_logic` | 6 directed checks | 8,192 comparisons | Done |
+| `uncached_hi_voltage_cross` | `uncached_hi_voltage_cross` | 7 directed checks | 315,777 comparisons | Done |
+| `uncached_lo_voltage_cross_lv_logic` | `uncached_lo_voltage_cross_lv_logic` | 6 directed checks | 4,096 comparisons | Done |
+| `uncached_lo_voltage_cross` | `uncached_lo_voltage_cross` | 6 directed checks | 332,181 comparisons | Done |
+| `uncacheable` | `uncacheable` | 3 directed checks | 264,837 comparisons | Done |
+
 ## Totals
 
 Structural discovery counts were refreshed from tracked Makefiles on
-2026-05-05. Repo-wide check/comparison totals are not carried as exact sums
-until every unit test and cosim is rerun and all legacy approximate rows are
+2026-05-20 during final compute-shire integration. Repo-wide check/comparison
+totals are not carried as exact sums until all legacy approximate rows are
 backfilled.
 
 | Metric | Count |
 |--------|-------|
-| Unit-test Makefiles | 65 |
-| Test suites discovered by `make test` | 187 |
-| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 214 |
+| Unit-test Makefiles | 87 |
+| Test suites discovered by `make test` | 248 |
+| RTL cosim Makefiles discovered by `make -C dv/rtlcosim test` | 311 |
 | Total checks | Not maintained as an exact repo-wide sum in this file |
 | Total comparisons | Not maintained as an exact repo-wide sum in this file |
-| Targeted update runs | 37 unit suites + 39 cosim Makefile runs |
+| Targeted update runs | 245 unit suites + 295 cosim Makefile runs + 1 Width=4 wrapper-parameter cosim run + 14 uncached-path cosims + shire_channel lint/unit/cosim/coverage update + shire_channel input-coverage cosim update + shire_channel retained-status input cosim update + shire_channel_leaves/shire_esr/shire_sbm/shire_uncached tests + shire_channel_wrap lint/unit/cosim/coverage refresh (58 checks, 294,161 comparisons) + shire_top lint/unit/cosim/coverage refresh (46 checks, 566,632 comparisons) + shire_channel_wrap/shire_top NOC reset-domain fix lint/unit/cosim/coverage refresh (66/53 checks, 296,731/578,688 comparisons) + final full lint (87/0), root unit test suite (87/0), full RTL cosim (311/0), cosim coverage refresh, and coverage-report |
 | Targeted update failures | 0 |

@@ -18,6 +18,12 @@
 #     <t>_ARGS  - Runtime arguments
 #     <t>_FLAGS - Extra Verilator flags (e.g. -Wno-UNOPTFLAT)
 #
+#   Runnable targets are generated with a test- prefix. For example:
+#     TESTS := foo bar
+#   creates `test-foo`, `test-bar`, `test-xrand-foo`, and `test-xrand-bar`.
+#   It does not create raw `foo` or `bar` targets unless the including
+#   Makefile defines those aliases separately.
+#
 #   Also set:
 #     LINT_SRCS - RTL files to lint (optional, uses RTL_SRCS if unset)
 #     LINT_FLAGS - Extra lint flags (optional, e.g. -Wno-MULTITOP)

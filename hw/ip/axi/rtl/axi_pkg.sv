@@ -49,6 +49,12 @@ package axi_pkg;
   localparam logic [AxProtSize-1:0]  ScMasterAxProt  = 3'b010;      // data, non-secure, unprivileged
   localparam logic [AxQosSize-1:0]   ScMasterAxQos   = 4'b0000;     // default QOS
 
+  // ── SYS slave AXI parameters ─────────────────────────────
+  // System-fabric ingress keeps the cache slave ID/address shape but carries
+  // 256-bit W/R data, matching the original SYS slave port width.
+  localparam int unsigned SysSlaveDataSize = 256;
+  localparam int unsigned SysSlaveStrbSize = SysSlaveDataSize / 8;  // 32
+
   // ── AXI4 channel structs ────────────────────────────────
 
   // AR / AW channel (address)
@@ -138,6 +144,25 @@ package axi_pkg;
     resp_e                        resp;
   } sc_slave_b_t;
 
+  // SYS slave AR/AW/B use the same ID/address shape as shire-cache slaves.
+  typedef sc_slave_ar_t sys_slave_ar_t;
+  typedef sc_slave_aw_t sys_slave_aw_t;
+  typedef sc_slave_b_t  sys_slave_b_t;
+
+  // SYS slave W/R carry 256-bit data.
+  typedef struct packed {
+    logic [SysSlaveDataSize-1:0] data;
+    logic [SysSlaveStrbSize-1:0] strb;
+    logic                        last;
+  } sys_slave_w_t;
+
+  typedef struct packed {
+    logic [ScSlaveIdSize-1:0]    id;
+    resp_e                       resp;
+    logic                        last;
+    logic [SysSlaveDataSize-1:0] data;
+  } sys_slave_r_t;
+
   // ── Composite port structs ──────────────────────────────
   // All 5 channels + valid/ready in one struct (for concise port lists).
 
@@ -176,5 +201,23 @@ package axi_pkg;
     logic            b_valid;
     sc_slave_b_t     b;
   } sc_slave_port_t;
+
+  typedef struct packed {
+    logic            ar_ready;
+    logic            ar_valid;
+    sys_slave_ar_t   ar;
+    logic            aw_ready;
+    logic            aw_valid;
+    sys_slave_aw_t   aw;
+    logic            w_ready;
+    logic            w_valid;
+    sys_slave_w_t    w;
+    logic            r_ready;
+    logic            r_valid;
+    sys_slave_r_t    r;
+    logic            b_ready;
+    logic            b_valid;
+    sys_slave_b_t    b;
+  } sys_slave_port_t;
 
 endpackage

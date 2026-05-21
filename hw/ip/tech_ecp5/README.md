@@ -52,6 +52,8 @@ The mapping choices follow Lattice's own guidance:
 | `prim_rst_sync` | Reset synchronizer | Same functional behavior, explicit ECP5 implementation |
 | `prim_fifo_async_hiv` | Async CDC FIFO (HV->LV) | Same functional behavior, explicit ECP5 implementation |
 | `prim_fifo_async_lov` | Async CDC FIFO (LV->HV) | Same functional behavior, explicit ECP5 implementation |
+| `prim_fifo_semisync_hiv` | Semi-synchronous FIFO (HV->LV) for 1:1 phase-controlled clocks | Same functional behavior, explicit ECP5 implementation |
+| `prim_fifo_semisync_lov` | Semi-synchronous FIFO (LV->HV) for 1:1 phase-controlled clocks | Same functional behavior, explicit ECP5 implementation |
 
 ## ECP5 Bring-Up Notes
 
