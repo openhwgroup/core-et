@@ -137,6 +137,7 @@ jobs:
       contents: read
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix: ${{ fromJson(needs.discover_unit_tests.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
@@ -178,15 +179,7 @@ jobs:
       - name: Run unit test — ${{ matrix.dv_dir }}
         env:
           DV_DIR: ${{ matrix.dv_dir }}
-        run: |
-          case "$DV_DIR" in
-            hw/ip/shire_channel/dv|hw/ip/shire_channel_wrap/dv|hw/ip/shire_top/dv|hw/ip/shirecache/dv)
-              make -C "$DV_DIR" VERILATOR_JOBS=1 test
-              ;;
-            *)
-              make -C "$DV_DIR" test
-              ;;
-          esac
+        run: make -C "$DV_DIR" VERILATOR_JOBS=1 test
 
       - name: Archive unit coverage — ${{ matrix.dv_dir }}
         if: always()
