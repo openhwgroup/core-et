@@ -11,6 +11,9 @@ PRIMS := $(PRIM_CLK_GATE) \
          $(PRIM_RF_3R2W_PREVIEW)
 
 TXFMA_REAL_RTL := $(MINION_VPU_TXFMA_REAL_RTL)
+TXFMA_C_STAGE_COMMON_RTL := $(COMMON_RTL) \
+                            $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_pkg.sv \
+                            $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_defs_pkg.sv
 
 TESTS := bypass \
          mask \
@@ -23,6 +26,13 @@ TESTS := bypass \
          txfma_lxd \
          txfma_trz \
          txfma_trz2 \
+         txfma_e1 \
+         txfma_e2 \
+         txfma_e4 \
+         txfma_e5 \
+         txfma_e6 \
+         txfma_ediff_opdorder_logic \
+         txfma_exp_special_detect \
          txfma_adder \
          txfma_align_shf \
          txfma_norm_shf \
@@ -34,6 +44,22 @@ TESTS := bypass \
          txfma_booth_ppg_32r4 \
          txfma_wallace1 \
          txfma_wallace2 \
+         txfma_c0 \
+         txfma_c1 \
+         txfma_c2 \
+         txfma_c3 \
+         txfma_c4 \
+         txfma_c5 \
+         txfma_c6 \
+         txfma_f0 \
+         txfma_f1 \
+         txfma_f2 \
+         txfma_f3 \
+         txfma_f4 \
+         txfma_f5 \
+         txfma_f6 \
+         txfma_frac_zero_detect \
+         txfma_rnd_adder \
          txfmactl_top \
          txfmafrac_top \
          txfmaexp_top \
@@ -128,6 +154,60 @@ txfma_trz2_SRCS := $(COMMON_RTL) \
                    $(CURDIR)/txfma_trz2_tb.sv \
                    $(CURDIR)/txfma_trz2_test.cc
 
+TXFMA_E_STAGE_COMMON_RTL := $(COMMON_RTL) \
+                            $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_pkg.sv \
+                            $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_defs_pkg.sv
+
+TXFMA_E_STAGE_MATH_RTL := $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_csa.sv \
+                          $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_adder.sv
+
+txfma_e1_TOP := txfma_e1_tb
+txfma_e1_SRCS := $(TXFMA_E_STAGE_COMMON_RTL) \
+                 $(TXFMA_E_STAGE_MATH_RTL) \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_e1.sv \
+                 $(CURDIR)/txfma_e1_tb.sv \
+                 $(CURDIR)/txfma_e1_test.cc
+
+txfma_e2_TOP := txfma_e2_tb
+txfma_e2_SRCS := $(TXFMA_E_STAGE_COMMON_RTL) \
+                 $(TXFMA_E_STAGE_MATH_RTL) \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_ediff_opdorder_logic.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_e2.sv \
+                 $(CURDIR)/txfma_e2_tb.sv \
+                 $(CURDIR)/txfma_e2_test.cc
+
+txfma_e4_TOP := txfma_e4_tb
+txfma_e4_SRCS := $(TXFMA_E_STAGE_COMMON_RTL) \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_e4.sv \
+                 $(CURDIR)/txfma_e4_tb.sv \
+                 $(CURDIR)/txfma_e4_test.cc
+
+txfma_e5_TOP := txfma_e5_tb
+txfma_e5_SRCS := $(TXFMA_E_STAGE_COMMON_RTL) \
+                 $(TXFMA_E_STAGE_MATH_RTL) \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_e5.sv \
+                 $(CURDIR)/txfma_e5_tb.sv \
+                 $(CURDIR)/txfma_e5_test.cc
+
+txfma_e6_TOP := txfma_e6_tb
+txfma_e6_SRCS := $(TXFMA_E_STAGE_COMMON_RTL) \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_adder.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_e6.sv \
+                 $(CURDIR)/txfma_e6_tb.sv \
+                 $(CURDIR)/txfma_e6_test.cc
+
+txfma_ediff_opdorder_logic_TOP := txfma_ediff_opdorder_logic_tb
+txfma_ediff_opdorder_logic_SRCS := $(TXFMA_E_STAGE_COMMON_RTL) \
+                                   $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_ediff_opdorder_logic.sv \
+                                   $(CURDIR)/txfma_ediff_opdorder_logic_tb.sv \
+                                   $(CURDIR)/txfma_ediff_opdorder_logic_test.cc
+
+txfma_exp_special_detect_TOP := txfma_exp_special_detect_tb
+txfma_exp_special_detect_SRCS := $(TXFMA_E_STAGE_COMMON_RTL) \
+                                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_exp_special_detect.sv \
+                                 $(CURDIR)/txfma_exp_special_detect_tb.sv \
+                                 $(CURDIR)/txfma_exp_special_detect_test.cc
+
 txfma_adder_TOP := txfma_adder_tb
 txfma_adder_SRCS := $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_adder.sv \
                     $(CURDIR)/txfma_adder_tb.sv \
@@ -200,6 +280,129 @@ txfma_wallace2_SRCS := $(COMMON_RTL) \
                        $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_wallace2.sv \
                        $(CURDIR)/txfma_wallace2_tb.sv \
                        $(CURDIR)/txfma_wallace2_test.cc
+
+txfma_c0_TOP := txfma_c0_tb
+txfma_c0_SRCS := $(TXFMA_C_STAGE_COMMON_RTL) \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_c0.sv \
+                 $(CURDIR)/txfma_c0_tb.sv \
+                 $(CURDIR)/txfma_c0_test.cc
+
+txfma_c1_TOP := txfma_c1_tb
+txfma_c1_SRCS := $(TXFMA_C_STAGE_COMMON_RTL) \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_c1.sv \
+                 $(CURDIR)/txfma_c1_tb.sv \
+                 $(CURDIR)/txfma_c1_test.cc
+
+txfma_c2_TOP := txfma_c2_tb
+txfma_c2_SRCS := $(TXFMA_C_STAGE_COMMON_RTL) \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_c2.sv \
+                 $(CURDIR)/txfma_c2_tb.sv \
+                 $(CURDIR)/txfma_c2_test.cc
+
+txfma_c3_TOP := txfma_c3_tb
+txfma_c3_SRCS := $(TXFMA_C_STAGE_COMMON_RTL) \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_c3.sv \
+                 $(CURDIR)/txfma_c3_tb.sv \
+                 $(CURDIR)/txfma_c3_test.cc
+
+txfma_c4_TOP := txfma_c4_tb
+txfma_c4_SRCS := $(TXFMA_C_STAGE_COMMON_RTL) \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_c4.sv \
+                 $(CURDIR)/txfma_c4_tb.sv \
+                 $(CURDIR)/txfma_c4_test.cc
+
+txfma_c5_TOP := txfma_c5_tb
+txfma_c5_SRCS := $(TXFMA_C_STAGE_COMMON_RTL) \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_c5.sv \
+                 $(CURDIR)/txfma_c5_tb.sv \
+                 $(CURDIR)/txfma_c5_test.cc
+
+txfma_c6_TOP := txfma_c6_tb
+txfma_c6_SRCS := $(TXFMA_C_STAGE_COMMON_RTL) \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_c6.sv \
+                 $(CURDIR)/txfma_c6_tb.sv \
+                 $(CURDIR)/txfma_c6_test.cc
+
+TXFMA_STAGE_COMMON_RTL := $(COMMON_RTL) \
+                          $(REPO_ROOT)/hw/ip/minion/dcache/rtl/minion_dcache_pkg.sv \
+                          $(REPO_ROOT)/hw/ip/minion/vpu/rtl/vpu_defs_pkg.sv
+
+txfma_f0_TOP := txfma_f0_tb
+txfma_f0_SRCS := $(TXFMA_STAGE_COMMON_RTL) \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_f0.sv \
+                 $(CURDIR)/txfma_f0_tb.sv \
+                 $(CURDIR)/txfma_f0_test.cc
+
+txfma_f1_TOP := txfma_f1_tb
+txfma_f1_SRCS := $(TXFMA_STAGE_COMMON_RTL) \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_csa.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_4_2_compressor.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_4_2_compressor_array.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_booth_ppg_32r4_norm.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_booth_ppg_32r4_msb.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_booth_ppg_32r4.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_wallace1.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_trz.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_f1.sv \
+                 $(CURDIR)/txfma_f1_tb.sv \
+                 $(CURDIR)/txfma_f1_test.cc
+
+txfma_f2_TOP := txfma_f2_tb
+txfma_f2_SRCS := $(TXFMA_STAGE_COMMON_RTL) \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_csa.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_4_2_compressor.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_4_2_compressor_array.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_wallace2.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_adder.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_f2.sv \
+                 $(CURDIR)/txfma_f2_tb.sv \
+                 $(CURDIR)/txfma_f2_test.cc
+
+txfma_f3_TOP := txfma_f3_tb
+txfma_f3_SRCS := $(TXFMA_STAGE_COMMON_RTL) \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_align_shf.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_csa.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_f3.sv \
+                 $(CURDIR)/txfma_f3_tb.sv \
+                 $(CURDIR)/txfma_f3_test.cc
+
+txfma_f4_TOP := txfma_f4_tb
+txfma_f4_SRCS := $(TXFMA_STAGE_COMMON_RTL) \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_adder.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_lxd.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_trz2.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_f4.sv \
+                 $(CURDIR)/txfma_f4_tb.sv \
+                 $(CURDIR)/txfma_f4_test.cc
+
+txfma_f5_TOP := txfma_f5_tb
+txfma_f5_SRCS := $(TXFMA_STAGE_COMMON_RTL) \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_norm_shf.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_frac_zero_detect.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_f5.sv \
+                 $(CURDIR)/txfma_f5_tb.sv \
+                 $(CURDIR)/txfma_f5_test.cc
+
+txfma_f6_TOP := txfma_f6_tb
+txfma_f6_SRCS := $(TXFMA_STAGE_COMMON_RTL) \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_adder.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_rnd_adder.sv \
+                 $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_f6.sv \
+                 $(CURDIR)/txfma_f6_tb.sv \
+                 $(CURDIR)/txfma_f6_test.cc
+
+txfma_frac_zero_detect_TOP := txfma_frac_zero_detect_tb
+txfma_frac_zero_detect_SRCS := $(TXFMA_STAGE_COMMON_RTL) \
+                               $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_frac_zero_detect.sv \
+                               $(CURDIR)/txfma_frac_zero_detect_tb.sv \
+                               $(CURDIR)/txfma_frac_zero_detect_test.cc
+
+txfma_rnd_adder_TOP := txfma_rnd_adder_tb
+txfma_rnd_adder_SRCS := $(TXFMA_STAGE_COMMON_RTL) \
+                         $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_adder.sv \
+                         $(REPO_ROOT)/hw/ip/minion/vpu/rtl/txfma_rnd_adder.sv \
+                         $(CURDIR)/txfma_rnd_adder_tb.sv \
+                         $(CURDIR)/txfma_rnd_adder_test.cc
 
 txfmactl_top_TOP := txfmactl_top_tb
 txfmactl_top_SRCS := $(COMMON_RTL) \

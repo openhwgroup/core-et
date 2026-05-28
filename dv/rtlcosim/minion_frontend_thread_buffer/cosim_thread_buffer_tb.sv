@@ -20,6 +20,7 @@ module cosim_thread_buffer_tb (
   input  logic                  f0_disable_thread_i,
   input  logic                  f0_enable_thread_i,
   input  logic                  in_debug_mode_i,
+  input  logic                  reset_debug_i,
 
   input  logic [7:0]            vm_status_i,       // packed minion_vm_status
 
@@ -107,7 +108,11 @@ module cosim_thread_buffer_tb (
   output logic                  new_dbg_clear_f7_o,
   output logic                  orig_dbg_clear_f7_o,
   output logic                  new_ffb_update_read_pointer_o,
-  output logic                  orig_ffb_update_read_pointer_o
+  output logic                  orig_ffb_update_read_pointer_o,
+  output logic [3:0]            new_debug_ffb_en_2_o,
+  output logic [3:0]            orig_debug_ffb_en_2_o,
+  output logic                  new_debug_ffb_exec_2_o,
+  output logic                  orig_debug_ffb_exec_2_o
 );
 
   // Reset inversion: original uses active-high synchronous.
@@ -137,7 +142,7 @@ module cosim_thread_buffer_tb (
   minion_frontend_thread_buffer #(.ThreadId(0)) u_new (
     .clk_i               (clk_i),
     .rst_ni              (rst_ni),
-    .reset_debug_i       (1'b0),
+    .reset_debug_i       (reset_debug_i),
     .chicken_bit_i       (1'b0),
     .dft_i               ('0),
     .f0_thread_enabled_i (f0_thread_enabled_i),
@@ -178,7 +183,7 @@ module cosim_thread_buffer_tb (
   frontend_thread_buffer #(.THREAD_ID(0)) u_orig (
     .clock_aon           (clk_i),
     .reset               (reset_orig),
-    .reset_debug         (1'b0),
+    .reset_debug         (reset_debug_i),
     .chicken_bit         (1'b0),
     .f0_thread_enabled   (f0_thread_enabled_i),
     .f0_reset_vector     (f0_reset_vector_i),
@@ -263,5 +268,9 @@ module cosim_thread_buffer_tb (
   assign orig_dbg_clear_f7_o = u_orig.dbg_clear_f7;
   assign new_ffb_update_read_pointer_o = u_new.ffb_update_read_pointer;
   assign orig_ffb_update_read_pointer_o = u_orig.ffb_update_read_pointer;
+  assign new_debug_ffb_en_2_o = u_new.debug_ffb_en_2;
+  assign orig_debug_ffb_en_2_o = u_orig.debug_ffb_en_2;
+  assign new_debug_ffb_exec_2_o = u_new.debug_ffb_exec_2;
+  assign orig_debug_ffb_exec_2_o = u_orig.debug_ffb_exec_2;
 
 endmodule

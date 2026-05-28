@@ -25,6 +25,7 @@ Import with `import etlink_pkg::*;` or use qualified names like `etlink_pkg::req
 |------|--------|
 | `req_opcode_e` | `ReqRead`, `ReqWrite`, `ReqMsgSendData`, `ReqFlush`, etc. (17 opcodes) |
 | `rsp_opcode_e` | `RspAck`, `RspAckData`, `RspMsgRcvData`, `RspErr` |
+| `write_around_subopcode_e` | `SubWriteAround`, `SubWriteAround2Way`, `SubWriteAround4Way` |
 | `size_e` | `SizeByte` through `SizeLine` (8b to 512b) |
 | `neigh_source_e` | `SrcMinion0`..`SrcMinion7`, `SrcIcache`, `SrcPtw0`/`1`, `SrcTbox`, `SrcCoop` |
 

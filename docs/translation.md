@@ -52,15 +52,54 @@ must remain separate reset domains in the translation.
 
 ## Macro Translation
 
-| Original | ETASP form |
-|----------|--------------|
-| `` `RST_FF `` | `always_ff @(posedge clk_i or negedge rst_ni)` |
-| `` `EN_FF `` | `always_ff @(posedge clk_i)` with explicit enable |
-| `` `RST_EN_FF `` | explicit `always_ff` with async-low reset and enable |
-| `` `ZX(W, sig) `` | explicit sizing/slicing/zero-padding, not parameterized cast |
-| `` `SX(W, sig) `` | explicit sign extension or safe signed expression |
-| `CSR_WRITE_LATCH_*` macro family | `prim_write_commit_en` / `prim_write_commit_rst_en` when the site has been narrowed to a write-pipeline seam |
-| `` `include "soc.vh" `` | package imports |
+The original CORE-ET flip-flop macros in `rtl/inc/macros.vh` have two
+separate reset families:
+
+- `` `RST_FF `` and `` `RST_EN_FF `` use `always @(posedge CLK)` only. Their
+  `RST` argument is a synchronous active-high branch in the clocked body.
+- `` `RST_FF_RASL `` and `` `RST_EN_FF_RASL `` are the explicit asynchronous
+  active-low reset variants (`always @(posedge CLK or negedge RSTN)`).
+
+Therefore, do not translate every `` `RST_FF `` or `` `RST_EN_FF `` instance
+mechanically into an async-low reset flop. First classify the macro reset
+argument.
+
+| Original | Original semantics | ETASP form |
+|----------|--------------------|--------------|
+| `` `RST_FF(CLK, RST, Q, D, DEF) `` | synchronous active-high `RST` branch on `posedge CLK` | If `RST` is a true original reset domain, preserve that domain using the project active-low async reset style (`rst_*_ni`). If `RST` is a local clear, keep it as a synchronous `if (clear)` branch inside `always_ff @(posedge clk_i)`. |
+| `` `RST_EN_FF(CLK, RST, EN, Q, D, DEF) `` | synchronous active-high `RST` branch before `EN` on `posedge CLK` | Same classification as `` `RST_FF ``. Preserve reset/clear-before-enable ordering: reset or clear assigns `DEF`; only the `else if (EN)` branch updates `Q` with `D`. |
+| `` `RST_FF_RASL(CLK, RSTN, Q, D, DEF) `` | asynchronous active-low reset | `always_ff @(posedge clk_i or negedge rst_*_ni)` with `if (!rst_*_ni) Q <= DEF; else Q <= D;`. |
+| `` `RST_EN_FF_RASL(CLK, RSTN, EN, Q, D, DEF) `` | asynchronous active-low reset before enable | `always_ff @(posedge clk_i or negedge rst_*_ni)` with reset first, then `else if (en)`. |
+| `` `EN_FF(CLK, EN, Q, D) `` | enabled flop with no reset branch | `always_ff @(posedge clk_i)` with only `if (en) Q <= D;`. Do not add a reset assignment unless the original state is separately reset elsewhere. |
+| `` `ZX(W, sig) `` | zero extension | explicit sizing/slicing/zero-padding, not parameterized cast |
+| `` `SX(W, sig) `` | sign extension | explicit sign extension or safe signed expression |
+| `CSR_WRITE_LATCH_*` macro family | generated CSR write latch path | `prim_write_commit_en` / `prim_write_commit_rst_en` when the site has been narrowed to a write-pipeline seam |
+| `` `include "soc.vh" `` | textual include | package imports |
+
+Decision process for `` `RST_FF `` / `` `RST_EN_FF `` sites:
+
+1. Identify the macro reset argument's source, not just its name. A signal
+   named `reset_*` can still be a local synchronous clear.
+2. If the argument is a true module reset domain (for example original
+   `reset`, `reset_c`, `reset_w`, or `reset_d`), preserve that domain and map
+   it to the project active-low async reset convention (`rst_ni`, `rst_c_ni`,
+   `rst_w_ni`, `rst_d_ni`, and so on). Keep separate original domains
+   separate.
+3. If the argument is local control logic used to clear a particular register
+   or pipeline stage, keep it inside the clocked body as a synchronous branch.
+   Do not promote it to the module reset sensitivity list or merge it into a
+   true reset domain.
+4. For `` `RST_EN_FF ``, preserve the original ordering: reset/clear wins over
+   enable, and the enabled update happens only in the `else if (en)` branch.
+5. For `` `EN_FF ``, preserve the no-reset behavior. Adding a reset can create
+   cycle-by-cycle mismatches and can hide intentionally retained state.
+
+Minion audit examples:
+
+- `minion_frontend_thread_buffer` uses original `reset_debug` as a synchronous
+  local clear for selected debug state, not as a separate async reset domain.
+- `minion_debug_apb_slv` uses original `` `EN_FF `` for `s1_rdata`; the
+  translated `s1_rdata_q` register must therefore keep no reset branch.
 
 Do not mechanically use parameterized casts like `W'(expr)` in translated RTL.
 The repo synthesis flow is Yosys with the slang frontend, and those casts are
@@ -76,7 +115,12 @@ These are the standard CORE-ET-to-ETASP primitive mappings.
 | `gen_mem2p` | `prim_ram_2p` | same policy as above |
 | `rbox_fifo` | `prim_fifo_sram` | preserve original handshake/latency |
 | `gen_fifo_reg` | `prim_fifo_reg` | register FIFO |
+| `vcfifo_wr_hiv_gcd` | `prim_fifo_async_hiv` | GCD-style arbitrary asynchronous HV-write/LV-read CDC FIFO |
+| `vcfifo_wr_lov_gcd` | `prim_fifo_async_lov` | GCD-style arbitrary asynchronous LV-write/HV-read CDC FIFO |
+| `vcfifo_wr_hiv_ss` | `prim_fifo_semisync_hiv` | Semi-synchronous HV-write/LV-read FIFO for 1:1 phase-controlled clocks |
+| `vcfifo_wr_lov_ss` | `prim_fifo_semisync_lov` | Semi-synchronous LV-write/HV-read FIFO for 1:1 phase-controlled clocks |
 | `rst_repeat` | `prim_rst_sync` | DFT-aware reset seam |
+| `arb_lru_grant` | matched grant-visible-on-stall arbiter seam/helper | Original keeps `grant` visible while `stall` is asserted and stalls only priority updates; `prim_arb_lru` gates `grant_o` with `~stall_i`, so it is not equivalent when a translated site observes grants under stall. |
 | `et_clk_gate` | `prim_clk_gate` | real local clock gate |
 | `et_clk_gate_n` | `prim_clk_gate_n` | negative-phase helper gate |
 | `et_clk_mux2` | `prim_clk_mux` | DFT SRAM clock select seam |
@@ -88,6 +132,12 @@ These are the standard CORE-ET-to-ETASP primitive mappings.
 | `rf_latch_2r_1w` | `prim_rf_2r1w` | 2R1W RF |
 | `r32cmp` | `prim_cmp_32` | compressor primitive |
 | `r42cmp` | `prim_cmp_42` | compressor primitive |
+
+For original `arb_lru_grant` users, first determine whether the downstream
+logic depends on grant-visible-on-stall behavior. If it does, do not silently
+substitute `prim_arb_lru`; use or add a precisely matched project primitive or
+named local helper and provide the normal RTL, README, unit-test, standalone
+cosim, `STATUS.md`, and cosim-coverage deliverables for that seam.
 
 DFT translation preserves existing original DFT surfaces; it does not create
 new module-level DFT behavior at unrelated sites. If the original module has

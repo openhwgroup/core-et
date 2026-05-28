@@ -141,7 +141,7 @@ make -C fpga/fifo_example/verilator test
 | `fpga/<project>/` | FPGA-oriented projects with backend heads for synthesis and simulation. |
 | `dv/common/` | Shared C++ DV utilities, including `sim_ctrl.h`. |
 | `dv/rtlcosim/` | RTL co-simulation tests comparing translated modules against original source RTL. |
-| `dv/rtlcosim/coverage/` | Checked-in co-simulation LCOV `.info` files used by CI. |
+| `dv/rtlcosim/coverage/` | Checked-in compressed co-simulation LCOV `.info.gz` snapshots used by CI. |
 | `dv/coverview/` | Coverage dashboard frontend and embedding scripts. |
 | `mk/` | Shared Make infrastructure for Verilator, co-simulation, primitive selection, and Yosys synthesis. |
 | `syn/` | Synthesis scripts and shared synthesis collateral. |

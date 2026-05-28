@@ -4,7 +4,8 @@
 // Tag state RAM wrapper (LRU + flags).
 //
 // Supports single-port and dual-port modes via DualPort parameter.
-// SRAM clock kept active for ram_delay cycles.
+// Dual-port mode preserves the original sram_clock_pre pulse generator;
+// ram_delay_i is assertion/control-plane state, not a clock extender.
 
 /* verilator lint_off UNUSEDSIGNAL */  // dft_t/ram_cfg_t passed whole; wrapper only uses a subset of fields
 /* verilator lint_off VARHIDDEN */  // local parameters intentionally shadow shirecache_pkg constants
@@ -39,45 +40,54 @@ module shirecache_pipe_tag_state_ram_wrap
   input  dft_t                    dft_i
 );
 
-  // ── Clock enable pipeline ─────────────────────────────
-
-  localparam int unsigned MaxDelay = 4;
-  logic [MaxDelay-1:0] clock_en_pipe_q;
-
-  always_ff @(posedge clk_i or negedge rst_ni) begin
-    if (!rst_ni) clock_en_pipe_q <= '0;
-    else         clock_en_pipe_q <= {clock_en_pipe_q[MaxDelay-2:0], clock_en_i};
-  end
-
-  logic sram_clock_en;
-  always_comb begin
-    unique case (ram_delay_i)
-      RamDelaySize'(2): sram_clock_en = clock_en_i | clock_en_pipe_q[0];
-      RamDelaySize'(3): sram_clock_en = clock_en_i | |clock_en_pipe_q[1:0];
-      RamDelaySize'(4): sram_clock_en = clock_en_i | |clock_en_pipe_q[2:0];
-      default:          sram_clock_en = clock_en_i | clock_en_pipe_q[0];
-    endcase
-  end
-
   // ── Clock generation ──────────────────────────────────
-
-  logic func_clk_gated;
-
-  prim_clk_gate u_clk_gate (
-    .clk_i  (clk_i),
-    .en_i   (sram_clock_en),
-    .dft_i  (dft_i),
-    .clk_o  (func_clk_gated)
-  );
 
   logic sram_clk;
 
-  prim_clk_mux u_clk_mux (
-    .clk0_i (func_clk_gated),
-    .clk1_i (dft_sram_clk_i),
-    .sel_i  (dft_i.sram_clk_override),
-    .clk_o  (sram_clk)
-  );
+  generate
+    if (DualPort) begin : gen_dp_clk
+      // Faithful translation of the original dual-port configuration:
+      // sram_clock_pre produces one SRAM clock pulse for each accepted
+      // clock_en_i request; ram_delay_i is assertion/control-plane state only.
+      logic sram_clock_pre;
+      logic sram_clock_en;
+
+      assign sram_clock_en = sram_clock_pre | clock_en_i;
+
+      always_ff @(posedge clk_i or negedge rst_ni) begin
+        if (!rst_ni)
+          sram_clock_pre <= 1'b0;
+        else if (sram_clock_en)
+          sram_clock_pre <= clock_en_i;
+      end
+
+      prim_clk_mux u_clk_mux (
+        .clk0_i (sram_clock_pre),
+        .clk1_i (dft_sram_clk_i),
+        .sel_i  (dft_i.sram_clk_override),
+        .clk_o  (sram_clk)
+      );
+    end else begin : gen_sp_clk
+      // Original single-port configuration used et_clk_gate(clock_en_i).
+      // Keep the same enable contract while retaining the translated DFT
+      // clock-mux hook at this wrapper boundary.
+      logic func_clk_gated;
+
+      prim_clk_gate u_clk_gate (
+        .clk_i  (clk_i),
+        .en_i   (clock_en_i),
+        .dft_i  (dft_i),
+        .clk_o  (func_clk_gated)
+      );
+
+      prim_clk_mux u_clk_mux (
+        .clk0_i (func_clk_gated),
+        .clk1_i (dft_sram_clk_i),
+        .sel_i  (dft_i.sram_clk_override),
+        .clk_o  (sram_clk)
+      );
+    end
+  endgenerate
 
   // ── RAM instance ──────────────────────────────────────
 

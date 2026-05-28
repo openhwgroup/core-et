@@ -50,6 +50,12 @@ RTL and its testbench live together under each IP block. Do not create separate 
 4. Create `hw/ip/<name>/dv/<name>_test.cc` using `sim_ctrl.h` from `dv/common/`
 5. The top-level `make test` auto-discovers all IP blocks with a `dv/Makefile`
 
+Unit-test CI uses the same top-level discovery through `make ci-unit-test-dirs`
+and `make ci-unit-test-matrix`. New unit-test frameworks must live under
+`hw/ip/*/dv/Makefile` or `hw/ip/*/*/dv/Makefile` so they run as independent CI
+matrix entries. If a test must use a different layout, update the top-level
+Makefile discovery and CI helper in the same change.
+
 Every IP block **must** have a `README.md` at its root (`hw/ip/<name>/README.md`) that describes:
 - What the module does
 - Parameters and their meaning
@@ -353,27 +359,40 @@ Coverage is always collected for both unit tests and cosim. View coverage:
 Coverage file policy:
 - `build/coverage/*.info` and `build/coverview/index.html` are generated outputs. Do not commit anything under `build/`.
 - Unit-test coverage is consumed locally or in CI from generated `build/coverage/*.info`. Do not check in unit-test coverage snapshots.
-- Cosim coverage snapshots are checked in at `dv/rtlcosim/coverage/*.info`. These are the only committed coverage data files.
+- Cosim coverage snapshots are checked in at `dv/rtlcosim/coverage/*.info.gz` using deterministic `gzip -9n`. These compressed snapshots are the only committed coverage data files.
+- Raw cosim `.info` files are generated artifacts under `build/coverage/` or `dv/rtlcosim/build/coverage/`; do not commit them.
 - `dv/coverview/index.html` is the checked-in Coverview frontend/template asset, not a run-specific generated report. Keep it tracked.
 
 ### Cosim coverage in CI
 
-CI does not run cosim tests (they require a local original CORE-ET RTL checkout). Instead, cosim LCOV `.info` files are checked in at `dv/rtlcosim/coverage/` and used by CI to build the combined coverage dashboard.
+CI does not run cosim tests (they require a local original CORE-ET RTL checkout). Instead, compressed cosim LCOV snapshots (`*.info.gz`) are checked in at `dv/rtlcosim/coverage/` and decompressed by the Makefile to build the combined coverage dashboard.
 CI generates the final dashboard artifact from:
 - current unit-test coverage in `build/coverage/*.info`
-- checked-in cosim coverage in `dv/rtlcosim/coverage/*.info`
+- checked-in compressed cosim coverage in `dv/rtlcosim/coverage/*.info.gz`
 - the checked-in Coverview assets in `dv/coverview/`
 
 The CI-uploaded dashboard is `build/coverview/index.html`. That generated file must not be committed.
 
-When cosim tests change (new modules, updated tests), regenerate and commit the checked-in `.info` files:
+When cosim tests change (new modules, updated tests), regenerate and commit the checked-in `.info.gz` files:
 
 ```bash
 make -C dv/rtlcosim test                  # run all cosims
-make update-cosim-coverage                # regenerate dv/rtlcosim/coverage/*.info
+make update-cosim-coverage                # regenerate dv/rtlcosim/coverage/*.info.gz with gzip -9n
 git add dv/rtlcosim/coverage/
 git commit -m "Update cosim coverage data"
 ```
+
+For scoped jobs that intentionally run only new or changed cosims, do **not**
+commit direct `make update-cosim-coverage` output after a clean plus targeted
+run if it replaces the global checked-in snapshots with targeted-only records.
+Instead, preserve the checked-in `dv/rtlcosim/coverage/*.info.gz` baseline, save the
+targeted `dv/rtlcosim/build/coverage/coverage_*_cosim.info` output, then merge or
+append only the targeted module records into decompressed working copies and
+recompress the final snapshots with `gzip -9n`. Before review, verify the
+raw decompressed diff is scoped to the targeted cosims (insertion-only for newly
+added cosims); the checked-in `*.info.gz` files themselves are binary. If a safe
+targeted merge cannot be produced and audited, run the full flow above.
+Generated `build/` outputs remain untracked and must not be committed.
 
 ### Writing a new cosim test
 
@@ -454,15 +473,37 @@ make test
 # 3. Run all cosim tests
 make -C dv/rtlcosim test
 
-# 4. Update the checked-in cosim coverage data
+# 4. Update the checked-in compressed cosim coverage data
 make update-cosim-coverage
 
-# 5. Commit everything together (including dv/rtlcosim/coverage/, but not build/)
+# 5. Commit everything together (including dv/rtlcosim/coverage/*.info.gz, but not build/)
 git add -A
 git commit
 ```
 
-Do not commit or close out work with failing lint or tests. Do not commit without updating the cosim coverage `.info` files when cosim behavior changes — CI uses these for the coverage dashboard. Do not commit generated `build/coverage/*` or `build/coverview/index.html`.
+Plain `git diff --check` only checks tracked changes; it does **not** inspect
+untracked new files. Before review, and again before integration, jobs that add
+new source, DV, cosim, documentation, or coverage files must make those paths
+visible to a whitespace check. Use one of these safe workflows:
+
+```bash
+# Option A: keep files unstaged but mark new approved paths as intent-to-add.
+git add -N <new-approved-paths>
+git diff --check -- <new-approved-paths>
+
+# Option B: stage only the approved paths for a commit-style check, then unstage
+# if the job should leave the worktree unstaged for review.
+git add <approved-paths>
+git diff --cached --check
+git reset -- <approved-paths>
+```
+
+Do not stage generated `build/` outputs, unit-test coverage, or unrelated local
+changes just to make a whitespace check see new files. If generated or unrelated
+paths are present, scope the `git add -N`, `git add`, and diff-check commands to
+the approved artifact paths only.
+
+Do not commit or close out work with failing lint or tests. Do not commit without updating the cosim coverage `.info.gz` files when cosim behavior changes — CI uses these for the coverage dashboard. Do not commit raw generated `build/coverage/*`, `dv/rtlcosim/build/coverage/*`, or `build/coverview/index.html`.
 
 ## STATUS.md
 
@@ -477,12 +518,12 @@ Follow the existing table format. Keep the same section grouping (Packages, Prim
 
 ## Build system
 
-- `mk/verilator.mk` — shared Verilator build rules with coverage, included by each IP's `dv/Makefile`. Supports single-test and multi-test modes. Multi-test per-test variables: `<t>_TOP`, `<t>_SRCS`, `<t>_ARGS`, `<t>_FLAGS`.
+- `mk/verilator.mk` — shared Verilator build rules with coverage, included by each IP's `dv/Makefile`. Supports single-test and multi-test modes. Multi-test per-test variables: `<t>_TOP`, `<t>_SRCS`, `<t>_ARGS`, `<t>_FLAGS`. With `TESTS := foo bar`, the runnable per-test targets are `test-foo`, `test-bar`, `test-xrand-foo`, and `test-xrand-bar`; raw `foo`/`bar` targets do not exist unless a local Makefile defines them separately.
 - `mk/rtlcosim.mk` — shared RTL co-simulation build rules, included by each cosim `dv/rtlcosim/<module>/Makefile`. Handles `ORIG_ROOT`, coverage, module renaming, and per-file coverage reporting.
 - `mk/yosys.mk` — shared Yosys FPGA synthesis rules using the slang SystemVerilog frontend, included by project synthesis heads
 - `mk/prim.mk` — technology-specific primitive selection. Set `TECH` (generic, ice40, xilinx) before including; provides `PRIM_*` variables pointing to the correct source files
 - Per-IP Makefiles set: `TB_TOP`, `RTL_SRCS`, `CC_SRCS`, optionally `INCDIRS` and `SIM_ARGS`
-- Top-level `Makefile` auto-discovers all `hw/ip/*/dv/Makefile` and `hw/ip/*/*/dv/Makefile` targets
+- Top-level `Makefile` auto-discovers all `hw/ip/*/dv/Makefile` and `hw/ip/*/*/dv/Makefile` targets. CI consumes this discovery via `ci-unit-test-dirs` and `ci-unit-test-matrix`, so keep new unit tests in those layouts or update the helper and workflow together.
 - `dv/rtlcosim/Makefile` — runs all cosim tests
 
 ## Projects
@@ -610,6 +651,7 @@ When reimplementing modules that use CORE-ET library primitives, use these repla
 | `gen_fifo_reg` | `prim_fifo_reg` | Register FIFO (depth 1-4) |
 | `rbox_fifo` | `prim_fifo_sram` | SRAM-backed FIFO with 1-cycle read latency |
 | `rst_repeat` | `prim_rst_sync` | Reset synchronizer with DFT bypass via `dft_t` |
+| `arb_lru_grant` | Precisely matched grant-visible-on-stall arbiter seam/helper | Original keeps `grant` visible while `stall` is asserted and stalls only priority updates; `prim_arb_lru` gates `grant_o` with `~stall_i`, so do not use it when grant-visible-on-stall behavior is required. |
 | `hot2bin` + `onehot_mux` | `prim_hot2bin` | One-hot to binary encoder |
 | `vcfifo_wr_hiv_gcd` | `prim_fifo_async_hiv` | Async CDC FIFO, write=high-voltage, read=low-voltage. DFT bypass via `dft_hv_i`/`dft_lv_i` |
 | `vcfifo_wr_lov_gcd` | `prim_fifo_async_lov` | Async CDC FIFO, write=low-voltage, read=high-voltage. DFT bypass via `dft_lv_i`/`dft_hv_i` |
@@ -638,6 +680,12 @@ When reimplementing modules that use CORE-ET library primitives, use these repla
 | `esr_shire_cache_ram_cfg_t` | `ram_cfg_pkg::ram_cfg_t` | Clean standardized RAM config struct |
 | DFT ports (`dft__*`) | `dft_pkg::dft_t dft_i` | Consolidated into single struct |
 | UltraSoC modules | Drop (replace with own debug IP later) | Third-party debug/trace IP |
+
+Do not silently substitute a primitive whose stall semantics differ from the
+original. In particular, an `arb_lru_grant` site that observes `grant` while
+`stall` is asserted needs a precisely matched primitive or named local helper
+with the required unit test, standalone cosim, `STATUS.md`, and checked-in
+cosim coverage deliverables.
 
 ### Latch-heavy translation policy
 

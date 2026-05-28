@@ -20,6 +20,7 @@
 #pragma once
 
 #include "sim_ctrl.h"
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <sstream>
@@ -39,7 +40,7 @@ public:
         }
     }
 
-    // Compare two values. Logs on mismatch.
+    // Compare two scalar values. Logs on mismatch.
     template <typename T>
     void compare(const std::string& name, T orig, T newv) {
         comparisons++;
@@ -53,6 +54,27 @@ public:
             printf("  ok [t=%lu] %s = 0x%llx\n",
                    (unsigned long)this->sim_time, name.c_str(),
                    (unsigned long long)(uint64_t)orig);
+        }
+    }
+
+    // Compare a Verilator wide packed vector. This preserves all bits for
+    // flattened RTL structs and arrays wider than 64 bits.
+    template <std::size_t NWords>
+    void compare(const std::string& name,
+                 const VlWide<NWords>& orig,
+                 const VlWide<NWords>& newv) {
+        comparisons++;
+        if (orig != newv) {
+            mismatches++;
+            const std::string orig_s = VL_TO_STRING(orig);
+            const std::string new_s = VL_TO_STRING(newv);
+            printf("  MISMATCH [t=%lu] %s: orig=0x%s new=0x%s\n",
+                   (unsigned long)this->sim_time, name.c_str(),
+                   orig_s.c_str(), new_s.c_str());
+        } else if (verbose) {
+            const std::string val_s = VL_TO_STRING(orig);
+            printf("  ok [t=%lu] %s = 0x%s\n",
+                   (unsigned long)this->sim_time, name.c_str(), val_s.c_str());
         }
     }
 

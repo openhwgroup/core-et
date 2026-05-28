@@ -10,6 +10,8 @@ Why this exists
 How this implementation realizes the contract
 - The FIFO body is the same Gray-pointer asynchronous FIFO structure as the
   generic model.
+- `ready_o` and `valid_o` are masked low while their respective effective reset
+  is asserted.
 - `dft_hv_i` and `dft_lv_i` still provide per-domain reset bypass.
 
 Why it is implemented this way

@@ -25,29 +25,29 @@ VPU-only types and datapath blocks that sit behind that boundary.
 | `txfma_booth_ppg_32r4` | `rtl/txfma_booth_ppg_32r4.sv` | `txfma_booth_ppg_32r4.v` | Done |
 | `txfma_wallace1` | `rtl/txfma_wallace1.sv` | `txfma_wallace1.v` | Done |
 | `txfma_wallace2` | `rtl/txfma_wallace2.sv` | `txfma_wallace2.v` | Done |
-| `txfma_c0` | `rtl/txfma_c0.sv` | `txfma_c0.v` | RTL present, covered through `txfma_top`/`txfmaexp_top` cosim |
-| `txfma_c1` | `rtl/txfma_c1.sv` | `txfma_c1.v` | RTL present, covered through `txfma_top`/`txfmaexp_top` cosim |
-| `txfma_c2` | `rtl/txfma_c2.sv` | `txfma_c2.v` | RTL present, covered through `txfma_top`/`txfmaexp_top` cosim |
-| `txfma_c3` | `rtl/txfma_c3.sv` | `txfma_c3.v` | RTL present, covered through `txfma_top`/`txfmaexp_top` cosim |
-| `txfma_c4` | `rtl/txfma_c4.sv` | `txfma_c4.v` | RTL present, covered through `txfma_top`/`txfmaexp_top` cosim |
-| `txfma_c5` | `rtl/txfma_c5.sv` | `txfma_c5.v` | RTL present, covered through `txfma_top`/`txfmaexp_top` cosim |
-| `txfma_c6` | `rtl/txfma_c6.sv` | `txfma_c6.v` | RTL present, covered through `txfma_top`/`txfmaexp_top` cosim |
-| `txfma_e1` | `rtl/txfma_e1.sv` | `txfma_e1.v` | RTL present, covered through `txfmaexp_top` cosim |
-| `txfma_e2` | `rtl/txfma_e2.sv` | `txfma_e2.v` | RTL present, covered through `txfmaexp_top` cosim |
-| `txfma_e4` | `rtl/txfma_e4.sv` | `txfma_e4.v` | RTL present, covered through `txfmaexp_top` cosim |
-| `txfma_e5` | `rtl/txfma_e5.sv` | `txfma_e5.v` | RTL present, covered through `txfmaexp_top` cosim |
-| `txfma_e6` | `rtl/txfma_e6.sv` | `txfma_e6.v` | RTL present, covered through `txfmaexp_top` cosim |
-| `txfma_ediff_opdorder_logic` | `rtl/txfma_ediff_opdorder_logic.sv` | `txfma_ediff_opdorder_logic.v` | RTL present, covered through `txfmaexp_top` cosim |
-| `txfma_exp_special_detect` | `rtl/txfma_exp_special_detect.sv` | `txfma_exp_special_detect.v` | RTL present, standalone DV/cosim pending |
-| `txfma_f0` | `rtl/txfma_f0.sv` | `txfma_f0.v` | RTL present, covered through `txfma_top` cosim |
-| `txfma_f1` | `rtl/txfma_f1.sv` | `txfma_f1.v` | RTL present, covered through `txfma_top` cosim |
-| `txfma_f2` | `rtl/txfma_f2.sv` | `txfma_f2.v` | RTL present, covered through `txfma_top` cosim |
-| `txfma_f3` | `rtl/txfma_f3.sv` | `txfma_f3.v` | RTL present, covered through `txfma_top` cosim |
-| `txfma_f4` | `rtl/txfma_f4.sv` | `txfma_f4.v` | RTL present, covered through `txfma_top` cosim |
-| `txfma_f5` | `rtl/txfma_f5.sv` | `txfma_f5.v` | RTL present, covered through `txfma_top` cosim |
-| `txfma_f6` | `rtl/txfma_f6.sv` | `txfma_f6.v` | RTL present, covered through `txfma_top` cosim |
-| `txfma_frac_zero_detect` | `rtl/txfma_frac_zero_detect.sv` | `txfma_frac_zero_detect.v` | RTL present, covered through `txfma_top` cosim |
-| `txfma_rnd_adder` | `rtl/txfma_rnd_adder.sv` | `txfma_rnd_adder.v` | RTL present, covered through `txfma_top` cosim |
+| `txfma_c0` | `rtl/txfma_c0.sv` | `txfma_c0.v` | Done (903 standalone checks, 9,101,638 standalone cosim comparisons) |
+| `txfma_c1` | `rtl/txfma_c1.sv` | `txfma_c1.v` | Done (295 standalone checks, 65,648 standalone cosim comparisons) |
+| `txfma_c2` | `rtl/txfma_c2.sv` | `txfma_c2.v` | Done (312 standalone checks, 192,888 standalone cosim comparisons) |
+| `txfma_c3` | `rtl/txfma_c3.sv` | `txfma_c3.v` | Done (351 standalone checks, 61,545 standalone cosim comparisons) |
+| `txfma_c4` | `rtl/txfma_c4.sv` | `txfma_c4.v` | Done (283 standalone checks, 32,824 standalone cosim comparisons) |
+| `txfma_c5` | `rtl/txfma_c5.sv` | `txfma_c5.v` | Done (301 standalone checks, 90,266 standalone cosim comparisons) |
+| `txfma_c6` | `rtl/txfma_c6.sv` | `txfma_c6.v` | Done (386 standalone checks, 188,784 standalone cosim comparisons) |
+| `txfma_e1` | `rtl/txfma_e1.sv` | `txfma_e1.v` | Done (standalone DV/cosim plus `txfmaexp_top` coverage) |
+| `txfma_e2` | `rtl/txfma_e2.sv` | `txfma_e2.v` | Done (standalone DV/cosim plus `txfmaexp_top` coverage) |
+| `txfma_e4` | `rtl/txfma_e4.sv` | `txfma_e4.v` | Done (standalone DV/cosim plus `txfmaexp_top` coverage) |
+| `txfma_e5` | `rtl/txfma_e5.sv` | `txfma_e5.v` | Done (standalone DV/cosim plus `txfmaexp_top` coverage) |
+| `txfma_e6` | `rtl/txfma_e6.sv` | `txfma_e6.v` | Done (standalone DV/cosim plus `txfmaexp_top` coverage) |
+| `txfma_ediff_opdorder_logic` | `rtl/txfma_ediff_opdorder_logic.sv` | `txfma_ediff_opdorder_logic.v` | Done (standalone DV/cosim plus `txfmaexp_top` coverage) |
+| `txfma_exp_special_detect` | `rtl/txfma_exp_special_detect.sv` | `txfma_exp_special_detect.v` | Done (standalone DV/cosim plus `txfmaexp_top` coverage) |
+| `txfma_f0` | `rtl/txfma_f0.sv` | `txfma_f0.v` | Done (standalone unit + cosim) |
+| `txfma_f1` | `rtl/txfma_f1.sv` | `txfma_f1.v` | Done (standalone unit + cosim) |
+| `txfma_f2` | `rtl/txfma_f2.sv` | `txfma_f2.v` | Done (standalone unit + cosim) |
+| `txfma_f3` | `rtl/txfma_f3.sv` | `txfma_f3.v` | Done (standalone unit + cosim) |
+| `txfma_f4` | `rtl/txfma_f4.sv` | `txfma_f4.v` | Done (standalone unit + cosim) |
+| `txfma_f5` | `rtl/txfma_f5.sv` | `txfma_f5.v` | Done (standalone unit + cosim) |
+| `txfma_f6` | `rtl/txfma_f6.sv` | `txfma_f6.v` | Done (standalone unit + cosim) |
+| `txfma_frac_zero_detect` | `rtl/txfma_frac_zero_detect.sv` | `txfma_frac_zero_detect.v` | Done (standalone unit + cosim) |
+| `txfma_rnd_adder` | `rtl/txfma_rnd_adder.sv` | `txfma_rnd_adder.v` | Done (standalone unit + cosim) |
 | `txfmactl_top` | `rtl/txfmactl_top.sv` | `txfmactl_top.v` | Done |
 | `txfmaexp_top` | `rtl/txfmaexp_top.sv` | `txfmaexp_top.v` | Done |
 | `txfmafrac_top` | `rtl/txfmafrac_top.sv` | `txfmafrac_top.v` | Done |
@@ -92,8 +92,9 @@ The VPU top-half integration RTL is present locally and the default translated
 `minion_top` path now instantiates the real `vpu_top`. The current standalone
 closure covers `vpu_tensorreduce`, `vpu_tensorfma`, `vpu_tensorquant`, `vpu_ml`,
 both real and fake `vpu_txfma_trans_top` configurations, the standalone TXFMA
-control/fraction subtops `txfmactl_top` and `txfmafrac_top`, plus the
-`vpu_ctrl`, `vpu_lane`, and `vpu_top` integration modules. The optional
+control/fraction subtops `txfmactl_top` and `txfmafrac_top`, the standalone
+TXFMA E-stage leaves, plus the `vpu_ctrl`, `vpu_lane`, and `vpu_top`
+integration modules. The optional
 integer-only `null_vpu` remains only behind the non-default `minion_top.VpuEn=0`
 configuration and is not original-equivalent VPU behavior.
 
@@ -504,9 +505,13 @@ The imported staged TXFMA helpers preserve the original split between control
 `txfma_e5`, `txfma_e6`), and fraction/result (`txfma_f0`..`txfma_f6`) pipeline
 logic. Smaller helpers such as `txfma_ediff_opdorder_logic`,
 `txfma_exp_special_detect`, `txfma_frac_zero_detect`, and `txfma_rnd_adder`
-keep the original leaf boundaries. Most of these are exercised through the
-imported TXFMA top cosims; `txfma_exp_special_detect` is imported for boundary
-completeness but still needs standalone DV/cosim coverage.
+keep the original leaf boundaries. The C-stage leaves (`txfma_c0`..`txfma_c6`)
+now have standalone expected-value unit tests and all-output standalone cosims
+against the original leaves, in addition to the imported TXFMA top cosims. The
+exponent-stage leaves `txfma_e1`, `txfma_e2`, `txfma_e4`, `txfma_e5`,
+`txfma_e6`, `txfma_ediff_opdorder_logic`, and
+`txfma_exp_special_detect` now have standalone expected-value unit tests and
+all-output cosims in addition to `txfmaexp_top` parent coverage.
 
 ### `txfmactl_top`, `txfmaexp_top`, and `txfmafrac_top`
 
