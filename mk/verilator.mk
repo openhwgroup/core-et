@@ -36,6 +36,7 @@
 REPO_ROOT ?= $(shell git rev-parse --show-toplevel)
 VERILATOR ?= verilator
 VERILATOR_JOBS ?= $(shell procs=$$(getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 1); jobs=$$((procs * 4 / 5)); if [ $$jobs -lt 1 ]; then jobs=1; fi; echo $$jobs)
+VERILATOR_BUILD_FLAGS ?= --build -j $(VERILATOR_JOBS)
 XRAND_FLAGS ?= --x-initial unique
 XRAND_SEED  ?= 1
 XRAND_ARGS  ?= +verilator+rand+reset+2 +verilator+seed+$(XRAND_SEED)
@@ -43,7 +44,7 @@ XRAND_ARGS  ?= +verilator+rand+reset+2 +verilator+seed+$(XRAND_SEED)
 BUILD_DIR  ?= $(CURDIR)/build
 
 COMMON_FLAGS := \
-  -sv --cc --exe --build -j $(VERILATOR_JOBS) \
+  -sv --cc --exe $(VERILATOR_BUILD_FLAGS) \
   -Wall \
   --assert \
   --coverage \
@@ -85,6 +86,7 @@ $(BUILD_DIR)/obj_$(1)/V$($(1)_TOP): $($(1)_SRCS)
 	  --top-module $($(1)_TOP) \
 	  -o V$($(1)_TOP) \
 	  $$^
+	$(if $(VERILATOR_BUILD_FLAGS),,$(MAKE) -C $(BUILD_DIR)/obj_$(1) -f V$($(1)_TOP).mk -j $(VERILATOR_JOBS))
 
 $(BUILD_DIR)/xrand_obj_$(1)/V$($(1)_TOP): $($(1)_SRCS)
 	@mkdir -p $(BUILD_DIR)
@@ -93,6 +95,7 @@ $(BUILD_DIR)/xrand_obj_$(1)/V$($(1)_TOP): $($(1)_SRCS)
 	  --top-module $($(1)_TOP) \
 	  -o V$($(1)_TOP) \
 	  $$^
+	$(if $(VERILATOR_BUILD_FLAGS),,$(MAKE) -C $(BUILD_DIR)/xrand_obj_$(1) -f V$($(1)_TOP).mk -j $(VERILATOR_JOBS))
 endef
 
 $(foreach t,$(TESTS),$(eval $(call TEST_template,$(t))))
@@ -171,6 +174,7 @@ $(OBJ_DIR)/V$(TB_TOP): $(RTL_SRCS) $(CC_SRCS)
 	  --top-module $(TB_TOP) \
 	  -o V$(TB_TOP) \
 	  $^
+	$(if $(VERILATOR_BUILD_FLAGS),,$(MAKE) -C $(OBJ_DIR) -f V$(TB_TOP).mk -j $(VERILATOR_JOBS))
 
 $(OBJ_DIR_XR)/V$(TB_TOP): $(RTL_SRCS) $(CC_SRCS)
 	@mkdir -p $(BUILD_DIR)
@@ -180,6 +184,7 @@ $(OBJ_DIR_XR)/V$(TB_TOP): $(RTL_SRCS) $(CC_SRCS)
 	  --top-module $(TB_TOP) \
 	  -o V$(TB_TOP) \
 	  $^
+	$(if $(VERILATOR_BUILD_FLAGS),,$(MAKE) -C $(OBJ_DIR_XR) -f V$(TB_TOP).mk -j $(VERILATOR_JOBS))
 
 $(OBJ_DIR_TR)/V$(TB_TOP): $(RTL_SRCS) $(CC_SRCS)
 	@mkdir -p $(BUILD_DIR)
@@ -191,6 +196,7 @@ $(OBJ_DIR_TR)/V$(TB_TOP): $(RTL_SRCS) $(CC_SRCS)
 	  --top-module $(TB_TOP) \
 	  -o V$(TB_TOP) \
 	  $^
+	$(if $(VERILATOR_BUILD_FLAGS),,$(MAKE) -C $(OBJ_DIR_TR) -f V$(TB_TOP).mk -j $(VERILATOR_JOBS))
 
 clean:
 	rm -rf $(BUILD_DIR)

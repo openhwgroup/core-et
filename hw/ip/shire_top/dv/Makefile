@@ -186,6 +186,11 @@ CC_SRCS := $(CURDIR)/shire_top_test.cc
 LINT_SRCS := $(filter-out $(CURDIR)/shire_top_tb.sv,$(filter-out %.cc,$(RTL_SRCS)))
 LINT_FLAGS := --top-module shire_top -Wno-MULTITOP -Wno-UNOPTFLAT
 
+# Let Verilator exit before compiling generated C++ so the Verilator process
+# memory is not held at the same time as cc1plus on small CI runners.
+VERILATOR_BUILD_FLAGS :=
 include $(REPO_ROOT)/mk/verilator.mk
 
-COMMON_FLAGS += -Wno-SYNCASYNCNET -Wno-UNOPTFLAT -Wno-IMPORTSTAR
+# Split generated C++ so GitHub-hosted runners do not compile one very large
+# shire integration translation unit in a single cc1plus process.
+COMMON_FLAGS += -Wno-SYNCASYNCNET -Wno-UNOPTFLAT -Wno-IMPORTSTAR --output-split 5000 --output-split-cfuncs 5000

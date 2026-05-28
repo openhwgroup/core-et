@@ -154,8 +154,13 @@ CC_SRCS := $(CURDIR)/shire_channel_test.cc
 LINT_SRCS := $(PKG_SRCS) $(PRIM_SRCS) $(SC_SRCS) $(RB_SRCS) $(UC_SRCS) $(ESR_SRCS) $(LEAF_SRCS) $(CHANNEL_SRCS)
 LINT_FLAGS := -Wno-MULTITOP -Wno-UNOPTFLAT
 
+# Let Verilator exit before compiling generated C++ so the Verilator process
+# memory is not held at the same time as cc1plus on small CI runners.
+VERILATOR_BUILD_FLAGS :=
 include $(REPO_ROOT)/mk/verilator.mk
 
 # The full native container pulls in existing shirecache reset assertions and RBOX
 # FIFO coverage paths that are already structurally benign in their block tests.
-COMMON_FLAGS += -Wno-SYNCASYNCNET -Wno-UNOPTFLAT
+# Split generated C++ so GitHub-hosted runners do not compile one very large
+# shire integration translation unit in a single cc1plus process.
+COMMON_FLAGS += -Wno-SYNCASYNCNET -Wno-UNOPTFLAT --output-split 5000 --output-split-cfuncs 5000

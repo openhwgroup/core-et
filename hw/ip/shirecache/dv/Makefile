@@ -262,4 +262,12 @@ topb_SRCS := $(LINT_SRCS) \
              $(CURDIR)/shirecache_top_bist_tb.sv \
              $(CURDIR)/shirecache_top_bist_test.cc
 
+# Let Verilator exit before compiling generated C++ so the Verilator process
+# memory is not held at the same time as cc1plus on small CI runners.
+VERILATOR_BUILD_FLAGS :=
+# Split generated C++ for the largest cache tests so GitHub-hosted runners do
+# not compile oversized generated translation units in one cc1plus process.
+SHIRECACHE_VERILATOR_FLAGS := --output-split 5000 --output-split-cfuncs 5000
+$(foreach t,$(TESTS),$(eval $(t)_FLAGS += $(SHIRECACHE_VERILATOR_FLAGS)))
+
 include $(REPO_ROOT)/mk/verilator.mk
